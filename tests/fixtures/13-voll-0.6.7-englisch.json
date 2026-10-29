@@ -1,0 +1,2308 @@
+{
+ "version": 1,
+ "title": "Example: Thieves’ Guild",
+ "startScene": "s1",
+ "assets": [
+  {
+   "id": "a_bg_keller",
+   "name": "Cellar",
+   "kind": "image",
+   "file": "assets/bg_keller.svg"
+  },
+  {
+   "id": "a_bg_hof",
+   "name": "Castle courtyard",
+   "kind": "image",
+   "file": "assets/bg_hof.svg"
+  },
+  {
+   "id": "a_bg_gilde",
+   "name": "Guild quarters",
+   "kind": "image",
+   "file": "assets/bg_gilde.svg"
+  },
+  {
+   "id": "a_ray",
+   "name": "Ray",
+   "kind": "image",
+   "file": "assets/char_ray.svg"
+  },
+  {
+   "id": "a_wache",
+   "name": "Guard",
+   "kind": "image",
+   "file": "assets/char_wache.svg"
+  },
+  {
+   "id": "a_truhe",
+   "name": "Chest",
+   "kind": "image",
+   "file": "assets/obj_truhe.svg"
+  },
+  {
+   "id": "a_tuer",
+   "name": "Door",
+   "kind": "image",
+   "file": "assets/obj_tuer.svg"
+  },
+  {
+   "id": "a_buch",
+   "name": "Book",
+   "kind": "image",
+   "file": "assets/obj_buch.svg"
+  },
+  {
+   "id": "a_musik",
+   "name": "musik_schleichen",
+   "kind": "audio",
+   "file": "assets/musik_schleichen.wav"
+  },
+  {
+   "id": "a_klick",
+   "name": "sfx_schloss_klick",
+   "kind": "audio",
+   "file": "assets/sfx_schloss_klick.wav"
+  },
+  {
+   "id": "a_glocke",
+   "name": "sfx_glocke",
+   "kind": "audio",
+   "file": "assets/sfx_glocke.wav"
+  },
+  {
+   "id": "a_voice_ray",
+   "name": "voice_ray_demo",
+   "kind": "audio",
+   "file": "assets/voice_ray_demo.wav"
+  },
+  {
+   "id": "a_i_dietrich",
+   "name": "Item lockpick",
+   "kind": "image",
+   "file": "assets/item_dietrich.svg"
+  },
+  {
+   "id": "a_i_trank",
+   "name": "Item healing potion",
+   "kind": "image",
+   "file": "assets/item_trank.svg"
+  },
+  {
+   "id": "a_i_ring",
+   "name": "Item ring",
+   "kind": "image",
+   "file": "assets/item_ring.svg"
+  },
+  {
+   "id": "a_i_brief",
+   "name": "Item letter",
+   "kind": "image",
+   "file": "assets/item_brief.svg"
+  },
+  {
+   "id": "a_c_gold",
+   "name": "Gold icon",
+   "kind": "image",
+   "file": "assets/ico_gold.svg"
+  },
+  {
+   "id": "a_c_gem",
+   "name": "Gem icon",
+   "kind": "image",
+   "file": "assets/ico_gem.svg"
+  },
+  {
+   "id": "a_font_cinzel",
+   "name": "Cinzel",
+   "kind": "font",
+   "file": "assets/Cinzel.woff2"
+  },
+  {
+   "id": "a_par_himmel",
+   "name": "Parallax sky",
+   "kind": "image",
+   "file": "assets/par_himmel.svg"
+  },
+  {
+   "id": "a_par_berge",
+   "name": "Parallax mountains",
+   "kind": "image",
+   "file": "assets/par_berge.svg"
+  },
+  {
+   "id": "a_par_huegel",
+   "name": "Parallax hills",
+   "kind": "image",
+   "file": "assets/par_huegel.svg"
+  },
+  {
+   "id": "a_par_vorne",
+   "name": "Parallax foreground",
+   "kind": "image",
+   "file": "assets/par_vorne.svg"
+  },
+  {
+   "id": "a_par_wolken",
+   "name": "Clouds (endless)",
+   "kind": "image",
+   "file": "assets/par_wolken.svg"
+  },
+  {
+   "id": "a_worldmap",
+   "name": "World map",
+   "kind": "image",
+   "file": "assets/world_map.svg"
+  }
+ ],
+ "scenes": [
+  {
+   "id": "s1",
+   "type": "story",
+   "name": "Scene 1 · The cellar",
+   "x": 80,
+   "y": 260,
+   "beats": 5,
+   "next": null,
+   "tracks": {
+    "bg": [
+     {
+      "id": "c_1",
+      "start": 0,
+      "len": 5,
+      "asset": "a_bg_keller",
+      "trans": "fade",
+      "dur": 1
+     }
+    ],
+    "char1": [
+     {
+      "id": "c_2",
+      "start": 0,
+      "len": 5,
+      "asset": "a_ray",
+      "x": 30,
+      "scale": 100,
+      "trans": "fade",
+      "dur": 0.6,
+      "idle": "none",
+      "name": "Ray",
+      "keys": [
+       {
+        "beat": 3,
+        "x": 22,
+        "scale": 97,
+        "dur": 0.6,
+        "ease": "back"
+       }
+      ]
+     }
+    ],
+    "char2": [
+     {
+      "id": "c_3",
+      "start": 3,
+      "len": 2,
+      "asset": "a_wache",
+      "x": 72,
+      "scale": 100,
+      "trans": "slide",
+      "dur": 0.6,
+      "idle": "none",
+      "name": "Guard"
+     }
+    ],
+    "fx": [],
+    "cam": [
+     {
+      "id": "c_4",
+      "start": 3,
+      "len": 2,
+      "zoom": 128,
+      "panX": 8,
+      "panY": -6,
+      "rot": 0,
+      "shake": 60,
+      "shakeDur": 0.5,
+      "dur": 0.5,
+      "ease": "ease-out",
+      "keys": []
+     }
+    ],
+    "video": [],
+    "dialog": [
+     {
+      "id": "c_5",
+      "start": 0,
+      "len": 1,
+      "speaker": "Ray",
+      "color": "#c4b2ff",
+      "text": "Psst … nobody ever really sleeps down here.",
+      "speed": 40,
+      "syncVoice": true,
+      "actions": []
+     },
+     {
+      "id": "c_6",
+      "start": 1,
+      "len": 1,
+      "speaker": "Ray",
+      "color": "#c4b2ff",
+      "text": "The door up ahead only has an old lock.",
+      "speed": 40,
+      "actions": []
+     },
+     {
+      "id": "c_7",
+      "start": 2,
+      "len": 1,
+      "speaker": "Ray",
+      "color": "#c4b2ff",
+      "text": "I can open it in ten seconds. Here, take the spare lockpick.",
+      "speed": 40,
+      "actions": [
+       {
+        "type": "giveItem",
+        "item": "it_dietrich",
+        "count": 1
+       }
+      ]
+     },
+     {
+      "id": "c_8",
+      "start": 3,
+      "len": 1,
+      "speaker": "Guard",
+      "color": "#ff9a8a",
+      "text": "Who’s there? {shake}Show yourself!{/shake}",
+      "speed": 40,
+      "actions": []
+     },
+     {
+      "id": "c_9",
+      "start": 4,
+      "len": 1,
+      "speaker": "Ray",
+      "color": "#c4b2ff",
+      "text": "Damn. What now?",
+      "speed": 40,
+      "actions": []
+     }
+    ],
+    "choice": [
+     {
+      "id": "c_10",
+      "start": 4,
+      "len": 1,
+      "options": [
+       {
+        "id": "opt_knacken",
+        "text": "Pick the lock",
+        "target": "s2",
+        "conds": [],
+        "actions": [
+         {
+          "type": "plugin",
+          "ref": "schlossknacken.spielen",
+          "params": {
+           "schwierigkeit": "leicht",
+           "stifte": 2,
+           "ergebnis": "v_tuer"
+          }
+         }
+        ]
+       },
+       {
+        "id": "opt_ablenken",
+        "text": "Distract the guard",
+        "target": "s3",
+        "conds": [],
+        "actions": [
+         {
+          "type": "addVar",
+          "var": "v_vertrauen",
+          "value": 1
+         }
+        ]
+       },
+       {
+        "id": "opt_bestechen",
+        "text": "Bribe the guard (20 gold)",
+        "target": "s3",
+        "conds": [
+         {
+          "type": "money",
+          "currency": "cur_gold",
+          "op": ">=",
+          "amount": 20
+         }
+        ],
+        "actions": [
+         {
+          "type": "money",
+          "currency": "cur_gold",
+          "amount": -20
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "music": [
+     {
+      "id": "c_11",
+      "start": 0,
+      "len": 5,
+      "asset": "a_musik",
+      "vol": 60,
+      "loop": true,
+      "carry": true,
+      "fade": 1
+     }
+    ],
+    "voice": [
+     {
+      "id": "c_13",
+      "start": 0,
+      "len": 1,
+      "asset": "a_voice_ray",
+      "vol": 80,
+      "in": 0.02,
+      "out": 1
+     },
+     {
+      "id": "c_14",
+      "start": 1,
+      "len": 1,
+      "asset": "a_voice_ray",
+      "vol": 80,
+      "in": 1.42,
+      "out": 2.52
+     },
+     {
+      "id": "c_15",
+      "start": 2,
+      "len": 1,
+      "asset": "a_voice_ray",
+      "vol": 80,
+      "in": 2.92,
+      "out": 3.82
+     }
+    ],
+    "sfx": [
+     {
+      "id": "c_12",
+      "start": 3,
+      "len": 1,
+      "asset": "a_klick",
+      "vol": 90
+     }
+    ]
+   }
+  },
+  {
+   "id": "s2",
+   "type": "story",
+   "name": "Scene 2 · Behind the door",
+   "x": 360,
+   "y": 120,
+   "beats": 3,
+   "next": "hub",
+   "tracks": {
+    "bg": [
+     {
+      "id": "c_16",
+      "start": 0,
+      "len": 3,
+      "asset": "a_bg_hof",
+      "trans": "mask",
+      "mask": "circle",
+      "maskSoft": 14,
+      "dur": 1.4,
+      "kenburns": true,
+      "vignette": 30,
+      "daytime": "night",
+      "charLight": 55
+     }
+    ],
+    "char1": [
+     {
+      "id": "c_17",
+      "start": 0,
+      "len": 3,
+      "asset": "a_ray",
+      "x": 50,
+      "scale": 100,
+      "trans": "fade",
+      "dur": 0.6,
+      "idle": "none",
+      "name": "Ray"
+     }
+    ],
+    "char2": [],
+    "fx": [
+     {
+      "id": "c_18",
+      "start": 0,
+      "len": 3,
+      "particles": "fireflies",
+      "color": "#d8ff7a",
+      "density": 40,
+      "speed": 15,
+      "size": 45,
+      "wind": 0,
+      "opacity": 100,
+      "styles": {}
+     }
+    ],
+    "cam": [],
+    "video": [],
+    "dialog": [
+     {
+      "id": "c_19",
+      "start": 0,
+      "len": 1,
+      "speaker": "Ray",
+      "color": "#c4b2ff",
+      "text": "Click. Told you so.",
+      "speed": 40,
+      "actions": []
+     },
+     {
+      "id": "c_20",
+      "start": 1,
+      "len": 1,
+      "speaker": "Ray",
+      "color": "#c4b2ff",
+      "text": "Fresh air … and not a guard in sight. Back to the {glow}guild{/glow}?",
+      "speed": 40,
+      "actions": []
+     },
+     {
+      "id": "c_21",
+      "start": 2,
+      "len": 1,
+      "speaker": "Ray",
+      "color": "#c4b2ff",
+      "text": "Back to the quarters before anyone notices.",
+      "speed": 40,
+      "actions": []
+     }
+    ],
+    "choice": [],
+    "music": [],
+    "voice": [],
+    "sfx": [
+     {
+      "id": "c_22",
+      "start": 0,
+      "len": 1,
+      "asset": "a_klick",
+      "vol": 90
+     }
+    ]
+   }
+  },
+  {
+   "id": "s3",
+   "type": "story",
+   "name": "Scene 2b · The distraction",
+   "x": 360,
+   "y": 400,
+   "beats": 3,
+   "next": "hub",
+   "tracks": {
+    "bg": [
+     {
+      "id": "c_23",
+      "start": 0,
+      "len": 3,
+      "asset": "a_bg_keller",
+      "trans": "cut",
+      "dur": 0
+     }
+    ],
+    "char1": [
+     {
+      "id": "c_24",
+      "start": 0,
+      "len": 3,
+      "asset": "a_ray",
+      "x": 25,
+      "scale": 100,
+      "trans": "cut",
+      "dur": 0,
+      "idle": "breathe"
+     }
+    ],
+    "char2": [
+     {
+      "id": "c_25",
+      "start": 0,
+      "len": 2,
+      "asset": "a_wache",
+      "x": 72,
+      "scale": 100,
+      "trans": "cut",
+      "dur": 0.6,
+      "idle": "none"
+     }
+    ],
+    "fx": [],
+    "cam": [],
+    "video": [],
+    "dialog": [
+     {
+      "id": "c_26",
+      "start": 0,
+      "len": 1,
+      "speaker": "Ray",
+      "color": "#c4b2ff",
+      "text": "Over there! Isn’t that smoke?",
+      "speed": 40,
+      "actions": []
+     },
+     {
+      "id": "c_27",
+      "start": 1,
+      "len": 1,
+      "speaker": "Guard",
+      "color": "#ff9a8a",
+      "text": "What? Where? … Stay right here!",
+      "speed": 40,
+      "actions": []
+     },
+     {
+      "id": "c_28",
+      "start": 2,
+      "len": 1,
+      "speaker": "Ray",
+      "color": "#c4b2ff",
+      "text": "Works every time. And gone.",
+      "speed": 40,
+      "actions": []
+     }
+    ],
+    "choice": [],
+    "music": [
+     {
+      "id": "c_29",
+      "start": 0,
+      "len": 3,
+      "asset": "a_musik",
+      "vol": 60,
+      "loop": true,
+      "carry": true,
+      "fade": 1
+     }
+    ],
+    "voice": [],
+    "sfx": []
+   }
+  },
+  {
+   "id": "hub",
+   "type": "hub",
+   "name": "Hub · Guild quarters",
+   "x": 660,
+   "y": 260,
+   "bg": "a_bg_gilde",
+   "music": null,
+   "bgLook": {
+    "vignette": 35
+   },
+   "objects": [
+    {
+     "id": "o_truhe",
+     "name": "Chest",
+     "asset": "a_truhe",
+     "x": 12,
+     "y": 66,
+     "w": 18,
+     "h": 20,
+     "rot": 0,
+     "shape": "rect",
+     "hover": "glow",
+     "target": null,
+     "message": "",
+     "sfx": "a_glocke",
+     "conds": [],
+     "actions": [
+      {
+       "type": "loot",
+       "table": "lt_truhe"
+      }
+     ]
+    },
+    {
+     "id": "o_30",
+     "name": "Door",
+     "asset": "a_tuer",
+     "x": 76,
+     "y": 22,
+     "w": 12,
+     "h": 50,
+     "rot": 0,
+     "shape": "rect",
+     "hover": "glow",
+     "target": "s4",
+     "message": "",
+     "sfx": null,
+     "conds": [],
+     "actions": []
+    },
+    {
+     "id": "o_31",
+     "name": "Book",
+     "asset": "a_buch",
+     "x": 46,
+     "y": 40,
+     "w": 10,
+     "h": 18,
+     "rot": -4,
+     "shape": "ellipse",
+     "hover": "grow",
+     "target": null,
+     "message": "The book is still sealed. Maybe later, once Ray trusts you more.",
+     "sfx": null,
+     "conds": [],
+     "actions": []
+    }
+   ],
+   "events": [
+    {
+     "id": "ev_tut",
+     "trigger": "first",
+     "spotlight": "o_truhe",
+     "lock": true,
+     "conds": [],
+     "lines": [
+      {
+       "id": "ln_tut1",
+       "speaker": "Ray",
+       "color": "#c4b2ff",
+       "text": "Welcome to the guild’s quarters!"
+      },
+      {
+       "id": "ln_tut2",
+       "speaker": "Ray",
+       "color": "#c4b2ff",
+       "text": "Take a look in the chest over there. Press “I” to open your inventory."
+      }
+     ]
+    }
+   ],
+   "loc": {
+    "unlock": "start",
+    "whenLocked": "hidden"
+   }
+  },
+  {
+   "id": "s4",
+   "type": "story",
+   "name": "Chapter 2 · The castle courtyard",
+   "x": 960,
+   "y": 260,
+   "beats": 5,
+   "next": null,
+   "tracks": {
+    "bg": [
+     {
+      "id": "c_32",
+      "start": 0,
+      "len": 5,
+      "asset": "a_bg_hof",
+      "trans": "fade",
+      "dur": 1,
+      "daytime": "evening"
+     }
+    ],
+    "char1": [],
+    "char2": [],
+    "fx": [
+     {
+      "id": "c_33",
+      "start": 0,
+      "len": 5,
+      "particles": "petals",
+      "color": "#ffb6d0",
+      "density": 30,
+      "speed": 22,
+      "size": 50,
+      "wind": 25,
+      "opacity": 100,
+      "styles": {}
+     }
+    ],
+    "cam": [],
+    "video": [],
+    "dialog": [
+     {
+      "id": "c_34",
+      "start": 0,
+      "len": 1,
+      "speaker": "",
+      "color": "#ffffff",
+      "text": "Chapter 2 starts here … Ray’s phone buzzes.",
+      "speed": 40,
+      "actions": []
+     },
+     {
+      "id": "c_35",
+      "start": 1,
+      "len": 1,
+      "speaker": "Unknown",
+      "color": "#ffffff",
+      "text": "We know what you did in the cellar.",
+      "speed": 40,
+      "chat": true,
+      "actions": []
+     },
+     {
+      "id": "c_36",
+      "start": 2,
+      "len": 1,
+      "speaker": "Ray",
+      "color": "#c4b2ff",
+      "text": "Who’s there?? 😳",
+      "speed": 40,
+      "chat": true,
+      "actions": []
+     },
+     {
+      "id": "c_37",
+      "start": 3,
+      "len": 1,
+      "speaker": "Unknown",
+      "color": "#ffffff",
+      "text": "Come to the fountain at midnight. Alone.",
+      "speed": 40,
+      "chat": true,
+      "actions": []
+     },
+     {
+      "id": "c_38",
+      "start": 4,
+      "len": 1,
+      "speaker": "",
+      "color": "#ffffff",
+      "text": "To be continued. Keep building!",
+      "speed": 40,
+      "actions": []
+     }
+    ],
+    "choice": [],
+    "music": [],
+    "voice": [],
+    "sfx": []
+   }
+  },
+  {
+   "id": "sp",
+   "type": "story",
+   "name": "Extra · Parallax test",
+   "x": 960,
+   "y": 480,
+   "beats": 3,
+   "next": null,
+   "tracks": {
+    "bg": [
+     {
+      "id": "c_39",
+      "start": 0,
+      "len": 3,
+      "asset": "a_par_himmel",
+      "trans": "fade",
+      "dur": 0.6,
+      "depth": 0,
+      "layers": [
+       {
+        "asset": "a_par_wolken",
+        "depth": 0.15,
+        "front": false,
+        "tile": {
+         "on": true,
+         "dir": "left",
+         "speed": 2.5,
+         "size": 100,
+         "mirror": false
+        }
+       },
+       {
+        "asset": "a_par_berge",
+        "depth": 0.3,
+        "front": false
+       },
+       {
+        "asset": "a_par_huegel",
+        "depth": 0.65,
+        "front": false
+       },
+       {
+        "asset": "a_par_vorne",
+        "depth": 1.5,
+        "front": true
+       }
+      ]
+     }
+    ],
+    "char1": [
+     {
+      "id": "c_40",
+      "start": 0,
+      "len": 3,
+      "asset": "a_ray",
+      "x": 50,
+      "scale": 62,
+      "trans": "cut",
+      "dur": 0,
+      "idle": "none",
+      "name": "Ray"
+     }
+    ],
+    "char2": [],
+    "fx": [],
+    "cam": [
+     {
+      "id": "c_41",
+      "start": 0,
+      "len": 3,
+      "zoom": 125,
+      "panX": -12,
+      "panY": 0,
+      "rot": 0,
+      "shake": 0,
+      "dur": 0,
+      "ease": "ease-in-out",
+      "keys": [
+       {
+        "beat": 2,
+        "zoom": 125,
+        "panX": 12,
+        "panY": 0,
+        "rot": 0,
+        "dur": 3,
+        "ease": "ease-in-out"
+       }
+      ]
+     }
+    ],
+    "video": [],
+    "dialog": [],
+    "choice": [],
+    "music": [],
+    "voice": [],
+    "sfx": []
+   }
+  },
+  {
+   "id": "h_1gou9",
+   "type": "hub",
+   "name": "Market square",
+   "x": 204.35556059839192,
+   "y": 165.2951949597497,
+   "bg": "a_bg_hof",
+   "music": null,
+   "objects": [],
+   "loc": {
+    "unlock": "start",
+    "whenLocked": "hidden"
+   },
+   "events": []
+  },
+  {
+   "id": "h_1hq6b",
+   "type": "hub",
+   "name": "Old harbor",
+   "x": 189.82661242608765,
+   "y": 204.87550497067303,
+   "bg": "a_bg_keller",
+   "music": null,
+   "objects": [],
+   "loc": {
+    "unlock": "action",
+    "whenLocked": "visible",
+    "lockText": "Only after chapter 2"
+   },
+   "events": []
+  }
+ ],
+ "counter": 57,
+ "vars": [
+  {
+   "id": "v_vertrauen",
+   "name": "Trust Ray",
+   "type": "number",
+   "start": 0,
+   "note": "Rises when you help Ray"
+  },
+  {
+   "id": "v_tuer",
+   "name": "Door picked",
+   "type": "flag",
+   "start": false,
+   "note": ""
+  }
+ ],
+ "items": [
+  {
+   "id": "it_dietrich",
+   "name": "Lockpick",
+   "cat": "Tools",
+   "stack": true,
+   "max": 10,
+   "value": 15,
+   "desc": "Bends, but rarely breaks. Mostly.",
+   "image": "a_i_dietrich"
+  },
+  {
+   "id": "it_trank",
+   "name": "Healing potion",
+   "cat": "Potions",
+   "stack": true,
+   "max": 5,
+   "value": 40,
+   "desc": "Tastes of cherries and trouble.",
+   "image": "a_i_trank"
+  },
+  {
+   "id": "it_ring",
+   "name": "Gold ring",
+   "cat": "Treasures",
+   "stack": false,
+   "max": 1,
+   "value": 120,
+   "desc": "Engraved: “For R.”",
+   "image": "a_i_ring"
+  },
+  {
+   "id": "it_brief",
+   "name": "Sealed letter",
+   "cat": "Quest",
+   "stack": false,
+   "max": 1,
+   "value": 0,
+   "desc": "The seal bears the lord of the castle’s crest.",
+   "image": "a_i_brief"
+  }
+ ],
+ "currencies": [
+  {
+   "id": "cur_gold",
+   "name": "Gold",
+   "color": "#e8c86a",
+   "start": 5,
+   "max": 99999,
+   "image": "a_c_gold"
+  },
+  {
+   "id": "cur_gem",
+   "name": "Gems",
+   "color": "#6ad0c8",
+   "start": 0,
+   "max": 999,
+   "image": "a_c_gem"
+  }
+ ],
+ "lootTables": [
+  {
+   "id": "lt_truhe",
+   "name": "Chest in the quarters",
+   "mode": "seed",
+   "maxDraws": 2,
+   "once": true,
+   "entries": [
+    {
+     "kind": "money",
+     "ref": "cur_gold",
+     "min": 10,
+     "max": 40,
+     "chance": 100,
+     "guaranteed": true,
+     "conds": []
+    },
+    {
+     "kind": "item",
+     "ref": "it_trank",
+     "min": 1,
+     "max": 2,
+     "chance": 45,
+     "guaranteed": false,
+     "conds": []
+    },
+    {
+     "kind": "item",
+     "ref": "it_brief",
+     "min": 1,
+     "max": 1,
+     "chance": 35,
+     "guaranteed": false,
+     "conds": []
+    },
+    {
+     "kind": "item",
+     "ref": "it_ring",
+     "min": 1,
+     "max": 1,
+     "chance": 8,
+     "guaranteed": false,
+     "conds": []
+    },
+    {
+     "kind": "money",
+     "ref": "cur_gem",
+     "min": 1,
+     "max": 3,
+     "chance": 20,
+     "guaranteed": false,
+     "conds": []
+    }
+   ]
+  }
+ ],
+ "inventory": {
+  "title": "Inventory",
+  "cols": 6,
+  "rows": 3,
+  "bg": null,
+  "slot": null,
+  "showMoney": true,
+  "hudMoney": true,
+  "enabled": true
+ },
+ "languages": [
+  "en",
+  "de"
+ ],
+ "translations": {
+  "de": {
+   "c_5": {
+    "text": "Psst … hier unten schläft nie jemand richtig.",
+    "src": "Psst … nobody ever really sleeps down here.",
+    "ok": true
+   },
+   "c_6": {
+    "text": "Die Tür da vorne hat nur ein altes Schloss.",
+    "src": "The door up ahead only has an old lock.",
+    "ok": true
+   },
+   "c_7": {
+    "text": "Das krieg ich in zehn Sekunden auf. Hier, nimm den Ersatz-Dietrich.",
+    "src": "I can open it in ten seconds. Here, take the spare lockpick.",
+    "ok": true
+   },
+   "c_8": {
+    "text": "Wer ist da? {shake}Zeig dich!{/shake}",
+    "src": "Who’s there? {shake}Show yourself!{/shake}",
+    "ok": true
+   },
+   "c_9": {
+    "text": "Mist. Was jetzt?",
+    "src": "Damn. What now?",
+    "ok": true
+   },
+   "opt_knacken": {
+    "text": "Schloss knacken",
+    "src": "Pick the lock",
+    "ok": true
+   },
+   "opt_ablenken": {
+    "text": "Wache ablenken",
+    "src": "Distract the guard",
+    "ok": true
+   },
+   "opt_bestechen": {
+    "text": "Wache bestechen (20 Gold)",
+    "src": "Bribe the guard (20 gold)",
+    "ok": true
+   },
+   "ln_tut1": {
+    "text": "Willkommen im Quartier der Gilde!",
+    "src": "Welcome to the guild’s quarters!",
+    "ok": true
+   },
+   "name:Wache": {
+    "text": "Wache",
+    "src": "Guard",
+    "ok": true
+   },
+   "menu:title": {
+    "text": "Die Diebesgilde",
+    "src": "The Thieves’ Guild",
+    "ok": true
+   },
+   "menu:mb_new": {
+    "text": "Neues Spiel",
+    "src": "New game",
+    "ok": true
+   },
+   "menu:mb_continue": {
+    "text": "Fortsetzen",
+    "src": "Continue",
+    "ok": true
+   },
+   "menu:mb_load": {
+    "text": "Laden",
+    "src": "Load",
+    "ok": true
+   },
+   "menu:mb_settings": {
+    "text": "Einstellungen",
+    "src": "Settings",
+    "ok": true
+   },
+   "menu:mb_quit": {
+    "text": "Beenden",
+    "src": "Quit",
+    "ok": true
+   }
+  }
+ },
+ "rigs": {
+  "a_ray": {
+   "template": "biped",
+   "bones": [
+    {
+     "id": "b_bq38v7",
+     "name": "Hüfte",
+     "parent": null,
+     "hx": 0.49833333333333335,
+     "hy": 0.6055200000000001,
+     "tx": 0.49833333333333335,
+     "ty": 0.42712,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_2rrmbr",
+     "name": "Brust",
+     "parent": "b_bq38v7",
+     "hx": 0.49833333333333335,
+     "hy": 0.42712,
+     "tx": 0.49833333333333335,
+     "ty": 0.32008,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_l5sc8h",
+     "name": "Hals",
+     "parent": "b_2rrmbr",
+     "hx": 0.49833333333333335,
+     "hy": 0.32008,
+     "tx": 0.49833333333333335,
+     "ty": 0.25764000000000004,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_d8nez3",
+     "name": "Kopf",
+     "parent": "b_l5sc8h",
+     "hx": 0.49833333333333335,
+     "hy": 0.25764000000000004,
+     "tx": 0.49833333333333335,
+     "ty": 0.12384,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_7s0ftc",
+     "name": "Schulter L",
+     "parent": "b_2rrmbr",
+     "hx": 0.49833333333333335,
+     "hy": 0.33792,
+     "tx": 0.351,
+     "ty": 0.35576,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_26st4q",
+     "name": "Oberarm L",
+     "parent": "b_7s0ftc",
+     "hx": 0.351,
+     "hy": 0.35576,
+     "tx": 0.29943333333333333,
+     "ty": 0.5074000000000001,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_ewfmuu",
+     "name": "Unterarm L",
+     "parent": "b_26st4q",
+     "hx": 0.29943333333333333,
+     "hy": 0.5074000000000001,
+     "tx": 0.28470000000000006,
+     "ty": 0.65904,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_kk6kw1",
+     "name": "Oberschenkel L",
+     "parent": "b_bq38v7",
+     "hx": 0.49833333333333335,
+     "hy": 0.6055200000000001,
+     "tx": 0.4320333333333334,
+     "ty": 0.80176,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_8pssbz",
+     "name": "Unterschenkel L",
+     "parent": "b_kk6kw1",
+     "hx": 0.4320333333333334,
+     "hy": 0.80176,
+     "tx": 0.4246666666666667,
+     "ty": 0.98016,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_g8x3fx",
+     "name": "Schulter R",
+     "parent": "b_2rrmbr",
+     "hx": 0.49833333333333335,
+     "hy": 0.33792,
+     "tx": 0.6456666666666666,
+     "ty": 0.35576,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_2629b7",
+     "name": "Oberarm R",
+     "parent": "b_g8x3fx",
+     "hx": 0.6456666666666666,
+     "hy": 0.35576,
+     "tx": 0.6972333333333334,
+     "ty": 0.5074000000000001,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_cv705n",
+     "name": "Unterarm R",
+     "parent": "b_2629b7",
+     "hx": 0.6972333333333334,
+     "hy": 0.5074000000000001,
+     "tx": 0.7119666666666667,
+     "ty": 0.65904,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_bqkai0",
+     "name": "Oberschenkel R",
+     "parent": "b_bq38v7",
+     "hx": 0.49833333333333335,
+     "hy": 0.6055200000000001,
+     "tx": 0.5646333333333333,
+     "ty": 0.80176,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_hpj0f9",
+     "name": "Unterschenkel R",
+     "parent": "b_bqkai0",
+     "hx": 0.5646333333333333,
+     "hy": 0.80176,
+     "tx": 0.5720000000000001,
+     "ty": 0.98016,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    }
+   ],
+   "pins": [
+    {
+     "x": 0.4246666666666667,
+     "y": 0.98908
+    },
+    {
+     "x": 0.5720000000000001,
+     "y": 0.98908
+    }
+   ],
+   "global": {
+    "breathe": {
+     "on": true,
+     "amp": 2,
+     "speed": 3.6
+    },
+    "sway": {
+     "on": true,
+     "amp": 0.8,
+     "speed": 6
+    },
+    "random": 0.3
+   },
+   "grid": 40,
+   "bbox": {
+    "x": 0.13,
+    "y": 0.106,
+    "w": 0.7366666666666667,
+    "h": 0.892
+   }
+  },
+  "a_wache": {
+   "template": "biped",
+   "bones": [
+    {
+     "id": "b_0l090n",
+     "name": "Hüfte",
+     "parent": null,
+     "hx": 0.5116666666666667,
+     "hy": 0.61168,
+     "tx": 0.5116666666666667,
+     "ty": 0.43607999999999997,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_sx09vj",
+     "name": "Brust",
+     "parent": "b_0l090n",
+     "hx": 0.5116666666666667,
+     "hy": 0.43607999999999997,
+     "tx": 0.5116666666666667,
+     "ty": 0.33072,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_c2lth7",
+     "name": "Hals",
+     "parent": "b_sx09vj",
+     "hx": 0.5116666666666667,
+     "hy": 0.33072,
+     "tx": 0.5116666666666667,
+     "ty": 0.26926,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_jtweih",
+     "name": "Kopf",
+     "parent": "b_c2lth7",
+     "hx": 0.5116666666666667,
+     "hy": 0.26926,
+     "tx": 0.5116666666666667,
+     "ty": 0.13756,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_6w2ak0",
+     "name": "Schulter L",
+     "parent": "b_sx09vj",
+     "hx": 0.5116666666666667,
+     "hy": 0.34828000000000003,
+     "tx": 0.3443333333333333,
+     "ty": 0.36584000000000005,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_kcgevc",
+     "name": "Oberarm L",
+     "parent": "b_6w2ak0",
+     "hx": 0.3443333333333333,
+     "hy": 0.36584000000000005,
+     "tx": 0.28576666666666667,
+     "ty": 0.5151,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_n7xplo",
+     "name": "Unterarm L",
+     "parent": "b_kcgevc",
+     "hx": 0.28576666666666667,
+     "hy": 0.5151,
+     "tx": 0.26903333333333335,
+     "ty": 0.66436,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_rr0wu0",
+     "name": "Oberschenkel L",
+     "parent": "b_0l090n",
+     "hx": 0.5116666666666667,
+     "hy": 0.61168,
+     "tx": 0.4363666666666667,
+     "ty": 0.80484,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_o7xscj",
+     "name": "Unterschenkel L",
+     "parent": "b_rr0wu0",
+     "hx": 0.4363666666666667,
+     "hy": 0.80484,
+     "tx": 0.428,
+     "ty": 0.98044,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_j90bdm",
+     "name": "Schulter R",
+     "parent": "b_sx09vj",
+     "hx": 0.5116666666666667,
+     "hy": 0.34828000000000003,
+     "tx": 0.679,
+     "ty": 0.36584000000000005,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_vb6bu8",
+     "name": "Oberarm R",
+     "parent": "b_j90bdm",
+     "hx": 0.679,
+     "hy": 0.36584000000000005,
+     "tx": 0.7375666666666667,
+     "ty": 0.5151,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_ebnap7",
+     "name": "Unterarm R",
+     "parent": "b_vb6bu8",
+     "hx": 0.7375666666666667,
+     "hy": 0.5151,
+     "tx": 0.7543000000000001,
+     "ty": 0.66436,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_n34ag0",
+     "name": "Oberschenkel R",
+     "parent": "b_0l090n",
+     "hx": 0.5116666666666667,
+     "hy": 0.61168,
+     "tx": 0.5869666666666666,
+     "ty": 0.80484,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    },
+    {
+     "id": "b_f5yhkd",
+     "name": "Unterschenkel R",
+     "parent": "b_n34ag0",
+     "hx": 0.5869666666666666,
+     "hy": 0.80484,
+     "tx": 0.5953333333333334,
+     "ty": 0.98044,
+     "kind": "body",
+     "motion": {
+      "type": "none",
+      "amp": 8,
+      "speed": 2.5,
+      "phase": 0
+     },
+     "physics": {
+      "on": false,
+      "stiff": 0.5,
+      "damp": 0.3,
+      "wind": 0
+     }
+    }
+   ],
+   "pins": [
+    {
+     "x": 0.428,
+     "y": 0.98922
+    },
+    {
+     "x": 0.5953333333333334,
+     "y": 0.98922
+    }
+   ],
+   "global": {
+    "breathe": {
+     "on": true,
+     "amp": 2,
+     "speed": 3.6
+    },
+    "sway": {
+     "on": true,
+     "amp": 0.8,
+     "speed": 6
+    },
+    "random": 0.3
+   },
+   "grid": 40
+  }
+ },
+ "blinks": {
+  "a_ray": {
+   "on": true,
+   "mode": "mask",
+   "eyes": [
+    {
+     "x": 0.4133,
+     "y": 0.282,
+     "w": 0.0467,
+     "h": 0.036
+    },
+    {
+     "x": 0.54,
+     "y": 0.282,
+     "w": 0.0467,
+     "h": 0.036
+    }
+   ],
+   "color": "#e9d6c4",
+   "lash": "#2a2440",
+   "min": 2.2,
+   "max": 5,
+   "dur": 0.16,
+   "double": 0.25
+  }
+ },
+ "plugins": {
+  "schlossknacken.js": {
+   "enabled": true
+  },
+  "jobs.js": {
+   "enabled": true,
+   "hash": "1e08ad44"
+  },
+  "minispiele.js": {
+   "enabled": true,
+   "hash": "dd6b9029"
+  }
+ },
+ "mainMenu": {
+  "enabled": true,
+  "bg": "a_bg_gilde",
+  "bgLook": {
+   "vignette": 55,
+   "styles": {
+    "blur": {
+     "on": true,
+     "amount": 3
+    }
+   },
+   "kenburns": true,
+   "zoom": 110
+  },
+  "music": "a_musik",
+  "title": "The Thieves’ Guild",
+  "titleColor": "#f3e2b8",
+  "titleSize": 10,
+  "titleY": 24,
+  "titleFont": "asset:a_font_cinzel",
+  "logo": null,
+  "logoW": 30,
+  "buttons": [
+   {
+    "id": "mb_new",
+    "label": "New game",
+    "action": "new",
+    "x": 50,
+    "y": 50,
+    "w": 26
+   },
+   {
+    "id": "mb_continue",
+    "label": "Continue",
+    "action": "continue",
+    "x": 50,
+    "y": 59,
+    "w": 26
+   },
+   {
+    "id": "mb_load",
+    "label": "Load",
+    "action": "load",
+    "x": 50,
+    "y": 68,
+    "w": 26
+   },
+   {
+    "id": "mb_settings",
+    "label": "Settings",
+    "action": "settings",
+    "x": 50,
+    "y": 77,
+    "w": 26
+   },
+   {
+    "id": "mb_quit",
+    "label": "Quit",
+    "action": "quit",
+    "x": 50,
+    "y": 86,
+    "w": 26
+   }
+  ],
+  "btn": {
+   "bg": "#1a1420",
+   "alpha": 80,
+   "color": "#f3e2b8",
+   "border": "#c9a24a",
+   "radius": 1.4,
+   "size": 3.4,
+   "hover": "glow"
+  }
+ },
+ "theme": {
+  "bubble": {
+   "preset": "dunkel"
+  },
+  "speakers": {
+   "Guard": {
+    "preset": "duester",
+    "font": "asset:a_font_cinzel",
+    "size": 3.4
+   }
+  },
+  "choice": {
+   "anim": "pop"
+  },
+  "sys": {
+   "titleFont": "asset:a_font_cinzel"
+  },
+  "gain": {},
+  "sounds": {
+   "click": "a_klick",
+   "vol": 45
+  },
+  "cursor": {},
+  "fonts": {},
+  "logo": {},
+  "presets": [],
+  "focus": {
+   "on": true,
+   "dim": 35
+  }
+ },
+ "mouths": {
+  "a_ray": {
+   "on": true,
+   "mode": "mask",
+   "rect": {
+    "x": 0.445,
+    "y": 0.343,
+    "w": 0.112,
+    "h": 0.052
+   },
+   "color": "#3a1418",
+   "lip": ""
+  },
+  "a_wache": {
+   "on": true,
+   "mode": "mask",
+   "rect": {
+    "x": 0.432,
+    "y": 0.376,
+    "w": 0.135,
+    "h": 0.056
+   },
+   "color": "#2a1012",
+   "lip": ""
+  }
+ },
+ "glossary": [
+  {
+   "id": "gl_gilde",
+   "term": "Guild",
+   "alt": "Thieves’ Guild",
+   "text": "The Thieves’ Guild of Old Brunnstadt. Officially it doesn’t exist; unofficially it owns half the lower town.",
+   "image": "a_bg_gilde"
+  }
+ ],
+ "chat": {
+  "me": "Ray"
+ },
+ "audioMix": {
+  "on": true,
+  "duck": 45
+ },
+ "schema": 1,
+ "resolution": {
+  "w": 1920,
+  "h": 1080
+ },
+ "figures": [],
+ "anims": [],
+ "poses": [],
+ "time": {
+  "enabled": true,
+  "slots": [
+   "Morning",
+   "Noon",
+   "Evening",
+   "Night"
+  ],
+  "days": [
+   "Monday",
+   "Tuesday",
+   "Wednesday",
+   "Thursday",
+   "Friday",
+   "Saturday",
+   "Sunday"
+  ],
+  "startDay": 0,
+  "startSlot": 0,
+  "hud": true,
+  "autoDaytime": true,
+  "dayMap": {}
+ },
+ "economy": {
+  "enabled": true
+ },
+ "shops": [],
+ "pluginData": {
+  "jobs": {
+   "jobs": [],
+   "promotion": false
+  }
+ },
+ "relations": {
+  "enabled": true,
+  "gifts": false,
+  "chars": [],
+  "ladder": [
+   {
+    "name": "Stranger",
+    "min": 0
+   },
+   {
+    "name": "Acquaintance",
+    "min": 20
+   },
+   {
+    "name": "Friend",
+    "min": 40
+   },
+   {
+    "name": "Close",
+    "min": 70
+   },
+   {
+    "name": "In love",
+    "min": 100
+   }
+  ],
+  "showNumbers": true,
+  "rewards": "show",
+  "hideUnmet": true,
+  "notify": true,
+  "giftPts": {
+   "love": 10,
+   "like": 5,
+   "neutral": 1,
+   "dislike": -5,
+   "hate": -12
+  },
+  "giftLimit": "scene",
+  "diminish": true
+ },
+ "engine":"0.6.7",
+ "world": {
+  "enabled": true,
+  "home": "hub",
+  "travel": 1,
+  "freeAtStart": true,
+  "maps": [
+   {
+    "id": "map1",
+    "name": "Old Brunnstadt",
+    "image": "a_worldmap",
+    "nightImage": null,
+    "parent": null,
+    "pins": [
+     {
+      "id": "pin1",
+      "loc": "hub",
+      "x": 22,
+      "y": 48,
+      "icon": null,
+      "cost": null
+     },
+     {
+      "id": "pin2",
+      "loc": "h_1gou9",
+      "x": 50,
+      "y": 44,
+      "icon": null,
+      "cost": null
+     },
+     {
+      "id": "pin3",
+      "loc": "h_1hq6b",
+      "x": 58,
+      "y": 66,
+      "icon": null,
+      "cost": null
+     }
+    ]
+   }
+  ],
+  "events": [],
+  "hudMap": true,
+  "hudHome": true
+ },
+ "quests": {
+  "enabled": true,
+  "list": [
+   {
+    "id": "qr1",
+    "who": "story",
+    "name": "Into the guild",
+    "single": false,
+    "startMode": "auto",
+    "start": [],
+    "reward": [],
+    "quests": [
+     {
+      "id": "qq1",
+      "name": "Get past the guard",
+      "desc": "The cellar door is the only way in.",
+      "order": "one",
+      "conds": [],
+      "fail": [],
+      "reward": [],
+      "steps": [
+       {
+        "id": "qs_1ippm",
+        "name": "Pick the lock",
+        "hint": "",
+        "conds": [
+         {
+          "type": "seen",
+          "scene": "s2"
+         }
+        ],
+        "reward": [],
+        "hidden": false
+       },
+       {
+        "id": "qs_1ju3d",
+        "name": "Distract the guard",
+        "hint": "",
+        "conds": [
+         {
+          "type": "seen",
+          "scene": "s3"
+         }
+        ],
+        "reward": [],
+        "hidden": false
+       }
+      ]
+     },
+     {
+      "id": "qq2",
+      "name": "Report to the guild",
+      "desc": "Find the guild quarters.",
+      "order": "seq",
+      "conds": [
+       {
+        "type": "seen",
+        "scene": "hub"
+       }
+      ],
+      "fail": [],
+      "reward": [],
+      "steps": []
+     }
+    ]
+   },
+   {
+    "id": "qr2",
+    "who": "Ray",
+    "name": "Ray’s past",
+    "single": false,
+    "startMode": "auto",
+    "start": [],
+    "reward": [],
+    "quests": [
+     {
+      "id": "qq3",
+      "name": "Searching for clues",
+      "desc": "Ray never talks about where she grew up.",
+      "order": "seq",
+      "conds": [],
+      "fail": [],
+      "reward": [],
+      "steps": [
+       {
+        "id": "qs_1kw6y",
+        "name": "Ask the merchant",
+        "hint": "",
+        "conds": [
+         {
+          "type": "seen",
+          "scene": "s4"
+         }
+        ],
+        "reward": [],
+        "hidden": false
+       },
+       {
+        "id": "qs_1lbfn",
+        "name": "Visit the old harbor",
+        "hint": "",
+        "conds": [
+         {
+          "type": "seen",
+          "scene": "h_1hq6b"
+         }
+        ],
+        "reward": [],
+        "hidden": false
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "notify": {
+   "new": {
+    "pos": "top",
+    "anim": "slide",
+    "out": "fade",
+    "dur": 3,
+    "text": "{quest}"
+   },
+   "step": {
+    "pos": "topright",
+    "anim": "slide",
+    "out": "fade",
+    "dur": 2.2,
+    "text": "{abschnitt}"
+   },
+   "done": {
+    "pos": "center",
+    "anim": "pop",
+    "out": "fade",
+    "dur": 3.2,
+    "text": "{quest}"
+   },
+   "series": {
+    "pos": "center",
+    "anim": "pop",
+    "out": "fade",
+    "dur": 4.2,
+    "text": "{reihe}"
+   },
+   "fail": {
+    "pos": "center",
+    "anim": "pop",
+    "out": "shatter",
+    "dur": 3,
+    "text": "{quest}"
+   }
+  },
+  "key": "q"
+ }
+}
