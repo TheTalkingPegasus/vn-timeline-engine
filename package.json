@@ -1,0 +1,35 @@
+{
+  "name": "vn-timeline-engine",
+  "version": "0.6.12",
+  "description": "Free visual novel engine in the style of a video editor (timeline), with plugins. English and German interface.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-packager . \"VN Timeline Engine\" --platform=win32 --arch=x64 --out=dist --overwrite --extra-resource=tools/rcedit-x64.exe --extra-resource=tools/rcedit-LICENSE.txt --ignore=^/dist --ignore=^/out --ignore=^/tools --ignore=^/docs --ignore=^/tests",
+    "test": "electron . --no-sandbox --selftest"
+  },
+  "keywords": [
+    "visual-novel",
+    "vn",
+    "engine",
+    "electron",
+    "timeline",
+    "game-engine",
+    "dating-sim"
+  ],
+  "author": "The Talking Pegasus",
+  "license": "MIT",
+  "devDependencies": {
+    "@electron/packager": "^20.3.0",
+    "electron": "^45.1.0"
+  },
+  "productName": "VN Timeline Engine",
+  "homepage": "https://github.com/YOUR-GITHUB-NAME/vn-timeline-engine",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR-GITHUB-NAME/vn-timeline-engine.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YOUR-GITHUB-NAME/vn-timeline-engine/issues"
+  }
+}

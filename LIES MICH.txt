@@ -1,0 +1,316 @@
+VN Timeline Engine · Prototyp 0.6.12
+====================================
+(English: see README.txt)
+
+STARTEN (Windows)
+1. Den ganzen Ordner aus der ZIP entpacken (nicht direkt aus der ZIP starten).
+2. "VN Timeline Engine.exe" doppelklicken.
+   Windows zeigt beim ersten Start evtl. "Der Computer wurde durch Windows geschützt",
+   weil das Programm nicht signiert ist: "Weitere Informationen" → "Trotzdem ausführen".
+3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
+   (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
+   Versionen lieber neu anlegen.
+
+NEU IN 0.6.12 · Design-Vorlagen für die Spielsysteme
+- Design → Spielsysteme: Jedes System hat eigene, passende Vorlagen, z. B. Skilltree "Sternenhimmel",
+  "Druiden-Baum", "Altes Lehrbuch", "Tech-Upgrade"; Kampf "Klassisch blau (RPG)", "Dunkler Kerker",
+  "Goldene Arena", "Raumschiff"; Aufbau "Königreich", "Bauernhof", "Weltraum-Kolonie", "Kontorbuch";
+  dazu Läden, Beziehungen, Geschenke, Questlog, Quest-Einblendungen, Weltkarte, Erfolge, Zeit-Anzeige
+  und Minispiele.
+- Neue Hintergrund-Muster ohne Bilddateien (Pergament, Holz, Stein, Leder, Sternenhimmel, liniertes
+  Papier, Pünktchen, Geschenkpapier-Streifen, Sci-Fi-Raster, Glas, Seekarte), Randbreite und Leuchten.
+- Aufbau-Optionen: Form der Skills (rund, eckig, Raute), Verbindungen (durchgezogen, gestrichelt,
+  leuchtend), Lage des Detail-Felds; Kampf-Befehlsleiste oben oder unten, Befehle als Liste oder Spalten,
+  Retro-Balken; Aufbau als Karten oder Liste, Ziele links/rechts/aus; Questlog-Reiter als Knöpfe oder
+  unterstrichen.
+- Die Design-Vorschau zeigt die echten Bildschirme (Questlog, Weltkarte, Beziehungen, Geschenke,
+  Einblendungen, Erfolg-Meldung) – mit Beispieldaten, solange das Projekt noch keine eigenen hat.
+- Aufbau-Korrekturen aus einer zweiten Prüfung: dieselbe Währung zweimal bei den Kosten wird
+  zusammengezählt, die Startstufe ist auf die Höchststufe begrenzt, die Zeitvorschau führt keine
+  Plugin-Aktionen oder Hooks mehr aus.
+
+NEU IN 0.6.11 · Aufbau (Idle)
+- Neues Spielsystem "Aufbau" (Spielsysteme → Aufbau): Gebäude produzieren Rohstoffe (deine
+  Währungen), werden mit steigenden Kosten ausgebaut und können von der Geschichte oder anderen
+  Gebäuden abhängen.
+- Produktion in Echtzeit beim Spielen, auch bei geschlossenem Spiel (gedeckelt, mit Prozentsatz) oder
+  in Spielzeit pro Tageszeit. Gebäude auf Wunsch anklickbar für sofortigen Ertrag.
+- Ziele der Reihe nach: Bedingungen (Rohstoffe, Gebäude-Stufen, beliebiges) und Aktionen beim
+  Erreichen, mit Meldung. Aufholbonus, wenn ein Ziel länger dauert als geplant.
+- Editor: Beispiel "Königreich" mit einem Klick, Zeitvorschau (wie lange ein sinnvoll spielender
+  Spieler pro Ziel braucht, Warnung ab einstellbaren Minuten), Probelauf mit Vorspulen, Problemliste.
+- Im Spiel: Taste K oder Pausenmenü, eigenes gestaltbares Fenster, Fortschrittsbalken fürs aktuelle
+  Ziel, "Während du weg warst"-Ertrag beim Laden.
+- Bedingungen "Gebäude-Stufe", "Aufbau-Ziel erreicht"; Aktionen "Aufbau öffnen", "Gebäude ausbauen
+  (geschenkt)", "Zeit überspringen (Produktion)". Skilltree-Bereich "Aufbau" (mehr Produktion,
+  billiger ausbauen, mehr pro Klick). Plugins: Hooks onBuild, onMilestone, Bonus-Schlüssel idle.*.
+
+NEU IN 0.6.10 · Stabilität
+Korrekturen aus der technischen Prüfung der 0.6.9, jede mit einem neuen automatischen Test:
+- Große Videos und Musik werden in Stücken gelesen statt ganz in den Speicher; Vorspulen in langen
+  Videos nutzt Dateibereiche.
+- Speichern zählt Änderungen mit: Was während des Speicherns geändert wird, steht nicht mehr fälschlich
+  als "Gespeichert" da, und beim Schließen des Fensters wird vorher alles Ausstehende gesichert.
+- Exportierte Spiele trennen ihre Spielstände pro Spiel (Titel + Projektkennung); Spielstände aus
+  älteren Versionen werden übernommen.
+- Beendete Ton-Elemente werden sofort aus der Tonverwaltung ausgetragen.
+- Die Leistungsprüfung langer Szenen schaut nur noch auf Schritte, an denen sich etwas ändert, und
+  merkt sich das Ergebnis.
+- Ein Kampf, der während der Befehlsauswahl geschlossen wird, endet sauber.
+- Plugins: Hook onUnload sowie ctx.listen, ctx.every, ctx.onCleanup – die Engine entfernt Ereignis-
+  Abfragen und Timer selbst, wenn ein Plugin neu geladen oder abgeschaltet wird. Plugin-Dateien werden
+  nur im Editor und nur als .js geschrieben.
+- Die Kampf-Simulation rechnet in kleinen Schritten mit Fortschrittsanzeige, der Editor bleibt bedienbar.
+
+NEU IN 0.6.9 · Kampf
+- Neues Spielsystem "Kampf" (Spielsysteme → Kampf): klassisch rundenbasiert in Seitenansicht,
+  Gruppe aus bis zu vier Helden gegen bis zu sechs Gegner. Gestartet wird mit der Aktion
+  "⚔ Kampf starten" an einem Dialog, einer Antwort oder einem Hub-Objekt.
+- Helden mit Stufen, Erfahrung und Wachstum; Fähigkeiten ab einer bestimmten Stufe. Gegner mit
+  Verhalten (zufällig, klug, greift die Schwächsten an, nur Angriff), EP, Geld und Loot-Tabellen.
+- Fähigkeiten: körperliche und magische Angriffe, Heilen, Wiederbeleben, Stärken und Schwächen,
+  ein oder alle Ziele, Elemente mit Schwächen und Resistenzen, MP-Kosten. Gegenstände können
+  heilen, MP auffüllen, wiederbeleben oder Schaden machen.
+- Einfache, austauschbare Animationen: Vorstürmen, Zaubern, Treffer, Hieb, Feuer, Eis, Blitz,
+  Steine, Licht, Schatten, Heilung; pro Fähigkeit eigenes Effekt-Bild und eigener Ton.
+  Schadenszahlen, kritische Treffer, Reihenfolge-Leiste.
+- Sieg, Niederlage und Flucht führen in eigene Szenen (sichtbar in den Pfaden). Nach einer
+  Niederlage: "Nochmal versuchen", "Nochmal im Story-Modus" oder "Aufgeben" (Spielende oder die
+  Geschichte geht weiter).
+- Story-Modus für leichtere Kämpfe (Einstellung für Spieler). Kampf-, Sieg- und Niederlage-Musik, Töne.
+- Editor: Beispiel mit einem Klick, Probekampf auf jeder Stufe, "100× simulieren" mit Siegchance
+  für zehn Stufen der Gruppe. Probleme werden aufgelistet.
+- Gruppen-Bildschirm (Taste G oder Pausenmenü). Bedingungen "Kampf gewonnen", "Kampf verloren oder
+  geflohen", "Held in der Gruppe", "Stufe eines Helden"; Aktionen "Kampf starten", "Held in die
+  Gruppe", "Held verlässt die Gruppe", "Gruppe heilen", "Erfahrung geben".
+- Skilltrees: neuer Bereich "Kampf" (Kampfwerte der Gruppe, mehr Erfahrung). Ein Held kann seine
+  Stufe in eine Variable schreiben, dann gibt ein Skilltree bei jedem Stufenaufstieg Punkte.
+- Plugins: Hooks onBattleStart, onBattleEnd, Bonus-Schlüssel combat.* (siehe PLUGINS.md).
+- Schmale Fenster: Der Projektname wird kürzer, statt die Knöpfe zu überdecken.
+
+NEU IN 0.6.8 · Skilltrees
+- Neues Spielsystem "Skilltrees" (Spielsysteme → Skilltrees): beliebig viele Bäume, jeder bezahlt mit
+  Geld, Punkten aus dem Level-Aufstieg (aus einer Variable) oder eigenen Punkten. Zurücksetzen mit
+  voller oder halber Erstattung oder gar nicht.
+- Skills mit Stufen, steigenden Kosten, Voraussetzungen (alle / eins davon), Story-Sperren
+  ("erst nach Kapitel 2"), versteckten und Meister-Skills. Vorlagen: zwei Äste, drei Äste, Ring.
+- Wirkungen greifen sofort: mehr Geld, billiger einkaufen, besser verkaufen, mehr Beziehungspunkte
+  (alle oder pro Figur), bessere Geschenke, mehr Lohn bei Jobs, schneller reisen, bessere
+  Minispiel-Ergebnisse, Werte, beliebige Aktionen. Bereiche pro Baum per Häkchen wählbar.
+- Editor: Skills auf einer Fläche verschieben und verbinden, Probleme werden aufgelistet (ohne Wirkung,
+  nicht erreichbar …), Gesamtkosten pro Baum, "▶ Ausprobieren" spielt den Baum mit Testgeld.
+- Im Spiel: Taste T oder Pausenmenü, eigenes gestaltbares Fenster (Design → Spielsysteme → Skilltree).
+- Bedingung "Skill gekauft", Aktionen "Skillpunkte geben", "Skill schenken", "Skilltree öffnen".
+- Plugins: ctx.bonus(Schlüssel, Wert), Hook onSkill, eigene Bereiche und Wirkungen (siehe PLUGINS.md).
+
+NEU IN 0.6.7 · Fundament
+- Projekt-Format mit Versionsnummer: Projekte aus älteren Versionen werden beim Öffnen automatisch
+  umgewandelt. Vorher legt die Engine eine Sicherung neben die Projektdatei
+  (z. B. "project.backup-format0.json"). Projekte aus einer NEUEREN Version fragen vor dem Öffnen nach.
+- Rückgängig: speichert pro Schritt nur, was sich geändert hat. Auch große Projekte haben jetzt
+  100 Schritte Verlauf (vorher bei großen Projekten nur rund 10) und es geht schneller.
+- Transkript: bleibt auch bei tausenden Zeilen flüssig (Zeilen werden beim Scrollen nachgeladen).
+- Text-Import (Knopf "⤓ Text" über der Timeline, Projekt ▾ oder Transkript): fertige Dialoge einfügen
+  als "Name: Text" oder als Ren'Py-Skript. Sprecher, Erzähler, Auswahlen ("> Antwort" bzw. menu) und
+  Szenen ("# Titel" bzw. label) werden erkannt, Ren'Py-Sprünge werden zu Verbindungen. Vorschau vor
+  dem Übernehmen, danach steht alles im Transkript.
+- Feste Testreihe (für Entwickler: "npm test"): 13 Projekte aus Version 0.3 bis heute werden geladen,
+  umgewandelt, in jeder Ansicht geöffnet, angespielt, gespeichert und als Web-Spiel exportiert.
+- Englische Oberfläche: Inhalte deines Projekts (Szenennamen, Dialoge, Dateinamen) werden nicht mehr
+  teilweise mitübersetzt.
+
+NEU IN 0.6.6 · Deutsch und Englisch
+- Die ganze Oberfläche gibt es jetzt auf Englisch und Deutsch: Menüs, Fenster, Hinweise, Tour,
+  Tutorial, Lernen, Meldungen und die Dialoge von Windows. Englisch ist die Startsprache.
+- Umschalten: auf dem Startbildschirm oben rechts (English / Deutsch) oder unter Projekt ▾ → Sprache.
+  Die Wahl wird gemerkt.
+- Neue Projekte, Beispiel-, Tutorial- und Lernprojekt werden in der gewählten Sprache angelegt
+  (Szenen, Dialoge, Gegenstände, Tageszeiten …). Bestehende Projekte bleiben, wie sie sind.
+- Die Menüs im Spiel (Speichern, Einstellungen, Questlog …) richten sich nach der Sprache des Spiels:
+  Ist das Spiel deutsch, sind sie deutsch, sonst englisch. Wechselt der Spieler die Spielsprache,
+  wechseln sie mit. Dialoge und Antworten werden dabei nie verändert.
+- PLUGINS.md gibt es auch auf Englisch (PLUGINS.en.md).
+
+NEU IN 0.6.5 · Das große Sortiment
+Für Spieler (alles in jedem Spiel automatisch dabei)
+- Verlauf: bereits gelesenen Text zurücklesen (Taste L oder Mausrad hoch), mit ▶ die Stimme nochmal hören.
+- Auto-Modus (Taste A) und Überspringen (Taste S oder Strg gedrückt halten). Überspringen hält bei
+  ungelesenem Text an (abschaltbar). Knöpfe „Auto · Skip · Verlauf“ oben rechts.
+- Lesen & Barrierefreiheit (Einstellungen): Auto-Tempo, Textgröße, deckende Textbox, ruhige Darstellung
+  (kein Wackeln), Untertitel für Geräusche, Vorlesen von Texten ohne Stimme.
+- Galerie: Bilder (CGs), Musikraum und Szenen zum erneut Ansehen – schalten sich beim Spielen frei.
+- Erfolge mit Symbol, geheimen Erfolgen und Einblendung. Gelten über alle Spielstände.
+- Werte (Stärke, Charme …) als Balken im Bildschirm „Werte“ (Taste C), auf Wunsch oben im Spiel.
+- Namen eingeben lassen (Aktion), im Text als {name}. Auch {Variable} funktioniert im Text.
+- Gegenstände benutzen (Heiltrank) und kombinieren (Seil + Haken), „Schlüssel auf Tür“ im Hub.
+- Wissen über Durchläufe (für Zeitschleifen): Aktion „Wissen merken“, Bedingung „Wissen“ und
+  „Szene je gesehen“.
+Welt & Orte (Spielsysteme → Übersicht einschalten)
+- Hub-Szenen werden zu Orten. Weltkarte (Taste M) mit Pins, Unterkarten (Welt → Stadt), Zuständen
+  (unbekannt, gesperrt mit Grund, geschlossen zu bestimmten Tageszeiten), „Du bist hier“, ♥/!-Markierungen,
+  Reisezeit und Reise-Animation. Zuhause mit Knopf „🏠 Zuhause“ (Taste H).
+- Ereignisse an Orten: Story-Szenen starten zur passenden Zeit am passenden Ort und kehren danach zurück
+  („↩ Zurück zum Ort“). Pflicht- und optionale Ereignisse, Freie Zeit an/aus per Aktion.
+- Pfade zeigen Orte (📍/🏠) und Ereignis-Linien, die Prüfung meldet Orte, die nie freigeschaltet werden.
+Questlog (Spielsysteme → Übersicht einschalten)
+- Questreihen → Quests → Abschnitte, für die Hauptstory und pro Figur. Zeilen: Figur/Story · Name ·
+  Bedingung zum Abschließen · Belohnung · Prüfung. Leere oder kaputte Felder werden rot markiert.
+- Abschnitte der Reihe nach, beliebig oder „einer reicht“; Belohnungen auf jeder Ebene; Scheitern per
+  Bedingung; Tipps für Spieler. Im Spiel Questlog mit Taste Q.
+- Einblendungen (Neue Quest, Abschnitt, Abgeschlossen, Reihe fertig, Gescheitert) frei gestaltbar:
+  Position, Größe, Animation, Dauer, Text mit Platzhaltern, Symbol, Sound, Jingle (Musik leiser, pausieren
+  oder darüber), eigene Jingles pro Reihe. Ausblenden auch als „Zersplittern“.
+- Beziehungs-Einblendung: Name, Leiste vom alten zum neuen Wert, Zahl/Herzen/Pfeil, Porträt, eigene
+  Stufen-Einblendung mit Jingle. Position und Größe frei (auch „neben der Figur“).
+- Neuer Szenen-Übergang „Bildschirm zerspringt“.
+Plugins
+- Eigene Bedingungen, Pausenmenü-Einträge mit Taste, HUD-Anzeige, {Platzhalter}, neue Hooks
+  (Antwort gewählt, Gegenstand erhalten/benutzt, Zeit, neuer Tag, Laden, Ort betreten), eigener Bereich
+  im Spielstand (ctx.store) und über alle Durchläufe (ctx.global). Siehe PLUGINS.md.
+Design
+- Design → Spielsysteme: neu dabei Erfolg-Meldung, Weltkarte, Questlog, alle Quest-Einblendungen und
+  die Beziehungs-Einblendung.
+
+NEU IN 0.6.4 · Korrekturen
+- Sicherheit nachgeschärft: Verknüpfungen (Symlinks) im Projektordner können nicht mehr nach draußen
+  zeigen. Der Export übernimmt keine Dateipfade aus der Projektdatei mehr ungeprüft. Ins Projekt kopiert
+  werden nur Dateien, die du selbst auswählst oder hineinziehst.
+- Richtigstellung zu 0.6.3: Dort stand, Plugins könnten nichts außerhalb des Projekts lesen. Das war zu
+  weit gefasst. Plugins sind Programmcode mit den Rechten der Oberfläche – installiere nur Plugins, denen
+  du vertraust (Abschnitt „Sicherheit“ in PLUGINS.md).
+- Bedingungen mit ungültigem Vergleich (z. B. aus beschädigten Daten) gelten als kaputt statt einen
+  Fehler auszulösen.
+- Mehrere Stimmen gleichzeitig: Die Musik bleibt leise, bis die LETZTE Stimme fertig ist. Jede Figur
+  bewegt den Mund zu ihrer eigenen Stimme. Neues Feld „Figur (Lippen)“ am Stimm-Clip, sonst automatisch
+  der Sprecher der Dialogzeile an dieser Stelle.
+
+NEU IN 0.6.3
+Sicherheit & Zuverlässigkeit
+- Dateizugriffe prüft jetzt das Hauptprogramm: Weder die Oberfläche noch ein Plugin kann außerhalb des
+  geöffneten Projektordners lesen oder schreiben. Ein exportiertes Spiel schreibt nur noch Spielstände.
+  Fremde Webseiten und neue Fenster lassen sich nicht mehr öffnen.
+- Stimmen: Beim Weiterklicken verstummen alle Stimmen eines Schritts, auch verzögerte, die noch gar nicht
+  angefangen haben. Vorher konnten zwei Stimmen übereinander laufen.
+- Bedingungen mit gelöschtem Bezug (Variable, Gegenstand, Szene, Figur …) gelten jetzt als NICHT erfüllt,
+  damit nichts versehentlich aufgeht. Die Pfade zeigen „⚠ kaputte Bedingung“ mit Liste zum Hinspringen,
+  der Bedingungs-Editor markiert die Zeile.
+- Sprecher-Skript enthält jetzt auch die Zeilen aus Hub-Ereignissen.
+Komfort
+- Kategorien verwalten (Spielsysteme → Inventar-Menü): anlegen, umbenennen (ändert alle Gegenstände mit),
+  sortieren, löschen. Bei Gegenständen gibt es eine Auswahlliste statt Freitext. Reiter „Alle“ abschaltbar.
+- Läden: Darstellung „Karten“ oder „Wie das Inventar“ (Fächer + Details), beide mit Kategorie-Reitern.
+- Design → Spielsysteme: Läden, Beziehungen, Geschenke, Zeit-Anzeige, Jobs und jedes Minispiel einzeln
+  mit Farben, Rahmen (9-Slice), Bild im Fenster, Hintergrund und Standard-Bildern (z. B. Memory-Rückseite).
+  Ein Bild direkt an der Aktion hat Vorrang. Rechtsklick auf so ein Fenster (Vorschau, Probelauf,
+  Spiel testen) → „Design ändern“. Plugins können eigene Designs anmelden (siehe PLUGINS.md).
+- Kapitel: Szenen in Ordnern sortieren (+ 📁, Szenen hineinziehen, auf-/zuklappen, Rechtsklick).
+  Suche über Szenennamen UND Dialogtexte, Antworten und Hub-Texte. Die Pfade können ein Kapitel
+  hervorheben und Suchtreffer markieren.
+- Minispiele-Plugin 1.2 und Jobs-Plugin 1.1 (Design-Unterstützung) – werden automatisch eingespielt.
+
+NEU IN 0.6.2
+- Spielsysteme → Minispiele zeigt jetzt alle sechs Minispiele mit Beschreibung und „▶ Ausprobieren“
+  (Probelauf direkt im Editor). Vorher waren dort nur die Kochrezepte zu sehen.
+- Mitgelieferte Plugins aktualisieren sich in bestehenden Projekten von selbst, solange du sie nicht
+  selbst geändert hast. Sonst erscheint im Reiter „Plugins“ ein Knopf „Neue Version einspielen“.
+- Partikel: Schnee, Staub, Blütenblätter und Glühwürmchen klebten oft in der linken oberen Ecke
+  (vor allem in der Vorschau im Editor) und waren dadurch kaum zu sehen. Behoben; dazu etwas
+  dichtere Standardwerte und Mindestgrößen, damit Partikel auch in kleinen Vorschauen sichtbar sind.
+
+NEU IN 0.6.1 · Wartung
+- Bones-Figuren ohne WebGL (alte Treiber, Remote-Desktop, VMs) rund 27× schneller; dauert ein Bild
+  trotzdem lange, zeichnet die Figur seltener, damit das Spiel flüssig bleibt.
+- Fehlende Dateien: Die Leistungs-Ampel einer Szene wird rot und nennt die Datei. Beim Exportieren
+  gibt es einen Hinweis. Ton-Fehler stehen im Protokoll der Entwickler-Konsole (^ oder F12).
+- Aufgeräumt: Der Spiel-Player ist in drei Dateien aufgeteilt (Ablauf, Ton, Menüs).
+
+NEU IN 0.6 · Lebenssimulation & Minispiele
+- Spielsysteme → Übersicht: alle Systeme mit Schaltern. Ausgeschaltet = unsichtbar in Editor und Spiel.
+- Zeit & Kalender: Tageszeiten und Wochentage frei benennbar, Aktion "Zeit vergehen lassen",
+  Bedingung "Tageszeit / Wochentag / Tag", Hintergründe passen ihre Tageszeit automatisch an.
+- Geld & Läden: Läden mit Preis, Vorrat und Verkauf. Aktion "Laden öffnen".
+- Beziehungen: Figuren mit Stufen (Fremd → Verliebt) und Belohnungen. Feld "♥ Beziehung" an jeder
+  Antwort, Bedingung "♥ Ray ab Stufe Freund", Bildschirm "Beziehungen" (Taste B, Pausenmenü).
+  Helfer: maximal erreichbare Punkte mit Warnung, "Woher kommen die Punkte?", F2-Regler,
+  "Test ab hier mit …", ♥ an Auswahl-Clips, ♥🔒 in den Pfaden.
+- Geschenke: verschenkbare Gegenstände mit Kategorien, Vorlieben pro Figur (liebt … verträgt nicht),
+  Reaktionen, Begrenzung pro Szene/Tag, abnehmende Wirkung. Spieler entdecken Vorlieben beim Schenken.
+- Mitgelieferte Plugins (in der Übersicht einschalten):
+  Jobs: Lohn, Dauer, Voraussetzungen, Zufallsereignisse, Minispiel, Beförderung mit Rängen.
+  Minispiele: Klick-Reflex, Memory, Puzzle, Kochen & Brauen (mit Rezeptbuch), Münzwurf,
+  Blütenblätter zupfen. Alle liefern ein Ergebnis 0–100 % (für Lohn, Variablen, Pfade).
+- Lernen: neues Thema "Lebenssimulation".
+
+NEU IN 0.5
+Stabilität & Leistung
+- Leistungs-Ampel über jeder Szene (Klick = Check mit Grafikspeicher, große Bilder verkleinern).
+- Im Spiel: Grafikqualität Auto/Niedrig/Mittel/Hoch/Ultra/Eigene, Bildrate begrenzen.
+  "Auto" regelt bei Ruckeln selbst herunter und später wieder hoch.
+- Entwickler-Konsole beim Testen: Taste ^ oder F12 (Bilder/s, Speicher, Fehler, Befehle).
+  Im fertigen Spiel nur, wenn im Export erlaubt.
+- Spielstände absturzsicher mit Sicherungskopie, Rückgängig nach Größe begrenzt,
+  nächste Szenen werden vorgeladen, mehr als 16 Bones-Figuren gleichzeitig möglich.
+Timeline & Ton
+- "+ Spur" unter der Timeline: weitere Figuren (Gruppenszenen), Musik/Atmo, Sounds, Stimmen,
+  Effekt-Ebenen. Spuren umbenennen, verschieben, stumm/solo/sperren/ausblenden, als Vorlage.
+- Ton-Einstellungen (Projekt ▾): Ausgabegerät für Vorschau und Test-Spiel getrennt,
+  Gesamtlautstärke, Mono. Im Spiel unter Einstellungen: Tonausgabe, Mono, Menü-Töne.
+Grafik
+- Endlos scrollen (Motion Tile) an Hintergrund und Parallax-Ebenen: Richtung, Tempo,
+  Kachelgröße, Ränder spiegeln. Vorlagen unter Effekte → Hintergrund.
+- Augen öffnen/schließen/blinzeln als Effekt und als Hintergrund-Übergang "Augen zu und auf".
+- Figuren → Bones → "Gewichte malen": festlegen, welche Teile mit einem Knochen mitgehen.
+Lernen
+- Startfenster und ?-Menü: "Lernen" mit 10 Themen. Läuft in einem eigenen Lernprojekt
+  (Dokumente/VN Timeline Engine/Lernprojekt), dein Projekt bleibt unberührt.
+- Links unter "Effekte": Rezepte wie Rückblende, Aufwachen, Explosion, Fahrt, Nachts im Regen
+  mit einem Klick an der aktuellen Stelle einfügen.
+
+
+NEU IN 0.4 (Kurzfassung)
+Design
+- Rechtsklick auf ein Objekt (Sprechblase, Figur, Hintergrund, Auswahl, Hub-Objekt, Menü-Button)
+  → "Design ändern …": Texturen austauschen, Farben, Rahmen.
+- Oben "Design": Projekt-Theme mit 6 Sprechblasen-Vorlagen (Hell, Dunkel, Düster, Pergament,
+  Comic, Neon), eigene Farben, eigene PNG-Rahmen per 9-Slice, Vorlagen speichern/teilen,
+  Sprechblase pro Sprecher und pro Zeile, Auswahl-Buttons, Systemfenster, Fundmeldung,
+  eigene Schriften (TTF/OTF/WOFF), UI-Sounds, Ducking, Mauszeiger, Studio-Logo.
+- Beim Spielstart erscheint kurz das Engine-Logo (Pflicht), optional dein Studio-Logo.
+Tutorial
+- "Tutorial starten" im Startfenster, ?-Knopf oben für Rundgang und Bereichs-Touren.
+Export
+- Exportieren öffnet ein Einstellungsfenster: Auflösung bis 4K, Seitenverhältnis, Anpassung
+  (Ränder/Füllen/Strecken), Start-Modus, WebP-Bilder, Opus-Audio, Name, Version, Icon.
+- Spielgröße steht immer unten links unter den Dateien (Klick = Aufteilung, Verkleinern).
+- Neue Projekte fragen nach der Spiel-Auflösung. Format-Vorschau über der Bühne.
+Werkzeuge
+- Keyframes für Figuren (Position, Höhe, Größe, Drehung, Deckkraft) mit Kurven.
+- Kamera-Spur: Zoom, Schwenk, Drehung, Wackeln. Parallax-Ebenen am Hintergrund.
+- Lippensync (Figuren → Lippensync: Mund markieren), Sprecher-Fokus, Sprecher-Porträt.
+- Ebenen-Figuren mit Ausdrücken und Outfits (Figuren → Ebenen & Outfits), auch per Variable.
+- Licht passend zur Szene, Tageszeit, Partikel (Regen, Schnee, Glühwürmchen …), Filter
+  (Rückblende, Schwarz-Weiß …), Masken-Übergänge, Videos auf der Timeline.
+- Text-Effekte (Zittern, Welle, Leuchten, Farbe, Pausen), Text synchron zur Stimme,
+  Handy-Chat-Modus, Zeitlimit-Auswahl, Glossar.
+- Stimm-Filter (Telefon, Funk, Höhle …), Musik-Übergänge, Untertitel-Export (SRT).
+- Links unter "Effekte": fertige Partikel, Filter und Kamerafahrten zum Hineinziehen.
+Animation
+- Oben "Animation": Figuren mit ihren Knochen animieren. Idle-Schleifen, Gesten,
+  Zwischensequenzen mit mehreren Figuren, Kamera und Ton. Zwiebelhaut, Posen, fertige
+  Bewegungen (Laufen, Nicken, Winken, Flügelschlag …).
+- Zwischensequenzen live im Spiel oder als Video (WebM) rendern.
+
+TASTEN
+Editor: Strg+S · Strg+Z / Strg+Y · Entf · Pfeil links/rechts · Bones: Enter beendet eine Kette
+Spiel:  Klick/Leertaste weiter · Esc Pausenmenü · I Inventar · F5/F9 Schnellspeichern/-laden · F2 Werte
+
+PROJEKTE
+Ein Projekt ist ein Ordner mit "project.json", "assets" und optional "plugins".
+Spielstände beim Testen landen im Projektordner unter ".test-saves".
+
+HINWEISE
+- Das fertige Windows-Spiel ist entpackt rund 300 MB groß (ca. 125 MB als ZIP). Das meiste
+  davon ist das Grundgerüst (Programm und Browser-Technik), das jedes Windows-Spiel braucht.
+  Das Web-Spiel ist viel kleiner.
+- Das Beispielprojekt enthält die freie Schrift "Cinzel" (SIL Open Font License, Lizenz im
+  assets-Ordner). Das Programm-Symbol der .exe wird mit rcedit gesetzt (MIT-Lizenz).
