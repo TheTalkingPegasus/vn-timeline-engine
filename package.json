@@ -24,12 +24,12 @@
     "electron": "^45.1.0"
   },
   "productName": "VN Timeline Engine",
-  "homepage": "https://github.com/YOUR-GITHUB-NAME/vn-timeline-engine",
+  "homepage": "https://github.com/TheTalkingPegasus/vn-timeline-engine",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YOUR-GITHUB-NAME/vn-timeline-engine.git"
+    "url": "https://github.com/TheTalkingPegasus/vn-timeline-engine.git"
   },
   "bugs": {
-    "url": "https://github.com/YOUR-GITHUB-NAME/vn-timeline-engine/issues"
+    "url": "https://github.com/TheTalkingPegasus/vn-timeline-engine/issues"
   }
 }
