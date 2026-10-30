@@ -40,6 +40,19 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
+      - name: Update-Suche im fertigen Programm prüfen
+        shell: bash
+        run: |
+          node -e "
+            const Module = require('module'); const orig = Module._load;
+            Module._load = function (r, ...a) { if (r === 'electron') return { app: {}, ipcMain: {}, net: {}, shell: {} }; return orig.call(this, r, ...a); };
+            const res = 'release/win-unpacked/resources';
+            const { resolveRepo } = require('./' + res + '/app/updater.js');
+            const r = resolveRepo(require('./' + res + '/app/package.json'), res);
+            console.log('Update-Quelle:', r);
+            if (r.owner !== 'TheTalkingPegasus' || r.repo !== 'vn-timeline-engine') { console.error('Update-Adresse fehlt im fertigen Programm'); process.exit(1); }
+          "
+
       - name: Text „Was ist neu?“ vorbereiten
         shell: bash
         run: |

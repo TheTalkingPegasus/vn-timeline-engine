@@ -1,6 +1,6 @@
 {
   "name": "vn-timeline-engine",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Free visual novel engine in the style of a video editor (timeline), with plugins. English and German interface.",
   "main": "main.js",
   "scripts": {

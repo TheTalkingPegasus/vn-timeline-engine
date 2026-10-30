@@ -8,7 +8,7 @@ const path = require('path');
 
 module.exports = function setupUpdater({ getWin, gameMode }) {
   const pkg = (() => { try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8')); } catch (e) { return {}; } })();
-  const pub = ((pkg.build && pkg.build.publish) || [])[0] || {};
+  const pub = Object.assign({}, resolveRepo(pkg, process.resourcesPath));
   const configured = !!(pub.owner && pub.repo && !/YOUR-GITHUB-NAME|DEINNAME/.test(pub.owner));
   const installed = app.isPackaged && process.platform === 'win32' && fs.existsSync(path.join(process.resourcesPath || '', 'app-update.yml'));
   const enabled = !gameMode && app.isPackaged && configured;
@@ -75,6 +75,23 @@ module.exports = function setupUpdater({ getWin, gameMode }) {
 
   return { check, state, enabled };
 };
+
+// Wo liegen die Releases? Im fertigen Programm fehlt der „build“-Abschnitt der package.json
+// (electron-builder entfernt ihn). Darum: 1. app-update.yml des Installers, 2. „build.publish“ (Entwicklung),
+// 3. „repository“-Adresse der package.json.
+function resolveRepo(pkg, resDir) {
+  try {
+    const t = fs.readFileSync(path.join(resDir || '', 'app-update.yml'), 'utf8');
+    const o = /^owner:\s*['"]?([^'"\s]+)/m.exec(t), r = /^repo:\s*['"]?([^'"\s]+)/m.exec(t);
+    if (o && r) return { owner: o[1], repo: r[1] };
+  } catch (e) { /* ZIP-Fassung oder Entwicklung */ }
+  const b = ((pkg.build && pkg.build.publish) || [])[0];
+  if (b && b.owner && b.repo) return { owner: b.owner, repo: b.repo };
+  const u = String((pkg.repository && (pkg.repository.url || pkg.repository)) || pkg.homepage || '');
+  const m = /github\.com[/:]([^/]+)\/([^/.#?]+)/i.exec(u);
+  return m ? { owner: m[1], repo: m[2] } : {};
+}
+module.exports.resolveRepo = resolveRepo;
 
 function notesText(n) {
   if (Array.isArray(n)) n = n.map((x) => x.note || '').join('\n');
