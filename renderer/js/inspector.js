@@ -150,6 +150,8 @@
           c.set ? null : assetField('Figur-Bild', 'image', c.asset, set(c, 'asset')),
           field('Name der Figur (für Sprecher)', text(c.name, set(c, 'name'), (VN.asset(c.asset) || {}).name || 'z. B. Ray')),
           range('Position', c.x != null ? c.x : 50, 0, 100, 1, (v) => Math.round(v) + ' %', set(c, 'x')),
+          range('Höhe', c.y || 0, -40, 60, 1, (v) => (Math.round(v) > 0 ? '+' : '') + Math.round(v) + ' %', set(c, 'y')),
+          el('div', { class: 'muted small' }, 'Tipp: Figuren lassen sich auf der Bühne auch direkt ziehen – waagerecht für die Position, senkrecht für die Höhe (Umschalt: nur eine Richtung).'),
           range('Größe', c.scale || 100, 30, 180, 1, (v) => Math.round(v) + ' %', set(c, 'scale')),
           check('Spiegeln', c.flip, set(c, 'flip')),
           field('Auftritt', select(c.trans || 'fade', [['cut', 'Sofort'], ['fade', 'Einblenden'], ['slide', 'Hereingleiten']], set(c, 'trans'))),
@@ -301,6 +303,7 @@
         field('Hitbox-Form', select(o.shape || 'rect', [['rect', 'Rechteck'], ['ellipse', 'Ellipse']], set(o, 'shape'))),
         VN.condEditor(o.conds || (o.conds = []), 'Objekt nur sichtbar, wenn'),
         el('div', { class: 'sec-title' }, 'Beim Klick'),
+        window.Connect ? Connect.rulesUI(o) : null,
         VN.actionEditor(o.actions || (o.actions = []), 'Ausführen (z. B. Loot würfeln)'),
         field('Gehe zu Szene', VN.sceneSelect(o.target, set(o, 'target'), { exclude: s.id })),
         el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const n = VN.createAltScene(s, o.name); o.target = n.id; }) }, 'Neue Szene als Ziel anlegen'),
@@ -337,13 +340,6 @@
     },
 
     graph() {
-      const reach = VN.reachable();
-      const unreachable = VN.project.scenes.filter((s) => !reach.has(s.id));
-      const deadChoices = [];
-      for (const s of VN.project.scenes) {
-        if (s.type !== 'story') continue;
-        for (const c of s.tracks.choice) for (const o of c.options) if (!o.target && c.start >= s.beats - 1 && !s.next) deadChoices.push(s.name + ': „' + o.text + '“');
-      }
       const sel = VN.scene(VN.ui.graphSel);
       return el('div', { class: 'insp' },
         el('div', null, el('h3', null, 'Pfade'), el('div', { class: 'insp-title' }, VN.project.scenes.length + ' Szenen')),
@@ -357,10 +353,11 @@
             el('button', { class: 'btn tiny', onclick: () => App.openScene(sel.id) }, 'Öffnen'),
             el('button', { class: 'btn tiny', onclick: () => Player.start(sel.id) }, '▶ Testen'))) : null,
         el('div', { class: 'sec-title' }, 'Prüfung'),
-        unreachable.length || deadChoices.length || VN.condIssues().length ? null : el('div', { class: 'hint-box' }, 'Alles in Ordnung: Jede Szene ist vom Start aus erreichbar.'),
-        ...VN.condIssues().map((i) => el('div', { class: 'hint-box', style: { borderLeft: '3px solid var(--orange)', cursor: i.scene ? 'pointer' : '' }, onclick: i.scene ? () => App.openScene(i.scene.id) : null }, el('strong', null, 'Kaputte Bedingung: '), (i.scene ? i.scene.name : 'Projekt') + (i.where ? ' · „' + String(i.where).slice(0, 30) + '“' : '') + ' – ' + i.text + ' (gilt als nicht erfüllt)')),
-        ...unreachable.map((s) => el('div', { class: 'hint-box', style: { borderLeft: '3px solid var(--orange)' } }, el('strong', null, 'Nicht erreichbar: '), s.name)),
-        ...deadChoices.map((t) => el('div', { class: 'hint-box', style: { borderLeft: '3px solid var(--orange)' } }, el('strong', null, 'Antwort ohne Ziel am Szenenende: '), t))
+        ...(() => {
+          const list = Help.visible().filter((x) => x.area === 'Pfade' || x.area === 'Bedingungen');
+          return list.length ? list.map((x) => Help.box(x)) : [el('div', { class: 'hint-box' }, 'Alles in Ordnung: Jede Szene ist vom Start aus erreichbar.')];
+        })(),
+        el('button', { class: 'btn tiny', onclick: () => Help.panel() }, 'Alle Hinweise zum Projekt …')
       );
     }
   });

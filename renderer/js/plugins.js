@@ -63,13 +63,42 @@
       let files = [];
       try { files = await VN.api.plugins.list(); } catch (e) { files = []; }
       VN.project.plugins = VN.project.plugins || {};
+      const shipped = VN.gameMode && VN.project.shipped;   // ab 0.7: Liste der mitgelieferten Plugins (Name → Prüfsumme)
+      VNPlugin.mods = [];
       for (const f of files) {
+        if (shipped) {
+          let h = '';
+          try { h = VNPlugin.hash(await VN.api.plugins.read(f)); } catch (e) { h = ''; }
+          if (shipped[f] && shipped[f] === h) { if (!(VN.project.plugins && VN.project.plugins[f] && VN.project.plugins[f].enabled === false)) await VNPlugin.inject(f); continue; }
+          // Nicht mitgeliefert oder verändert = Mod
+          const allow = !!(VN.project.export && VN.project.export.mods);
+          VNPlugin.mods.push({ file: f, hash: h, allowedByGame: allow });
+          if (!allow) { console.warn('Mod nicht erlaubt, nicht geladen:', f); continue; }
+          if (await VNPlugin.modApproved(f, h)) await VNPlugin.inject(f);
+          continue;
+        }
         if (!VN.project.plugins[f]) VN.project.plugins[f] = { enabled: true };
         if (!VN.project.plugins[f].enabled) continue;
         await VNPlugin.inject(f);
       }
       VNPlugin.available = files;
       if (!VN.gameMode && !VNPlugin._updating) await VNPlugin.checkBundled();
+    },
+    // Mods (fertiges Spiel): Spieler entscheidet pro Datei einmal, Wahl wird gemerkt (Datei geändert = neu fragen)
+    modKey() { return 'vn-mods:' + (VN.Extras && VN.Extras.pid ? VN.Extras.pid() : VN.project.title); },
+    modStore() { try { return JSON.parse(localStorage.getItem(VNPlugin.modKey()) || '{}'); } catch (e) { return {}; } },
+    modSave(st) { try { localStorage.setItem(VNPlugin.modKey(), JSON.stringify(st)); } catch (e) { /* egal */ } },
+    async modApproved(f, h) {
+      const st = VNPlugin.modStore();
+      const cur = st[f];
+      if (cur && cur.hash === h) return !!cur.on;
+      const lang = VN.lang || (VN.project.languages || ['de'])[0];
+      const en = String(lang).startsWith('en');
+      let r = 1;
+      try { r = await VN.api.confirm(en ? 'Mod found: „' + f + '“\n\nMods can change anything in the game. Only load mods from sources you trust.\n\nLoad this mod?' : 'Mod gefunden: „' + f + '“\n\nMods können alles im Spiel verändern. Lade nur Mods aus Quellen, denen du vertraust.\n\nDiesen Mod laden?', en ? ['Load', "Don't load"] : ['Laden', 'Nicht laden']); } catch (e) { r = 1; }
+      st[f] = { hash: h, on: r === 0 };
+      VNPlugin.modSave(st);
+      return r === 0;
     },
     // Mitgelieferte Plugins aktuell halten: unveränderte alte Versionen still ersetzen,
     // selbst geänderte nur auf Wunsch (Knopf im Plugin-Reiter)

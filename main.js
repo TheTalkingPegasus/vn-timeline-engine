@@ -377,7 +377,8 @@ ipcMain.handle('app:engineSize', () => {
     let s = dirSize(base);
     const loc = path.join(base, 'locales');
     if (fs.existsSync(loc)) for (const f of fs.readdirSync(loc)) if (!KEEP_LOCALES.includes(f)) s -= fs.statSync(path.join(loc, f)).size;
-    for (const extra of ['rcedit-x64.exe', 'rcedit-LICENSE.txt']) { const p = path.join(process.resourcesPath, extra); if (fs.existsSync(p)) s -= fs.statSync(p).size; }
+    for (const extra of ['rcedit-x64.exe', 'rcedit-LICENSE.txt', 'elevate.exe', 'app-update.yml']) { const p = path.join(process.resourcesPath, extra); if (fs.existsSync(p)) s -= fs.statSync(p).size; }
+    for (const f of fs.readdirSync(base)) if (INSTALLER_FILES.test(f)) s -= fs.statSync(path.join(base, f)).size;
     return s;
   } catch (e) { return null; }
 });
@@ -398,8 +399,30 @@ ipcMain.handle('asset:write', (_e, { dir, rel, bytes }) => {
 ipcMain.handle('project:setDir', (_e, dir) => {
   if (gameMode) return projectDir === path.resolve(dir || '') || path.resolve(dir || '') === path.resolve(GAME_DIR);
   if (!approvedDirs.has(path.resolve(dir || ''))) return !!denied('Projektordner nicht freigegeben: ' + dir);
-  projectDir = path.resolve(dir); return true;
+  projectDir = path.resolve(dir);
+  warnIfInProgramDir(projectDir);
+  return true;
 });
+
+// Projekte im Programmordner würden beim nächsten Update gelöscht (der Installer ersetzt den ganzen Ordner)
+const warnedDirs = new Set();
+function warnIfInProgramDir(dir) {
+  if (!app.isPackaged || warnedDirs.has(dir)) return;
+  const prog = path.dirname(process.execPath);
+  const rel = path.relative(prog, dir);
+  if (rel.startsWith('..') || path.isAbsolute(rel)) return;
+  warnedDirs.add(dir);
+  const en = uiLang === 'en';
+  dialog.showMessageBox(win, {
+    type: 'warning',
+    title: en ? 'Project inside the program folder' : 'Projekt im Programmordner',
+    message: en ? 'This project is stored inside the program folder of the engine.' : 'Dieses Projekt liegt im Programmordner der Engine.',
+    detail: en
+      ? 'The program folder is replaced completely on every update, so the project would be lost.\n\nPlease move the project folder somewhere else, for example to Documents\\VN Timeline Engine, and open it from there.'
+      : 'Der Programmordner wird bei jedem Update komplett ersetzt – das Projekt wäre dann weg.\n\nBitte verschiebe den Projektordner an einen anderen Ort, z. B. nach Dokumente\\VN Timeline Engine, und öffne ihn von dort.',
+    buttons: ['OK']
+  }).catch(() => {});
+}
 
 ipcMain.handle('file:saveText', async (_e, { name, text, ext }) => {
   const r = await dialog.showSaveDialog(win, { defaultPath: name, filters: [{ name: ext.toUpperCase(), extensions: [ext] }] });
@@ -521,6 +544,7 @@ ipcMain.handle('plugins:addBundled', (_e, name, force) => {
 
 // ---------- Export ----------
 const KEEP_LOCALES = ['de.pak', 'en-US.pak', 'en-GB.pak'];
+const INSTALLER_FILES = /^(Uninstall .*\.exe|uninstallerIcon\.ico|elevate\.exe|app-update\.yml)$/i;
 // files: umgewandelte Dateien [{ file, bytes }], die statt der Originale geschrieben werden
 async function copyGameFiles(dest, data, files) {
   fs.mkdirSync(dest, { recursive: true });
@@ -536,7 +560,8 @@ async function copyGameFiles(dest, data, files) {
     if (conv[a.file]) { fs.writeFileSync(out, Buffer.from(conv[a.file])); continue; }
     if (fs.existsSync(src)) await fs.promises.copyFile(src, out);
   }
-  const plugins = Object.entries(data.plugins || {}).filter(([k, v]) => v && v.enabled && k === path.basename(k) && /\.js$/i.test(k)).map(([k]) => k);
+  // Ab 0.7: alle Plugins aus der Prüfsummen-Liste (Umfang „vollständig“ nimmt auch ausgeschaltete mit), sonst die eingeschalteten
+  const plugins = (data.shipped ? Object.keys(data.shipped) : Object.entries(data.plugins || {}).filter(([, v]) => v && v.enabled).map(([k]) => k)).filter((k) => k === path.basename(k) && /\.js$/i.test(k));
   if (plugins.length) {
     fs.mkdirSync(path.join(dest, 'plugins'), { recursive: true });
     for (const f of plugins) { const src = path.join(pluginsDir(), f); if (fs.existsSync(src) && insideReal(pluginsDir(), src)) await fs.promises.copyFile(src, path.join(dest, 'plugins', f)); }
@@ -565,6 +590,8 @@ async function exportWindowsTo(parent, data, files, iconPng) {
       recursive: true, force: true,
       filter: (p) => {
         if (/(LIES MICH|README)\.txt$/.test(p) || p.includes(path.join('resources', 'game')) || /rcedit/i.test(path.basename(p))) return false;
+        // Teile des Installers gehören nicht ins Spiel: Deinstallieren, Update-Infos, Rechte-Helfer
+        if (INSTALLER_FILES.test(path.basename(p))) return false;
         // Nur deutsche und englische Sprachpakete von Chromium mitnehmen (spart ca. 45 MB)
         if (path.basename(path.dirname(p)) === 'locales' && p.endsWith('.pak') && !KEEP_LOCALES.includes(path.basename(p))) return false;
         return true;
@@ -604,14 +631,14 @@ async function exportWebTo(dest, data, files) {
   fs.unlinkSync(path.join(dest, 'project.json'));
   const rd = path.join(__dirname, 'renderer');
   fs.mkdirSync(path.join(dest, 'engine'), { recursive: true });
-  const engineFiles = ['style.css', 'js/web-boot.js', 'js/i18n-en.js', 'js/core.js', 'js/i18n.js', 'js/audioout.js', 'js/logic.js', 'js/life.js', 'js/extras.js', 'js/world.js', 'js/quests.js', 'js/skills.js', 'js/combat.js', 'js/idle.js', 'js/theme.js', 'js/uipresets.js', 'js/uidesign.js', 'js/perf.js', 'js/fx.js', 'js/stage.js', 'js/systems.js', 'js/rig.js', 'js/anim.js', 'js/blink.js', 'js/plugins.js', 'js/menu.js', 'js/player-audio.js', 'js/player-menus.js', 'js/player-extras.js', 'js/player-world.js', 'js/player-notify.js', 'js/player-skills.js', 'js/player-combat.js', 'js/player-idle.js', 'js/player.js', 'js/schema.js'];
+  const engineFiles = ['style.css', 'js/web-boot.js', 'js/i18n-en.js', 'js/core.js', 'js/i18n.js', 'js/audioout.js', 'js/logic.js', 'js/life.js', 'js/extras.js', 'js/world.js', 'js/quests.js', 'js/skills.js', 'js/combat.js', 'js/idle.js', 'js/theme.js', 'js/uipresets.js', 'js/uidesign.js', 'js/perf.js', 'js/fx.js', 'js/stage.js', 'js/systems.js', 'js/rig.js', 'js/anim.js', 'js/blink.js', 'js/plugins.js', 'js/menu.js', 'js/player-audio.js', 'js/player-menus.js', 'js/player-extras.js', 'js/player-world.js', 'js/relmsg.js', 'js/player-notify.js', 'js/player-skills.js', 'js/player-combat.js', 'js/player-idle.js', 'js/player.js', 'js/schema.js'];
   for (const f of engineFiles) await fs.promises.copyFile(path.join(rd, f), path.join(dest, 'engine', path.basename(f)));
   fs.writeFileSync(path.join(dest, 'engine', 'game-data.js'), 'window.VN_GAME = ' + JSON.stringify(data) + ';', 'utf8');
   try { fs.copyFileSync(path.join(__dirname, 'LICENSE'), path.join(dest, 'engine', 'LICENSE.txt')); } catch (e) { /* Lizenzdatei fehlt in der Entwicklung */ }
   const plugins = Object.entries(data.plugins || {}).filter(([, v]) => v && v.enabled).map(([k]) => k);
   const esc = (t) => String(t).replace(/[<&>]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
   const html = `<!doctype html>\n<html lang="${(data.languages && data.languages[0]) || 'de'}">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>${esc(data.title || 'Spiel')}</title>\n<link rel="stylesheet" href="engine/style.css">\n<style>html,body{background:#000;overflow:hidden}</style>\n</head>\n<body>\n<div id="player"></div><div id="toast"></div><div id="ctxmenu" hidden></div>\n` +
-    ['game-data.js', 'web-boot.js', 'i18n-en.js', 'core.js', 'i18n.js', 'audioout.js', 'logic.js', 'life.js', 'extras.js', 'world.js', 'quests.js', 'skills.js', 'combat.js', 'idle.js', 'theme.js', 'uipresets.js', 'uidesign.js', 'perf.js', 'fx.js', 'stage.js', 'systems.js', 'rig.js', 'anim.js', 'blink.js', 'plugins.js', 'menu.js', 'player-audio.js', 'player-menus.js', 'player-extras.js', 'player-world.js', 'player-notify.js', 'player-skills.js', 'player-combat.js', 'player-idle.js', 'schema.js'].map((f) => `<script src="engine/${f}"></script>`).join('\n') + '\n' +
+    ['game-data.js', 'web-boot.js', 'i18n-en.js', 'core.js', 'i18n.js', 'audioout.js', 'logic.js', 'life.js', 'extras.js', 'world.js', 'quests.js', 'skills.js', 'combat.js', 'idle.js', 'theme.js', 'uipresets.js', 'uidesign.js', 'perf.js', 'fx.js', 'stage.js', 'systems.js', 'rig.js', 'anim.js', 'blink.js', 'plugins.js', 'menu.js', 'player-audio.js', 'player-menus.js', 'player-extras.js', 'player-world.js', 'relmsg.js', 'player-notify.js', 'player-skills.js', 'player-combat.js', 'player-idle.js', 'schema.js'].map((f) => `<script src="engine/${f}"></script>`).join('\n') + '\n' +
     plugins.map((f) => `<script>VNPlugin._current = ${JSON.stringify(f)};</script><script src="plugins/${encodeURIComponent(f)}"></script>`).join('\n') + '\n<script src="engine/player.js"></script>\n<script>VNWeb.start();</script>\n</body>\n</html>\n';
   fs.writeFileSync(path.join(dest, 'index.html'), html, 'utf8');
   if (String((data.languages || ['de'])[0]).startsWith('de')) fs.writeFileSync(path.join(dest, 'LIES MICH.txt'), 'Web-Version von "' + (data.title || 'Spiel') + '"\r\n\r\nFür itch.io: diesen Ordner als ZIP hochladen und "This file will be played in the browser" wählen.\r\nLokal testen: index.html im Browser öffnen. Manche Browser blockieren dabei Bones-Animationen; auf itch.io oder einem Webserver funktioniert alles.\r\n', 'utf8');
@@ -646,6 +673,8 @@ app.whenReady().then(async () => {
     return;
   }
   createWindow();
+  // Updates (nur Engine, nie in exportierten Spielen); die Oberfläche fragt beim Start selbst nach
+  require('./updater.js')({ getWin: () => win, gameMode: !!gameData || SELFTEST || !!process.env.VN_AUTOTEST });
 });
 app.on('window-all-closed', () => app.quit());
 

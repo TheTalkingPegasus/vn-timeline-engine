@@ -1,12 +1,14 @@
 {
   "name": "vn-timeline-engine",
-  "version": "0.6.12",
+  "version": "0.7.0",
   "description": "Free visual novel engine in the style of a video editor (timeline), with plugins. English and German interface.",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "build:win": "electron-packager . \"VN Timeline Engine\" --platform=win32 --arch=x64 --out=dist --overwrite --extra-resource=tools/rcedit-x64.exe --extra-resource=tools/rcedit-LICENSE.txt --ignore=^/dist --ignore=^/out --ignore=^/tools --ignore=^/docs --ignore=^/tests",
-    "test": "electron . --no-sandbox --selftest"
+    "test": "electron . --no-sandbox --selftest",
+    "dist:win": "node tools/sync-license.js && electron-builder --win nsis --x64",
+    "version:set": "node tools/set-version.js"
   },
   "keywords": [
     "visual-novel",
@@ -18,10 +20,11 @@
     "dating-sim"
   ],
   "author": "The Talking Pegasus",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "devDependencies": {
     "@electron/packager": "^20.3.0",
-    "electron": "^45.1.0"
+    "electron": "^45.1.0",
+    "electron-builder": "^26.0.12"
   },
   "productName": "VN Timeline Engine",
   "homepage": "https://github.com/TheTalkingPegasus/vn-timeline-engine",
@@ -31,5 +34,92 @@
   },
   "bugs": {
     "url": "https://github.com/TheTalkingPegasus/vn-timeline-engine/issues"
+  },
+  "dependencies": {
+    "electron-updater": "^6.6.2"
+  },
+  "build": {
+    "appId": "com.thetalkingpegasus.vntimelineengine",
+    "productName": "VN Timeline Engine",
+    "copyright": "© The Talking Pegasus",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "asar": false,
+    "files": [
+      "**/*",
+      "!dist/**",
+      "!out/**",
+      "!release/**",
+      "!tools/**",
+      "!docs/**",
+      "!tests/**",
+      "!build/**",
+      "!.test-saves/**",
+      "!**/*.exe",
+      "!**/*.zip",
+      "!**/*.blockmap",
+      "!.github/**"
+    ],
+    "extraResources": [
+      {
+        "from": "tools/rcedit-x64.exe",
+        "to": "rcedit-x64.exe"
+      },
+      {
+        "from": "tools/rcedit-LICENSE.txt",
+        "to": "rcedit-LICENSE.txt"
+      }
+    ],
+    "electronLanguages": [
+      "de",
+      "en-US",
+      "en-GB"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "VN-Timeline-Engine-${version}-win.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "VN Timeline Engine",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
+      "multiLanguageInstaller": true,
+      "installerLanguages": [
+        "de_DE",
+        "en_US"
+      ],
+      "displayLanguageSelector": false,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "include": "build/installer.nsh",
+      "differentialPackage": true,
+      "installerSidebar": "build/installerSidebar.bmp",
+      "uninstallerSidebar": "build/uninstallerSidebar.bmp",
+      "artifactName": "VN-Timeline-Engine-Setup-${version}.${ext}"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "TheTalkingPegasus",
+        "repo": "vn-timeline-engine",
+        "releaseType": "release"
+      }
+    ]
   }
 }

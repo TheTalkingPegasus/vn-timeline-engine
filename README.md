@@ -1,13 +1,13 @@
 # VN Timeline Engine
 
 **Build visual novels like in a video editor.** Images, text and sound lie as clips on a timeline –
-every column is one click of the player. Free, open source (MIT), with an English and German interface.
+every column is one click of the player. Free, source available (VN Timeline Engine License), with an English and German interface.
 
 🇩🇪 [Deutsche Beschreibung weiter unten](#deutsch)
 
 ![Editor with timeline](docs/screenshots/en/editor-timeline.png)
 
-> **Status:** prototype (0.6.12). It works and is tested, but expect rough edges. Back up your projects.
+> **Status:** prototype (0.7.0). It works and is tested, but expect rough edges. Back up your projects.
 
 ## Download
 
@@ -101,7 +101,7 @@ tools/             rcedit (sets the icon of exported games)
 
 ## License
 
-MIT © 2026 The Talking Pegasus – see [LICENSE](LICENSE).
+VN Timeline Engine License 1.0 © 2026 The Talking Pegasus – see [LICENSE](LICENSE) (German: [LIZENZ.txt](LIZENZ.txt)). Free to use, change and make games with; games you make are yours and may be sold. The engine itself may not be sold or passed off as your own. Versions up to 0.6.12 remain under the MIT License.
 Third-party components: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 Games you make with VN Timeline Engine are yours. You can sell them, and you don’t have to publish their content.
@@ -113,11 +113,11 @@ Games you make with VN Timeline Engine are yours. You can sell them, and you don
 ## Deutsch
 
 **Visual Novels bauen wie im Schnittprogramm.** Bilder, Texte und Töne liegen als Clips auf einer Timeline –
-jede Spalte ist ein Klick des Spielers. Kostenlos, Open Source (MIT), Oberfläche auf Deutsch und Englisch.
+jede Spalte ist ein Klick des Spielers. Kostenlos, Quellcode offen (VN Timeline Engine Lizenz), Oberfläche auf Deutsch und Englisch.
 
 ![Editor mit Timeline](docs/screenshots/de/editor-timeline.png)
 
-> **Stand:** Prototyp (0.6.12). Funktioniert und ist getestet, aber noch nicht in allem rund. Mach Sicherungen deiner Projekte.
+> **Stand:** Prototyp (0.7.0). Funktioniert und ist getestet, aber noch nicht in allem rund. Mach Sicherungen deiner Projekte.
 
 ### Herunterladen
 
@@ -159,4 +159,4 @@ Windows-Version bauen: `npm run build:win` (Ergebnis in `dist/`). Testreihe: `np
 
 ### Lizenz
 
-MIT © 2026 The Talking Pegasus – siehe [LICENSE](LICENSE). Spiele, die du mit der Engine machst, gehören dir.
+VN Timeline Engine Lizenz 1.0 © 2026 The Talking Pegasus – siehe [LIZENZ.txt](LIZENZ.txt) (englisch: [LICENSE](LICENSE)). Spiele, die du mit der Engine machst, gehören dir und dürfen verkauft werden. Die Engine selbst darf nicht verkauft oder als eigenes Werk ausgegeben werden. Versionen bis 0.6.12 bleiben unter der MIT-Lizenz.

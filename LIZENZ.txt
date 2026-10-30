@@ -1,0 +1,116 @@
+VN Timeline Engine Lizenz 1.0
+Copyright (c) 2026 The Talking Pegasus. Alle Rechte vorbehalten, soweit unten nichts anderes erlaubt ist.
+
+Diese Lizenz gilt ab Version 0.7. Dies ist eine Übersetzung der englischen Lizenz (Datei LICENSE).
+Im Zweifel gilt der englische Text.
+
+Kurz gesagt (nicht Teil der Lizenz): Du darfst die Engine kostenlos benutzen, verändern, Plugins
+schreiben und mit ihr eigene Spiele machen und verkaufen. Die Engine selbst darfst du nicht verkaufen,
+nicht als dein eigenes Werk ausgeben und keine veränderte Fassung unter ihrem Namen veröffentlichen.
+
+
+1. Begriffe
+
+„Lizenzgeber“ ist The Talking Pegasus.
+
+„Software“ ist die VN Timeline Engine, wie sie der Lizenzgeber veröffentlicht: der Editor, die
+Spiel-Laufzeit, der Quellcode, die Dokumentation, die mitgelieferten Vorlagen, Beispiele und
+mitgelieferten Plugins sowie jede veränderte Fassung davon.
+
+„Spiel“ ist eine Visual Novel, ein Spiel oder ein anderes interaktives Werk, das du mit der Software
+erstellst, einschließlich eines exportierten Windows- oder Web-Spiels, das die zum Spielen nötige
+Spiel-Laufzeit enthält.
+
+„Deine Inhalte“ ist alles in einem Spiel, das du gemacht hast oder an dem du die Rechte hast:
+Geschichte, Texte, Bilder, Musik, Stimmen, Videos, Figuren, eigene Plugins und eigene Designs.
+
+„Du“ ist die Person oder Organisation, die die Software unter dieser Lizenz benutzt.
+
+
+2. Was du darfst
+
+Der Lizenzgeber gibt dir ein kostenloses, weltweites, nicht ausschließliches Recht:
+
+a) die Software für jeden Zweck zu benutzen, privat oder gewerblich, auch um Spiele zu erstellen;
+b) die Software zu kopieren und zu verändern;
+c) unveränderte oder veränderte Kopien der Software kostenlos an andere weiterzugeben,
+   unter den Bedingungen der Abschnitte 4 und 5;
+d) Plugins, Vorlagen und Designs für die Software zu schreiben.
+
+
+3. Deine Spiele gehören dir
+
+a) Der Lizenzgeber beansprucht keine Rechte an deinen Inhalten oder deinen Spielen.
+b) Du darfst deine Spiele auf jede Art veröffentlichen, weitergeben und verkaufen, auch gegen Geld,
+   auf jeder Plattform, ohne Gebühren oder Beteiligungen an den Lizenzgeber. Das gilt auch für die
+   Spiel-Laufzeit, die in einem exportierten Spiel enthalten ist.
+c) Ein exportiertes Spiel muss das Start-Logo der Engine genau so behalten, wie die Software es beim
+   Spielstart zeigt: mindestens 5 Sekunden sichtbar, frühestens nach 2 Sekunden vom Spieler
+   überspringbar. Eigene Logos davor oder danach sind erlaubt.
+d) Deine eigenen Plugins, Vorlagen und Designs sind dein eigenes Werk. Du darfst sie zu deinen
+   eigenen Bedingungen weitergeben oder verkaufen, solange sie keine Kopien des Codes der Software
+   enthalten, die über das hinausgehen, was zur Nutzung der Plugin-Schnittstelle nötig ist.
+
+
+4. Was du nicht darfst
+
+a) Du darfst die Software selbst oder eine veränderte Fassung nicht verkaufen, vermieten,
+   unterlizenzieren oder auf andere Weise Geld dafür verlangen. Dazu gehört auch, sie hinter eine
+   Bezahlschranke, ein Abo oder ein kostenpflichtiges Paket zu stellen oder Geld für den Download
+   oder den Zugang zu verlangen. Der Verkauf von Spielen (Abschnitt 3) ist davon nicht betroffen.
+b) Du darfst die Software oder eine veränderte Fassung nicht als dein eigenes Werk ausgeben und
+   Urheberrechtsvermerke sowie diese Lizenz nicht entfernen, verstecken oder ändern.
+c) Du darfst den Namen „VN Timeline Engine“ oder ihr Logo nicht als Namen oder Logo einer
+   veränderten Fassung verwenden. Du darfst sagen, dass deine Fassung „auf der VN Timeline Engine
+   basiert“.
+
+
+5. Wenn du die Software weitergibst
+
+Wenn du die Software oder eine veränderte Fassung weitergibst (außer innerhalb eines exportierten
+Spiels), musst du:
+
+a) diese Lizenz und den Urheberrechtsvermerk unverändert beilegen;
+b) deutlich angeben, dass die Fassung verändert ist, falls sie es ist, und ihr einen eigenen Namen geben;
+c) die Hinweise zu Fremdkomponenten beibehalten (siehe THIRD_PARTY_NOTICES.md).
+
+
+6. Beiträge
+
+Wenn du dem Lizenzgeber Änderungen schickst (zum Beispiel einen Pull Request auf GitHub), erlaubst du
+dem Lizenzgeber, sie als Teil der Software unter dieser oder einer späteren Lizenz der Software zu
+benutzen, zu ändern und zu veröffentlichen, und du bestätigst, dass du dazu berechtigt bist.
+
+
+7. Fremdkomponenten
+
+Die Software enthält oder benutzt Komponenten anderer Urheber (zum Beispiel Electron und Chromium).
+Für sie gelten ihre eigenen Lizenzen, aufgeführt in THIRD_PARTY_NOTICES.md. Diese Lizenz ändert daran nichts.
+
+
+8. Frühere Versionen
+
+Versionen der Software bis einschließlich 0.6.12 wurden unter der MIT-Lizenz veröffentlicht. Kopien
+dieser Versionen bleiben unter der MIT-Lizenz. Diese Lizenz gilt für Version 0.7 und spätere Versionen.
+
+
+9. Ende der Lizenz
+
+Wenn du gegen diese Lizenz verstößt, enden deine Rechte daraus automatisch. Sie leben wieder auf, wenn
+du den Verstoß innerhalb von 30 Tagen beendest, nachdem der Lizenzgeber dich darauf hingewiesen hat –
+außer du hast schon früher gegen die Lizenz verstoßen.
+
+
+10. Keine Gewährleistung, beschränkte Haftung
+
+Die Software wird „wie sie ist“ bereitgestellt, ohne ausdrückliche oder stillschweigende Gewährleistung,
+insbesondere ohne Gewähr für Marktgängigkeit, Eignung für einen bestimmten Zweck und Nichtverletzung
+von Rechten. Soweit gesetzlich zulässig, haftet der Lizenzgeber nicht für Ansprüche, Schäden oder
+sonstige Haftung, die aus der Software oder ihrer Benutzung entstehen. Die Haftung für Vorsatz und grobe
+Fahrlässigkeit bleibt unberührt, soweit das Gesetz es verlangt.
+
+
+11. Anwendbares Recht
+
+Für diese Lizenz gilt das Recht der Republik Österreich unter Ausschluss der Verweisungsnormen und des
+UN-Kaufrechts. Zwingende Verbraucherschutzgesetze deines Landes bleiben unberührt.

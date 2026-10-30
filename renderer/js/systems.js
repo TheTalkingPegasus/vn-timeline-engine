@@ -82,7 +82,9 @@
       const L = VN.Life || {};
       const pt = plTabs.find((x) => x[0] === tab);
       if (pt) { try { pt[2].editorTab.render(body); } catch (e) { body.appendChild(el('div', { class: 'hint-box' }, 'Fehler im Plugin: ' + e.message)); console.error(e); } return; }
-      ({ overview: L.overview, time: L.timeTab, shops: L.shopsTab, rel: L.relTab, gifts: L.giftsTab, vars: Systems.vars, items: Systems.items, money: Systems.money, loot: Systems.loot, inv: Systems.inv, gloss: Systems.gloss, plugins: VNPlugin.editorPanel, ach: Systems.achTab, gallery: Systems.galleryTab, quests: Systems.questsTab, world: Systems.worldTab, skills: Systems.skillsTab, combat: Systems.combatTab, idle: Systems.idleTab })[tab](body);
+      const TAB_FN = { overview: L.overview, time: L.timeTab, shops: L.shopsTab, rel: L.relTab, gifts: L.giftsTab, vars: Systems.vars, items: Systems.items, money: Systems.money, loot: Systems.loot, inv: Systems.inv, gloss: Systems.gloss, plugins: VNPlugin.editorPanel, ach: Systems.achTab, gallery: Systems.galleryTab, quests: Systems.questsTab, world: Systems.worldTab, skills: Systems.skillsTab, combat: Systems.combatTab, idle: Systems.idleTab };
+      // Unbekannter Reiter (z. B. aus einer älteren Version): zur Übersicht
+      (TAB_FN[tab] || TAB_FN.overview)(body);
     },
 
     gloss(body) {

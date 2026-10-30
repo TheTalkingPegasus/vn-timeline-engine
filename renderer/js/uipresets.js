@@ -33,8 +33,11 @@
   const OPTS = {
     skills: [['oNode', 'Form der Skills', [['round', 'Rund'], ['square', 'Eckig'], ['diamond', 'Raute']]], ['oLines', 'Verbindungen', [['solid', 'Durchgezogen'], ['dashed', 'Gestrichelt'], ['glow', 'Leuchtend']]], ['oSide', 'Detail-Feld', [['right', 'Rechts'], ['left', 'Links']]]],
     combat: [['oPanel', 'Befehlsleiste', [['bottom', 'Unten'], ['top', 'Oben']]], ['oMenu', 'Befehle', [['grid', 'Zwei Spalten'], ['list', 'Liste']]], ['oBars', 'Balken', [['round', 'Abgerundet'], ['flat', 'Eckig (Retro)']]]],
-    idle: [['oCards', 'Gebäude', [['grid', 'Karten'], ['list', 'Liste']]], ['oGoals', 'Ziele', [['right', 'Rechts'], ['left', 'Links'], ['hidden', 'Ausblenden']]]],
-    questlog: [['oTabs', 'Reiter', [['pills', 'Als Knöpfe'], ['line', 'Unterstrichen']]]]
+    idle: [['oCards', 'Gebäude', [['grid', 'Karten'], ['list', 'Liste']]], ['oGoals', 'Ziele', [['right', 'Rechts'], ['left', 'Links'], ['hidden', 'Ausblenden']]], ['oPop', 'Effekt beim Ausbauen', [['pulse', 'Pulsieren'], ['shrink', 'Kurz kleiner'], ['bounce', 'Hüpfen'], ['glow', 'Aufleuchten'], ['none', 'Keiner']]]],
+    questlog: [['oTabs', 'Reiter', [['pills', 'Als Knöpfe'], ['line', 'Unterstrichen']]]],
+    relmsg: [['oMsg', 'Darstellung', [['phone', 'Handy'], ['bubble', 'Sprechblase'], ['window', 'Fenster']]], ['oSide', 'Seite', [['right', 'Rechts'], ['left', 'Links'], ['center', 'Mitte']]]],
+    relnote: [['oNotePos', 'Position', [['top', 'Oben'], ['topleft', 'Oben links'], ['topright', 'Oben rechts'], ['bottom', 'Unten']]]],
+    galnew: [['oNew', '„Neu“ zeigen als', [['both', 'Leuchten + Schild'], ['glow', 'Nur Leuchten'], ['badge', 'Nur Schild']]]]
   };
 
   // Vorlagen je System. v = Werte wie im Design-Feld (Farben, Schrift, Ecken, Muster, Leuchten, Aufbau)
@@ -80,6 +83,22 @@
       P('banner', 'Goldenes Banner', { bg: '#2a1e08', alpha: 95, border: '#f3d27a', text: '#fff4d2', accent: '#f3d27a', accentText: '#2a1e08', titleFont: 'serif', radius: 0.6, pattern: 'soft', glow: true }),
       P('scroll', 'Pergament', { bg: '#ecdcb6', alpha: 97, border: '#8a6a3a', text: '#3a2a16', accent: '#9a3a2a', accentText: '#fff4e2', titleFont: 'palatino', radius: 0.4, pattern: 'parchment' }),
       P('glass', 'Glas', { bg: '#141a24', alpha: 75, border: '#9fc6ff', text: '#ffffff', accent: '#9fc6ff', accentText: '#0a1220', titleFont: 'trebuchet', radius: 2, pattern: 'glass' })
+    ],
+    relmsg: [
+      P('phone', 'Modernes Handy', { bg: '#14151c', alpha: 98, border: '#3a3d4a', text: '#f2f2f7', accent: '#4a8cff', accentText: '#ffffff', radius: 3, pattern: 'none', oMsg: 'phone' }),
+      P('love', 'Liebesbrief', { bg: '#f6e6e6', alpha: 98, border: '#c86a7a', text: '#4a1e28', accent: '#d64a6a', accentText: '#ffffff', titleFont: 'palatino', radius: 1.2, pattern: 'parchment', oMsg: 'window' }),
+      P('bubble', 'Comic-Sprechblase', { bg: '#ffffff', alpha: 100, border: '#1a1a1a', text: '#1a1a1a', accent: '#ff5f95', accentText: '#ffffff', radius: 3, pattern: 'none', borderW: 0.5, oMsg: 'bubble' }),
+      P('neon', 'Neon-Chat', { bg: '#120a20', alpha: 94, border: '#ff4fd8', text: '#ffe9fb', accent: '#ff4fd8', accentText: '#1a0016', radius: 2, pattern: 'grid', glow: true, oMsg: 'phone' })
+    ],
+    relnote: [
+      P('push', 'Push-Nachricht', { bg: '#1c1d24', alpha: 94, border: '#4a4d5a', text: '#ffffff', accent: '#4a8cff', accentText: '#ffffff', radius: 2.4, pattern: 'glass', oNotePos: 'top' }),
+      P('heart', 'Herz', { bg: '#4a1428', alpha: 94, border: '#ff8fb5', text: '#ffeef4', accent: '#ff5f95', accentText: '#2a0010', radius: 4, pattern: 'soft', glow: true, oNotePos: 'top' }),
+      P('scroll', 'Brief', { bg: '#ecdcb6', alpha: 97, border: '#8a6a3a', text: '#3a2a16', accent: '#9a3a2a', accentText: '#fff4e2', titleFont: 'palatino', radius: 0.6, pattern: 'parchment', oNotePos: 'topright' })
+    ],
+    galnew: [
+      P('gold', 'Gold', { accent: '#ffd84a', accentText: '#2a1e00', oNew: 'both' }),
+      P('pink', 'Pink', { accent: '#ff5f95', accentText: '#ffffff', oNew: 'both' }),
+      P('blue', 'Blau', { accent: '#5fc0ff', accentText: '#001a2a', oNew: 'glow' })
     ],
     relpop: [
       P('heart', 'Herz', { bg: '#4a1428', alpha: 94, border: '#ff8fb5', text: '#ffeef4', accent: '#ff5f95', accentText: '#2a0010', radius: 4, pattern: 'soft', glow: true }),

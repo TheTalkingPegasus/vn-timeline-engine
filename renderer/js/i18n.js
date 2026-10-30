@@ -203,6 +203,8 @@
     const c = CONTENT_D[s.trim()];
     return c !== undefined ? s.replace(s.trim(), c) : en(s);
   };
+  // Mit Platzhaltern: VN.tf('Szene „{name}“ fehlt', { name }) – erst übersetzen, dann einsetzen
+  VN.tf = (s, o) => String(VN.t(s)).replace(/\{(\w+)\}/g, (m, k) => (o && o[k] != null ? o[k] : m));
   // Text für den Spieler (folgt der Spielsprache)
   VN.tp = (s) => (playerLang() === 'en' ? en(s) : s);
   try { if (window.vnApi && window.vnApi.setUiLang) window.vnApi.setUiLang(uiLang); } catch (e) { /* egal */ }

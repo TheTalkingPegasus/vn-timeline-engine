@@ -38,6 +38,14 @@ contextBridge.exposeInMainWorld('vnApi', {
   exportWeb: (payload) => ipcRenderer.invoke('export:web', payload),
   statFiles: (rels) => ipcRenderer.invoke('files:stat', rels),
   engineSize: () => ipcRenderer.invoke('app:engineSize'),
+  update: {
+    state: () => ipcRenderer.invoke('update:state'),
+    check: () => ipcRenderer.invoke('update:check'),
+    download: () => ipcRenderer.invoke('update:download'),
+    install: () => ipcRenderer.invoke('update:install'),
+    openPage: () => ipcRenderer.invoke('update:openPage'),
+    onState: (fn) => ipcRenderer.on('update:state', (_e, s) => fn(s))
+  },
   writeAsset: (dir, rel, bytes) => ipcRenderer.invoke('asset:write', { dir, rel, bytes }),
   // Projektdateien laufen über das eigene Protokoll vnasset://
   fileUrl: (dir, rel) => 'vnasset://project/' + rel.split(/[\\/]/).map(encodeURIComponent).join('/'),

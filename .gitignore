@@ -1,0 +1,12 @@
+# Dependencies and build output
+node_modules/
+dist/
+out/
+
+# Test saves and local stuff
+.test-saves/
+*.log
+.DS_Store
+Thumbs.db
+desktop.ini
+release/

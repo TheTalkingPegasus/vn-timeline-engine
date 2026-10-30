@@ -118,6 +118,8 @@
         const t = VN.scene(o.target);
         node.appendChild(el('div', { class: 'hit' + (o.shape === 'ellipse' ? ' ellipse' : '') }));
         node.appendChild(el('div', { class: 'hit-label' }, (o.name || 'Objekt') + (t ? ' → ' + t.name : o.message ? ' → Meldung' : '')));
+        const bd = window.Connect ? Connect.badges(o) : [];
+        if (bd.length) node.appendChild(el('div', { class: 'hub-badges', title: VN.t('Verbunden mit') + ': ' + (o.actions || []).map((a) => VN.actionText(a)).join(', ') }, ...bd.map((b) => el('span', null, b))));
       }
       if (sel) {
         node.appendChild(el('div', { class: 'h-rs', title: 'Skalieren' }));
@@ -164,6 +166,9 @@
         VN.menu(e.clientX, e.clientY, [
           { head: o.name || 'Objekt' },
           { label: '🎨 Design ändern …', hint: 'Bild, Maus darüber', action: () => Design.openTab() },
+          'sep',
+          { label: '🔗 Verbinden mit …', hint: 'Aufbau, Laden, Kampf …', action: () => Connect.menu(e.clientX, e.clientY, s, o) },
+          { label: '🧱 Bausteine …', hint: 'Kaufen, nur einmal …', action: () => Connect.blocks(e.clientX, e.clientY, s, o) },
           'sep',
           { label: 'Neue Szene als Ziel anlegen', action: () => VN.mutate(() => { const n = VN.createAltScene(s, o.name); o.target = n.id; }) },
           { label: 'Duplizieren', action: () => Hub.duplicate(s, o) },

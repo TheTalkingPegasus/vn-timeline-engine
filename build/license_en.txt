@@ -1,0 +1,117 @@
+﻿VN Timeline Engine License 1.0
+Copyright (c) 2026 The Talking Pegasus. All rights reserved except as granted below.
+
+This license applies to version 0.7 and later.
+A German translation is in LIZENZ.txt. In case of doubt, this English text applies.
+
+In short (not part of the license): Use the engine for free, change it, write plugins,
+and make and sell your own games with it. Do not sell the engine itself, do not present
+it as your own work, and do not release a changed version under its name.
+
+
+1. Definitions
+
+"Licensor" means The Talking Pegasus.
+
+"Software" means the VN Timeline Engine as published by the Licensor: the editor, the
+game runtime, the source code, the documentation, the bundled templates, examples and
+bundled plugins, and any modified version of these.
+
+"Game" means a visual novel, game or other interactive work that you create with the
+Software, including an exported Windows or web build that contains the game runtime
+needed to play it.
+
+"Your Content" means everything in a Game that you made or have the rights to: story,
+text, images, music, voices, videos, characters, your own plugins and your own designs.
+
+"You" means the person or organization using the Software under this license.
+
+
+2. What you may do
+
+The Licensor grants you a free, worldwide, non-exclusive license to:
+
+a) use the Software for any purpose, privately or commercially, including to create Games;
+b) copy the Software and change it;
+c) share unmodified or modified copies of the Software with others free of charge,
+   subject to sections 4 and 5;
+d) write plugins, templates and designs for the Software.
+
+
+3. Your Games belong to you
+
+a) The Licensor claims no rights in Your Content or in your Games.
+b) You may publish, distribute and sell your Games in any way you like, including for money,
+   on any platform, without paying fees or royalties to the Licensor. This includes the
+   game runtime contained in an exported Game.
+c) An exported Game must keep the engine start logo exactly as the Software shows it when the
+   Game starts: visible for at least 5 seconds, and the player may skip it after 2 seconds at
+   the earliest. You may add your own logos before or after it.
+d) Your own plugins, templates and designs are your own work. You may share or sell them under
+   terms of your choice, as long as they do not contain copies of the Software's code beyond
+   what is needed to use its plugin interface.
+
+
+4. What you may not do
+
+a) You may not sell, rent, sublicense or otherwise charge money for the Software itself or
+   for a modified version of it. This includes putting it behind a paywall, a subscription
+   or a paid bundle, and charging for downloading or accessing it. Selling Games (section 3)
+   is not affected.
+b) You may not present the Software, or a modified version, as your own work, or remove,
+   hide or change the copyright notices and this license.
+c) You may not use the name "VN Timeline Engine" or its logo as the name or logo of a
+   modified version. You may say that your version is "based on VN Timeline Engine".
+
+
+5. When you share the Software
+
+When you share the Software or a modified version (other than inside an exported Game), you must:
+
+a) include this license and the copyright notice unchanged;
+b) clearly state that the version is modified, if it is, and give it a name of its own;
+c) keep the notices of third-party components (see THIRD_PARTY_NOTICES.md).
+
+
+6. Contributions
+
+If you send changes to the Licensor (for example a pull request on GitHub), you allow the
+Licensor to use, change and publish them as part of the Software under this or any later
+license of the Software, and you confirm that you have the right to do so.
+
+
+7. Third-party components
+
+The Software contains or uses components of other authors (for example Electron and
+Chromium). They are covered by their own licenses, listed in THIRD_PARTY_NOTICES.md.
+This license does not change them.
+
+
+8. Earlier versions
+
+Versions of the Software up to and including 0.6.12 were published under the MIT License.
+Copies of those versions remain under the MIT License. This license applies to version 0.7
+and later.
+
+
+9. Ending of the license
+
+If you break this license, your rights under it end automatically. They come back if you
+stop the violation within 30 days after the Licensor tells you about it, unless you broke
+the license before.
+
+
+10. No warranty, limited liability
+
+The Software is provided "as is", without warranty of any kind, express or implied,
+including the warranties of merchantability, fitness for a particular purpose and
+non-infringement. To the extent permitted by law, the Licensor is not liable for any
+claim, damages or other liability arising from the Software or its use. Liability for
+intent and gross negligence remains unaffected where the law requires it.
+
+
+11. Applicable law
+
+This license is governed by the law of the Republic of Austria, excluding its conflict-of-law
+rules and the UN Convention on Contracts for the International Sale of Goods. Mandatory
+consumer protection laws of your country remain unaffected.

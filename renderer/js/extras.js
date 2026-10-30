@@ -23,7 +23,7 @@
     if (cache && cacheKey === k) return cache;
     let d = {};
     try { d = JSON.parse(localStorage.getItem(k) || '{}'); } catch (e) { d = {}; }
-    for (const f of ['read', 'seen', 'gallery', 'music', 'ach', 'know']) d[f] = d[f] || {};
+    for (const f of ['read', 'seen', 'gallery', 'music', 'ach', 'know', 'galNew']) d[f] = d[f] || {};
     cache = d; cacheKey = k;
     return d;
   };
@@ -40,6 +40,11 @@
   X.replayScenes = () => VN.project.scenes.filter((s) => s.replay);
   X.galleryOn = () => !!(X.galleryImages().length || X.galleryMusic().length || X.replayScenes().length);
   X.seeImage = (id) => { const a = id && VN.asset(id); if (a && a.gallery) X.mark('gallery', id); };
+  // Neu freigeschaltet (z. B. von einer Figur geschickt): leuchtet als „Neu“, bis man es in der Galerie öffnet
+  X.unlockNew = (id) => { const a = id && VN.asset(id); if (!a) return; if (X.mark('gallery', id)) { X.P().galNew[id] = Date.now(); X.save(); } };
+  X.isNew = (id) => !!X.P().galNew[id];
+  X.seenNew = (id) => { const P = X.P(); if (P.galNew[id]) { delete P.galNew[id]; X.save(); } };
+  X.newCount = () => Object.keys(X.P().galNew).filter((id) => { const a = VN.asset(id); return a && a.gallery; }).length;
   X.hearMusic = (id) => { const a = id && VN.asset(id); if (a && a.musicRoom) X.mark('music', id); };
 
   // ---------- Erfolge ----------

@@ -1,8 +1,11 @@
-VN Timeline Engine · Prototyp 0.6.12
+VN Timeline Engine · Prototyp 0.7.0
 ====================================
 (English: see README.txt)
 
 STARTEN (Windows)
+Am einfachsten: "VN-Timeline-Engine-Setup-0.7.0.exe" starten. Das Setup legt auf Wunsch eine
+Desktop-Verknüpfung an, einen Eintrag im Startmenü, und ab jetzt kommen Updates automatisch.
+Ohne Installation (ZIP):
 1. Den ganzen Ordner aus der ZIP entpacken (nicht direkt aus der ZIP starten).
 2. "VN Timeline Engine.exe" doppelklicken.
    Windows zeigt beim ersten Start evtl. "Der Computer wurde durch Windows geschützt",
@@ -10,6 +13,38 @@ STARTEN (Windows)
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.7.0 · Öffentlicher Prototyp
+- Windows-Setup: für mich oder für alle Benutzer, Ordner wählbar, Desktop-Verknüpfung (Häkchen),
+  Startmenü, Deinstallieren über die Windows-Einstellungen. Patches: einfach das neue Setup drüber
+  installieren – Verknüpfung, Projekte, Einstellungen, Spielstände und Plugins bleiben.
+- Automatische Updates (Setup-Fassung): Unten rechts erscheint "Version X ist da", geladen wird nur,
+  was sich geändert hat, installiert beim Neustart (Projekt wird vorher gespeichert).
+  Projekt → "Nach Updates suchen …", dort auch abschaltbar. Exportierte Spiele suchen nie nach Updates.
+- Hilfemeldungen: Jede Meldung im Editor sagt, was los ist, und hat Knöpfe mit Lösungen.
+  💡 öffnet eine Erklärung mit Beispielen und Ideen. Rot = Spiel geht kaputt, Gelb = funktioniert nicht
+  wie gedacht, Blau = Tipp. Oben der Knopf "⚠" öffnet die Fehlerliste mit allen Hinweisen.
+- Verknüpfen ohne Umwege: Rechtsklick auf ein Hub-Objekt → "Verbinden mit …" (Aufbau, Skilltree,
+  Questlog, Karte, Inventar, Laden, Kampf, Geschenk, Galerie, Plugins …) und "Bausteine …":
+  "Wird gekauft …" (Preis, Rückfrage, danach verschwinden), "Nur einmal anklickbar", "Gibt einen
+  Gegenstand (einmal)". Am Objekt neu: Preis und "Wie oft" – ganz ohne Variablen.
+- Aufbau: Gebäude "durch Aktion" freischalten (z. B. Bäckerei im Hub kaufen) mit der neuen Aktion
+  "🏰 Gebäude freischalten".
+- Beziehungs-Meilensteine: Pro Figur bei beliebigen Prozentwerten eine Nachricht (Handy, Sprechblase
+  oder Fenster), Meldung "Ray hat dir ein Bild geschickt", Bild in die Galerie, eigene Aktionen, auch
+  beim Sinken. Galerie mit Filter nach Figur und leuchtendem "Neu", bis man das Bild ansieht.
+  Alles gestaltbar unter Design → Spielsysteme, mit eigenen Tönen (Projekt, Figur oder Meilenstein).
+- Studio-Intro: beliebig viele eigene Logos (Bild oder Video) vor oder nach dem Engine-Logo, mit
+  Übergängen, Jingle und Einstellung fürs Überspringen.
+- Figuren: neuer Regler "Höhe", und Figuren lassen sich auf der Bühne direkt ziehen.
+- Pausenmenü: Questlog, Skilltree, Gruppe, Karte und Beziehungen lassen sich einzeln ausblenden.
+- Export: "Mods erlauben" (aus = nur deine Plugins, unverändert) und "Umfang" (schlank/vollständig).
+- Fehler behoben: Die Warnung "nicht erreichbar" bei Beziehungen zählt jetzt ♥-Punkte aus allen
+  Systemen (Aufbau, Quests, Kämpfe …); Beziehungspunkte an Hub-Objekten erscheinen nicht mehr als
+  "Gefunden: Gegenstand"; Hub-Aktionen, die Aufbau/Skilltree öffnen, gehen wieder.
+- Neue Lizenz ab 0.7 (LIZENZ.txt, englisch LICENSE): kostenlos benutzen, verändern und Spiele machen
+  und verkaufen; die Engine selbst nicht verkaufen und nicht als eigenes Werk ausgeben. Das Engine-Logo
+  bleibt im Spiel (mindestens 5 Sekunden, ab 2 Sekunden überspringbar). Bis 0.6.12 gilt weiter MIT.
 
 NEU IN 0.6.12 · Design-Vorlagen für die Spielsysteme
 - Design → Spielsysteme: Jedes System hat eigene, passende Vorlagen, z. B. Skilltree "Sternenhimmel",

@@ -339,6 +339,9 @@
         for (const o of s.objects) {
           if (o.name) out.push({ id: o.id + ':name', area: s.name, where: 'Objekt', who: 'Tooltip', text: o.name, set: (v) => { o.name = v; }, sceneId: s.id });
           if (o.message) out.push({ id: o.id + ':msg', area: s.name, where: 'Objekt ' + o.name, who: 'Meldung', text: o.message, set: (v) => { o.message = v; }, sceneId: s.id });
+          if (o.buyWhat) out.push({ id: o.id + ':what', area: s.name, where: 'Objekt ' + o.name, who: 'Kauf: Name', text: o.buyWhat, set: (v) => { o.buyWhat = v; }, sceneId: s.id });
+          if (o.doneMsg) out.push({ id: o.id + ':done', area: s.name, where: 'Objekt ' + o.name, who: 'Meldung danach', text: o.doneMsg, set: (v) => { o.doneMsg = v; }, sceneId: s.id });
+          if (o.buyText) out.push({ id: o.id + ':buy', area: s.name, where: 'Objekt ' + o.name, who: 'Kauf-Frage', text: o.buyText, set: (v) => { o.buyText = v; }, sceneId: s.id });
         }
         for (const ev of s.events || []) for (const l of ev.lines) {
           out.push({ id: l.id, area: s.name, where: 'Hub-Ereignis ' + ((s.events || []).indexOf(ev) + 1), who: l.speaker || 'Erzähler', text: l.text || '', set: (v) => { l.text = v; }, sceneId: s.id });

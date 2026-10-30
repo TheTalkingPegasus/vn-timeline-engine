@@ -165,7 +165,7 @@
     const p = VN.project;
     body.appendChild(el('p', { class: 'muted' }, 'Skilltrees: Spieler verdienen Geld oder Punkte und schalten damit Skills frei, die sofort wirken – mehr Geld, bessere Minispiele, Rabatt, mehr Beziehungspunkte, höhere Werte oder freigeschaltete Orte und Quests. Abfragen lassen sie sich überall mit der Bedingung „🌳 Skill gekauft“. Im Spiel öffnet Taste ' + (c.key || 't').toUpperCase() + ' den Skilltree.'));
     const iss = SK().issues();
-    if (iss.length) body.appendChild(el('div', { class: 'opt-card bad-card' }, el('div', { class: 'sec-title', style: { color: '#ffb3ad' } }, '⚠ ' + iss.length + (iss.length === 1 ? ' Problem' : ' Probleme')), ...iss.slice(0, 8).map((x) => el('div', { class: 'small' }, '• ' + x.text))));
+    if (iss.length) body.appendChild(Help.sysBox(iss));
     // Bäume als Reiter
     let t = SK().tree(VN.ui.skTree) || c.trees[0] || null;
     const tabs = el('div', { class: 'row gap4', style: { flexWrap: 'wrap', alignItems: 'center' } });
@@ -179,6 +179,7 @@
       el('option', { value: '' }, '+ Skilltree …'), el('option', { value: 'empty' }, 'Leer'), el('option', { value: 'two' }, 'Vorlage: zwei Wege'), el('option', { value: 'three' }, 'Vorlage: drei Äste'), el('option', { value: 'ring' }, 'Vorlage: Kreis um die Mitte')));
     tabs.appendChild(el('div', { class: 'spacer' }));
     tabs.appendChild(field('Taste im Spiel', txt(c.key || 't', (v) => { c.key = (v || 't').slice(0, 1).toLowerCase(); }, { width: '40px' })));
+    tabs.appendChild(el('label', { class: 'check', title: 'Aus: nur über die Taste oder die Aktion „🌳 Skilltree öffnen“ erreichbar' }, el('input', { type: 'checkbox', checked: c.inMenu !== false, onchange: (e) => VN.mutate(() => { c.inMenu = e.target.checked; }) }), 'Im Pausenmenü'));
     tabs.appendChild(el('button', { class: 'btn tiny', onclick: () => window.UiDesign && UiDesign.edit('skills') }, '🎨 Design des Skilltrees'));
     body.appendChild(tabs);
     if (!t) { body.appendChild(el('div', { class: 'hint-box' }, 'Lege oben einen Skilltree an – am schnellsten mit einer Vorlage.')); body.appendChild(pointsCard()); return; }

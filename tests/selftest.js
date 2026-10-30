@@ -170,6 +170,55 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     ok(res.scenes[0].tracks.choice[0].options[0].target === res.scenes[1].id, 'Text-Import: Sprung nicht verknüpft');
     const ps = VN.TextImport.parse('Ray: Hi\\nDas hier ist ein Satz: ohne Namen, weil zu viele Wörter davor\\n> A\\n> B');
     ok(ps.mode === 'simple' && ps.items.length === 3 && ps.items[1].who === '' && ps.items[2].kind === 'choice', 'Text-Import: eigenes Format falsch erkannt');
+    // 0.7: ♥-Punkte aus jedem System werden in „max. %“ gezählt; jede Aktion läuft ohne Absturz
+    try {
+      const pp = VN.migrate({ title: 'A', scenes: [], assets: [], vars: [{ id: 'v', name: 'V', type: 'num', start: 0 }], currencies: [{ id: 'g', name: 'Gold', start: 100 }], items: [{ id: 'it', name: 'Rose', use: { actions: [] } }] });
+      VN.project = pp;
+      pp.relations.enabled = true;
+      pp.relations.chars.push({ id: 'nv', name: 'Neon', start: 0, likes: {}, itemPrefs: {}, reactions: {}, rewards: { 1: { text: 'x' } } });
+      const R = (n) => ({ type: 'rel', char: 'nv', amount: n });
+      const st = VN.newStoryScene('S');
+      st.tracks.dialog.push({ id: 'd1', start: 0, len: 1, speaker: 'Neon', text: 'Hi', actions: [R(1)] });
+      st.tracks.choice.push({ id: 'c1', start: 0, len: 1, options: [{ id: 'op', text: 'A', actions: [], rel: [{ char: 'nv', amount: 2 }] }] });
+      const hb = VN.newHubScene('H');
+      hb.objects.push({ id: 'o1', name: 'Tür', x: 1, y: 1, w: 5, h: 5, actions: [R(4)] });
+      pp.items[0].use.actions.push(R(8));
+      VN.Idle.cfg().enabled = true; pp.idle.milestones.push({ id: 'm1', name: 'Dorf', conds: [], actions: [R(16)], target: 1, message: '' });
+      pp.combat = { enabled: true, heroes: [], enemies: [], skills: [], party: [], battles: [{ id: 'b1', name: 'K', enemies: [], win: { actions: [R(32)] }, lose: { actions: [] } }] };
+      pp.quests = { enabled: true, list: [{ id: 'qs', name: 'Q', single: true, reward: [], quests: [{ id: 'q1', name: 'Q1', reward: [R(64)], steps: [{ id: 'st1', name: 'A', reward: [R(128)] }] }] }] };
+      VN.migrate(pp);
+      const src = VN.Life.relSources('nv');
+      const sum = src.reduce((n, x) => n + x.pos, 0);
+      ok(sum === 255, 'Beziehungen: nicht alle ♥-Quellen gezählt (' + sum + ' statt 255: ' + src.map((x) => x.label + '+' + x.pos).join(', ') + ')');
+      ok(VN.Life.relIssues().length === 0, 'Beziehungen: Meldung trotz genug Punkten');
+      pp.relations.chars[0].rewards = { 4: { text: 'y' } };
+      pp.relations.ladder[4] = pp.relations.ladder[4] || { name: 'X', min: 100 };
+      // Jede Aktion: Standardwerte anlegen und ausführen, ohne Fehler
+      const types = [...VN.ACTION_TYPES, ...VN.Life.actionTypes(), ...Object.keys(VN.ext.actions).map((k) => [k])].map((x) => x[0]);
+      const rsA = VN.newRunState();
+      for (const t of types) {
+        const xd = VN.ext.actions[t];
+        const a = Object.assign({ type: t }, xd && xd.make ? xd.make() : { value: 1, count: 1, amount: 1 });
+        try { VN.applyActions([a], rsA, 'test'); } catch (e) { out.push('Aktion „' + t + '“ stürzt ab: ' + e.message); }
+        try { VN.actionText(a); } catch (e) { out.push('Aktion „' + t + '“: Text stürzt ab'); }
+      }
+      // Kaufen: Gebäude per Aktion freischalten
+      const ID = VN.Idle;
+      const b = Object.assign(ID.newBuilding(), { id: 'bk', name: 'Bäckerei', unlockBy: 'action', costs: [], prods: [{ cur: 'g', amount: 1 }] });
+      pp.idle.buildings.push(b);
+      const rsB = VN.newRunState();
+      ok(ID.status(rsB, b) === 'locked', 'Aufbau: Gebäude „durch Aktion“ ist von Anfang an frei');
+      ok(ID.issues().some((x) => /Bäckerei/.test(x.text)), 'Aufbau: fehlende Freischalt-Aktion wird nicht gemeldet');
+      VN.applyActions([{ type: 'idleUnlock', building: 'bk', build: true }], rsB, 't');
+      ok(ID.level(rsB, b) === 1 && ID.status(rsB, b) !== 'locked', 'Aufbau: „Gebäude freischalten“ wirkt nicht');
+      hb.objects[0].actions.push({ type: 'idleUnlock', building: 'bk', build: true });
+      ok(!ID.issues().some((x) => /Bäckerei/.test(x.text)), 'Aufbau: Freischalt-Aktion am Hub-Objekt wird nicht erkannt');
+      // Umweg-Erkennung: Bedingung Geld ≥ X + Aktion Geld −X
+      hb.objects.push({ id: 'o2', name: 'Haus', x: 1, y: 1, w: 5, h: 5, conds: [{ type: 'money', currency: 'g', op: '>=', amount: 50 }], actions: [{ type: 'money', currency: 'g', amount: -50 }] });
+      ok(window.Connect && Connect.detours().length === 1, 'Umweg Geld prüfen + abziehen wird nicht erkannt');
+      // Hilfe: alle Meldungen lassen sich sammeln
+      try { Help.all(); } catch (e) { out.push('Fehlerliste stürzt ab: ' + e.message); }
+    } catch (e) { out.push('0.7-Prüfung stürzt ab: ' + String(e && e.stack || e).split('\\n').slice(0, 3).join(' | ')); }
     VN.project = prev;
     return JSON.stringify(out);
   })()`));

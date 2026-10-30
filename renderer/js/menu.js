@@ -45,6 +45,7 @@
             borderRadius: (b.radius != null ? b.radius : 1.4) + 'cqh', fontSize: (b.size || 3.4) + 'cqh', fontFamily: uiFont || ''
           }
         }, VN.tr('menu:' + btn.id, btn.label));
+        if (opts.live && btn.action === 'gallery' && VN.Extras && VN.Extras.newCount && VN.Extras.newCount()) { node.classList.add('has-new'); node.appendChild(el('span', { class: 'sys-new' }, String(VN.Extras.newCount()))); }
         if (b.img && Theme.src(b.img)) {
           node.classList.add('img');
           node.style.setProperty('--mb-img', Theme.cssUrl(b.img));

@@ -30,7 +30,16 @@
       }
       H.panel(mode === 'save' ? 'Spiel speichern' : 'Spielstand laden',
         H.store() ? grid : el('div', null, 'Speichern ist hier nicht verfügbar.'),
+        modRows(),
         H.sysBtn('Zurück', () => (fromMenu ? H.closeOverlay() : (R() ? (R().overlay = null, H.pauseMenu()) : H.closeOverlay()))));
+    }
+    // Mod-Liste (nur wenn das Spiel Mods erlaubt und welche gefunden wurden)
+    function modRows() {
+      const mods = (window.VNPlugin && VNPlugin.mods || []).filter((m) => m.allowedByGame);
+      if (!mods.length) return null;
+      const st = VNPlugin.modStore();
+      return el('div', { class: 'set-mods' }, el('div', { class: 'set-row' }, el('strong', null, 'Mods'), el('span', { class: 'set-val' }, 'wirkt nach Neustart'), el('span')),
+        ...mods.map((m) => el('div', { class: 'set-row' }, el('span', null, m.file.replace(/\.js$/i, '')), el('input', { type: 'checkbox', checked: !!(st[m.file] && st[m.file].on && st[m.file].hash === m.hash), onchange: (e) => { const s2 = VNPlugin.modStore(); s2[m.file] = { hash: m.hash, on: e.target.checked }; VNPlugin.modSave(s2); } }), el('span'))));
     }
 
     // Grafik-Einstellungen: Qualitätsstufe, bei "Eigene" einzelne Schalter

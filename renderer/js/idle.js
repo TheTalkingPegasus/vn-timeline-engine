@@ -9,7 +9,7 @@
   ID.MODES = [['realtime', 'Echtzeit, nur während gespielt wird'], ['offline', 'Echtzeit, auch bei geschlossenem Spiel'], ['gametime', 'Spielzeit (pro Tageszeit, braucht „Zeit & Kalender“)']];
   ID.cfg = () => {
     const p = P();
-    p.idle = Object.assign({ enabled: false, title: 'Aufbau', key: 'k', mode: 'realtime', offlineMax: 8, offlinePct: 50, click: false, catchup: 100, warnMin: 20, buildings: [], milestones: [], hidden: false }, p.idle || {});
+    p.idle = Object.assign({ enabled: false, title: 'Aufbau', key: 'k', inMenu: false, mode: 'realtime', offlineMax: 8, offlinePct: 50, click: false, catchup: 100, warnMin: 20, buildings: [], milestones: [], hidden: false }, p.idle || {});
     return p.idle;
   };
   ID.on = () => !!(P() && P().idle && P().idle.enabled);
@@ -30,7 +30,12 @@
   };
   ID.level = (rs, b) => Math.min(ID.max(b), ID.state(rs).lv[b.id] || 0);
   ID.max = (b) => Math.max(1, Number(b.max) || 1);
-  ID.unlocked = (rs, b) => !(b.conds || []).length || VN.checkConds(b.conds, rs);
+  // Freischalten: sofort, über Bedingungen oder durch eine Aktion (z. B. Kauf an einem Hub-Objekt)
+  ID.unlocked = (rs, b) => {
+    if (b.unlockBy === 'action' && !((ID.state(rs).unl || {})[b.id]) && !ID.level(rs, b)) return false;
+    return !(b.conds || []).length || VN.checkConds(b.conds, rs);
+  };
+  ID.unlock = (rs, b) => { const st = ID.state(rs); st.unl = st.unl || {}; st.unl[b.id] = true; };
   // Kosten der nächsten Stufe (Stufe lvl → lvl+1), mit Rabatt aus Skilltrees
   // Kosten der nächsten Stufe (Stufe lvl → lvl+1), mit Rabatt aus Skilltrees.
   // Mehrfach eingetragene Währungen werden zusammengezählt (sonst würde jede Zeile einzeln geprüft).
@@ -268,6 +273,23 @@
     problem: (a) => (ID.building(a.building) ? null : 'Gebäude fehlt'),
     row: (row, a, sel) => row.appendChild(sel(a.building || '', bOpts(), (v) => VN.mutate(() => { a.building = v; })))
   });
+  VN.registerAction('idleUnlock', {
+    label: '🏰 Gebäude freischalten', on: ID.on, make: () => ({ building: '', build: true }),
+    apply: (a, rs, gains) => {
+      const b = ID.building(a.building);
+      if (!b) return;
+      const was = ID.unlocked(rs, b);
+      ID.unlock(rs, b);
+      if (a.build && !ID.level(rs, b)) ID.build(rs, b, true);
+      if (gains && !was) gains.push({ kind: 'text', text: '🏰 ' + b.name + ' ' + VN.tp('freigeschaltet') });
+    },
+    text: (a) => { const b = ID.building(a.building); return '🏰 ' + (b ? b.name : '?') + ' ' + VN.t('freischalten') + (a.build ? ' + ' + VN.t('Stufe 1') : ''); },
+    problem: (a) => (ID.building(a.building) ? null : 'Gebäude fehlt'),
+    row: (row, a, sel) => {
+      row.appendChild(sel(a.building || '', bOpts(), (v) => VN.mutate(() => { a.building = v; })));
+      row.appendChild(sel(a.build ? '1' : '0', [['1', 'gleich Stufe 1 bauen'], ['0', 'nur freischalten']], (v) => VN.mutate(() => { a.build = v === '1'; })));
+    }
+  });
   VN.registerAction('idleProduce', {
     label: '🏰 Zeit überspringen (Produktion)', on: ID.on, make: () => ({ units: 60 }),
     apply: (a, rs, gains) => { const got = ID.produce(rs, Number(a.units) || 0); if (gains) for (const [cur, n] of Object.entries(got)) gains.push({ kind: 'money', id: cur, count: n }); },
@@ -286,6 +308,7 @@
     for (const c of b.conds || []) { const pr = VN.condProblem(c); if (pr) out.push('Freischalten: ' + pr); }
     return out;
   };
+  ID.unlockedSomewhere = (b) => { let found = false; const walk = (o, d) => { if (found || !o || typeof o !== 'object' || d > 14) return; if (Array.isArray(o)) { for (const x of o) walk(x, d + 1); return; } if (o.type === 'idleUnlock' && o.building === b.id) { found = true; return; } for (const k in o) if (o[k] && typeof o[k] === 'object') walk(o[k], d + 1); }; walk(VN.project, 0); return found; };
   ID.issues = () => {
     const out = [];
     if (!ID.on()) return out;
@@ -296,6 +319,7 @@
     const needed = new Set(); for (const b of c.buildings) for (const x of b.costs || []) if (x.cur && Number(x.amount) > 0) needed.add(x.cur);
     for (const cur of needed) if (!made.has(cur)) out.push({ text: (VN.I18n && VN.I18n.lang === 'en' ? 'Building: ' : 'Aufbau: ') + ID.curName(cur) + ' ' + VN.t('wird zum Bauen gebraucht, aber kein Gebäude stellt es her') });
     if (c.buildings.length && !c.buildings.some((b) => Number(b.start) > 0 || !(b.costs || []).some((x) => Number(x.amount) > 0) || (b.costs || []).every((x) => (P().currencies.find((cu) => cu.id === x.cur) || {}).start >= x.amount))) out.push({ text: 'Aufbau: kein Gebäude ist zu Beginn bezahlbar (Startgeld oder Startstufe fehlt)' });
+    for (const b of c.buildings) if (b.unlockBy === 'action' && !ID.unlockedSomewhere(b)) out.push({ text: VN.tf('Gebäude „{name}“ soll durch eine Aktion freigeschaltet werden, aber das passiert nirgends.', { name: b.name }), topic: 'idleUnlock' });
     for (const b of c.buildings) for (const pr of ID.buildingProblems(b)) out.push({ text: (VN.I18n && VN.I18n.lang === 'en' ? 'Building' : 'Gebäude') + ' „' + b.name + '“: ' + VN.t(pr) });
     for (const m of c.milestones) { if (!(m.conds || []).length) out.push({ text: (VN.I18n && VN.I18n.lang === 'en' ? 'Goal' : 'Ziel') + ' „' + m.name + '“: ' + VN.t('keine Bedingung') }); for (const cd of m.conds || []) { const pr = VN.condProblem(cd); if (pr) out.push({ text: 'Ziel „' + m.name + '“: ' + pr }); } }
     return out;

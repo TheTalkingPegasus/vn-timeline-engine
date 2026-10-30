@@ -2,6 +2,42 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.7.0 – Public prototype
+- Windows setup (VN-Timeline-Engine-Setup-x.y.z.exe): install for me or for all users, choose the folder,
+  optional desktop shortcut (on by default), Start menu entry, uninstall via Windows settings, own sidebar
+  and icon. Updating: run the new setup over the old one – shortcut, projects, settings, saves and plugins
+  stay; the shortcut choice is remembered.
+- Automatic updates for the setup version via GitHub releases: notice at the bottom right, downloads only the
+  changes, installs on restart after saving the project. Project → Check for updates …; can be turned off.
+  The ZIP version shows a notice with a link. Exported games never check for updates.
+- One-click releases: GitHub Actions workflow “Neue Version veröffentlichen” builds setup and ZIP on Windows,
+  sets the version everywhere and publishes the release. tools/set-version.js, docs/VERÖFFENTLICHEN.md.
+- Help messages: every editor check says what's wrong, offers fix buttons and a 💡 window with explanation,
+  examples and ideas; red/yellow/blue levels; problem list button in the top bar; hide/unhide per message.
+- Connect without workarounds: right-click a hub object → “Connect with …” (building, skill tree, quest log,
+  map, inventory, shop, battle, gift, gallery, plugins …) and “Building blocks …” (can be bought, only once,
+  gives an item once, gives relationship points once). New object click rules: price with confirmation and
+  “not enough money” message, how often (any / once then hide / once and stay). Workaround detection
+  (money condition + money action) with one-click conversion. Badges on objects show their connections.
+- Building: buildings can be unlocked by an action; new action “🏰 Unlock building” (optionally builds level 1).
+- Relationship milestones: per character at any percentage (rising or falling), message as phone, speech
+  bubble or window, notification (“Ray sent you a picture”), picture unlocked into the gallery, extra actions.
+  Gallery: filter by character, “New” glow and counter until viewed. New design entries “Message from a
+  character”, “Notification”, “Gallery: New glow” with templates and sounds (project, character, milestone).
+- Studio intro: any number of logos (image or video) before or after the engine logo, transitions, jingle,
+  skip setting. Engine logo: at least 5 s, skippable after 2 s.
+- Characters: new “Height” slider; drag characters on the stage (horizontal = position, vertical = height).
+- Pause menu: quest log, skill tree, party, map and relationships can each be hidden.
+- Export: “Allow mods” (off = only shipped plugins with checksum; on = players may add plugins, the game asks
+  per mod, mod list in settings) and “Scope” (slim/complete).
+- Warning when a project is stored inside the program folder; installer files are not copied into games.
+- Fixes: relationship “not reachable” check counts ♥ points from every system (building goals, quests,
+  battles, events, skill trees …); the points list no longer breaks for sources outside scenes; relationship
+  points on hub objects no longer appear as “Found: item”; hub actions that open building/skill tree work.
+- License: from 0.7 the VN Timeline Engine License 1.0 (LICENSE, German LIZENZ.txt): free to use, change and
+  make and sell games; the engine itself may not be sold or passed off as your own; engine logo stays.
+  Versions up to 0.6.12 remain MIT.
+
 ## 0.6.12 – Design templates for game systems
 - Design → Game systems: every system has its own fitting templates, e.g. skill tree “Starry sky”,
   “Druid tree”, “Old textbook”, “Tech upgrade”; combat “Classic blue (RPG)”, “Dark dungeon”,
