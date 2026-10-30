@@ -1,0 +1,72 @@
+# Neue Version veröffentlichen – mit einem Klick auf GitHub:
+#   Actions → "Neue Version veröffentlichen" → Run workflow → Versionsnummer eintragen → Run workflow
+# Baut unter Windows das Setup (+ ZIP), setzt die Versionsnummer überall, legt das Release an
+# und lädt alle Dateien hoch, die die automatischen Updates brauchen.
+name: Neue Version veröffentlichen
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versionsnummer, z. B. 0.7.1 (muss größer sein als die letzte)'
+        required: true
+      notes:
+        description: 'Was ist neu? (erscheint in der Engine unter „Was ist neu?“). Leer = Abschnitt aus CHANGELOG.md'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Versionsnummer setzen
+        run: node tools/set-version.js ${{ github.event.inputs.version }}
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      - name: Setup und ZIP bauen
+        run: npx electron-builder --win nsis zip --x64 --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Text „Was ist neu?“ vorbereiten
+        shell: bash
+        run: |
+          if [ -n "${{ github.event.inputs.notes }}" ]; then
+            printf '%s\n' "${{ github.event.inputs.notes }}" > notes.md
+          else
+            awk 'BEGIN{n=0} /^## /{n++} n==1' CHANGELOG.md | tail -n +2 > notes.md
+          fi
+          printf '\n\n**Download:** `VN-Timeline-Engine-Setup-%s.exe` (empfohlen, mit automatischen Updates) oder die ZIP-Datei.\n' "${{ github.event.inputs.version }}" >> notes.md
+
+      - name: Versionsnummer im Repository speichern
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json renderer/js/schema.js renderer/index.html README.md README.txt "LIES MICH.txt"
+          git commit -m "Version ${{ github.event.inputs.version }}" || echo "keine Änderung"
+          git push
+
+      - name: Release anlegen und Dateien hochladen
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          V=${{ github.event.inputs.version }}
+          gh release create "v$V" --title "VN Timeline Engine $V" --notes-file notes.md --target "$(git rev-parse HEAD)" \
+            "release/VN-Timeline-Engine-Setup-$V.exe" \
+            "release/VN-Timeline-Engine-Setup-$V.exe.blockmap" \
+            "release/latest.yml" \
+            "release/VN-Timeline-Engine-$V-win.zip"
