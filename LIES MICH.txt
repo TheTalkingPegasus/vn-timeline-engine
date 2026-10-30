@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.7.0
+VN Timeline Engine · Prototyp 0.7.1
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,10 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.7.1 · Fehlerbehebung: automatische Updates
+- Die installierte Fassung (Setup) hat die Update-Quelle nicht gefunden. Behoben. Wer 0.7.0 oder älter
+  installiert hat, installiert 0.7.1 einmal von Hand drüber – ab dann kommen Updates automatisch.
 
 NEU IN 0.7.0 · Öffentlicher Prototyp
 - Windows-Setup: für mich oder für alle Benutzer, Ordner wählbar, Desktop-Verknüpfung (Häkchen),

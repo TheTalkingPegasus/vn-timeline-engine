@@ -2,6 +2,13 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.7.1 – Fix: automatic updates
+- Fix: installed versions (setup) never found the update source, because the build tool removes the
+  publish settings from the packaged package.json. The engine now reads the source from the installer's
+  app-update.yml (fallback: repository address). Versions 0.7.0 and older have to install 0.7.1 once by hand;
+  from 0.7.1 on, updates arrive automatically.
+- The release workflow now checks the finished program for the update source and stops if it is missing.
+
 ## 0.7.0 – Public prototype
 - Windows setup (VN-Timeline-Engine-Setup-x.y.z.exe): install for me or for all users, choose the folder,
   optional desktop shortcut (on by default), Start menu entry, uninstall via Windows settings, own sidebar
