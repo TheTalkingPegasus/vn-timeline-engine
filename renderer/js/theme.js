@@ -7,7 +7,7 @@
   VN.EXPORT_BASE = { target: 'win', fit: 'letterbox', start: 'window', resizable: true, img: 'original', imgQ: 85, downscale: true, audio: 'original', audioKbps: 96, version: '1.0', icon: '', studio: '', skipUnused: true };
   VN.res = () => { const r = VN.project && VN.project.resolution; return { w: (r && r.w) || 1920, h: (r && r.h) || 1080 }; };
   VN.aspect = () => { const r = VN.res(); return r.w / r.h; };
-  VN.exportOpts = () => Object.assign({}, VN.EXPORT_BASE, (VN.project && VN.project.export) || {});
+  VN.exportOpts = () => { const o = Object.assign({}, VN.EXPORT_BASE, (VN.project && VN.project.export) || {}); if (!o.scope) o.scope = 'slim'; if (o.scope === 'slim') o.skipUnused = true; return o; };
 
   VN.hexA = (hex, a) => {
     let h = String(hex || '#000000').replace('#', '');
@@ -355,6 +355,16 @@
     },
 
     // Pflicht-Logo der Engine (Startbildschirm)
+    // Studio-Logos (neu: Liste; alte Projekte haben ein einzelnes Bild in logo.studio)
+    logoItems() {
+      const L = Theme.t().logo;
+      if (!Array.isArray(L.items)) {
+        L.items = [];
+        if (L.studio) L.items.push({ id: VN.uid('lg'), kind: 'image', asset: L.studio, dur: L.dur != null ? L.dur : 2.5, bg: L.bg || '#000000', when: L.when || 'after', tin: 'fade', tout: 'fade' });
+        delete L.studio; delete L.when; delete L.dur;
+      }
+      return L.items.filter((x) => x && x.asset && VN.assetUrl(x.asset));
+    },
     engineLogo() {
       return el('div', { class: 'engine-logo' },
         el('div', { class: 'el-mark', html: '<svg viewBox="0 0 24 24" fill="none" stroke="#1d1404" stroke-width="2.4" stroke-linecap="round"><path d="M3 7h18M3 12h12M3 17h7"/></svg>' }),

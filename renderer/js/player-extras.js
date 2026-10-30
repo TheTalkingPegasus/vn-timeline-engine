@@ -108,7 +108,7 @@
       H.setPanelKind('pause');
       const P = X().P();
       let tab = X().galleryImages().length ? 'img' : X().galleryMusic().length ? 'music' : 'scene';
-      let playing = null, played = false;
+      let playing = null, played = false, who = '';
       const body = el('div', { class: 'gal-body' });
       const tabs = el('div', { class: 'gal-tabs' });
       const draw = () => {
@@ -116,12 +116,25 @@
         const T = [['img', 'Bilder', X().galleryImages(), 'gallery'], ['music', 'Musik', X().galleryMusic(), 'music'], ['scene', 'Szenen', X().replayScenes(), 'seen']];
         for (const [k, label, items, field] of T) if (items.length) tabs.appendChild(el('button', { class: 'sys-btn' + (tab === k ? ' primary' : ''), onclick: (e) => { e.stopPropagation(); tab = k; draw(); } }, label + ' ' + items.filter((x) => P[field][x.id]).length + '/' + items.length));
         if (tab === 'img') {
+          // Filter nach Figur (Bilder, die einer Figur zugeordnet sind)
+          const chars = (VN.project.relations && VN.project.relations.chars || []).filter((c) => X().galleryImages().some((a) => a.galleryChar === c.id));
+          if (chars.length) {
+            const f = el('div', { class: 'gal-filter' });
+            const chip = (id, label, n) => el('button', { class: 'gal-chip' + (who === id ? ' on' : ''), onclick: (e) => { e.stopPropagation(); who = id; draw(); } }, label, n ? el('span', { class: 'gal-chip-new' }, String(n)) : null);
+            const newIn = (fn) => X().galleryImages().filter((a) => fn(a) && X().isNew(a.id)).length;
+            f.appendChild(chip('', VN.tp('Alle'), newIn(() => true)));
+            for (const c of chars) f.appendChild(chip(c.id, VN.tr('name:' + c.name, c.name), newIn((a) => a.galleryChar === c.id)));
+            body.appendChild(f);
+          }
           const grid = el('div', { class: 'gal-grid' });
           for (const a of X().galleryImages()) {
+            if (who && a.galleryChar !== who) continue;
             const ok = P.gallery[a.id];
-            grid.appendChild(ok ? el('button', { class: 'gal-tile', style: { backgroundImage: `url("${VN.assetUrl(a.id)}")` }, 'aria-label': a.name, onclick: (e) => { e.stopPropagation(); view(a); } }) : el('div', { class: 'gal-tile locked' }, '?'));
+            const isNew = ok && X().isNew(a.id);
+            grid.appendChild(ok ? el('button', { class: 'gal-tile' + (isNew ? ' is-new' : ''), style: { backgroundImage: `url("${VN.assetUrl(a.id)}")` }, 'aria-label': a.name, onclick: (e) => { e.stopPropagation(); X().seenNew(a.id); view(a); draw(); } }, isNew ? el('span', { class: 'gal-new' }, VN.tp('Neu')) : null) : el('div', { class: 'gal-tile locked' }, '?'));
           }
           body.appendChild(grid);
+          if (window.UiDesign) { const D = UiDesign.resolve('galnew'); body.style.setProperty('--gal-new', D.accent || '#ffd84a'); body.dataset.oNew = D.oNew || 'both'; }
         } else if (tab === 'music') {
           for (const a of X().galleryMusic()) {
             const ok = P.music[a.id];

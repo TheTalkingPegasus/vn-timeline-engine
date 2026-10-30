@@ -182,7 +182,19 @@
       if (VN.Extras && VN.Extras.pid && !VN.project.persistId) { VN.Extras.pid(); if (VN.markDirty) VN.markDirty(); }
       const data = JSON.parse(JSON.stringify(VN.project));
       const used = usedAssets(VN.project);
-      if (o.skipUnused) data.assets = data.assets.filter((a) => used.has(a.id));
+      const slim = (o.scope || 'slim') === 'slim';
+      if (o.skipUnused || slim) data.assets = data.assets.filter((a) => used.has(a.id));
+      // Nur im Editor gebraucht
+      delete data.hiddenHints;
+      // Schlank: Daten ausgeschalteter Spielsysteme weglassen
+      if (slim) for (const k of ['skills', 'combat', 'idle', 'quests', 'world']) if (data[k] && data[k].enabled === false) delete data[k];
+      // Mitgelieferte Plugins mit Prüfsumme: Das Spiel lädt nur diese (außer Mods sind erlaubt)
+      data.shipped = {};
+      for (const [f, v] of Object.entries(data.plugins || {})) {
+        if (!v || (!v.enabled && slim)) continue;
+        try { data.shipped[f] = VNPlugin.hash(await VN.api.plugins.read(f)); } catch (e) { /* Datei fehlt */ }
+      }
+      if (!slim) for (const f of (VNPlugin.available || [])) if (!data.shipped[f]) { try { data.shipped[f] = VNPlugin.hash(await VN.api.plugins.read(f)); data.plugins = data.plugins || {}; data.plugins[f] = data.plugins[f] || { enabled: false }; } catch (e) { /* egal */ } }
       const files = [];
       const lim = o.downscale ? Math.max(VN.res().w, VN.res().h) : 0;
       const todo = data.assets.filter((a) => {
@@ -280,7 +292,15 @@
                   el('label', { class: 'field' }, el('span', { class: 'lbl' }, 'Studio-Name'), el('input', { type: 'text', value: o.studio, placeholder: 'optional', onchange: (ev) => { o.studio = ev.target.value; } })),
                   el('label', { class: 'field' }, el('span', { class: 'lbl' }, 'Programm-Symbol (Icon)'), sel(o.icon, [['', '— Standard —'], ...VN.assetsOf('image').map((a) => [a.id, a.name])], (v) => { o.icon = v; }))),
                 o.icon ? el('div', { class: 'row gap8' }, el('span', { class: 'mini-thumb', style: { backgroundImage: `url("${VN.assetUrl(o.icon)}")` } }), el('span', { class: 'muted small' }, 'Quadratisch, am besten 256 × 256 px')) : null),
-              el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: o.skipUnused, onchange: (ev) => { o.skipUnused = ev.target.checked; draw(); } }), 'Unbenutzte Dateien weglassen' + (e.unusedN ? ' (' + e.unusedN + ', ' + fmtMB(e.unused) + ')' : '')),
+              (o.scope || 'slim') === 'full' ? el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: o.skipUnused, onchange: (ev) => { o.skipUnused = ev.target.checked; draw(); } }), 'Unbenutzte Dateien weglassen' + (e.unusedN ? ' (' + e.unusedN + ', ' + fmtMB(e.unused) + ')' : '')) : (e.unusedN ? el('div', { class: 'muted small' }, VN.tf('{n} unbenutzte Dateien werden weggelassen ({size}).', { n: e.unusedN, size: fmtMB(e.unused) })) : null),
+              row('Mods', el('div', { class: 'ex-opts' },
+                opt(false, !!o.mods, 'Nicht erlauben', 'nur deine Plugins', (v) => { o.mods = v; }),
+                opt(true, !!o.mods, 'Mods erlauben', 'Spieler dürfen Plugins ergänzen', (v) => { o.mods = v; })),
+                el('div', { class: 'muted small' }, o.mods ? 'Spieler können eigene Plugins in den Ordner „plugins“ legen. Beim Start fragt das Spiel bei jedem neuen Mod nach; in den Einstellungen gibt es eine Mod-Liste zum Ein- und Ausschalten.' : 'Das Spiel lädt nur die Plugins, die du mitlieferst – unverändert. Fremde oder veränderte Dateien werden ignoriert.')),
+              row('Umfang', el('div', { class: 'ex-opts' },
+                opt('slim', o.scope || 'slim', 'Schlank', 'nur was das Spiel braucht', (v) => { o.scope = v; if (v === 'slim') o.skipUnused = true; }),
+                opt('full', o.scope || 'slim', 'Vollständig', 'alles mitnehmen', (v) => { o.scope = v; if (v === 'full') o.skipUnused = false; })),
+                el('div', { class: 'muted small' }, (o.scope || 'slim') === 'slim' ? 'Lässt unbenutzte Dateien, ausgeschaltete Spielsysteme und ausgeschaltete Plugins weg.' : 'Nimmt alle Dateien, alle Spielsystem-Daten und alle Plugins mit (z. B. für Modder oder spätere Patches).')),
               el('label', { class: 'check', title: 'Für Beta-Tester und Modder: Taste ^ öffnet im fertigen Spiel die Entwickler-Konsole (Werte setzen, springen …).' }, el('input', { type: 'checkbox', checked: !!p.devConsole, onchange: (ev) => VN.mutate(() => { p.devConsole = ev.target.checked; }) }), 'Entwickler-Konsole im fertigen Spiel erlauben'))),
           el('div', { class: 'ex-foot' },
             el('div', { class: 'ex-size', onclick: () => { VN.mutate(() => { p.export = o; }); back.remove(); Export.sizeModal(); } },

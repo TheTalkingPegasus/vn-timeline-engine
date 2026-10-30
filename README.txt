@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototype 0.6.12
+VN Timeline Engine · Prototype 0.7.0
 ====================================
 (Deutsch: siehe LIES MICH.txt)
 
@@ -6,12 +6,26 @@ Build visual novels like in a video editor: images, text and sound lie as clips 
 Each column is one click of the player.
 
 GETTING STARTED (Windows)
+Easiest: run "VN-Timeline-Engine-Setup-0.7.0.exe". It can create a desktop shortcut and a Start menu
+entry, and from then on updates arrive automatically.
+Without installing (ZIP):
 1. Unzip the whole folder (don't start it from inside the ZIP).
 2. Double-click "VN Timeline Engine.exe".
    On first start Windows may show "Windows protected your PC" because the program
    isn't signed: "More info" → "Run anyway".
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
+
+NEW IN 0.7.0 · Public prototype
+- Windows setup with desktop shortcut and automatic updates (only changes are downloaded).
+- Help messages with fix buttons, 💡 explanations and a problem list.
+- Right-click hub objects: "Connect with …" and building blocks like "Can be bought …" (price,
+  confirmation, only once) – no variables needed. Buildings can be unlocked by an action.
+- Relationship milestones: messages (phone, bubble, window), pictures into the gallery, "New" glow,
+  gallery filter by character; all designable with sounds.
+- Studio intro with several logos (image/video), transitions and jingle; character height slider and
+  dragging on the stage; pause menu entries can be hidden; export switches "Allow mods" and "Scope".
+- New license from 0.7 (LICENSE / LIZENZ.txt). See CHANGELOG.md for everything.
 
 LANGUAGE
 The interface is available in English and German. English is the default.
@@ -68,4 +82,5 @@ NOTES
   assets folder). The program icon of the .exe is set with rcedit (MIT license).
 - This is a prototype. Make backups of your projects.
 
-License: MIT · © 2026 The Talking Pegasus
+License: VN Timeline Engine License 1.0 (see LICENSE, German: LIZENZ.txt) · © 2026 The Talking Pegasus
+Games you make are yours and may be sold. The engine itself may not be sold or passed off as your own.

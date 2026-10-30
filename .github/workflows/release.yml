@@ -36,7 +36,7 @@ jobs:
         run: npm ci
 
       - name: Setup und ZIP bauen
-        run: npx electron-builder --win nsis zip --x64 --publish never
+        run: node tools/sync-license.js && npx electron-builder --win nsis zip --x64 --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 

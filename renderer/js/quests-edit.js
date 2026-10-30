@@ -35,7 +35,7 @@
     const head = el('div', { class: 'row gap8', style: { alignItems: 'center', marginBottom: '8px' } },
       el('strong', { style: { fontSize: '15px' } }, 'Quests'),
       el('span', { class: 'muted small' }, list.length + ' Reihen · ' + list.reduce((n, s) => n + (s.quests || []).length, 0) + ' Quests · ' + list.reduce((n, s) => n + (s.quests || []).reduce((m, q) => m + (q.steps || []).length, 0), 0) + ' Abschnitte'),
-      issues.length ? el('span', { class: 'qtag bad', title: issues.map((i) => i.text).join('\n') }, issues.length + (issues.length === 1 ? ' Problem' : ' Probleme')) : el('span', { class: 'qtag ok' }, 'alles in Ordnung'),
+      issues.length ? el('span', { class: 'qtag bad', style: { cursor: 'pointer' }, title: issues.map((i) => i.text).join('\n'), onclick: () => Help.panel() }, issues.length + (issues.length === 1 ? ' Problem' : ' Probleme')) : el('span', { class: 'qtag ok' }, 'alles in Ordnung'),
       el('div', { style: { flex: '1' } }),
       el('button', { class: 'btn', onclick: () => VN.mutate(() => { const q = newQuest(1); q.name = VN.t('Neue Quest'); const s = { id: VN.uid('qr'), who: 'story', name: VN.t('Neue Quest'), single: true, startMode: 'auto', start: [], reward: [], quests: [q] }; list.push(s); VN.ui.qSel = q.id; }) }, '+ Quest'),
       el('button', { class: 'btn primary', onclick: () => VN.mutate(() => { const s = { id: VN.uid('qr'), who: 'story', name: VN.t('Neue Questreihe'), single: false, startMode: 'auto', start: [], reward: [], quests: [newQuest(1)] }; list.push(s); open[s.id] = true; VN.ui.qSel = s.id; }) }, '+ Questreihe'));
@@ -193,6 +193,7 @@
     const c = Q().cfg();
     const box = el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Einblendungen im Spiel'),
       el('div', { class: 'muted small' }, 'Für jede Meldung: Position, Animation (auch Zersplittern), Dauer, Text mit Platzhaltern {quest} {reihe} {abschnitt} {figur}, Symbol, Sound oder Jingle. Farben, Rahmen und Hintergrund über „🎨“.'),
+      el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: c.inMenu !== false, onchange: (e) => VN.mutate(() => { c.inMenu = e.target.checked; }) }), 'Questlog im Pausenmenü (Esc) anzeigen'),
       el('div', { class: 'logic-row' }, el('span', { class: 'muted small' }, 'Questlog-Taste'), txt(c.key || 'q', (v) => { c.key = (v || 'q').slice(0, 1).toLowerCase(); }, { width: '40px' }),
         el('button', { class: 'btn tiny', onclick: () => window.UiDesign && UiDesign.edit('questlog') }, '🎨 Design des Questlogs'),
         el('button', { class: 'btn tiny', onclick: () => window.UiDesign && UiDesign.edit('q_all') }, '🎨 Alle Einblendungen')));

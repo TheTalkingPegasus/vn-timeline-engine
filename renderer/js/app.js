@@ -248,6 +248,7 @@
     document.getElementById('b-undo').disabled = !VN.undoStack.length;
     document.getElementById('b-redo').disabled = !VN.redoStack.length;
     VN.updateSaveStatus();
+    if (window.Help) Help.badgeSoon();
     if (window.Tour) Tour.maybeAuto();
   };
 
@@ -296,6 +297,7 @@
       'sep',
       { label: 'Text importieren …', hint: 'Dialoge, Ren\'Py', action: () => VN.TextImport.open(VN.curScene && VN.curScene()) },
       { label: 'Ton-Einstellungen …', hint: 'Kopfhörer, Boxen', action: () => App.audioSettings() },
+      { label: 'Nach Updates suchen …', hint: 'v' + ((VN.Schema && VN.Schema.ENGINE) || ''), action: () => Updates.open() },
       { label: 'Projektordner öffnen', action: () => VN.api.openPath('') },
       'sep',
       { head: 'Sprache · Language' },
@@ -307,6 +309,7 @@
   $('b-redo').onclick = () => VN.redo();
   $('b-play-all').onclick = () => Player.start(VN.project.startScene, 0, { menu: true });
   $('b-export').onclick = () => Export.open();
+  $('b-issues').onclick = () => Help.panel();
   $('size-badge').onclick = () => Export.sizeModal();
   $('b-play-scene').onclick = () => Player.start(VN.ui.view === 'graph' && VN.ui.graphSel ? VN.ui.graphSel : VN.ui.sceneId, VN.ui.view === 'scene' ? VN.ui.beat : 0);
   $('b-add-story').onclick = () => VN.mutate(() => { const s = VN.newStoryScene(); VN.ui.sceneId = s.id; VN.ui.sel = null; VN.ui.view = 'scene'; VN.ui.beat = 0; });
@@ -386,6 +389,9 @@
     if (VN.settings && VN.settings.fullscreen) api.fullscreen(true);
     Player.start(null, 0, { menu: true });
   })();
+
+  // Engine-Updates (nur Editor; exportierte Spiele setzen VN.gameMode vorher)
+  setTimeout(() => { if (window.Updates && !VN.gameMode) Updates.init(); }, 1500);
 
   // Haken für den automatischen Test
   window.__vnLoad = (dir, data) => App.load(dir, data);

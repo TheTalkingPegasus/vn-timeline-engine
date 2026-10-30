@@ -432,7 +432,8 @@
     if (gains.pending && gains.pending.length) {
       run.blocked = true;
       if (window.Theme) stage.style.cursor = Theme.cursor('wait', 'progress');
-      try { await Promise.all(gains.pending); } catch (e) { console.error(e); }
+      // Manche Aktionen liefern eine Funktion (Fenster öffnen): erst jetzt aufrufen und auf das Schließen warten
+      try { await Promise.all(gains.pending.map((f) => (typeof f === 'function' ? f() : f))); } catch (e) { console.error(e); }
       if (window.Theme) stage.style.cursor = Theme.cursor('normal', 'pointer');
       if (myRun !== run) return null;
       run.blocked = false;
@@ -500,6 +501,24 @@
     msgBox.innerHTML = '';
     msgBox.appendChild(el('div', { class: 'pl-msg' }, content));
     msgBox.hidden = false;
+  };
+  // Ja/Nein-Frage im Spiel (z. B. „Bäckerei für 500 Gold kaufen?“)
+  const askYesNo = (content, yesLabel, noLabel) => new Promise((resolve) => {
+    run.blocked = 'ask';
+    msgBox.innerHTML = '';
+    const done = (v) => (e) => { if (e) e.stopPropagation(); if (run.blocked === 'ask') run.blocked = null; msgBox.hidden = true; msgBox.innerHTML = ''; uiSound(v ? 'click' : 'close'); resolve(v); };
+    msgBox.appendChild(el('div', { class: 'pl-msg pl-ask' }, content,
+      el('div', { class: 'pl-ask-btns' },
+        el('button', { class: 'pl-ask-yes', onclick: done(true) }, yesLabel || VN.tp('Ja')),
+        el('button', { class: 'pl-ask-no', onclick: done(false) }, noLabel || VN.tp('Abbrechen')))));
+    msgBox.hidden = false;
+  });
+  // Preis eines Hub-Objekts: { cur, amount, name }
+  const objPrice = (o) => {
+    const pr = o.price;
+    if (!pr || !pr.cur || !(Number(pr.amount) > 0)) return null;
+    const c = VN.project.currencies.find((x) => x.id === pr.cur);
+    return c ? { cur: c.id, amount: Number(pr.amount), name: VN.tr(c.id + ':name', c.name) } : null;
   };
 
   const updateInfo = () => {
@@ -639,6 +658,7 @@
     hubBox.innerHTML = '';
     for (const o of s.objects) {
       if (!VN.checkConds(o.conds, run.rs)) continue;
+      if (o.once === 'hide' && run.rs.seen['obj:' + o.id]) continue;
       const url = VN.assetUrl(o.asset);
       const hovUrl = o.hoverAsset ? VN.assetUrl(o.hoverAsset) : '';
       const look = url ? el('img', { src: url, draggable: 'false', class: hovUrl ? 'base' : null }) : el('div', { class: 'ph' }, VN.tr(o.id + ':name', o.name || 'Objekt'));
@@ -658,6 +678,22 @@
           if (run.lockTo && run.lockTo !== o.id) return;
           if (run.lockTo === o.id) clearSpot();
           if (run.holding) { await E.useOn(o); return; }
+          // Nur einmal: danach ohne Wirkung (oder verschwunden, siehe oben)
+          if (o.once && run.rs.seen['obj:' + o.id]) { if (o.doneMsg) showMessage(el('div', null, VN.tr(o.id + ':done', o.doneMsg))); return; }
+          // Preis: Geld prüfen, auf Wunsch nachfragen, abziehen
+          const pr = objPrice(o);
+          if (pr) {
+            const have = run.rs.money[pr.cur] || 0;
+            if (have < pr.amount) { uiSound('close'); showMessage(el('div', null, VN.tp('Nicht genug {cur}: {n} nötig, du hast {have}.').replace('{cur}', pr.name).replace('{n}', pr.amount).replace('{have}', have))); return; }
+            if (o.confirm !== false) {
+              const q = (o.buyText ? VN.tr(o.id + ':buy', o.buyText) : VN.tp('{what} für {n} {cur} kaufen?').replace('{what}', o.buyWhat ? VN.tr(o.id + ':what', o.buyWhat) : VN.tr(o.id + ':name', o.name || VN.tp('Das'))).replace('{n}', pr.amount).replace('{cur}', pr.name));
+              const ok = await askYesNo(el('div', null, q), VN.tp('Kaufen'), VN.tp('Abbrechen'));
+              if (!ok) return;
+            }
+            VN.addMoney(run.rs, pr.cur, -pr.amount);
+            renderHud();
+          }
+          if (o.once) run.rs.seen['obj:' + o.id] = true;
           if (o.sfx) playOnce(o.sfx, 90, 0, 'sfx');
           const myRun = run;
           const g0 = await doActions(o.actions, o.id);
@@ -667,10 +703,13 @@
             if (o.target && VN.scene(o.target)) enterScene(o.target, 0);
             else showHub(VN.scene(run.scene), false);
           };
-          const real = gains.filter((g) => !g.empty);
+          // Beziehungs-Änderungen haben ihre eigene Einblendung (nicht als „Gefunden“ zeigen)
+          const relG = gains.filter((g) => g.kind === 'rel');
+          if (relG.length) showGains(relG);
+          const real = gains.filter((g) => !g.empty && g.kind !== 'rel');
           const parts = [];
           if (o.message) parts.push(el('div', null, VN.tr(o.id + ':msg', o.message)));
-          if (real.length) parts.push(el('div', { class: 'pl-found' }, el('div', { class: 'pl-gain-title' }, 'Gefunden'), ...real.map((g) => el('div', null, VN.lootName(g)))));
+          if (real.length) parts.push(el('div', { class: 'pl-found' }, el('div', { class: 'pl-gain-title' }, pr ? VN.tp('Gekauft') : 'Gefunden'), ...real.map((g) => el('div', null, VN.lootName(g)))));
           else if (gains.some((g) => g.empty) && !o.message) parts.push(el('div', null, 'Hier ist nichts mehr.'));
           renderHud();
           if (parts.length) showMessage(el('div', null, ...parts), go); else go();
@@ -862,15 +901,16 @@
       sysBtn('Einstellungen', () => settingsScreen()),
       sysBtn('Verlauf', () => E.logScreen(true)),
       VN.Extras && VN.Extras.statsOn() ? sysBtn('Werte', () => E.statsScreen(true)) : null,
-      VN.Extras && VN.Extras.galleryOn() ? sysBtn('Galerie', () => E.galleryScreen(true)) : null,
-      VN.Quests && VN.Quests.on() ? sysBtn('Questlog (' + (VN.Quests.cfg().key || 'q').toUpperCase() + ')', () => { closeOverlay(); NT.questScreen(true); }) : null,
-      VN.Skills && VN.Skills.on() && VN.Skills.trees().some((t) => (t.nodes || []).length) ? sysBtn('Skilltree (' + (VN.Skills.cfg().key || 't').toUpperCase() + ')', () => { closeOverlay(); SKP.screen(null, true); }) : null,
-      VN.Combat && VN.Combat.on() && VN.Combat.state(run.rs).party.length ? sysBtn('Gruppe (G)', () => CBP.partyScreen(true)) : null,
-      VN.Idle && VN.Idle.on() && VN.Idle.cfg().buildings.length ? sysBtn(VN.tr('idle:title', VN.Idle.cfg().title || 'Aufbau') + ' (' + (VN.Idle.cfg().key || 'k').toUpperCase() + ')', () => { closeOverlay(); IDP.open(true); }) : null,
+      VN.Extras && VN.Extras.galleryOn() ? (() => { const b = sysBtn('Galerie', () => E.galleryScreen(true)); const n = VN.Extras.newCount(); if (n) { b.classList.add('has-new'); b.appendChild(el('span', { class: 'sys-new' }, String(n))); } return b; })() : null,
+      VN.Quests && VN.Quests.on() && VN.Quests.cfg().inMenu !== false ? sysBtn('Questlog (' + (VN.Quests.cfg().key || 'q').toUpperCase() + ')', () => { closeOverlay(); NT.questScreen(true); }) : null,
+      VN.Skills && VN.Skills.on() && VN.Skills.cfg().inMenu !== false && VN.Skills.trees().some((t) => (t.nodes || []).length) ? sysBtn('Skilltree (' + (VN.Skills.cfg().key || 't').toUpperCase() + ')', () => { closeOverlay(); SKP.screen(null, true); }) : null,
+      VN.Combat && VN.Combat.on() && VN.Combat.cfg().partyInMenu !== false && VN.Combat.state(run.rs).party.length ? sysBtn('Gruppe (G)', () => CBP.partyScreen(true)) : null,
+      VN.Idle && VN.Idle.on() && VN.Idle.cfg().buildings.length && VN.Idle.cfg().inMenu ? sysBtn(VN.tr('idle:title', VN.Idle.cfg().title || 'Aufbau') + ' (' + (VN.Idle.cfg().key || 'k').toUpperCase() + ')', () => { closeOverlay(); IDP.open(true); }) : null,
       VN.Extras && VN.Extras.achOn() ? sysBtn('Erfolge', () => E.achScreen(true)) : null,
       ...(window.VNPlugin ? VNPlugin.menuEntries(run.rs).map((m) => sysBtn(m.label + (m.key ? ' (' + m.key.toUpperCase() + ')' : ''), () => runPluginMenu(m, true))) : []),
       (VN.project.glossary || []).length ? sysBtn('Glossar', () => glossaryScreen()) : null,
-      VN.Life && VN.Life.relOn() ? sysBtn('Beziehungen', () => { const r = run; VN.Life.relScreen(run.rs).then(() => { if (run === r) pauseMenu(); }); }) : null,
+      VN.World && VN.World.on() && VN.World.cfg().inMenu && VN.World.maps().length ? sysBtn('Karte (M)', () => { closeOverlay(); WD.openMap(); }) : null,
+      VN.Life && VN.Life.relOn() && VN.project.relations.inMenu !== false ? sysBtn('Beziehungen', () => { const r = run; VN.Life.relScreen(run.rs).then(() => { if (run === r) pauseMenu(); }); }) : null,
       hasMenu ? sysBtn('Hauptmenü', () => showMainMenu()) : null,
       VN.gameMode ? sysBtn('Spiel beenden', () => VN.api.quit()) : sysBtn('Zurück zum Editor', () => Player.close()));
   }
@@ -954,6 +994,7 @@
   };
 
   const onKey = (e) => {
+    if (run && run.overlay === 'relmsg') { e.preventDefault(); if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter') { const b = stage.querySelector('.rm-back'); if (b && b._close) b._close(); } return; }
     if (run && run.overlay === 'combat') { if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); CBP.onKey(e); } return; }
     if (e.key === 'Escape' && run && run.holding) { e.preventDefault(); E.dropHold(); return; }
     if (e.key === 'Escape' && run && run.overlay === 'map') { e.preventDefault(); WD.closeMap(); return; }
@@ -985,24 +1026,49 @@
     else if (e.key === 'F9') { e.preventDefault(); if (store()) store().list().then((all) => { if (all.quick) { closeOverlay(); loadSave(all.quick); } else VN.toast('Kein Schnellspeicher'); }); }
   };
 
-  // Start-Logos: Engine-Logo (Pflicht) und optional Studio-Logo
+  let splashStop = null;   // stoppt den Intro-Jingle, wenn das Spiel mitten im Intro geschlossen wird
+  // Start-Logos: Engine-Logo (Pflicht) und beliebig viele Studio-Logos (Bild oder Video) davor/danach
   function splash(done) {
     const L = Theme.t().logo;
-    const seq = [{ kind: 'engine', dur: 2.2 }];
-    if (L.studio && VN.assetUrl(L.studio)) seq[L.when === 'before' ? 'unshift' : 'push']({ kind: 'studio', dur: L.dur != null ? L.dur : 2.5 });
+    const items = Theme.logoItems ? Theme.logoItems() : [];
+    // Engine-Logo: mindestens 5 Sekunden, nach 2 Sekunden überspringbar (Lizenzbedingung ab 0.7)
+    const seq = [...items.filter((x) => x.when === 'before'), { kind: 'engine', dur: 5, skipAfter: 2 }, ...items.filter((x) => x.when !== 'before')];
     const mySession = session;
-    let i = 0;
+    const skipMode = L.skip || 'click';
+    let i = 0, jingle = null, skipAll = false;
+    const stopJingle = () => {
+      splashStop = null; if (!jingle) return; const a = jingle; jingle = null; const t0 = a.volume; let k = 0; const iv = setInterval(() => { k++; a.volume = Math.max(0, t0 * (1 - k / 8)); if (k >= 8) { clearInterval(iv); a.pause(); } }, 50); };
+    splashStop = () => stopJingle();
+    if (L.jingle && VN.assetUrl(L.jingle)) { try { jingle = new Audio(VN.assetUrl(L.jingle)); jingle.volume = Math.min(1, ((L.jingleVol != null ? L.jingleVol : 90) / 100) * ((VN.settings.music != null ? VN.settings.music : 80) / 100)); jingle.play().catch(() => {}); } catch (e) { jingle = null; } }
     const next = () => {
-      if (session !== mySession) return;
-      if (i >= seq.length) return done();
+      if (session !== mySession) { stopJingle(); return; }
+      while (skipAll && i < seq.length && seq[i].kind !== 'engine') i++;
+      if (i >= seq.length) { stopJingle(); return done(); }
       const it = seq[i++];
-      const box = el('div', { class: 'splash live', style: { background: it.kind === 'engine' ? '#0b0b0e' : (L.bg || '#000') } },
-        it.kind === 'engine' ? Theme.engineLogo() : el('img', { class: 'splash-img', src: VN.assetUrl(L.studio), draggable: 'false' }));
+      const url = it.asset && VN.assetUrl(it.asset);
+      let media;
+      if (it.kind === 'engine') media = Theme.engineLogo();
+      else if (it.kind === 'video' && url) media = el('video', { class: 'splash-img splash-vid', src: url, autoplay: true, playsinline: true });
+      else media = url ? el('img', { class: 'splash-img', src: url, draggable: 'false', style: it.size ? { maxWidth: it.size + '%', maxHeight: it.size + '%' } : null }) : el('div');
+      const box = el('div', { class: 'splash live tin-' + (it.kind === 'engine' ? 'fade' : (it.tin || 'fade')), style: { background: it.kind === 'engine' ? '#0b0b0e' : (it.bg || L.bg || '#000') } }, media);
       stage.appendChild(box);
       let gone = false;
-      const out = () => { if (gone) return; gone = true; box.classList.add('out'); setTimeout(() => { box.remove(); next(); }, 420); };
-      box.addEventListener('click', (e) => { e.stopPropagation(); out(); });
-      later(out, it.dur * 1000);
+      const out = () => { if (gone) return; gone = true; box.classList.add('out', 'tout-' + (it.kind === 'engine' ? 'fade' : (it.tout || 'fade'))); if (media.pause) media.pause(); setTimeout(() => { box.remove(); next(); }, 520); };
+      const t0 = Date.now();
+      box.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (it.kind === 'engine') { if (Date.now() - t0 < it.skipAfter * 1000) return; out(); return; }
+        if (skipMode === 'none') return;
+        if (skipMode === 'all') skipAll = true;
+        out();
+      });
+      if (it.kind === 'video' && media.tagName === 'VIDEO') {
+        media.volume = Math.min(1, (VN.settings.sfx != null ? VN.settings.sfx : 90) / 100);
+        media.addEventListener('ended', out);
+        media.addEventListener('error', out);
+        if (Number(it.dur) > 0) later(out, Number(it.dur) * 1000);
+        else later(out, 30000);
+      } else later(out, (it.kind === 'engine' ? it.dur : (Number(it.dur) || 2.5)) * 1000);
     };
     next();
   }
@@ -1080,6 +1146,18 @@
         else newGame(id, beat || 0);
       };
       if (opts.menu && !opts.noSplash && window.Theme) splash(go); else go();
+    },
+
+    // Nachricht einer Figur (Beziehungs-Meilenstein) – wartet, bis der Spieler sie schließt
+    relMessage(charId, msId) {
+      const c = VN.Life && VN.Life.relChar(charId);
+      const m = c && (c.milestones || []).find((x) => x.id === msId);
+      if (!run || !c || !m || !window.RelMsg) return Promise.resolve();
+      const myRun = run;
+      // Kann auch über einem offenen Bildschirm erscheinen (z. B. Aufbau): danach den alten Zustand wiederherstellen
+      const prev = myRun.overlay;
+      myRun.overlay = 'relmsg';
+      return RelMsg.show(stage, c, m).then(() => { if (myRun === run && run.overlay === 'relmsg') run.overlay = prev || null; renderHud(); });
     },
 
     advance() {
@@ -1215,8 +1293,10 @@
     close(silent) {
       if (!session && !silent) return;
       if (VN.gameMode && !silent) { showMainMenu(); return; }
+      if (splashStop) splashStop();
       if (VN.Audio) { VN.Audio.playing = false; VN.Audio.refresh(); }
       CBP.abort();
+      if (window.RelMsg) RelMsg.abortAll();
       IDP.stopClock();
       clearTimers();
       stopTyping();

@@ -368,17 +368,43 @@
     logoEditor() {
       const t = Theme.t();
       const L = t.logo;
+      Theme.logoItems();
       const set = (k, v) => VN.mutate(() => { L[k] = v; });
+      const TR = [['fade', 'Überblenden'], ['zoom', 'Zoom'], ['slide', 'Hereinschieben'], ['blur', 'Unschärfe'], ['none', 'Hart']];
+      const list = el('div', { class: 'lg-list' });
+      L.items.forEach((it, i) => {
+        const upd = (k, v) => VN.mutate(() => { it[k] = v; });
+        const kindSel = sel(it.kind || 'image', [['image', 'Bild'], ['video', 'Video']], (v) => upd('kind', v));
+        list.appendChild(el('div', { class: 'opt-card lg-item' },
+          el('div', { class: 'row gap4', style: { alignItems: 'center', flexWrap: 'wrap' } }, el('strong', null, (i + 1) + '.'), kindSel,
+            sel(it.when || 'after', [['before', 'vor dem Engine-Logo'], ['after', 'nach dem Engine-Logo']], (v) => upd('when', v)),
+            el('div', { class: 'spacer' }),
+            el('button', { class: 'btn tiny', disabled: i === 0, onclick: () => VN.mutate(() => { L.items.splice(i, 1); L.items.splice(i - 1, 0, it); }) }, '↑'),
+            el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { L.items.splice(i, 1); }) }, '×')),
+          (it.kind || 'image') === 'video'
+            ? field('Video (WebM oder MP4, mit Ton)', VN.assetSelect('video', it.asset, (v) => upd('asset', v)))
+            : textureField('Logo-Bild', it.asset, (v) => upd('asset', v), { placeholder: 'keins', hint: Theme.sizeHint(40, 30) + ', PNG mit Transparenz' }),
+          el('div', { class: 'grid2' },
+            rng((it.kind || 'image') === 'video' ? 'Dauer (0 = ganzes Video)' : 'Dauer', Number(it.dur) || 0, 0, 12, 0.5, (v) => (v ? v + ' s' : 'ganz'), (v) => upd('dur', v)),
+            (it.kind || 'image') === 'image' ? rng('Größe', it.size || 50, 20, 100, 5, (v) => v + ' %', (v) => upd('size', v)) : el('div')),
+          el('div', { class: 'grid2' },
+            field('Einblenden', sel(it.tin || 'fade', TR, (v) => upd('tin', v))),
+            field('Ausblenden', sel(it.tout || 'fade', TR, (v) => upd('tout', v)))),
+          row(color('Hintergrund', it.bg || '#000000', (v) => upd('bg', v)))));
+      });
       return el('div', { class: 'insp' },
         el('div', { class: 'hint-box' }, el('strong', null, 'Start-Logos'), el('br'),
-          'Beim Spielstart erscheint immer kurz das Logo der VN Timeline Engine (Pflicht, ca. 2 Sekunden, mit Klick überspringbar). Dein eigenes Studio-Logo kann davor oder danach kommen.'),
-        sec('Studio-Logo',
-          textureField('Logo-Bild', L.studio, (v) => set('studio', v), { placeholder: 'keins', hint: Theme.sizeHint(40, 30) + ', PNG mit Transparenz' }),
-          el('div', { class: 'grid2' },
-            field('Zeitpunkt', sel(L.when || 'after', [['before', 'Vor dem Engine-Logo'], ['after', 'Nach dem Engine-Logo']], (v) => set('when', v))),
-            rng('Dauer', L.dur != null ? L.dur : 2.5, 1, 6, 0.5, (v) => v + ' s', (v) => set('dur', v))),
-          row(color('Hintergrund', L.bg || '#000000', (v) => set('bg', v))),
-          el('button', { class: 'btn primary', onclick: () => Player.start(null, 0, { menu: true }) }, '▶ Spielstart ansehen')));
+          'Beim Spielstart erscheint immer das Logo der VN Timeline Engine (Pflicht: mindestens 5 Sekunden, ab 2 Sekunden mit Klick überspringbar). Deine eigenen Logos – Bilder oder Videos – können davor oder danach kommen, so viele du willst.'),
+        sec('Studio-Intro', list,
+          el('div', { class: 'row gap8', style: { flexWrap: 'wrap' } },
+            el('button', { class: 'btn', onclick: () => VN.mutate(() => { L.items.push({ id: VN.uid('lg'), kind: 'image', asset: null, dur: 2.5, size: 50, bg: '#000000', when: 'after', tin: 'fade', tout: 'fade' }); }) }, '+ Logo (Bild)'),
+            el('button', { class: 'btn', onclick: () => VN.mutate(() => { L.items.push({ id: VN.uid('lg'), kind: 'video', asset: null, dur: 0, bg: '#000000', when: 'after', tin: 'fade', tout: 'fade' }); }) }, '+ Logo (Video)'))),
+        sec('Jingle und Überspringen',
+          field('Jingle (läuft über alle Logos)', VN.assetSelect('audio', L.jingle, (v) => set('jingle', v))),
+          L.jingle ? rng('Lautstärke', L.jingleVol != null ? L.jingleVol : 90, 0, 100, 1, (v) => v + ' %', (v) => set('jingleVol', v)) : null,
+          field('Klick auf ein Studio-Logo', sel(L.skip || 'click', [['click', 'überspringt dieses Logo'], ['all', 'überspringt alle Studio-Logos'], ['none', 'nicht überspringbar']], (v) => set('skip', v))),
+          el('div', { class: 'muted small' }, 'Das Engine-Logo ist davon ausgenommen: Es lässt sich immer erst nach 2 Sekunden überspringen.')),
+        el('button', { class: 'btn primary', onclick: () => Player.start(null, 0, { menu: true }) }, '▶ Spielstart ansehen'));
     },
 
     speakersEditor() {
@@ -570,12 +596,12 @@
     },
     splashPreview() {
       const L = Theme.t().logo;
-      const box = el('div', { class: 'splash', style: { background: L.bg || '#000' } });
+      const items = Theme.logoItems();
+      const box = el('div', { class: 'splash', style: { background: '#0b0b0e' } });
       box.appendChild(Design.engineLogo());
-      if (L.studio && VN.assetUrl(L.studio)) {
-        box.appendChild(el('div', { class: 'splash-note' }, L.when === 'before' ? 'davor: ' : 'danach: ',
-          el('img', { src: VN.assetUrl(L.studio), style: { height: '6cqh', verticalAlign: 'middle' } })));
-      }
+      const strip = (arr, label) => arr.length ? el('div', { class: 'splash-strip' }, el('span', null, label), ...arr.map((x) => x.kind === 'video' ? el('span', { class: 'splash-chip' }, '🎬') : el('img', { src: VN.assetUrl(x.asset) }))) : null;
+      const before = items.filter((x) => x.when === 'before'), after = items.filter((x) => x.when !== 'before');
+      box.appendChild(el('div', { class: 'splash-note' }, strip(before, 'davor:'), before.length || after.length ? el('span', { class: 'splash-eng' }, '▣ Engine 5 s') : null, strip(after, 'danach:'), L.jingle ? el('span', null, '♪ Jingle') : null));
       return box;
     },
     engineLogo() { return Theme.engineLogo(); }

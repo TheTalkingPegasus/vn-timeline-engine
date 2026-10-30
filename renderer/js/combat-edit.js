@@ -238,7 +238,8 @@
         field('Fluchtchance %', num(c.flee, (v) => { c.flee = Math.max(0, Math.min(100, v)); }, '60px', 5)),
         field('Geld der Gegner in', sel(c.currency || '', [['', 'erste Währung'], ...p.currencies.map((x) => [x.id, x.name])], (v) => { c.currency = v; })),
         field('Tempo der Animationen', sel(String(c.speed || 1), [['0.75', 'ruhig'], ['1', 'normal'], ['1.5', 'schnell'], ['2', 'sehr schnell']], (v) => { c.speed = Number(v); })),
-        check(c.story !== false, 'Story-Modus anbieten', (v) => { c.story = v; }, 'Spieler können in den Einstellungen leichtere Kämpfe wählen'))));
+        check(c.story !== false, 'Story-Modus anbieten', (v) => { c.story = v; }, 'Spieler können in den Einstellungen leichtere Kämpfe wählen'),
+        check(c.partyInMenu !== false, 'Gruppe im Pausenmenü (Esc) anzeigen', (v) => { c.partyInMenu = v; }, 'Aus: nur über Taste G'))));
     const snd = c.sounds || (c.sounds = {});
     body.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Musik und Töne'),
       el('div', { class: 'sk-grid2' },
@@ -259,7 +260,7 @@
     const c = CB().cfg();
     body.appendChild(el('p', { class: 'muted' }, 'Kampf wie in klassischen Rollenspielen: rundenbasiert, Seitenansicht, Gruppe aus bis zu vier Helden. Gestartet wird ein Kampf mit der Aktion „⚔ Kampf starten“ – an einem Dialog, einer Antwort oder einem Hub-Objekt. Sieg, Niederlage und Flucht führen in eigene Szenen; „⚔ Kampf gewonnen“ fragt das Ergebnis später ab.'));
     const iss = CB().issues();
-    if (iss.length) body.appendChild(el('div', { class: 'opt-card bad-card' }, el('div', { class: 'sec-title', style: { color: '#ffb3ad' } }, '⚠ ' + iss.length + (iss.length === 1 ? ' Problem' : ' Probleme')), ...iss.slice(0, 8).map((x) => el('div', { class: 'small' }, '• ' + x.text))));
+    if (iss.length) body.appendChild(Help.sysBox(iss));
     if (!c.heroes.length && !c.enemies.length && !c.battles.length) {
       body.appendChild(el('div', { class: 'hint-box' }, 'Noch leer. Am schnellsten geht es mit dem Beispiel: drei Helden, drei Gegner, sieben Fähigkeiten und zwei Kämpfe – alles änderbar.',
         el('div', { class: 'row gap8', style: { marginTop: '8px' } }, el('button', { class: 'btn primary', onclick: () => { VN.ui.cbTab = 'battles'; CB().example(); } }, 'Beispiel anlegen'), el('button', { class: 'btn', onclick: () => VN.mutate(() => { const h = CB().newFighter('hero'); c.heroes.push(h); c.party.push(h.id); VN.ui.cbTab = 'heroes'; VN.ui.cbSel = h.id; }) }, 'Leer beginnen'))));

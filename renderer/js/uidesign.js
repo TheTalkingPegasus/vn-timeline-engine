@@ -21,6 +21,9 @@
     { key: 'q_fail', label: 'Quest: Gescheitert', icon: '✗', images: [], parent: 'q_all' },
     { key: 'q_all', label: 'Quest-Einblendungen (alle)', icon: '📜', images: [] },
     { key: 'relpop', label: 'Beziehungs-Einblendung', icon: '♥', images: [] },
+    { key: 'relmsg', label: 'Nachricht einer Figur', icon: '💬', images: [['phone', 'Handy-Rahmen (eigenes Bild, optional)']], sounds: [['sndA', 'Nachricht kommt an']] },
+    { key: 'relnote', label: 'Meldung „… hat dir geschickt“', icon: '🔔', images: [], sounds: [['sndA', 'Ton der Meldung (leer = Nachrichten-Ton)']] },
+    { key: 'galnew', label: 'Galerie: „Neu“-Leuchten', icon: '✨', images: [], sounds: [['sndA', 'Bild freigeschaltet']] },
     { key: 'skills', label: 'Skilltree', icon: '🌳', images: [] },
     { key: 'combat', label: 'Kampf', icon: '⚔', images: [] },
     { key: 'idle', label: 'Aufbau', icon: '🏰', images: [] },
@@ -28,7 +31,7 @@
   ];
   // Felder wie beim Systemfenster (theme.js SYS_BASE) plus Fenster-Hintergrundbild
   const FIELDS = ['bg', 'alpha', 'border', 'text', 'accent', 'accentText', 'font', 'titleFont', 'radius', 'dim', 'frame', 'slice', 'frameW', 'panelBg', 'screenBg', 'pattern', 'glow', 'borderW', 'preset',
-    'oNode', 'oLines', 'oSide', 'oPanel', 'oMenu', 'oBars', 'oCards', 'oGoals', 'oTabs'];
+    'oNode', 'oLines', 'oSide', 'oPanel', 'oMenu', 'oBars', 'oCards', 'oGoals', 'oTabs', 'oPop', 'oMsg', 'oNotePos', 'oNew', 'sndA'];
   const UP = () => window.UiPresets;
 
   const UiDesign = (window.UiDesign = {
@@ -185,7 +188,7 @@
         const sw = el('div', { class: 'ud-sw' + (own.preset === pr.id ? ' on' : '') , title: pr.label, onclick: () => VN.mutate(() => {
           const s = UiDesign.store();
           const keepImgs = (s[key] && s[key].images) || {};
-          s[key] = Object.assign({ images: keepImgs, frame: (s[key] || {}).frame || '', panelBg: (s[key] || {}).panelBg || '', screenBg: (s[key] || {}).screenBg || '' }, pr.v, { preset: pr.id });
+          s[key] = Object.assign({ images: keepImgs, frame: (s[key] || {}).frame || '', panelBg: (s[key] || {}).panelBg || '', screenBg: (s[key] || {}).screenBg || '', sndA: (s[key] || {}).sndA || '' }, pr.v, { preset: pr.id });
         }) });
         const face = el('div', { class: 'ud-sw-face', style: { background: UP().background(V) || VN.hexA(V.bg, 1), borderColor: V.border, color: V.text, borderRadius: Math.min(1.2, (V.radius || 0) * 0.4) + 'em', boxShadow: V.glow ? '0 0 10px ' + VN.hexA(V.accent, 0.45) : '' } },
           el('span', { style: { fontFamily: Theme.fontCss(V.titleFont) || 'Georgia, serif' } }, 'Aa'), el('i', { style: { background: V.accent } }));
@@ -227,6 +230,11 @@
           lay.appendChild(fld(ol, s));
         }
         box.appendChild(lay);
+      }
+      if (kind && kind.sounds && kind.sounds.length) {
+        const so = sec('Töne', el('div', { class: 'muted small' }, 'Gelten fürs ganze Projekt. Bei einer Figur oder einem einzelnen Meilenstein kannst du eigene Töne wählen – die haben Vorrang.'));
+        for (const [sk, sl] of kind.sounds) so.appendChild(fld(sl, el('div', { class: 'row gap4' }, VN.assetSelect('audio', own[sk] || '', (v) => set(sk, v || '')), D[sk] ? el('button', { class: 'btn tiny', onclick: () => { try { const a = new Audio(VN.assetUrl(D[sk])); a.play().catch(() => {}); } catch (e) { /* egal */ } } }, '▶') : null)));
+        box.appendChild(so);
       }
       if (kind && kind.images.length) {
         const im = sec('Standard-Bilder', el('div', { class: 'muted small' }, 'Gelten überall, wo an der Aktion selbst kein Bild gewählt ist. Ein Bild direkt an der Aktion hat immer Vorrang.'));
@@ -320,6 +328,39 @@
         UiDesign.apply(key, box);
         return;
       }
+      if (key === 'relmsg' || key === 'relnote') {
+        const s = window.RelMsg ? RelMsg.sample() : null;
+        if (s) {
+          const ms = Object.assign({}, s.m, { style: '' });
+          const note = RelMsg.note(stage, s.c, ms, true);
+          void note;
+          if (key === 'relmsg') {
+            const M = UiDesign.resolve('relmsg');
+            const style = M.oMsg || 'phone';
+            const img = ms.image && VN.assetUrl(ms.image) ? el('img', { class: 'rm-img', src: VN.assetUrl(ms.image) }) : null;
+            const por = el('div', { class: 'rm-small-por ph' }, (s.c.name || '?').slice(0, 1));
+            const panel = style === 'bubble' ? el('div', { class: 'rm-bubble' }, el('div', { class: 'rm-big-por ph' }, (s.c.name || '?').slice(0, 1)), el('div', { class: 'rm-bub-box' }, el('strong', { class: 'rm-name' }, s.c.name), el('div', { class: 'rm-text' }, ms.text), img))
+              : style === 'window' ? el('div', { class: 'rm-window' }, el('div', { class: 'rm-win-head' }, por, el('strong', { class: 'rm-name' }, s.c.name)), el('div', { class: 'rm-text' }, ms.text), img)
+                : el('div', { class: 'rm-phone' }, el('div', { class: 'rm-ph-notch' }), el('div', { class: 'rm-ph-head' }, por, el('strong', { class: 'rm-name' }, s.c.name)), el('div', { class: 'rm-ph-chat' }, el('div', { class: 'rm-msg' }, ms.text, el('span', { class: 'rm-time' }, VN.t('jetzt'))), img ? el('div', { class: 'rm-msg img' }, img) : null));
+            const frame = UiDesign.image('relmsg', 'phone');
+            if (frame && style === 'phone') { panel.classList.add('has-frame'); panel.style.setProperty('--rm-frame', `url("${frame}")`); }
+            const back = el('div', { class: 'rm-back side-' + (M.oSide || 'right') + ' st-' + style }, panel);
+            stage.appendChild(back);
+            UiDesign.apply('relmsg', panel, back);
+          }
+        }
+        return;
+      }
+      if (key === 'galnew') {
+        const G = UiDesign.resolve('galnew');
+        const imgs = VN.project.assets.filter((a) => a.kind === 'image').slice(0, 4);
+        const grid = el('div', { class: 'gal-grid' }, ...[0, 1, 2, 3].map((i) => el('div', { class: 'gal-tile' + (i < 2 ? ' is-new' : ''), style: { backgroundImage: imgs[i] ? `url("${VN.assetUrl(imgs[i].id)}")` : 'none' } }, i < 2 ? el('span', { class: 'gal-new' }, VN.t('Neu')) : null)));
+        const body = el('div', { class: 'gal-body', style: { '--gal-new': G.accent || '#ffd84a' } }, el('div', { class: 'gal-filter' }, el('button', { class: 'gal-chip on' }, VN.t('Alle'), el('span', { class: 'gal-chip-new' }, '2')), el('button', { class: 'gal-chip' }, 'Ray', el('span', { class: 'gal-chip-new' }, '2'))), grid);
+        body.dataset.oNew = G.oNew || 'both';
+        const panel = el('div', { class: 'sys-panel' }, el('div', { class: 'sys-title' }, VN.t('Galerie')), body);
+        stage.appendChild(el('div', { class: 'pl-overlay' }, panel));
+        return;
+      }
       if (key === 'ach') {
         const box = el('div', { class: 'ach-toast' }, el('div', { class: 'ach-ico ph' }, '🏆'), el('div', null, el('div', { class: 'ach-t1' }, T('Erfolg freigeschaltet')), el('strong', null, T('Meisterdieb'))));
         stage.appendChild(box);
@@ -399,6 +440,7 @@
     },
     // Ausprobieren: Laden-Vorschau oder ein Minispiel des Plugins
     tryable(key) {
+      if (key === 'relmsg' || key === 'relnote') return true;
       if (key === 'shop') return !!(VN.project.shops || []).length;
       const k = UiDesign.find(key);
       return !!(k && k.plugin && UiDesign.actionFor(key));
@@ -413,6 +455,7 @@
       return first ? k.plugin + '.' + first : null;
     },
     tryRun(key) {
+      if ((key === 'relmsg' || key === 'relnote') && window.RelMsg) { const s = RelMsg.sample(); return RelMsg.preview(s.c, s.m); }
       if (key === 'shop') {
         const shop = VN.project.shops[0];
         const rs = VN.newRunState();

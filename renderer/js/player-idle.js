@@ -65,7 +65,7 @@
               el('div', { class: 'id-name' }, tr(b.id + ':name', b.name), el('span', { class: 'id-lv' }, lvl ? tt('Stufe') + ' ' + lvl + (id.max(b) > 1 ? '/' + id.max(b) : '') : tt('Noch nicht gebaut'))),
               b.desc ? el('div', { class: 'id-desc' }, tr(b.id + ':desc', b.desc)) : null,
               el('div', { class: 'id-prod' + (lvl ? '' : ' dim') }, (lvl ? '' : tt('Bringt') + ' ') + prodTxt)));
-          if (st === 'locked') card.appendChild(el('div', { class: 'id-lock' }, '🔒 ' + (b.conds || []).map((x) => VN.condText(x)).join(', ')));
+          if (st === 'locked') card.appendChild(el('div', { class: 'id-lock' }, '🔒 ' + ((b.conds || []).length ? (b.conds || []).map((x) => VN.condText(x)).join(', ') : VN.tp('Noch nicht freigeschaltet'))));
           else if (st === 'max') card.appendChild(el('div', { class: 'id-max' }, '✓ ' + tt('Voll ausgebaut')));
           else {
             const cost = id.cost(b, lvl, rs);
@@ -100,14 +100,16 @@
         }
         if (!c.milestones.length) side.appendChild(el('div', { class: 'id-ms future' }, tt('Keine Ziele.')));
         const foot = el('div', { class: 'id-foot' }, el('span', { class: 'id-hint' }, c.click ? tt('Tipp: Auf gebaute Gebäude klicken bringt sofort etwas.') : ''),
-          el('button', { class: 'sys-btn', onclick: close }, tt('Schließen') + ' (' + (c.key || 'k').toUpperCase() + ')'));
+          el('button', { class: 'sys-btn', onclick: close }, tt('Schließen') + (c.key ? ' (' + c.key.toUpperCase() + ')' : '')));
         box.append(head, el('div', { class: 'id-body' }, grid, side), foot);
         if (window.UiDesign) UiDesign.apply('idle', box);
+        lastSig = sigOf();
       };
-      // Nur Zahlen und Knöpfe auffrischen (ohne neu aufzubauen, damit Klicks nicht verloren gehen)
+      // Nur Zahlen und Knöpfe auffrischen (ohne neu aufzubauen, damit Klicks und Animationen nicht verloren gehen)
       let lastSig = '';
+      const sigOf = () => c.buildings.map((b) => id.status(rs, b) + id.level(rs, b)).join() + '|' + Object.keys(id.state(rs).done).length + '|' + id.catchup(rs);
       const updateNums = () => {
-        const sig = c.buildings.map((b) => id.status(rs, b) + id.level(rs, b)).join() + '|' + Object.keys(id.state(rs).done).length + '|' + id.catchup(rs);
+        const sig = sigOf();
         if (sig !== lastSig) { lastSig = sig; draw(); return; }
         const rate = id.rate(rs);
         const chips = box.querySelectorAll('.id-rchip');
@@ -130,7 +132,7 @@
         if (bar && m) bar.style.width = Math.round(id.progress(rs, m) * 100) + '%';
       };
       draw();
-      lastSig = c.buildings.map((b) => id.status(rs, b) + id.level(rs, b)).join() + '|' + Object.keys(id.state(rs).done).length + '|' + id.catchup(rs);
+
       // Probelauf: eigene Uhr (im Spiel tickt die Produktion im Spieler weiter, auch bei geschlossenem Fenster)
       if (!opts.static) timer = setInterval(() => {
         if (!box.isConnected) { clearInterval(timer); return; }
@@ -203,7 +205,8 @@
     const onKey = (e) => {
       const r = R();
       if (!r || !ID().on() || (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName))) return false;
-      if (e.key.toLowerCase() !== (ID().cfg().key || 'k').toLowerCase()) return false;
+      const key = ID().cfg().key;
+      if (!key || e.key.toLowerCase() !== key.toLowerCase()) return false;
       if (screen) { screen.close(); return true; }
       if (r.overlay || r.blocked) return false;
       open(false);

@@ -307,6 +307,38 @@
       Stage.renderStory(stage, s, VN.ui.beat);
       if (VN.ui.fmtPreview) Export.formatOverlay(stage, VN.ui.fmtPreview);
       Story._ro = Stage.fit(wrap, stage);
+      // Figuren auf der Bühne ziehen: waagerecht = Position, senkrecht = Höhe (bei einem Keyframe im aktuellen Schritt wird der Keyframe geändert)
+      stage.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return;
+        const hit = Story.hitTest(stage, e.clientX, e.clientY);
+        const f = hit && VN.findClip(s, hit);
+        if (!f || VN.tbase(f.track) !== 'char' || f.track.lock) return;
+        const c = f.clip;
+        const node = stage.querySelector('[data-clip="' + c.id + '"]');
+        if (!node) return;
+        e.preventDefault();
+        const key = (c.keys || []).find((k) => k.beat === VN.ui.beat && (k.x != null || k.y != null));
+        const pr = window.Fx ? Fx.propsAt(c, VN.ui.beat) : { x: c.x != null ? c.x : 50, y: c.y || 0 };
+        const r = stage.getBoundingClientRect();
+        let nx = pr.x, ny = pr.y;
+        VN.drag(e, (dx, dy, ev) => {
+          let ddx = dx, ddy = dy;
+          if (ev && ev.shiftKey) { if (Math.abs(dx) > Math.abs(dy)) ddy = 0; else ddx = 0; }
+          nx = Math.max(-20, Math.min(120, Math.round((pr.x + ddx / r.width * 100) * 2) / 2));
+          ny = Math.max(-40, Math.min(60, Math.round((pr.y - ddy / r.height * 100) * 2) / 2));
+          node.style.left = nx + '%';
+          node.style.bottom = ny + '%';
+        }, (dx, dy, moved) => {
+          if (!moved) { VN.ui.sel = c.id; VN.render(); return; }
+          VN.mutate(() => {
+            // Liegt vor diesem Schritt schon ein Keyframe mit Position, würde er die Basis überdecken: dann hier einen Keyframe setzen
+            const earlier = (c.keys || []).some((k) => k.beat < VN.ui.beat && (k.x != null || k.y != null));
+            let tgt = key || c;
+            if (!key && earlier) { c.keys = c.keys || []; tgt = (c.keys.find((k) => k.beat === VN.ui.beat)) || (c.keys.push({ beat: VN.ui.beat }), c.keys[c.keys.length - 1]); }
+            tgt.x = nx; tgt.y = ny; VN.ui.sel = c.id;
+          });
+        });
+      });
       // Rechtsklick auf ein Objekt der Bühne: Design-Reiter öffnen
       stage.addEventListener('contextmenu', (e) => {
         e.preventDefault();

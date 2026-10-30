@@ -69,7 +69,15 @@
     box.appendChild(sec('Anklicken',
       c.click ? el('div', { class: 'sk-grid2' }, check(b.clickable, 'Dieses Gebäude anklickbar', (v) => { b.clickable = v; }), b.clickable ? field('Pro Klick (× Stufe)', num(b.clickAmount || 1, (v) => { b.clickAmount = Math.max(1, v || 1); }, '56px', 1)) : null)
         : el('div', { class: 'muted small' }, 'Anklicken ist in den Einstellungen ausgeschaltet.')));
-    box.appendChild(sec('Freischalten', VN.condEditor(b.conds, 'Erst baubar, wenn (optional)'), check(b.hideLocked, 'Bis dahin verstecken', (v) => { b.hideLocked = v; })));
+    const ub = b.unlockBy === 'action' ? 'action' : 'conds';
+    box.appendChild(sec('Freischalten',
+      el('div', { class: 'seg', style: { marginBottom: '6px' } },
+        el('button', { class: ub === 'conds' ? 'active' : '', onclick: () => VN.mutate(() => { b.unlockBy = 'conds'; }) }, 'Von Anfang an / mit Bedingung'),
+        el('button', { class: ub === 'action' ? 'active' : '', onclick: () => VN.mutate(() => { b.unlockBy = 'action'; }) }, 'Durch Aktion (z. B. Kauf im Hub)')),
+      ub === 'action' ? el('div', { class: 'hint-box' }, VN.t('Das Gebäude erscheint erst, wenn irgendwo die Aktion „🏰 Gebäude freischalten“ ausgeführt wird – am einfachsten per Rechtsklick auf ein Hub-Objekt → Bausteine → „Wird gekauft …“.'),
+        ID().unlockedSomewhere(b) ? null : el('div', { style: { marginTop: '6px', color: '#e8b84a' } }, '⚠ ' + VN.t('Noch nirgends eingerichtet.'))) : null,
+      VN.condEditor(b.conds, ub === 'action' ? 'Zusätzlich nur, wenn (optional)' : 'Erst baubar, wenn (optional)'),
+      check(b.hideLocked, 'Bis dahin verstecken', (v) => { b.hideLocked = v; })));
     return box;
   };
 
@@ -119,7 +127,7 @@
     body.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Allgemein'),
       el('div', { class: 'sk-grid2' },
         field('Titel im Spiel', txt(c.title, (v) => { c.title = v; })),
-        field('Taste', txt(c.key || 'k', (v) => { c.key = (v || 'k').slice(0, 1).toLowerCase(); }, { width: '40px' })),
+        field('Taste (leer = keine)', txt(c.key || '', (v) => { c.key = (v || '').slice(0, 1).toLowerCase(); }, { width: '40px' })),
         field('Produktion läuft', sel(c.mode, ID().MODES, (v) => { c.mode = v; }))),
       c.mode === 'offline' ? el('div', { class: 'sk-grid2' },
         field('Höchstens (Stunden)', num(c.offlineMax, (v) => { c.offlineMax = Math.max(0, v); }, '64px', 1)),
@@ -127,6 +135,7 @@
         el('span', { class: 'muted small', style: { alignSelf: 'end' } }, 'Beim nächsten Laden gibt es den Ertrag der Abwesenheit (gedeckelt).')) : null,
       c.mode === 'gametime' ? el('div', { class: 'muted small' }, 'Produziert wird, wenn per Aktion „Zeit vergehen lassen“ Tageszeiten vergehen. Mengen gelten dann pro Tageszeit.') : null,
       el('div', { class: 'row gap8', style: { flexWrap: 'wrap' } },
+        check(c.inMenu, 'Im Pausenmenü (Esc) anzeigen', (v) => { c.inMenu = v; }, 'Aus: Der Aufbau ist nur über die Spielwelt erreichbar – z. B. ein Objekt im Hub mit der Aktion „🏰 Aufbau öffnen“'),
         check(c.click, 'Gebäude anklickbar (pro Gebäude einstellbar)', (v) => { c.click = v; }),
         check(c.hidden, 'Künftige Ziele als „???“ zeigen', (v) => { c.hidden = v; }))));
     body.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Damit die Geschichte nicht ausgebremst wird'),
@@ -138,9 +147,9 @@
 
   S.idleTab = (body) => {
     const c = ID().cfg();
-    body.appendChild(el('p', { class: 'muted' }, el('span', null, 'Aufbau wie in Idle- und Aufbauspielen: Gebäude produzieren Rohstoffe (deine Währungen), werden mit steigenden Kosten ausgebaut, und erreichte Ziele treiben die Geschichte voran – z. B. ein Königreich aufbauen, um das Burgfräulein zu beeindrucken.'), ' ', el('span', null, (VN.I18n && VN.I18n.lang === 'en' ? 'In the game, key ' + (c.key || 'k').toUpperCase() + ' opens it.' : 'Im Spiel öffnet Taste ' + (c.key || 'k').toUpperCase() + ' den Aufbau.'))));
+    body.appendChild(el('p', { class: 'muted' }, el('span', null, 'Aufbau wie in Idle- und Aufbauspielen: Gebäude produzieren Rohstoffe (deine Währungen), werden mit steigenden Kosten ausgebaut, und erreichte Ziele treiben die Geschichte voran – z. B. ein Königreich aufbauen, um das Burgfräulein zu beeindrucken.'), ' ', el('span', null, VN.t('Geöffnet wird er über die Aktion „🏰 Aufbau öffnen“, z. B. an einem Objekt im Hub.') + (c.key ? ' ' + (VN.I18n && VN.I18n.lang === 'en' ? 'Key ' + c.key.toUpperCase() + ' also works.' : 'Taste ' + c.key.toUpperCase() + ' geht auch.') : ''))));
     const iss = ID().issues();
-    if (iss.length) body.appendChild(el('div', { class: 'opt-card bad-card' }, el('div', { class: 'sec-title', style: { color: '#ffb3ad' } }, '⚠ ' + iss.length + (iss.length === 1 ? ' Problem' : ' Probleme')), ...iss.slice(0, 8).map((x) => el('div', { class: 'small' }, '• ' + x.text))));
+    if (iss.length) body.appendChild(Help.sysBox(iss));
     if (!c.buildings.length && !c.milestones.length) {
       body.appendChild(el('div', { class: 'hint-box' }, 'Noch leer. Das Beispiel „Königreich“ legt Holz und Stein als Rohstoffe an, fünf Gebäude (Holzfällerhütte bis Burg) und drei Ziele – alles änderbar.',
         el('div', { class: 'row gap8', style: { marginTop: '8px' } }, el('button', { class: 'btn primary', onclick: () => { VN.ui.idTab = 'buildings'; ID().example(); } }, 'Beispiel: Königreich'), el('button', { class: 'btn', onclick: () => VN.mutate(() => { const b = ID().newBuilding(); c.buildings.push(b); VN.ui.idTab = 'buildings'; VN.ui.idSel = b.id; }) }, 'Leer beginnen'))));

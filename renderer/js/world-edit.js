@@ -17,8 +17,7 @@
     const p = VN.project, c = W().cfg();
     body.appendChild(el('p', { class: 'muted' }, 'Hub-Szenen werden zu Orten, zwischen denen man frei reisen kann – über die Weltkarte (Taste M) und den Knopf „🏠 Zuhause“ (Taste H). Story-Szenen werden zu Ereignissen: Sie starten, wenn man zur passenden Zeit an einen Ort kommt, und kehren danach dorthin zurück. Mit der Aktion „Freie Zeit beginnt / endet“ wechselst du zwischen freiem Herumlaufen und linearer Story.'));
     const iss = W().issues();
-    if (iss.length) body.appendChild(el('div', { class: 'opt-card bad-card' }, el('div', { class: 'sec-title', style: { color: '#ffb3ad' } }, '⚠ ' + iss.length + (iss.length === 1 ? ' Problem' : ' Probleme')),
-      ...iss.map((i) => el('div', { class: 'small', style: { color: '#ffb3ad' } }, '• ' + i.text))));
+    if (iss.length) body.appendChild(Help.sysBox(iss));
 
     // ---------- Einstellungen ----------
     const locOpts = [['', '— keins —'], ...W().locs().map((s) => [s.id, s.name])];
@@ -28,6 +27,7 @@
       timeOn() ? el('div', { class: 'logic-row' }, el('span', null, 'Reisen dauert'), num(c.travel, (v) => { c.travel = Math.max(0, v || 0); }), el('span', { class: 'muted small' }, 'Tageszeiten (an jedem Pin einzeln änderbar, 0 = sofort)')) : null,
       el('label', { class: 'check' }, chk(c.freeAtStart, (v) => { c.freeAtStart = v; }), 'Freie Zeit schon ab Spielbeginn (sonst erst per Aktion „Freie Zeit beginnt“)'),
       el('label', { class: 'check' }, chk(c.hudMap !== false, (v) => { c.hudMap = v; }), 'Knopf „🗺 Karte“ im Spiel'),
+      el('label', { class: 'check' }, chk(!!c.inMenu, (v) => { c.inMenu = v; }), 'Karte auch im Pausenmenü (Esc) anzeigen'),
       el('label', { class: 'check' }, chk(c.hudHome !== false, (v) => { c.hudHome = v; }), 'Knopf „🏠 Zuhause“ im Spiel'),
       el('label', { class: 'check' }, chk(c.walkAnim !== false, (v) => { c.walkAnim = v; }), 'Kleine Reise-Animation auf der Karte'),
       el('div', { class: 'row gap8' }, el('button', { class: 'btn tiny', onclick: () => { if (window.UiDesign) UiDesign.edit('map'); } }, '🎨 Design der Karte'))));
