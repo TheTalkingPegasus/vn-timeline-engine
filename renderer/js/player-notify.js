@@ -116,6 +116,7 @@
     const questScreen = (back) => new Promise((resolve) => {
       const r = R();
       if (!r || !Q().on()) return resolve();
+      VN.did(r.rs, 'screen', 'quests');
       r.overlay = 'quests';
       H.uiSound('open');
       const rs = r.rs;

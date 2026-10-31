@@ -27,6 +27,7 @@
       if (rs.log.length > 150) rs.log.splice(0, rs.log.length - 150);
     };
     const logScreen = (back) => new Promise((resolve) => {
+      if (R()) VN.did(R().rs, 'screen', 'log');
       const r = R();
       if (r) r.overlay = 'log';
       H.setPanelKind('pause');
@@ -47,7 +48,7 @@
     const markRead = () => { const r = R(); if (r && r.curLine) X().mark('read', r.curLine); };
     let tick = 0, autoAt = 0, autoKey = '', skipHeld = false, lastSkip = 0;
     const mode = { auto: false, skip: false };
-    const canStep = (r) => r && !r.ended && !r.overlay && !r.blocked && !r.choicesShown && !r.holding && !H.stage().querySelector('.gl-pop, .plugin-overlay, .pl-name-ask, .wm-screen, .ql-screen') && (r.curLine || r.message);
+    const canStep = (r) => r && !r.waitFor && !r.ended && !r.overlay && !r.blocked && !r.choicesShown && !r.holding && !H.stage().querySelector('.gl-pop, .plugin-overlay, .pl-name-ask, .wm-screen, .ql-screen') && (r.curLine || r.message);
     const loop = () => {
       const r = R();
       if (!r) return;
@@ -103,6 +104,7 @@
 
     // ---------- Galerie ----------
     const galleryScreen = (fromMenu) => new Promise((resolve) => {
+      if (R()) VN.did(R().rs, 'screen', 'gallery');
       const r = R();
       if (r) r.overlay = 'gallery';
       H.setPanelKind('pause');
@@ -160,6 +162,7 @@
 
     // ---------- Erfolge ----------
     const achScreen = (fromMenu) => new Promise((resolve) => {
+      if (R()) VN.did(R().rs, 'screen', 'ach');
       const r = R();
       if (r) r.overlay = 'ach';
       H.setPanelKind('pause');
@@ -193,6 +196,7 @@
 
     // ---------- Werte ----------
     const statsScreen = (back) => new Promise((resolve) => {
+      if (R()) VN.did(R().rs, 'screen', 'stats');
       const r = R();
       if (!r) return resolve();
       r.overlay = 'stats';
@@ -224,7 +228,7 @@
       const box = el('div', { class: 'pl-name-ask', onclick: (e) => e.stopPropagation() },
         el('div', { class: 'sys-panel' }, el('div', { class: 'sys-title' }, a.prompt || 'Wie heißt du?'), inp,
           el('button', { class: 'sys-btn primary', onclick: () => ok() }, 'OK')));
-      const ok = () => { const v = inp.value.trim() || a.def || ''; if (!v) { inp.focus(); return; } r.rs.names[a.var] = v; box.remove(); resolve(); };
+      const ok = () => { const v = inp.value.trim() || a.def || ''; if (!v) { inp.focus(); return; } r.rs.names[a.var] = v; VN.did(r.rs, 'name', a.var); box.remove(); resolve(); };
       inp.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') ok(); });
       H.stage().appendChild(box);
       setTimeout(() => inp.focus(), 30);
@@ -240,6 +244,7 @@
       if (hubTargets) { hold(it); return; }
       if (!X().canUse(it)) { H.showMessage(el('div', null, 'Das kann man hier nicht benutzen.'), () => {}); return; }
       if (it.use.consume !== false) { r.rs.inv[it.id] = Math.max(0, (r.rs.inv[it.id] || 0) - 1); if (!r.rs.inv[it.id]) delete r.rs.inv[it.id]; }
+      VN.did(r.rs, 'use', it.id);
       if (window.VNPlugin) VNPlugin.hook('onUseItem', it.id, null, VNPlugin.makeCtx(r.rs));
       const gains = await H.doActions(it.use.actions, 'use:' + it.id);
       if (gains === null) return;

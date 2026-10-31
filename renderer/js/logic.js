@@ -333,6 +333,7 @@
         for (const d of dl) {
           out.push({ id: d.id, area: s.name, where: 'Schritt ' + (d.start + 1), who: d.speaker || 'Erzähler', text: d.text || '', set: (v) => { d.text = v; }, sceneId: s.id, beat: d.start });
           if (d.speaker) speakers.add(d.speaker.trim());
+          if (d.waitFor && d.waitFor.hint) out.push({ id: d.id + ':wait', area: s.name, where: 'Schritt ' + (d.start + 1), who: 'Hinweis (Weiter erst, wenn …)', text: d.waitFor.hint, set: (v) => { d.waitFor.hint = v; }, sceneId: s.id, beat: d.start });
         }
         for (const c of s.tracks.choice) for (const o of c.options) out.push({ id: o.id, area: s.name, where: 'Antwort · Schritt ' + (c.start + 1), who: 'Antwort', text: o.text || '', set: (v) => { o.text = v; }, sceneId: s.id, beat: c.start });
       } else {

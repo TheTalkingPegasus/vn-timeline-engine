@@ -2,6 +2,21 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.7.2 – Equipment, “Continue only when …”, new triggers
+- New game system “Equipment” (Game systems → Overview): slots like head, body, hand, jewellery (freely
+  definable), items get a slot (Items → “Equip” column). In the inventory the player equips and takes off
+  items; worn items are marked. Condition “👕 Wears item” / “👕 Slot filled”, actions “Put on item”,
+  “Take off slot”, “Open equipment”. Plugin hook onEquip.
+- “Continue only when …” on dialogue lines: the game stays on the line until a condition is met (e.g. the
+  inventory was opened or a dress is worn), with a hint text, optional glowing button and optional automatic
+  continue. Auto and skip pause there.
+- New condition “✔ Player has done …”: opened a screen (inventory, map, quest log, relationships, skill tree,
+  building, party, gallery, achievements, stats, history), entered a name, visited a scene/place, used an
+  item, equipped an item, gave a gift. Usable everywhere, also as quest trigger.
+- Dialogue editor: placeholder help under the text with buttons to insert {name} and variables.
+- Fix: sound effects kept playing in the editor after closing a test.
+- Inventory: the close button no longer covers the item actions.
+
 ## 0.7.1 – Fix: automatic updates
 - Fix: installed versions (setup) never found the update source, because the build tool removes the
   publish settings from the packaged package.json. The engine now reads the source from the installer's

@@ -107,6 +107,7 @@
     const screen = (treeId, back) => new Promise((resolve) => {
       const r = R();
       if (!r || !SK().on()) return resolve();
+      VN.did(r.rs, 'screen', 'skills');
       r.overlay = 'skills';
       H.uiSound('open');
       const b = VN.SkillScreen.open({

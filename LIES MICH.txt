@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.7.1
+VN Timeline Engine · Prototyp 0.7.2
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,17 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.7.2 · Ausrüstung, „Weiter erst, wenn …“, neue Auslöser
+- Neues Spielsystem „Ausrüstung“ (Spielsysteme → Übersicht): Plätze wie Kopf, Körper, Hand, Schmuck
+  frei festlegen, Gegenständen einen Platz geben (Gegenstände → Spalte „Ausrüsten“). Im Inventar rüstet
+  der Spieler aus und legt ab. Bedingung „👕 Trägt Gegenstand“, Aktionen „anlegen“ und „ablegen“.
+- „Weiter erst, wenn …“ an Dialogzeilen: Das Spiel bleibt stehen, bis z. B. das Inventar geöffnet oder
+  ein Kleid angezogen wurde. Mit Hinweistext und leuchtendem Knopf – ideal für Tutorials im eigenen Spiel.
+- Neue Bedingung „✔ Spieler hat … getan“: Bildschirm geöffnet, Namen eingetragen, Ort besucht,
+  Gegenstand benutzt oder ausgerüstet, Geschenk gegeben. Überall nutzbar, auch für Quests.
+- Dialog-Editor: Hilfe zu Platzhaltern wie {name} mit Knöpfen zum Einfügen.
+- Behoben: Soundeffekte liefen nach dem Beenden eines Tests im Editor weiter.
 
 NEU IN 0.7.1 · Fehlerbehebung: automatische Updates
 - Die installierte Fassung (Setup) hat die Update-Quelle nicht gefunden. Behoben. Wer 0.7.0 oder älter

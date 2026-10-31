@@ -197,6 +197,7 @@
     const open = (back) => new Promise((resolve) => {
       const r = R();
       if (!r || !ID().on()) return resolve();
+      VN.did(r.rs, 'screen', 'idle');
       r.overlay = 'idle';
       H.uiSound('open');
       H.stage().classList.add('in-panel');

@@ -4,7 +4,7 @@
 
   const TABS = [
     ['overview', 'Übersicht'], ['vars', 'Variablen'], ['items', 'Gegenstände'], ['money', 'Währungen'], ['loot', 'Loot-Tabellen'], ['inv', 'Inventar-Menü'],
-    ['time', 'Zeit'], ['shops', 'Läden'], ['rel', 'Beziehungen'], ['gifts', 'Geschenke'], ['quests', 'Quests'], ['world', 'Welt & Orte'], ['skills', 'Skilltrees'], ['combat', 'Kampf'], ['idle', 'Aufbau'], ['ach', 'Erfolge'], ['gallery', 'Galerie'], ['gloss', 'Glossar'], ['plugins', 'Plugins']
+    ['time', 'Zeit'], ['shops', 'Läden'], ['rel', 'Beziehungen'], ['gifts', 'Geschenke'], ['quests', 'Quests'], ['world', 'Welt & Orte'], ['skills', 'Skilltrees'], ['combat', 'Kampf'], ['idle', 'Aufbau'], ['equip', 'Ausrüstung'], ['ach', 'Erfolge'], ['gallery', 'Galerie'], ['gloss', 'Glossar'], ['plugins', 'Plugins']
   ];
   // Reiter nur zeigen, wenn das System eingeschaltet ist
   const tabOn = (k) => {
@@ -19,6 +19,7 @@
     if (k === 'skills') return !!(p.skills && p.skills.enabled);
     if (k === 'combat') return !!(p.combat && p.combat.enabled);
     if (k === 'idle') return !!(p.idle && p.idle.enabled);
+    if (k === 'equip') return !!(p.equip && p.equip.enabled);
     return true;
   };
 
@@ -82,7 +83,7 @@
       const L = VN.Life || {};
       const pt = plTabs.find((x) => x[0] === tab);
       if (pt) { try { pt[2].editorTab.render(body); } catch (e) { body.appendChild(el('div', { class: 'hint-box' }, 'Fehler im Plugin: ' + e.message)); console.error(e); } return; }
-      const TAB_FN = { overview: L.overview, time: L.timeTab, shops: L.shopsTab, rel: L.relTab, gifts: L.giftsTab, vars: Systems.vars, items: Systems.items, money: Systems.money, loot: Systems.loot, inv: Systems.inv, gloss: Systems.gloss, plugins: VNPlugin.editorPanel, ach: Systems.achTab, gallery: Systems.galleryTab, quests: Systems.questsTab, world: Systems.worldTab, skills: Systems.skillsTab, combat: Systems.combatTab, idle: Systems.idleTab };
+      const TAB_FN = { overview: L.overview, time: L.timeTab, shops: L.shopsTab, rel: L.relTab, gifts: L.giftsTab, vars: Systems.vars, items: Systems.items, money: Systems.money, loot: Systems.loot, inv: Systems.inv, gloss: Systems.gloss, plugins: VNPlugin.editorPanel, ach: Systems.achTab, gallery: Systems.galleryTab, quests: Systems.questsTab, world: Systems.worldTab, skills: Systems.skillsTab, combat: Systems.combatTab, idle: Systems.idleTab, equip: Systems.equipTab };
       // Unbekannter Reiter (z. B. aus einer älteren Version): zur Übersicht
       (TAB_FN[tab] || TAB_FN.overview)(body);
     },
@@ -121,10 +122,12 @@
     items(body) {
       const p = VN.project;
       body.appendChild(el('p', { class: 'muted' }, 'Alle Gegenstände des Spiels. Namen und Beschreibungen erscheinen automatisch im Transkript. Vergeben werden sie über Aktionen oder Loot-Tabellen.'));
-      body.appendChild(table('150px minmax(110px, 1.2fr) 130px 64px 60px 60px 1.3fr 88px 36px', ['Bild', 'Name', 'Kategorie', 'Stapelbar', 'Max', 'Wert', 'Beschreibung', '', ''], p.items.map((it) => [
+      const eqOn = !!(VN.Equip && VN.Equip.on());
+      body.appendChild(table('150px minmax(110px, 1.2fr) 130px ' + (eqOn ? '120px ' : '') + '64px 60px 60px 1.3fr 88px 36px', ['Bild', 'Name', 'Kategorie', ...(eqOn ? ['Ausrüsten'] : []), 'Stapelbar', 'Max', 'Wert', 'Beschreibung', '', ''], p.items.map((it) => [
         imgSel(it.image, (v) => { it.image = v; }),
         txt(it.name, (x) => { it.name = x || 'Gegenstand'; }),
         catSel(it),
+        ...(eqOn ? [sel(it.slot || '', [['', '— nein —'], ...VN.Equip.slots().map((sl) => [sl.id, (sl.icon ? sl.icon + ' ' : '') + sl.name])], (v) => { if (v) it.slot = v; else delete it.slot; })] : []),
         chk(it.stack, (x) => { it.stack = x; }),
         num(it.max, (x) => { it.max = x; }, { width: '60px' }),
         num(it.value, (x) => { it.value = x; }, { width: '60px' }),
@@ -312,7 +315,11 @@
         }
         return out;
       };
+      const eqHolder = el('div', { class: 'eq-holder' });
       const draw = () => {
+        eqHolder.innerHTML = '';
+        const eqb = VN.Equip ? VN.Equip.bar(rs, draw, opts.preview) : null;
+        if (eqb) eqHolder.appendChild(eqb);
         tabs.innerHTML = '';
         for (const c of cats) tabs.appendChild(el('button', { class: 'inv-tab' + (c === cat ? ' active' : ''), onclick: (e) => { e.stopPropagation(); cat = c; draw(); } }, c === 'Alle' ? VN.tr('ui:allTab', 'Alle') : VN.tr('invcat:' + c, c)));
         slotsEl.innerHTML = '';
@@ -323,6 +330,7 @@
           const slot = el('div', { class: 'inv-slot' + (e && selected === e.it ? ' sel' : '') + (s.slot ? '' : ' ph') });
           if (s.slot) slot.style.backgroundImage = `url("${VN.assetUrl(s.slot)}")`;
           if (e) {
+            if (VN.Equip && VN.Equip.worn(rs, e.it.id)) slot.classList.add('worn');
             slot.appendChild(e.it.image ? el('div', { class: 'inv-img', style: { backgroundImage: `url("${VN.assetUrl(e.it.image)}")` } }) : el('div', { class: 'inv-img ph' }, (e.it.name || '?').slice(0, 2)));
             if (e.n > 1) slot.appendChild(el('span', { class: 'inv-n' }, String(e.n)));
             slot.title = VN.tr(e.it.id + ':name', e.it.name);
@@ -355,6 +363,7 @@
             note ? el('div', { class: 'inv-note' }, note) : null,
             combining ? el('div', { class: 'inv-note' }, 'Womit kombinieren? Zweiten Gegenstand anklicken.') : null,
             el('div', { class: 'inv-acts' },
+              VN.Equip && !opts.preview ? VN.Equip.button(rs, selected, draw) : null,
               opts.onUse && opts.canUse && opts.canUse(selected) ? el('button', { class: 'inv-act', onclick: (ev) => { ev.stopPropagation(); opts.onUse(selected); } }, 'Benutzen') : null,
               opts.onCombine && VN.Extras && VN.Extras.combos().some((c) => c.a === selected.id || c.b === selected.id) ? el('button', { class: 'inv-act' + (combining ? ' on' : ''), onclick: (ev) => { ev.stopPropagation(); combining = combining ? null : selected; note = ''; draw(); } }, combining ? 'Abbrechen' : 'Kombinieren …') : null));
         } else detail.append(el('div', { class: 'muted' }, 'Gegenstand anklicken für Details'), note ? el('div', { class: 'inv-note' }, note) : '');
@@ -365,6 +374,7 @@
       box.append(
         el('div', { class: 'inv-head' }, el('strong', { class: 'inv-title' }, VN.tr('ui:inventory', s.title || 'Inventar')), money),
         tabs,
+        eqHolder,
         el('div', { class: 'inv-main' }, slotsEl, detail));
       if (opts.onClose) box.appendChild(el('button', { class: 'inv-close', onclick: (e) => { e.stopPropagation(); opts.onClose(); } }, 'Schließen (I)'));
       return box;

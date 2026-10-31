@@ -7,7 +7,7 @@ every column is one click of the player. Free, source available (VN Timeline Eng
 
 ![Editor with timeline](docs/screenshots/en/editor-timeline.png)
 
-> **Status:** prototype (0.7.1). It works and is tested, but expect rough edges. Back up your projects.
+> **Status:** prototype (0.7.2). It works and is tested, but expect rough edges. Back up your projects.
 
 ## Download
 
@@ -117,7 +117,7 @@ jede Spalte ist ein Klick des Spielers. Kostenlos, Quellcode offen (VN Timeline 
 
 ![Editor mit Timeline](docs/screenshots/de/editor-timeline.png)
 
-> **Stand:** Prototyp (0.7.1). Funktioniert und ist getestet, aber noch nicht in allem rund. Mach Sicherungen deiner Projekte.
+> **Stand:** Prototyp (0.7.2). Funktioniert und ist getestet, aber noch nicht in allem rund. Mach Sicherungen deiner Projekte.
 
 ### Herunterladen
 

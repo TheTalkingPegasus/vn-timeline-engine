@@ -546,6 +546,7 @@
     const Rr = R();
     // Ohne laufendes Spiel (z. B. Prüfung im Editor) gibt es nichts anzuzeigen
     if (!(window.Player && Player.running)) return Promise.resolve();
+    VN.did(rs, 'screen', 'rel');
     return new Promise((resolve) => {
       const list = el('div', { class: 'rel-list' });
       const shown = Rr.chars.filter((c) => !Rr.hideUnmet || rs.relMet[c.id] || c.alwaysShow);
@@ -612,7 +613,7 @@
           e.stopPropagation();
           const { pts, pref } = Life.giftPoints(c, it, rs);
           rs.inv[it.id] -= 1; if (!rs.inv[it.id]) delete rs.inv[it.id];
-          rs.giftCount[c.id] = rs.giftCount[c.id] || {}; rs.giftCount[c.id][it.id] = (rs.giftCount[c.id][it.id] || 0) + 1;
+          rs.giftCount[c.id] = rs.giftCount[c.id] || {}; rs.giftCount[c.id][it.id] = (rs.giftCount[c.id][it.id] || 0) + 1; VN.did(rs, 'gift', c.id);
           rs.giftLast[c.id] = allowed;
           rs.giftKnown[c.id] = rs.giftKnown[c.id] || {}; rs.giftKnown[c.id][pref.tag] = pref.lv;
           const g = []; Life.addRel(rs, c.id, pts > 0 && VN.bonus ? Math.round(VN.bonus('gift.gain', pts, rs)) : pts, g);
