@@ -14,7 +14,7 @@
   const check = (v, label, fn, title) => el('label', { class: 'check', title: title || '' }, el('input', { type: 'checkbox', checked: !!v, onchange: (e) => VN.mutate(() => fn(e.target.checked)) }), label);
   const sec = (title, ...kids) => el('div', { class: 'sk-sec' }, el('span', { class: 'sec-title' }, title), ...kids);
   const curOpts = () => [['', '— Währung —'], ...VN.project.currencies.map((c) => [c.id, c.name])];
-  const unitL = () => (ID().cfg().mode === 'gametime' ? VN.t('pro Tageszeit') : VN.t('pro Minute'));
+  const unitL = () => (ID().cfg().mode === 'gametime' ? VN.t('pro Tageszeit') : VN.t({ sec: 'pro Sekunde', hour: 'pro Stunde' }[ID().cfg().tick] || 'pro Minute'));
 
   const listLayout = (items, selId, setSel, render, addBtns, rowInfo) => {
     const list = el('div', { class: 'cb-elist' });
@@ -128,7 +128,14 @@
       el('div', { class: 'sk-grid2' },
         field('Titel im Spiel', txt(c.title, (v) => { c.title = v; })),
         field('Taste (leer = keine)', txt(c.key || '', (v) => { c.key = (v || '').slice(0, 1).toLowerCase(); }, { width: '40px' })),
-        field('Produktion läuft', sel(c.mode, ID().MODES, (v) => { c.mode = v; }))),
+        field('Produktion läuft', sel(c.mode, ID().MODES, (v) => { c.mode = v; })),
+        c.mode !== 'gametime' ? field('Mengen gelten', sel(c.tick || 'min', ID().TICKS, (v) => { c.tick = v; })) : null,
+        field('Aufbau startet', sel(c.startWhen || 'always', ID().STARTS, (v) => { c.startWhen = v; }))),
+      c.startWhen === 'cond' ? VN.condEditor(c.startConds || (c.startConds = []), 'Startet, sobald') : null,
+      c.startWhen === 'cond' ? el('div', { class: 'muted small' }, 'Zum Beispiel „✔ Spieler hat … eine Szene gesehen“ oder eine Variable, die ein Dialog setzt. Danach läuft der Aufbau dauerhaft.') : null,
+      c.startWhen === 'action' ? el('div', { class: 'muted small' }, 'Setze die Aktion „🏰 Aufbau starten“ z. B. an eine Dialogzeile („Ab heute gehört dir das Dorf!“), an eine Antwort oder an ein Objekt im Hub.') : null,
+      c.startWhen === 'firstOpen' ? el('div', { class: 'muted small' }, 'Die Produktion beginnt in dem Moment, in dem der Spieler den Aufbau zum ersten Mal öffnet – vorher wird nichts gesammelt.') : null,
+      c.mode !== 'gametime' && c.tick === 'hour' ? el('div', { class: 'muted small' }, 'Pro Stunde lohnt sich meist mit „auch bei geschlossenem Spiel“ – sonst müsste der Spieler eine Stunde mit offenem Spiel warten.') : null,
       c.mode === 'offline' ? el('div', { class: 'sk-grid2' },
         field('Höchstens (Stunden)', num(c.offlineMax, (v) => { c.offlineMax = Math.max(0, v); }, '64px', 1)),
         field('Davon %', num(c.offlinePct, (v) => { c.offlinePct = Math.max(0, Math.min(100, v)); }, '64px', 5)),

@@ -150,6 +150,9 @@
     if (a.type === 'money' && !p.currencies.some((x) => x.id === a.currency)) return 'Währung fehlt';
     if (a.type === 'loot' && !p.lootTables.some((x) => x.id === a.table)) return 'Loot-Tabelle fehlt';
     if ((a.type === 'rel' || a.type === 'gift') && !(VN.Life && VN.Life.relChar(a.char))) return 'Figur fehlt';
+    if (a.type === 'charPic' && !(VN.Life && VN.Life.relChar(a.char))) return 'Figur fehlt';
+    if (a.type === 'charPic' && !a.image && !a.text) return 'Kein Bild und keine Nachricht';
+    if (a.type === 'charPic' && a.image && !VN.asset(a.image)) return 'Bild fehlt';
     if (a.type === 'plugin' && window.VNPlugin && !VNPlugin.actionDef(a.ref)) return 'Plugin fehlt';
     const x = VN.ext.actions[a.type];
     if (x && x.problem) { try { return x.problem(a) || null; } catch (e) { return 'Fehler in der Aktion'; } }

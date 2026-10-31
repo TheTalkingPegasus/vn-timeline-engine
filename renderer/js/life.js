@@ -442,7 +442,7 @@
       box.appendChild(head);
       if (open) {
         const det = el('div', { class: 'ms-detail' },
-          el('div', { class: 'logic-row' }, el('span', { class: 'muted small', style: { width: '150px' } }, VN.t('Bild mitschicken')), VN.assetSelect('image', m.image, (v) => VN.mutate(() => { m.image = v; const a = v && VN.asset(v); if (a) { a.gallery = true; if (!a.galleryChar) a.galleryChar = c.id; } }))),
+          el('div', { class: 'logic-row' }, el('span', { class: 'muted small', style: { width: '150px' } }, VN.t('Bild mitschicken')), VN.assetSelect('image', m.image, (v) => VN.mutate(() => { m.image = v; const a = v && VN.asset(v); if (a) { a.gallery = true; if (VN.Extras && VN.Extras.addGalChar) VN.Extras.addGalChar(a, c.id); else if (!a.galleryChar) a.galleryChar = c.id; } }))),
           el('div', { class: 'logic-row' }, el('span', { class: 'muted small', style: { width: '150px' } }, VN.t('Darstellung')),
             el('select', { class: 'sel', onchange: (e) => VN.mutate(() => { m.style = e.target.value; }) }, ...[['', VN.t('wie im Design')], ['phone', VN.t('Handy')], ['bubble', VN.t('Sprechblase')], ['window', VN.t('Fenster')], ['none', VN.t('nur Meldung, keine Nachricht')]].map(([k, l]) => el('option', { value: k, selected: (m.style || '') === k }, l)))),
           el('div', { class: 'logic-row' }, el('span', { class: 'muted small', style: { width: '150px' } }, VN.t('Meldung')), el('input', { type: 'text', value: m.notify || '', placeholder: Life.msNotify(c, m), style: { flex: '1' }, onchange: (e) => VN.mutate(() => { m.notify = e.target.value; }) })),
@@ -500,6 +500,15 @@
     if (a.type === 'rel') { Life.addRel(rs, a.char, a.amount, gains); return true; }
     if (a.type === 'gift') { gains.pending.push(Life.giftDialog(a.char, rs)); return true; }
     if (a.type === 'relScreen') { gains.pending.push(Life.relScreen(rs, true)); return true; }
+    if (a.type === 'charPic') {
+      // Bild-Geschenk (0.7.4): Figur schickt ein Bild mit eigener Nachricht, es landet in der Galerie
+      const c = Life.relChar(a.char);
+      if (!c) return true;
+      if (a.image) { const as = VN.asset(a.image); if (as) { as.gallery = true; if (VN.Extras && VN.Extras.addGalChar) VN.Extras.addGalChar(as, c.id); } if (VN.Extras && VN.Extras.unlockNew) VN.Extras.unlockNew(a.image); }
+      if (VN.did) VN.did(rs, 'charPic', a.char);
+      if (gains && gains.pending && (a.text || a.image) && window.Player && Player.charMessage && !(VN.Idle && VN.Idle._sim)) gains.pending.push(() => Player.charMessage(c.id, { id: a.id || ('cp_' + c.id), text: a.text || '', image: a.image || null, style: a.style || '', notify: a.notify || '' }));
+      return true;
+    }
     return baseApply(a, rs, gains);
   };
   const baseActText = Life.actionText;
@@ -507,6 +516,7 @@
     if (a.type === 'rel') { const c = Life.relChar(a.char); return '♥ ' + (c ? c.name : '?') + (Number(a.amount) >= 0 ? ' +' : ' ') + (a.amount || 0); }
     if (a.type === 'gift') { const c = Life.relChar(a.char); return 'Geschenk an ' + (c ? c.name : '?'); }
     if (a.type === 'relScreen') return 'Beziehungen anzeigen';
+    if (a.type === 'charPic') { const c = Life.relChar(a.char); const im = a.image && VN.asset(a.image); return '📷 ' + (c ? c.name : '?') + ' ' + VN.t('schickt') + ' ' + (im ? '„' + im.name + '“' : VN.t('eine Nachricht')); }
     return baseActText(a);
   };
   const baseActRow = Life.actionRow;
@@ -517,10 +527,19 @@
       return true;
     }
     if (a.type === 'relScreen') return true;
+    if (a.type === 'charPic') {
+      if (!a.id) a.id = VN.uid('cp');
+      row.appendChild(sel(a.char || '', [['', '— Figur —'], ...R().chars.map((x) => [x.id, x.name])], (v) => VN.mutate(() => { a.char = v; const im = a.image && VN.asset(a.image); if (im && v && VN.Extras) VN.Extras.addGalChar(im, v); })));
+      row.appendChild(VN.assetSelect('image', a.image, (v) => VN.mutate(() => { a.image = v; const im = v && VN.asset(v); if (im) { im.gallery = true; if (a.char && VN.Extras) VN.Extras.addGalChar(im, a.char); } })));
+      row.appendChild(el('input', { type: 'text', value: a.text || '', placeholder: VN.t('Nachricht, z. B. „Hab an dich gedacht 😊“'), style: { flex: '1', minWidth: '140px' }, onchange: (e) => VN.mutate(() => { a.text = e.target.value; }) }));
+      row.appendChild(sel(a.style || '', [['', 'wie im Design'], ['phone', '📱 Handy'], ['bubble', '💬 Sprechblase'], ['window', '🪟 Fenster']], (v) => VN.mutate(() => { a.style = v; }), { width: '110px' }));
+      if (a.image || a.text) row.appendChild(el('button', { class: 'btn tiny', title: VN.t('Vorschau'), onclick: () => { const c = Life.relChar(a.char); if (c && window.RelMsg) RelMsg.preview(c, { id: a.id, text: a.text, image: a.image, style: a.style }); } }, '▶'));
+      return true;
+    }
     return baseActRow(row, a, sel, inp);
   };
   Life.extraCondTypes = () => (Life.relOn() ? [['rel', '♥ Beziehung']] : []);
-  Life.extraActionTypes = () => (Life.relOn() ? [['rel', '♥ Beziehung ändern'], ...(Life.giftsOn() ? [['gift', '🎁 Geschenk geben lassen']] : []), ['relScreen', '♥ Beziehungen anzeigen']] : []);
+  Life.extraActionTypes = () => (Life.relOn() ? [['rel', '♥ Beziehung ändern'], ...(Life.giftsOn() ? [['gift', '🎁 Geschenk geben lassen']] : []), ['charPic', '📷 Figur schickt ein Bild'], ['relScreen', '♥ Beziehungen anzeigen']] : []);
 
   // Antworten: „Beziehung“-Feld direkt an der Antwort (+10 Ray, −5 Wache)
   Life.optActions = (o) => [...(o.actions || []), ...((o.rel || []).filter((r) => r.char && Number(r.amount)).map((r) => ({ type: 'rel', char: r.char, amount: r.amount })))];

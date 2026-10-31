@@ -39,6 +39,10 @@
   X.galleryMusic = () => VN.project.assets.filter((a) => a.kind === 'audio' && a.musicRoom);
   X.replayScenes = () => VN.project.scenes.filter((s) => s.replay);
   X.galleryOn = () => !!(X.galleryImages().length || X.galleryMusic().length || X.replayScenes().length);
+  // Figuren eines Galeriebilds (0.7.4: mehrere möglich; galleryChar bleibt als erste Figur erhalten)
+  X.galChars = (a) => (a && Array.isArray(a.galleryChars) && a.galleryChars.length ? a.galleryChars : a && a.galleryChar ? [a.galleryChar] : []);
+  X.setGalChars = (a, ids) => { const list = [...new Set(ids.filter(Boolean))]; if (list.length) { a.galleryChars = list; a.galleryChar = list[0]; } else { delete a.galleryChars; delete a.galleryChar; } };
+  X.addGalChar = (a, id) => { if (a && id && !X.galChars(a).includes(id)) X.setGalChars(a, [...X.galChars(a), id]); };
   X.seeImage = (id) => { const a = id && VN.asset(id); if (a && a.gallery) X.mark('gallery', id); };
   // Neu freigeschaltet (z. B. von einer Figur geschickt): leuchtet als „Neu“, bis man es in der Galerie öffnet
   X.unlockNew = (id) => { const a = id && VN.asset(id); if (!a) return; if (X.mark('gallery', id)) { X.P().galNew[id] = Date.now(); X.save(); } };
@@ -168,6 +172,10 @@
     }
     for (const c of X.combos()) if (c.text) out.push({ id: c.id + ':text', area: 'Gegenstände', where: 'Kombination', who: 'Meldung', text: c.text, set: (v) => { c.text = v; } });
     for (const it of VN.project.items) if (it.use && it.use.text) out.push({ id: it.id + ':use', area: 'Gegenstände', where: it.name, who: 'Benutzen', text: it.use.text, set: (v) => { it.use.text = v; } });
+    // Bild-Geschenke (Aktion „📷 Figur schickt ein Bild“), überall im Projekt
+    const seen = new Set();
+    const walk = (o, d) => { if (!o || typeof o !== 'object' || d > 16) return; if (Array.isArray(o)) { for (const x of o) walk(x, d + 1); return; } if (o.type === 'charPic' && o.id && !seen.has(o.id)) { seen.add(o.id); if (o.text) out.push({ id: o.id + ':text', area: 'Bild-Geschenke', where: (VN.Life && VN.Life.relChar(o.char) || {}).name || '', who: 'Nachricht', text: o.text, set: (v) => { o.text = v; } }); if (o.notify) out.push({ id: o.id + ':note', area: 'Bild-Geschenke', where: (VN.Life && VN.Life.relChar(o.char) || {}).name || '', who: 'Meldung', text: o.notify, set: (v) => { o.notify = v; } }); } for (const k in o) if (o[k] && typeof o[k] === 'object') walk(o[k], d + 1); };
+    walk(VN.project.scenes, 0); walk(VN.project.relations, 0); walk(VN.project.idle, 0); walk(VN.project.quests, 0); walk(VN.project.world, 0); walk(VN.project.items, 0);
     return out;
   };
 })();

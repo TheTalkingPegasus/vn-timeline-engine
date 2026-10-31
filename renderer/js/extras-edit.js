@@ -52,8 +52,8 @@
     const grid = el('div', { class: 'gal-ed-grid' });
     for (const a of imgs) grid.appendChild(el('label', { class: 'gal-ed' + (a.gallery ? ' on' : '') }, el('div', { class: 'thumb', style: { backgroundImage: `url("${VN.assetUrl(a.id)}")` } }),
       el('span', { class: 'row gap4' }, chk(a.gallery, (v) => { if (v) a.gallery = true; else delete a.gallery; }), el('span', { class: 'small' }, a.name)),
-      a.gallery && VN.Life && VN.Life.relOn() && VN.project.relations.chars.length ? el('select', { class: 'sel gal-who', title: VN.t('Figur (Filter in der Galerie)'), onclick: (ev) => ev.stopPropagation(), onchange: (ev) => VN.mutate(() => { if (ev.target.value) a.galleryChar = ev.target.value; else delete a.galleryChar; }) },
-        el('option', { value: '' }, VN.t('— keine Figur —')), ...VN.project.relations.chars.map((c) => el('option', { value: c.id, selected: a.galleryChar === c.id }, c.name))) : null));
+      a.gallery && VN.Life && VN.Life.relOn() && VN.project.relations.chars.length ? el('div', { class: 'gal-who-chips', title: VN.t('Figuren (Filter in der Galerie) – auch mehrere, z. B. bei Gruppenbildern') },
+        ...VN.project.relations.chars.map((c) => { const on = VN.Extras.galChars(a).includes(c.id); return el('button', { class: 'gal-who-chip' + (on ? ' on' : ''), style: on ? { background: c.color || '#e86a9a', borderColor: c.color || '#e86a9a' } : null, onclick: (ev) => { ev.preventDefault(); ev.stopPropagation(); VN.mutate(() => { const cur = VN.Extras.galChars(a); VN.Extras.setGalChars(a, on ? cur.filter((x) => x !== c.id) : [...cur, c.id]); }); } }, c.name); })) : null));
     body.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Bilder (CGs) · ' + imgs.filter((a) => a.gallery).length + ' gewählt'), imgs.length ? grid : el('div', { class: 'muted small' }, 'Noch keine Bilder im Projekt.')));
     const mus = el('div', { class: 'col gap4' });
     for (const a of auds) mus.appendChild(el('label', { class: 'check' }, chk(a.musicRoom, (v) => { if (v) a.musicRoom = true; else delete a.musicRoom; }), a.name));

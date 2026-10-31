@@ -74,7 +74,7 @@
       const tbtn = (on, txt, title, k) => el('button', { class: 'tb' + (on ? ' on' : ''), title, onclick: (e) => { e.stopPropagation(); flip(k); } }, txt);
       const name = el('span', { class: 'tl-name', title: t.label + ' · Doppelklick: umbenennen, Rechtsklick: Menü' }, t.label);
       const head = el('div', { class: 'tl-head' + (VN.trackOn(s, t, tracks) ? '' : ' off') },
-        el('span', { class: 'sw', style: { background: t.color } }), name,
+        el('span', { class: 'sw', style: { background: VN.A11y ? VN.A11y.col(t.color) : t.color } }), name,
         el('span', { class: 'tl-btns' },
           visual ? tbtn(t.hide, t.hide ? '◌' : '◉', t.hide ? 'Ausgeblendet (nur beim Bearbeiten/Testen)' : 'Sichtbar – klicken zum Ausblenden', 'hide') : null,
           audio ? tbtn(t.mute, 'M', 'Stumm (nur beim Bearbeiten/Testen)', 'mute') : null,
@@ -321,24 +321,31 @@
         const pr = window.Fx ? Fx.propsAt(c, VN.ui.beat) : { x: c.x != null ? c.x : 50, y: c.y || 0 };
         const r = stage.getBoundingClientRect();
         let nx = pr.x, ny = pr.y;
+        // Einrasten (0.7.4): Bildmitte, Drittel, Boden und die anderen Figuren; Alt = frei
+        const others = Object.values(Stage.state(s, VN.ui.beat).chars || []).map(([, oc]) => oc).filter((oc) => oc && oc.id !== c.id).map((oc) => (window.Fx ? Fx.propsAt(oc, VN.ui.beat).x : oc.x));
+        const snapsX = [50, 100 / 3, 200 / 3, 25, 75, ...others];
         VN.drag(e, (dx, dy, ev) => {
           let ddx = dx, ddy = dy;
           if (ev && ev.shiftKey) { if (Math.abs(dx) > Math.abs(dy)) ddy = 0; else ddx = 0; }
           nx = Math.max(-20, Math.min(120, Math.round((pr.x + ddx / r.width * 100) * 2) / 2));
           ny = Math.max(-40, Math.min(60, Math.round((pr.y - ddy / r.height * 100) * 2) / 2));
+          let gx = null, gy = null;
+          if (!(ev && ev.altKey)) {
+            for (const t of snapsX) if (Math.abs(nx - t) < 1.2) { nx = Math.round(t * 10) / 10; gx = nx; break; }
+            if (Math.abs(ny) < 1.2) { ny = 0; gy = 0; }
+          }
+          Story.guides(stage, gx, gy);
           node.style.left = nx + '%';
           node.style.bottom = ny + '%';
+          const tf = stage.querySelector('.tf-box'); if (tf) tf.remove();
         }, (dx, dy, moved) => {
+          Story.guides(stage, null, null);
           if (!moved) { VN.ui.sel = c.id; VN.render(); return; }
-          VN.mutate(() => {
-            // Liegt vor diesem Schritt schon ein Keyframe mit Position, würde er die Basis überdecken: dann hier einen Keyframe setzen
-            const earlier = (c.keys || []).some((k) => k.beat < VN.ui.beat && (k.x != null || k.y != null));
-            let tgt = key || c;
-            if (!key && earlier) { c.keys = c.keys || []; tgt = (c.keys.find((k) => k.beat === VN.ui.beat)) || (c.keys.push({ beat: VN.ui.beat }), c.keys[c.keys.length - 1]); }
-            tgt.x = nx; tgt.y = ny; VN.ui.sel = c.id;
-          });
+          VN.mutate(() => { Story.writeCharProps(c, { x: nx, y: ny }); VN.ui.sel = c.id; });
         });
       });
+      // Freies Transformieren (0.7.4): Rahmen mit Griffen um die gewählte Figur
+      Story.transformBox(stage, s);
       // Rechtsklick auf ein Objekt der Bühne: Design-Reiter öffnen
       stage.addEventListener('contextmenu', (e) => {
         e.preventDefault();
@@ -350,6 +357,7 @@
             items.push({ head: f.track.label + ' · ' + clipLabel(f.clip, f.track).slice(0, 36) });
             items.push({ label: '🎨 Design ändern …', action: () => { VN.ui.sel = f.clip.id; Design.openTab(); } });
             items.push({ label: 'Eigenschaften', action: () => { VN.ui.sel = f.clip.id; VN.ui.inspTab = 'props'; VN.render(); } });
+            if (VN.tbase(f.track) === 'char' && window.FmtCopy) items.push(...FmtCopy.menuItems(s, f.clip));
             items.push('sep');
           }
         } else items.push({ head: 'Bühne' });
@@ -481,6 +489,99 @@
       scroll.scrollTop = Story._scroll.top;
     },
 
+    // Eigenschaften einer Figur schreiben – gibt es in diesem Schritt einen Keyframe (oder einen früheren, der
+    // die Basis überdecken würde), landet der Wert im Keyframe, sonst im Clip.
+    writeCharProps(c, props) {
+      const b = VN.ui.beat;
+      const names = Object.keys(props);
+      const key = (c.keys || []).find((k) => k.beat === b && names.some((n) => k[n] != null));
+      const earlier = (c.keys || []).some((k) => k.beat < b && names.some((n) => k[n] != null));
+      let tgt = key || c;
+      if (!key && earlier) { c.keys = c.keys || []; tgt = (c.keys.find((k) => k.beat === b)) || (c.keys.push({ beat: b }), c.keys[c.keys.length - 1]); }
+      for (const n of names) tgt[n] = props[n];
+    },
+
+    // Hilfslinien beim Einrasten
+    guides(stage, gx, gy) {
+      stage.querySelectorAll('.tf-guide').forEach((n) => n.remove());
+      if (gx != null) stage.appendChild(el('div', { class: 'tf-guide v', style: { left: gx + '%' } }));
+      if (gy != null) stage.appendChild(el('div', { class: 'tf-guide h', style: { bottom: gy + '%' } }));
+    },
+
+    // Rahmen um die gewählte Figur: Ecken = skalieren, Kreis oben = drehen (Umschalt: 15°-Schritte), Doppelklick auf den Kreis = 0°
+    transformBox(stage, s) {
+      const f = VN.ui.sel && VN.findClip(s, VN.ui.sel);
+      if (!f || VN.tbase(f.track) !== 'char' || f.track.lock) return;
+      const c = f.clip;
+      if (VN.ui.beat < c.start || VN.ui.beat >= c.start + c.len) return;
+      const place = () => {
+        const old = stage.querySelector('.tf-box'); if (old) old.remove();
+        const node = stage.querySelector('[data-clip="' + c.id + '"]');
+        if (!node) return;
+        // Rahmen um das sichtbare Bild (Canvas der Bones-Figuren hat Rand, dann die Figur selbst) – auf die Bühne begrenzt
+        const img = node.querySelector('img'), cv = node.querySelector('canvas');
+        const sr = stage.getBoundingClientRect();
+        let r0 = (img || node).getBoundingClientRect();
+        if (!img && cv) { const cr = cv.getBoundingClientRect(), nr0 = node.getBoundingClientRect(), w = cr.width * nr0.height / Math.max(1, cr.height); r0 = { left: cr.left + (cr.width - w) / 2, right: cr.left + (cr.width + w) / 2, top: nr0.top, bottom: nr0.bottom, width: w }; }
+        if (!r0.width || !sr.width) return;
+        const L = Math.max(r0.left, sr.left + 2), T = Math.max(r0.top, sr.top + 2), R = Math.min(r0.right, sr.right - 2), B = Math.min(r0.bottom, sr.bottom - 2);
+        if (R - L < 6 || B - T < 6) return;
+        const ir = { left: L, top: T, width: R - L, height: B - T };
+        const k = stage.offsetWidth / sr.width; // Bühne ist skaliert
+        const box = el('div', { class: 'tf-box', style: { left: (ir.left - sr.left) * k + 'px', top: (ir.top - sr.top) * k + 'px', width: ir.width * k + 'px', height: ir.height * k + 'px' } });
+        for (const corner of ['nw', 'ne', 'sw', 'se']) box.appendChild(el('div', { class: 'tf-h ' + corner, title: VN.t('Ziehen = Größe ändern') }));
+        box.appendChild(el('div', { class: 'tf-rot', title: VN.t('Ziehen = drehen (Umschalt: 15°-Schritte) · Doppelklick = gerade') }));
+        stage.appendChild(box);
+        const pr = window.Fx ? Fx.propsAt(c, VN.ui.beat) : { x: c.x || 50, y: c.y || 0, scale: c.scale || 100, rot: c.rot || 0 };
+        // Ankerpunkt: unten in der Mitte der Figur (dort sitzt sie)
+        const nr = node.getBoundingClientRect();
+        const ax = nr.left + nr.width / 2, ay = nr.bottom;
+        box.querySelectorAll('.tf-h').forEach((h) => h.addEventListener('mousedown', (e) => {
+          e.preventDefault(); e.stopPropagation();
+          const d0 = Math.max(8, Math.hypot(e.clientX - ax, e.clientY - ay));
+          let sc = pr.scale;
+          VN.drag(e, (dx, dy, ev) => {
+            const d = Math.hypot(e.clientX + dx - ax, e.clientY + dy - ay);
+            sc = Math.max(10, Math.min(400, Math.round(pr.scale * d / d0)));
+            if (!(ev && ev.altKey)) for (const t of [100, 50, 150, 200]) if (Math.abs(sc - t) < 3) sc = t;
+            node.style.height = (88 * sc / 100) + '%';
+            box.style.visibility = 'hidden';
+            Story.tfLabel(stage, sc + ' %');
+          }, (dx, dy, moved) => { Story.tfLabel(stage, null); if (moved) VN.mutate(() => Story.writeCharProps(c, { scale: sc })); else place(); });
+        }));
+        const rotH = box.querySelector('.tf-rot');
+        rotH.addEventListener('dblclick', (e) => { e.stopPropagation(); VN.mutate(() => Story.writeCharProps(c, { rot: 0 })); });
+        rotH.addEventListener('mousedown', (e) => {
+          e.preventDefault(); e.stopPropagation();
+          const cx = ir.left + ir.width / 2, cy = ir.top + ir.height / 2;
+          const a0 = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI;
+          let rot = pr.rot || 0;
+          VN.drag(e, (dx, dy, ev) => {
+            const a = Math.atan2(e.clientY + dy - cy, e.clientX + dx - cx) * 180 / Math.PI;
+            rot = Math.round((pr.rot || 0) + a - a0);
+            if (rot > 180) rot -= 360; if (rot < -180) rot += 360;
+            if (ev && ev.shiftKey) rot = Math.round(rot / 15) * 15;
+            else if (Math.abs(rot) < 3) rot = 0;
+            node.style.rotate = rot ? rot + 'deg' : '';
+            box.style.visibility = 'hidden';
+            Story.tfLabel(stage, rot + '°');
+          }, (dx, dy, moved) => { Story.tfLabel(stage, null); if (moved) VN.mutate(() => Story.writeCharProps(c, { rot })); else place(); });
+        });
+      };
+      // Bilder müssen geladen sein, bevor der Rahmen passt
+      // (Bühnengröße und Figuren-Canvas stehen erst nach dem ersten Layout fest – ein paar Mal nachsetzen)
+      const again = () => { if (stage.isConnected && !VN.dragging) place(); };
+      requestAnimationFrame(again); setTimeout(again, 160); setTimeout(again, 600);
+      const img = stage.querySelector('[data-clip="' + c.id + '"] img');
+      if (img && !img.complete) img.addEventListener('load', again, { once: true });
+    },
+    tfLabel(stage, text) {
+      let n = stage.querySelector('.tf-label');
+      if (text == null) { if (n) n.remove(); return; }
+      if (!n) { n = el('div', { class: 'tf-label' }); stage.appendChild(n); }
+      n.textContent = text;
+    },
+
     // Welcher Clip liegt auf der Bühne an dieser Stelle? (Dialog vor Auswahl vor Figuren vor Hintergrund)
     hitTest(stage, x, y) {
       const inside = (n) => { const r = n.getBoundingClientRect(); return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom; };
@@ -501,7 +602,7 @@
       const needsAsset = (t.kind === 'image' && !c.set) || t.kind === 'audio' || (t.kind === 'video' && !c.anim);
       const node = el('div', {
         class: 'clip' + (t.kind === 'dialog' ? ' clip-user' : '') + (VN.ui.sel === c.id ? ' sel' : '') + (needsAsset && !VN.asset(c.asset) ? ' empty' : '') + (t.kind === 'audio' ? ' audio' : ''),
-        style: { left: c.start * BW + 1 + 'px', width: Math.max(16, c.len * BW - 2) + 'px', background: t.color, color: t.fg },
+        style: { left: c.start * BW + 1 + 'px', width: Math.max(16, c.len * BW - 2) + 'px', background: VN.A11y ? VN.A11y.col(t.color) : t.color, color: t.fg },
         title: clipLabel(c, t)
       }, el('span', null, clipLabel(c, t)));
       if (t.kind !== 'dialog' && t.kind !== 'choice') node.appendChild(el('div', { class: 'rs', title: 'Ziehen zum Verlängern' }));
@@ -552,6 +653,7 @@
           const has = (c.keys || []).some((k) => k.beat === kb);
           items.push({ label: has ? 'Keyframe bei Schritt ' + (kb + 1) + ' bearbeiten' : '◆ Keyframe bei Schritt ' + (kb + 1) + ' setzen', action: () => { if (!has) Story.addKey(c, t, kb); VN.ui.sel = c.id; VN.ui.inspTab = 'props'; VN.ui.beat = kb; VN.render(); } });
         }
+        if (VN.tbase(t) === 'char' && window.FmtCopy) items.push(...FmtCopy.menuItems(s, c), 'sep');
         if (Design.hasTab(t)) items.push({ label: '🎨 Design ändern …', hint: t.key === 'dialog' ? 'Sprechblase' : t.key === 'choice' ? 'Buttons' : 'Textur', action: () => Design.openTab() }, 'sep');
         if (t.key === 'dialog') items.push({ label: 'Dialog danach einfügen', action: () => Story.addClip(s, t, c.start + 1) });
         items.push({ label: 'Duplizieren', action: () => Story.duplicateClip(s, c, t) });

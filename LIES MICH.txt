@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.7.3
+VN Timeline Engine · Prototyp 0.7.4
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,33 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.7.4 · Hub-Dialoge, Storyboard, freies Transformieren, Komfort & Farbenblind, Anleitung für KI
+- Hub-Dialoge wie in der Timeline: Ein Hub-Ereignis kann jetzt eine ganze Timeline-Szene über dem Hub
+  abspielen – mit Figuren, Handy-Chat, Auswahl und Aktionen – und kehrt danach in den Hub zurück
+  („+ Timeline-Dialog“). Auch Objekte können beim Klick so einen Dialog starten. Neuer Auslöser „sobald
+  ‚Nur wenn‘ stimmt“ (auch mitten im Hub). Kurze Ereignis-Zeilen können als 📱 Handy oder 🔔 Meldung
+  erscheinen. „↩ Zurück zum Hub“ funktioniert jetzt auch ohne Welt & Orte.
+- Aufbau (Idle): startet wahlweise sofort, erst beim ersten Öffnen, sobald Bedingungen stimmen (z. B. nach
+  einem Dialog) oder durch die neue Aktion „🏰 Aufbau starten“. Mengen gelten pro Sekunde, Minute oder
+  Stunde. Neue Bedingung „🏰 Aufbau läuft“.
+- Figuren frei transformieren: Rahmen auf der Bühne mit Ecken zum Skalieren und Kreis zum Drehen,
+  Einrasten an Mitte, Dritteln, Boden und anderen Figuren (Alt = frei). Neben jedem Regler ein Zahlenfeld
+  zum Eintippen, neuer Regler „Drehung“.
+- Format kopieren: Rechtsklick auf eine Figur → „Format kopieren“, bei einer anderen „Format einfügen …“
+  – per Häkchen wählen, was übertragen wird (Position, Größe, Drehung, Spiegeln, Effekte, Auftritt,
+  Bewegung, Keyframes), auch auf alle Figuren im Schritt oder in der Szene.
+- Bild-Geschenke: neue Aktion „📷 Figur schickt ein Bild“ mit eigener Nachricht (Handy, Sprechblase,
+  Fenster); das Bild landet in der Galerie. Galeriebilder können mehreren Figuren gehören (Gruppenbilder).
+- Storyboard: neuer Reiter neben dem Transkript – freie Fläche für Bilder (per Drag and Drop), Notizen mit
+  Namen, Überschriften, Pfeile und Verknüpfung mit Szenen. Für Profis und Teams; wird im Projekt
+  gespeichert, aber nicht ins Spiel exportiert.
+- Komfort & Barrierefreiheit (Projekt ▾): Komfort-Modus (ruhig, keine Animationen, gedämpfte Farben),
+  größere Oberfläche, Farbenblind-Modus und eine Vorschau „Spiel mit den Augen farbenblinder Spieler“.
+  Für Spieler neu: „Farbhilfe“ für drei Arten von Farbenblindheit und „Weniger Effekte“.
+- Anleitung für KI (Projekt ▾ → 🤖): erzeugt AI-GUIDE.md mit Dateiformat, allen Bedingungen und Aktionen,
+  Bedienung und Projektübersicht – damit ChatGPT, Gemini, Grok & Co. Projekte ohne Quellcode verstehen.
+  Allgemeine Fassung: docs/AI-GUIDE.md.
 
 NEU IN 0.7.3 · Ausrüstung mit Aktionen und Boni, „Weiter erst, wenn …“ verbessert
 - „Weiter erst, wenn …“: neue Auswahl „Diese Zeile erst zeigen, wenn erledigt“ – z. B. das Lob

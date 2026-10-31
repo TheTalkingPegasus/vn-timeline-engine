@@ -2,6 +2,32 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.7.4 – Hub dialogues, storyboard, free transform, comfort & colour-blind modes, AI guide
+- Hub dialogues like in the timeline: a hub event can now play a whole timeline scene over the hub –
+  characters, phone chat, choices, actions – and returns to the hub afterwards (“+ Timeline dialogue”).
+  Hub objects can start such a dialogue on click. New trigger “as soon as ‘Only if’ is true” (also while
+  in the hub). Short event lines can appear as 📱 phone message or 🔔 notification. “↩ Back to the hub”
+  now works without World & locations.
+- Building (idle): starts right away, on first opening, as soon as conditions are met (e.g. after a
+  dialogue) or through the new action “🏰 Start building”. Amounts apply per second, minute or hour.
+  New condition “🏰 Building is running”.
+- Free transform for characters: frame on the stage with corner handles to scale and a circle to rotate,
+  snapping to centre, thirds, floor and other characters (Alt = free). Every slider has a number field
+  to type values; new “Rotation” slider.
+- Copy format: right-click a character → “Copy format”, on another one “Paste format …” – tick what is
+  transferred (position, size, rotation, flip, effects, entrance, idle motion, keyframes), also to all
+  characters in the step or scene.
+- Picture gifts: new action “📷 Character sends a picture” with its own message (phone, speech bubble,
+  window); the picture lands in the gallery. Gallery pictures can belong to several characters.
+- Storyboard: new tab next to the transcript – a free board for images (drag and drop), notes with author,
+  headings, arrows and links to scenes. For pros and teams; saved in the project, not exported into games.
+- Comfort & accessibility (Project ▾): comfort mode (calm, no animations, muted colours), larger interface,
+  colour-blind mode and a preview “see the game through the eyes of colour-blind players”. New for
+  players: “Colour help” for three kinds of colour blindness and “Fewer effects”.
+- AI guide (Project ▾ → 🤖): generates AI-GUIDE.md with the file format, all conditions and actions, how to
+  operate the program and a project overview – so ChatGPT, Gemini, Grok & co. understand projects without
+  the source code. General version: docs/AI-GUIDE.md.
+
 ## 0.7.3 – Equipment actions and bonuses, “Continue only when …” improved
 - “Continue only when …”: new choice “Show this line only once it's done” (default for new setups) – the
   line, e.g. a reaction, appears only after the condition is met; works even if it is met inside the

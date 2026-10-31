@@ -237,6 +237,7 @@
     if (VN.ui.view === 'graph') Graph.render(center);
     else if (VN.ui.view === 'systems') Systems.render(center);
     else if (VN.ui.view === 'transcript') Transcript.render(center);
+    else if (VN.ui.view === 'storyboard') Storyboard.render(center);
     else if (VN.ui.view === 'bones') Figures.render(center);
     else if (VN.ui.view === 'menu') Menu.render(center);
     else if (VN.ui.view === 'design') Design.render(center);
@@ -297,8 +298,10 @@
       'sep',
       { label: 'Text importieren …', hint: 'Dialoge, Ren\'Py', action: () => VN.TextImport.open(VN.curScene && VN.curScene()) },
       { label: 'Ton-Einstellungen …', hint: 'Kopfhörer, Boxen', action: () => App.audioSettings() },
+      { label: '♿ Komfort & Barrierefreiheit …', hint: 'ruhig, größer, farbenblind', action: () => VN.A11y.open() },
       { label: 'Nach Updates suchen …', hint: 'v' + ((VN.Schema && VN.Schema.ENGINE) || ''), action: () => Updates.open() },
       { label: 'Projektordner öffnen', action: () => VN.api.openPath('') },
+      { label: '🤖 Anleitung für KI …', hint: 'ChatGPT, Gemini, Grok …', action: () => VN.AIGuide.open() },
       'sep',
       { head: 'Sprache · Language' },
       { label: (VN.I18n.lang === 'en' ? '✓ ' : '　') + 'English', action: () => VN.I18n.set('en') },

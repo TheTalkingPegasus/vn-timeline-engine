@@ -12,14 +12,27 @@
     onchange: (e) => { let v = parseFloat(e.target.value); if (isNaN(v)) v = o.min || 0; if (o.min != null) v = Math.max(o.min, v); if (o.max != null) v = Math.min(o.max, v); commit(v); }
   });
 
-  const range = (label, value, min, max, step, fmt, commit) => {
+  // Regler mit Zahlenfeld zum Eintippen (0.7.4). o.free: eingetippte Werte dürfen über den Regler hinausgehen (lo/hi = harte Grenzen)
+  const range = (label, value, min, max, step, fmt, commit, o = {}) => {
     const lab = el('div', { class: 'lbl' }, label + ': ' + fmt(value));
+    const numIn = el('input', {
+      type: 'number', class: 'rng-num', value: Math.round(value * 100) / 100, step,
+      title: VN.t('Wert eintippen'),
+      onkeydown: (e) => { if (e.key === 'Enter') e.target.blur(); },
+      onchange: (e) => {
+        let v = parseFloat(String(e.target.value).replace(',', '.'));
+        if (isNaN(v)) { e.target.value = value; return; }
+        const lo = o.free ? (o.lo != null ? o.lo : -Infinity) : min, hi = o.free ? (o.hi != null ? o.hi : Infinity) : max;
+        v = Math.max(lo, Math.min(hi, v));
+        commit(v);
+      }
+    });
     const inp = el('input', {
       type: 'range', min, max, step, value,
-      oninput: (e) => { lab.textContent = label + ': ' + fmt(parseFloat(e.target.value)); },
+      oninput: (e) => { lab.textContent = label + ': ' + fmt(parseFloat(e.target.value)); numIn.value = e.target.value; },
       onchange: (e) => commit(parseFloat(e.target.value))
     });
-    return el('div', { class: 'field' }, lab, inp);
+    return el('div', { class: 'field' }, lab, el('div', { class: 'rng-row' }, inp, numIn));
   };
 
   const check = (label, checked, commit) => el('label', { class: 'check' },
@@ -71,6 +84,7 @@
       if (VN.ui.view === 'graph') return root.appendChild(Inspector.graph());
       if (VN.ui.view === 'systems') return root.appendChild(Inspector.systems());
       if (VN.ui.view === 'transcript') return root.appendChild(Transcript.inspector());
+      if (VN.ui.view === 'storyboard') return root.appendChild(Storyboard.inspector());
       if (VN.ui.view === 'bones') return root.appendChild(Figures.inspector());
       if (VN.ui.view === 'menu') return root.appendChild(Menu.inspector());
       if (!s) return root.appendChild(el('div', { class: 'hint-box' }, 'Lege links eine Story- oder Hub-Szene an.'));
@@ -115,6 +129,7 @@
         el('div', null, el('h3', null, 'Story-Szene'), el('div', { class: 'insp-title' }, s.name)),
         field('Name', text(s.name, set(s, 'name'))),
         field('Länge in Schritten (Klicks)', num(s.beats, (v) => VN.mutate(() => { s.beats = Math.max(1, Math.round(v)); }), { min: 1, max: 999 })),
+        s.overHub || s.next === '@return' ? check('Über dem Hub abspielen (Hub bleibt im Hintergrund sichtbar)', s.overHub, set(s, 'overHub')) : null,
         field('Danach weiter zu', VN.sceneSelect(s.next, set(s, 'next'), { exclude: s.id, world: true, emptyLabel: VN.World && VN.World.on() ? '— Ende (oder zurück zum Ort nach Ereignis) —' : '— Ende des Spiels —' })),
         Inspector.startRow(s),
         el('div', { class: 'hint-box' },
@@ -149,10 +164,11 @@
         box.append(Tools.figureFields(s, c),
           c.set ? null : assetField('Figur-Bild', 'image', c.asset, set(c, 'asset')),
           field('Name der Figur (für Sprecher)', text(c.name, set(c, 'name'), (VN.asset(c.asset) || {}).name || 'z. B. Ray')),
-          range('Position', c.x != null ? c.x : 50, 0, 100, 1, (v) => Math.round(v) + ' %', set(c, 'x')),
-          range('Höhe', c.y || 0, -40, 60, 1, (v) => (Math.round(v) > 0 ? '+' : '') + Math.round(v) + ' %', set(c, 'y')),
-          el('div', { class: 'muted small' }, 'Tipp: Figuren lassen sich auf der Bühne auch direkt ziehen – waagerecht für die Position, senkrecht für die Höhe (Umschalt: nur eine Richtung).'),
-          range('Größe', c.scale || 100, 30, 180, 1, (v) => Math.round(v) + ' %', set(c, 'scale')),
+          range('Position', c.x != null ? c.x : 50, 0, 100, 1, (v) => Math.round(v * 10) / 10 + ' %', set(c, 'x'), { free: true, lo: -50, hi: 150 }),
+          range('Höhe', c.y || 0, -40, 60, 1, (v) => (v > 0 ? '+' : '') + Math.round(v * 10) / 10 + ' %', set(c, 'y'), { free: true, lo: -100, hi: 100 }),
+          range('Größe', c.scale || 100, 30, 180, 1, (v) => Math.round(v) + ' %', set(c, 'scale'), { free: true, lo: 5, hi: 400 }),
+          range('Drehung', c.rot || 0, -180, 180, 1, (v) => Math.round(v) + '°', set(c, 'rot')),
+          el('div', { class: 'muted small' }, 'Frei transformieren: Figur auf der Bühne ziehen (rastet an Mitte, Dritteln, Boden und anderen Figuren ein – Alt = frei), an den Ecken skalieren, am Kreis oben drehen (Umschalt: 15°-Schritte). Werte lassen sich auch eintippen.'),
           check('Spiegeln', c.flip, set(c, 'flip')),
           field('Auftritt', select(c.trans || 'fade', [['cut', 'Sofort'], ['fade', 'Einblenden'], ['slide', 'Hereingleiten']], set(c, 'trans'))),
           field('Bewegung im Stand', select(c.idle || 'none', [['none', 'Keine'], ['breathe', 'Atmen'], ['float', 'Schweben']], set(c, 'idle'))),
@@ -273,21 +289,41 @@
         const card = el('div', { class: 'opt-card' },
           el('div', { class: 'row gap8' }, el('strong', { style: { flex: '1' } }, 'Ereignis ' + (i + 1)),
             el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { s.events.splice(i, 1); }) }, 'Entfernen')),
-          field('Auslöser', select(ev.trigger || 'first', [['first', 'Beim ersten Betreten'], ['always', 'Bei jedem Betreten']], set(ev, 'trigger'))),
-          field('Spotlight auf Objekt', select(ev.spotlight || '', [['', '— keins —'], ...s.objects.map((o) => [o.id, o.name || 'Objekt'])], (v) => VN.mutate(() => { ev.spotlight = v || null; }))),
-          ev.spotlight ? check('Klicksperre: nur dieses Objekt klickbar, bis es angeklickt wurde', ev.lock, set(ev, 'lock')) : null,
+          field('Auslöser', select(ev.trigger || 'first', [['first', 'Beim ersten Betreten'], ['always', 'Bei jedem Betreten'], ['cond', 'Sobald „Nur wenn“ stimmt (einmal, auch mitten im Hub)']], set(ev, 'trigger'))),
+          field('Art', select(ev.mode || 'lines', [['lines', 'Kurze Zeilen (hier eintippen)'], ['scene', 'Timeline-Dialog (Figuren, Handy, Auswahl …)']], set(ev, 'mode'))),
+          ev.mode === 'scene' ? Inspector.hubDialogRow(s, ev) : null,
+          ev.mode === 'scene' ? null : field('Spotlight auf Objekt', select(ev.spotlight || '', [['', '— keins —'], ...s.objects.map((o) => [o.id, o.name || 'Objekt'])], (v) => VN.mutate(() => { ev.spotlight = v || null; }))),
+          ev.spotlight && ev.mode !== 'scene' ? check('Klicksperre: nur dieses Objekt klickbar, bis es angeklickt wurde', ev.lock, set(ev, 'lock')) : null,
           VN.condEditor(ev.conds || (ev.conds = []), 'Nur wenn'));
+        if (ev.mode === 'scene') { box.appendChild(card); return; }
         ev.lines.forEach((l, j) => {
           card.appendChild(el('div', { class: 'logic-row' },
             el('input', { type: 'text', value: l.speaker || '', placeholder: 'Sprecher', style: { width: '80px' }, onchange: (e) => VN.mutate(() => { l.speaker = e.target.value; }) }),
             el('input', { type: 'text', value: l.text || '', placeholder: 'Text', style: { flex: '1', maxWidth: 'none', minWidth: '120px' }, onchange: (e) => VN.mutate(() => { l.text = e.target.value; }) }),
+            el('select', { title: VN.t('Darstellung'), style: { width: '92px' }, onchange: (e) => VN.mutate(() => { if (e.target.value) l.style = e.target.value; else delete l.style; }) },
+              ...[['', 'Sprechblase'], ['phone', '📱 Handy'], ['note', '🔔 Meldung']].map(([v, t]) => el('option', { value: v, selected: (l.style || '') === v }, VN.t(t)))),
             el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { ev.lines.splice(j, 1); }) }, '×')));
         });
         card.appendChild(el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const prev = ev.lines[ev.lines.length - 1]; ev.lines.push({ id: VN.uid('ln'), speaker: prev ? prev.speaker : '', color: prev ? prev.color : '#c4b2ff', text: VN.t('Neuer Text …') }); }) }, '+ Zeile'));
         box.appendChild(card);
       });
-      box.appendChild(el('button', { class: 'btn', onclick: () => VN.mutate(() => { s.events.push({ id: VN.uid('ev'), trigger: 'first', spotlight: null, lock: false, conds: [], lines: [{ id: VN.uid('ln'), speaker: '', color: '#c4b2ff', text: VN.t('Willkommen! Sieh dich ruhig um.') }] }); }) }, '+ Ereignis'));
+      box.appendChild(el('div', { class: 'row gap8', style: { flexWrap: 'wrap' } },
+        el('button', { class: 'btn', onclick: () => VN.mutate(() => { s.events.push({ id: VN.uid('ev'), trigger: 'first', spotlight: null, lock: false, conds: [], lines: [{ id: VN.uid('ln'), speaker: '', color: '#c4b2ff', text: VN.t('Willkommen! Sieh dich ruhig um.') }] }); }) }, '+ Ereignis'),
+        el('button', { class: 'btn', title: VN.t('Ein Dialog mit allen Möglichkeiten der Timeline, der über dem Hub abläuft und danach zurückkehrt'), onclick: () => VN.mutate(() => { const n = VN.newHubDialog(s); s.events.push({ id: VN.uid('ev'), trigger: 'first', mode: 'scene', scene: n.id, spotlight: null, lock: false, conds: [], lines: [] }); }) }, '+ Timeline-Dialog')));
       return box;
+    },
+
+    // Timeline-Dialog eines Hub-Ereignisses: Szene wählen, neu anlegen, öffnen
+    hubDialogRow(s, ev) {
+      const sc = ev.scene && VN.scene(ev.scene);
+      return el('div', { class: 'insp', style: { gap: '6px' } },
+        field('Szene', VN.sceneSelect(ev.scene, (v) => VN.mutate(() => { ev.scene = v; const n = v && VN.scene(v); if (n && n.type === 'story' && !n.next) n.next = '@return'; }), { exclude: s.id, emptyLabel: '— Szene wählen —' })),
+        el('div', { class: 'row gap8', style: { flexWrap: 'wrap' } },
+          sc ? el('button', { class: 'btn tiny primary', onclick: () => App.openScene(sc.id) }, '✏ In der Timeline bearbeiten') : null,
+          el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const n = VN.newHubDialog(s); ev.scene = n.id; }) }, '+ Neue Szene dafür')),
+        sc && sc.type === 'story' && sc.next !== '@return' ? el('div', { class: 'hint-box warn-box small' }, VN.t('Diese Szene kehrt am Ende nicht zum Hub zurück.'), ' ',
+          el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { sc.next = '@return'; }) }, '↩ Zurück zum Hub einstellen')) : null,
+        el('div', { class: 'muted small' }, 'Läuft über dem Hub (Hintergrund und Objekte bleiben sichtbar, wenn die Szene keinen eigenen Hintergrund hat). Figuren, Handy-Chat, Auswahl, Aktionen – alles wie in jeder Story-Szene. Am Ende geht es zurück in den Hub.'));
     },
 
     // Platzhalter wie {name}: kurze Erklärung und Knöpfe zum Einfügen an der Cursor-Stelle
@@ -363,6 +399,9 @@
         window.Connect ? Connect.rulesUI(o) : null,
         VN.actionEditor(o.actions || (o.actions = []), 'Ausführen (z. B. Loot würfeln)'),
         field('Gehe zu Szene', VN.sceneSelect(o.target, set(o, 'target'), { exclude: s.id })),
+        el('div', { class: 'row gap8', style: { flexWrap: 'wrap', marginTop: '-4px' } },
+          el('button', { class: 'btn tiny', title: VN.t('Beim Klick läuft ein Dialog über dem Hub, danach geht es zurück'), onclick: () => VN.mutate(() => { const n = VN.newHubDialog(s, VN.t('Hub-Dialog') + ' · ' + (o.name || s.name)); o.target = n.id; }) }, '💬 + Timeline-Dialog beim Klick'),
+          o.target && VN.scene(o.target) && VN.scene(o.target).overHub ? el('button', { class: 'btn tiny primary', onclick: () => App.openScene(o.target) }, '✏ Bearbeiten') : null),
         el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const n = VN.createAltScene(s, o.name); o.target = n.id; }) }, 'Neue Szene als Ziel anlegen'),
         field('Meldung anzeigen (optional)', el('textarea', { style: { minHeight: '60px' }, onchange: (e) => set(o, 'message')(e.target.value) }, o.message || '')),
         VN.useOnEditor ? VN.useOnEditor(s, o) : null,
