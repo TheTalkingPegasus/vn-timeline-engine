@@ -24,7 +24,7 @@
 
   // ---------- Ton (player-audio.js) ----------
   const A = VN.PlayerAudio({ run: () => run, later, volOf });
-  const { fadeVolume, musicVol, duck, stopMusic, playMusic, playOnce, stopVoice, lipLoop, showAmbient, stopAmbient } = A;
+  const { fadeVolume, musicVol, duck, stopMusic, playMusic, playOnce, stopVoice, stopSfx, lipLoop, showAmbient, stopAmbient } = A;
 
   // ---------- Bühne ----------
   const lookKey = (l) => (l ? [l.zoom, l.fx, l.fy, l.vignette, l.kenburns, l.daytime, l.depth, JSON.stringify(l.layers || []), JSON.stringify(l.styles || {}), JSON.stringify(l.tile || {}), VN.Life && run ? VN.Life.daytime(l, run.rs) : ''].join('|') : '');
@@ -287,11 +287,42 @@
     if (src && src.shake) Fx.shake(world, src.shake, src.shakeDur || 0.5);
   };
 
+  // ---------- „Weiter erst, wenn …“: Dialog hält an, bis eine Bedingung erfüllt ist ----------
+  let waitTick = 0;
+  const stopWait = () => {
+    clearInterval(waitTick); waitTick = 0;
+    if (run) run.waitFor = null;
+    if (!stage) return;
+    stage.querySelectorAll('.pl-wait').forEach((x) => x.remove());
+    stage.querySelectorAll('.pl-ctrl button.wait-glow').forEach((x) => x.classList.remove('wait-glow'));
+  };
+  const startWait = (clip) => {
+    stopWait();
+    const w = clip && clip.waitFor;
+    if (!w || !(w.conds || []).length || VN.checkConds(w.conds, run.rs)) return;
+    run.waitFor = clip.id;
+    const hint = el('div', { class: 'pl-wait pos-' + (w.pos || 'top') }, el('span', { class: 'pl-wait-ic' }, '👉'), el('span', null, w.hint ? VN.tr(clip.id + ':wait', w.hint) : VN.tp('Erst weiter, wenn du das erledigt hast.')));
+    stage.appendChild(hint);
+    if (w.glow) stage.querySelectorAll('.pl-ctrl button[data-btn="' + w.glow + '"]').forEach((b) => b.classList.add('wait-glow'));
+    const myRun = run;
+    waitTick = setInterval(() => {
+      if (run !== myRun || !run || run.curLine !== clip.id) { clearInterval(waitTick); waitTick = 0; return; }
+      if (!VN.checkConds(w.conds, run.rs)) return;
+      hint.classList.add('done');
+      hint.lastChild.textContent = VN.tp('Erledigt! Klicken zum Weiterlesen.');
+      clearInterval(waitTick); waitTick = 0;
+      run.waitFor = null;
+      stage.querySelectorAll('.pl-ctrl button.wait-glow').forEach((x) => x.classList.remove('wait-glow'));
+      setTimeout(() => hint.remove(), 2600);
+      if (w.auto && !run.overlay) setTimeout(() => { if (run === myRun && run.curLine === clip.id && !run.overlay) Player.advance(); }, 700);
+    }, 250);
+  };
+
   const showDialog = (clip, override) => {
     stopTyping();
     dlgBox.innerHTML = '';
     phoneBox.innerHTML = '';
-    if (!clip) { dlgBox.hidden = true; run.curLine = null; run.curText = ''; return; }
+    if (!clip) { stopWait(); dlgBox.hidden = true; run.curLine = null; run.curText = ''; return; }
     const s = VN.scene(run.scene);
     const chars = Object.entries(run.chars).filter(([, v]) => v.clip).map(([k, v]) => [k, v.clip]);
     run.speakingChar = null;
@@ -301,6 +332,7 @@
     const speaker = XF(override ? override.speaker : VN.tr(VN.speakerKey(clip.speaker), clip.speaker));
     const full = XF(override ? override.text : VN.tr(clip.id, clip.text || ''));
     run.curLine = clip.id;
+    startWait(clip);
     run.curText = full;
     E.logLine(clip, speaker, full);
     E.speak(full, !!(s && s.type === 'story' && !run.event && (s.tracks.voice || []).some((v) => v.start === run.beat && v.asset)));
@@ -563,6 +595,7 @@
 
   // ---------- Ablauf ----------
   function enterScene(id, beat, opts = {}) {
+    stopWait();
     const s = VN.scene(id);
     if (!s) return showEnd();
     if (run.replay && id !== run.replay) return endReplay();
@@ -979,6 +1012,7 @@
     overlayBox.appendChild(Systems.inventoryEl(run.rs, { onClose: toggleInventory, onUse: (it) => E.useItem(it), onCombine: (a, b) => { const r = E.combine(a, b, run.rs); renderHud(); return r; }, canUse: (it) => VN.Extras.canUse(it) || (VN.scene(run.scene) || {}).type === 'hub' && (VN.scene(run.scene).objects || []).some((o) => o.useItem === it.id) }));
     overlayBox.hidden = false;
     run.overlay = 'inv';
+    VN.did(run.rs, 'screen', 'inv');
   };
 
   const refreshTexts = () => {
@@ -1122,8 +1156,8 @@
       ctrl = el('div', { class: 'pl-ctrl' },
         WD.ctrlBox,
         E.ctrlBox,
-        p.inventory.enabled && p.items.length ? el('button', { onclick: (e) => { e.stopPropagation(); toggleInventory(); } }, VN.tr('ui:inventory', p.inventory.title || 'Inventar') + ' (I)') : null,
-        el('button', { onclick: (e) => { e.stopPropagation(); pauseMenu(); } }, 'Menü (Esc)'),
+        p.inventory.enabled && p.items.length ? el('button', { 'data-btn': 'inv', onclick: (e) => { e.stopPropagation(); toggleInventory(); } }, VN.tr('ui:inventory', p.inventory.title || 'Inventar') + ' (I)') : null,
+        el('button', { 'data-btn': 'menu', onclick: (e) => { e.stopPropagation(); pauseMenu(); } }, 'Menü (Esc)'),
         VN.gameMode ? null : el('button', { onclick: (e) => { e.stopPropagation(); Player.close(); } }, 'Editor'));
       stage.append(world, vig, partBox, hubBox, black, phoneBox, dlgBox, choiceBox, msgBox, gainBox, menuBox, overlayBox, info, hud, debugBox, ctrl);
       root.appendChild(stage);
@@ -1178,6 +1212,7 @@
       if (!s || s.type === 'hub') return;
       if (run.typing) return stopTyping(true);
       if (run.choicesShown) return;
+      if (run.waitFor) { const h = stage.querySelector('.pl-wait'); if (h) { h.classList.remove('shake'); void h.offsetWidth; h.classList.add('shake'); } return; }
       E.markRead();
       if (run.pendingChoice) return showChoices(run.pendingChoice);
       uiSound('next');
@@ -1297,10 +1332,12 @@
       if (VN.Audio) { VN.Audio.playing = false; VN.Audio.refresh(); }
       CBP.abort();
       if (window.RelMsg) RelMsg.abortAll();
+      stopWait();
       IDP.stopClock();
       clearTimers();
       stopTyping();
       stopVoice();
+      stopSfx();
       if (A.music) { A.music.audio.pause(); A.music = null; }
       stopAmbient();
       window.removeEventListener('keydown', onKey, true);

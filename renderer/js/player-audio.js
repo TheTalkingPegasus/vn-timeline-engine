@@ -79,6 +79,8 @@
         a._route = needRoute ? Fx.route(a, clip && clip.vfx, v) : null;
         if (!a._route) a.volume = v;
         if (inS) a.currentTime = inS;
+        // Alle einmaligen Töne merken, damit „Test beenden“ sie anhalten kann
+        if (!isVoice) { oneShots.add(a); const forget = () => oneShots.delete(a); a.addEventListener('ended', forget); a.addEventListener('pause', forget); }
         a.play().catch(() => {});
         // Musik bleibt leise, bis KEINE Stimme mehr läuft
         const end = () => { if (isVoice) { voices.delete(a); if (voice === a) voice = Array.from(voices).pop() || null; if (!anyVoice()) duck(false); } };
@@ -100,6 +102,8 @@
       const d = sc && sc.tracks && (sc.tracks.dialog || []).find((x) => x.start === r.beat);
       return d ? d.speaker || '' : '';
     };
+    const oneShots = new Set();
+    const stopSfx = () => { for (const a of Array.from(oneShots)) { try { a.pause(); } catch (e) { /* schon weg */ } } oneShots.clear(); };
     const stopVoice = () => {
       for (const t of voiceTimers) clearTimeout(t);
       voiceTimers.clear();
@@ -169,7 +173,7 @@
     const stopAmbient = () => { if (R() && R().amb) { for (const x of Object.values(R().amb)) x.audio.pause(); R().amb = {}; } };
 
     return {
-      fadeVolume, musicVol, duck, stopMusic, playMusic, playOnce, stopVoice, lipLoop, showAmbient, stopAmbient,
+      fadeVolume, musicVol, duck, stopMusic, playMusic, playOnce, stopVoice, stopSfx, lipLoop, showAmbient, stopAmbient,
       get music() { return music; }, set music(v) { music = v; },
       get voice() { return voice; }, get voiceCount() { return voices.size + voiceTimers.size; }, get ducked() { return anyVoice(); }, set voice(v) { voice = v; }
     };

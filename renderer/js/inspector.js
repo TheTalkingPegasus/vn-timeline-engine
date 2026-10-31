@@ -185,9 +185,11 @@
             field('Farbe', color)),
           Inspector.designLink('Sprechblase, Vorlage, Rahmen'),
           field('Text', el('div', { class: 'tt-wrap' }, bar, ta)),
+          Inspector.placeholderHint(ta, (v) => set(c, 'text')(v)),
           range('Tempo', c.speed != null ? c.speed : 40, 0, 120, 5, (v) => (v === 0 ? 'sofort' : v + ' Zeichen/s'), set(c, 'speed')),
           Tools.dialogExtras(s, c),
           VN.actionEditor(c.actions || (c.actions = []), 'Beim Erreichen dieses Dialogs ausführen'),
+          Inspector.waitEditor(c),
           field('Start (Schritt)', num(c.start + 1, (v) => VN.mutate(() => { c.start = Math.max(0, Math.round(v) - 1); s.beats = Math.max(s.beats, c.start + 1); }), { min: 1 })));
       } else if (tb === 'choice') {
         box.appendChild(el('div', { class: 'hint-box' }, 'Erscheint, nachdem der Dialog dieses Schritts gelesen wurde. Ohne Ziel geht es in dieser Szene weiter.'));
@@ -285,6 +287,46 @@
         box.appendChild(card);
       });
       box.appendChild(el('button', { class: 'btn', onclick: () => VN.mutate(() => { s.events.push({ id: VN.uid('ev'), trigger: 'first', spotlight: null, lock: false, conds: [], lines: [{ id: VN.uid('ln'), speaker: '', color: '#c4b2ff', text: VN.t('Willkommen! Sieh dich ruhig um.') }] }); }) }, '+ Ereignis'));
+      return box;
+    },
+
+    // Platzhalter wie {name}: kurze Erklärung und Knöpfe zum Einfügen an der Cursor-Stelle
+    placeholderHint(ta, save) {
+      const names = new Set();
+      const walk = (o, d) => { if (!o || typeof o !== 'object' || d > 14) return; if (Array.isArray(o)) { for (const x of o) walk(x, d + 1); return; } if (o.type === 'nameInput' && o.var) names.add(String(o.var)); for (const k in o) if (o[k] && typeof o[k] === 'object') walk(o[k], d + 1); };
+      walk(VN.project.scenes, 0);
+      const vars = VN.project.vars.map((v) => v.name).filter(Boolean).slice(0, 8);
+      const ins = (k) => {
+        const t = '{' + k + '}', a = ta.selectionStart != null ? ta.selectionStart : ta.value.length, b = ta.selectionEnd != null ? ta.selectionEnd : a;
+        ta.value = ta.value.slice(0, a) + t + ta.value.slice(b);
+        save(ta.value);
+      };
+      const chip = (k, cls) => el('button', { class: 'btn tiny ph-chip' + (cls ? ' ' + cls : ''), title: VN.t('An der Cursor-Stelle einfügen'), onmousedown: (e) => e.preventDefault(), onclick: () => ins(k) }, '{' + k + '}');
+      return el('div', { class: 'ph-hint' },
+        el('div', { class: 'muted small' }, VN.t('Platzhalter: {name} zeigt im Spiel den Namen, den der Spieler eingetippt hat (Aktion „✏ Namen eingeben lassen“). Geht auch im Sprecher-Feld und in Antworten. Variablen genauso, z. B. {Gold}.')),
+        names.size || vars.length
+          ? el('div', { class: 'row gap4', style: { flexWrap: 'wrap', marginTop: '4px' } }, ...[...names].map((k) => chip(k, 'primary')), ...vars.map((k) => chip(k)))
+          : el('div', { class: 'muted small', style: { marginTop: '4px', fontStyle: 'italic' } }, VN.t('Noch kein Name abgefragt: Füge irgendwo die Aktion „✏ Namen eingeben lassen“ hinzu, z. B. an der ersten Dialogzeile.')));
+    },
+
+    // „Weiter erst, wenn …“ an einer Dialogzeile
+    waitEditor(c) {
+      const w = c.waitFor;
+      const box = el('div', { class: 'opt-card' + (w ? ' wait-on' : '') },
+        el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!w, onchange: (e) => VN.mutate(() => { if (e.target.checked) c.waitFor = { conds: [{ type: 'did', what: 'screen', key: 'inv' }], hint: VN.t('Öffne dein Inventar mit I.'), glow: 'inv', auto: false }; else delete c.waitFor; }) }),
+          el('strong', null, VN.t('Weiter erst, wenn …'))),
+        el('div', { class: 'muted small' }, VN.t('Das Spiel bleibt bei dieser Zeile stehen, bis der Spieler etwas getan hat – z. B. das Inventar geöffnet oder etwas angezogen. Gut für Tutorials im eigenen Spiel.')));
+      if (!w) return box;
+      w.conds = w.conds || [];
+      box.append(
+        VN.condEditor(w.conds, VN.t('Bedingung (alle müssen erfüllt sein)')),
+        el('div', { class: 'logic-row' }, el('span', { class: 'muted small', style: { width: '90px' } }, VN.t('Hinweis')),
+          el('input', { type: 'text', value: w.hint || '', placeholder: VN.t('z. B. Öffne dein Inventar mit I.'), style: { flex: '1' }, onchange: (e) => VN.mutate(() => { w.hint = e.target.value; }) })),
+        el('div', { class: 'logic-row' }, el('span', { class: 'muted small', style: { width: '90px' } }, VN.t('Knopf leuchtet')),
+          (() => { const s = el('select', { onchange: (e) => VN.mutate(() => { w.glow = e.target.value; }) }); for (const [k, l] of [['', VN.t('— keiner —')], ['inv', VN.t('Inventar')], ['menu', VN.t('Menü')]]) { const o = el('option', { value: k }, l); if (k === (w.glow || '')) o.selected = true; s.appendChild(o); } return s; })(),
+          el('span', { class: 'muted small' }, VN.t('Hinweis')),
+          (() => { const s = el('select', { onchange: (e) => VN.mutate(() => { w.pos = e.target.value; }) }); for (const [k, l] of [['top', VN.t('oben')], ['middle', VN.t('Mitte')]]) { const o = el('option', { value: k }, l); if (k === (w.pos || 'top')) o.selected = true; s.appendChild(o); } return s; })()),
+        el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!w.auto, onchange: (e) => VN.mutate(() => { w.auto = e.target.checked; }) }), VN.t('Danach automatisch weiter (sonst mit Klick)')));
       return box;
     },
 

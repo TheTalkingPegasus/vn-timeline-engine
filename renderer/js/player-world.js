@@ -36,6 +36,7 @@
     const openMap = (mapId) => new Promise((resolve) => {
       const r = R();
       if (!r || !W().on()) return resolve();
+      VN.did(r.rs, 'screen', 'map');
       const maps = W().maps();
       if (!maps.length) { VN.toast('Noch keine Karte angelegt'); return resolve(); }
       let cur = W().map(mapId) || W().mapOf(here()) || W().rootMap();

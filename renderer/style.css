@@ -1776,3 +1776,35 @@ code { font-family: Consolas, "JetBrains Mono", monospace; background: var(--bg3
 .splash-eng { color: #e8a43a; }
 .lg-item { display: flex; flex-direction: column; gap: 6px; }
 .lg-item select { max-width: 150px; }
+.ph-hint { margin: -4px 0 8px; padding: 7px 9px; border-radius: 7px; background: var(--bg3); }
+.ph-chip { font-family: ui-monospace, Consolas, monospace; }
+
+/* ---------- Ausrüstung im Inventar ---------- */
+.eq-wrap { margin: 0.6cqh 0 1cqh; }
+.eq-title { font-size: 1.7cqh; opacity: 0.75; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.6cqh; }
+.eq-bar { display: flex; gap: 1cqh; flex-wrap: wrap; }
+.eq-slot { width: 9cqh; display: flex; flex-direction: column; align-items: center; gap: 0.4cqh; cursor: default; }
+.eq-slot.full { cursor: pointer; }
+.eq-slot > .eq-img, .eq-slot > .eq-ico { width: 7cqh; height: 7cqh; border-radius: 1cqh; border: 1px dashed rgba(255,255,255,0.28); background: rgba(0,0,0,0.25) center/contain no-repeat; display: flex; align-items: center; justify-content: center; font-size: 3cqh; opacity: 0.55; }
+.eq-slot.full > .eq-img, .eq-slot.full > .eq-ico { border: 2px solid var(--accent, #e8a43a); opacity: 1; box-shadow: 0 0 1.4cqh rgba(232,164,58,0.35); }
+.eq-slot.full:hover > * { filter: brightness(1.2); }
+.eq-name { font-size: 1.5cqh; text-align: center; opacity: 0.85; max-width: 9cqh; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inv-slot.worn { box-shadow: inset 0 0 0 2px var(--accent, #e8a43a); }
+.inv-slot.worn::after { content: '👕'; position: absolute; left: 0.3cqh; top: 0.2cqh; font-size: 1.6cqh; }
+
+/* ---------- „Weiter erst, wenn …“ ---------- */
+.pl-wait { position: absolute; left: 50%; transform: translateX(-50%); z-index: 40; display: flex; align-items: center; gap: 1.2cqh; padding: 1.2cqh 2.4cqh; border-radius: 1.4cqh; background: rgba(20, 21, 26, 0.92); border: 2px solid var(--accent, #e8a43a); color: #fff; font-size: 2.4cqh; box-shadow: 0 0.8cqh 3cqh rgba(0,0,0,0.5); pointer-events: none; animation: pl-wait-in 0.35s ease-out; max-width: 80%; }
+.pl-wait.pos-top { top: 9cqh; }
+.pl-wait.pos-middle { top: 42%; }
+.pl-wait-ic { font-size: 3cqh; animation: pl-wait-bob 1.2s ease-in-out infinite; }
+.pl-wait.done { border-color: #5cc98a; }
+.pl-wait.done .pl-wait-ic { animation: none; }
+.pl-wait.shake { animation: pl-wait-shake 0.4s; }
+@keyframes pl-wait-in { from { opacity: 0; transform: translate(-50%, -1.5cqh); } to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes pl-wait-bob { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(0.8cqh); } }
+@keyframes pl-wait-shake { 0%, 100% { transform: translateX(-50%); } 25% { transform: translateX(calc(-50% - 1cqh)); } 75% { transform: translateX(calc(-50% + 1cqh)); } }
+.pl-ctrl button.wait-glow { box-shadow: 0 0 0 2px var(--accent, #e8a43a), 0 0 2cqh var(--accent, #e8a43a); animation: wait-glow 1s ease-in-out infinite alternate; }
+@keyframes wait-glow { from { box-shadow: 0 0 0 2px var(--accent, #e8a43a), 0 0 0.6cqh var(--accent, #e8a43a); } to { box-shadow: 0 0 0 2px var(--accent, #e8a43a), 0 0 2.4cqh var(--accent, #e8a43a); } }
+/* Platz für „Schließen“ unten, Bild im Detail nicht zu groß (sonst verdeckt der Knopf die Aktionen) */
+.inv-box:has(> .inv-close) { padding-bottom: 8.5cqh; }
+.inv-big { max-height: 17cqh; }

@@ -336,6 +336,7 @@
     const abort = () => { if (screen) { const s = screen; screen = null; s.close(); } if (R()) H.stage().classList.remove('in-battle'); };
     // Gruppe: Stufe, Erfahrung, Werte und Fähigkeiten der Helden (Pausenmenü, Taste G)
     const partyScreen = (back) => new Promise((resolve) => {
+      if (R()) VN.did(R().rs, 'screen', 'party');
       const r = R();
       const cb = CB();
       if (!r || !cb.on()) return resolve();
