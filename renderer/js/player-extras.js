@@ -119,18 +119,18 @@
         for (const [k, label, items, field] of T) if (items.length) tabs.appendChild(el('button', { class: 'sys-btn' + (tab === k ? ' primary' : ''), onclick: (e) => { e.stopPropagation(); tab = k; draw(); } }, label + ' ' + items.filter((x) => P[field][x.id]).length + '/' + items.length));
         if (tab === 'img') {
           // Filter nach Figur (Bilder, die einer Figur zugeordnet sind)
-          const chars = (VN.project.relations && VN.project.relations.chars || []).filter((c) => X().galleryImages().some((a) => a.galleryChar === c.id));
+          const chars = (VN.project.relations && VN.project.relations.chars || []).filter((c) => X().galleryImages().some((a) => X().galChars(a).includes(c.id)));
           if (chars.length) {
             const f = el('div', { class: 'gal-filter' });
             const chip = (id, label, n) => el('button', { class: 'gal-chip' + (who === id ? ' on' : ''), onclick: (e) => { e.stopPropagation(); who = id; draw(); } }, label, n ? el('span', { class: 'gal-chip-new' }, String(n)) : null);
             const newIn = (fn) => X().galleryImages().filter((a) => fn(a) && X().isNew(a.id)).length;
             f.appendChild(chip('', VN.tp('Alle'), newIn(() => true)));
-            for (const c of chars) f.appendChild(chip(c.id, VN.tr('name:' + c.name, c.name), newIn((a) => a.galleryChar === c.id)));
+            for (const c of chars) f.appendChild(chip(c.id, VN.tr('name:' + c.name, c.name), newIn((a) => X().galChars(a).includes(c.id))));
             body.appendChild(f);
           }
           const grid = el('div', { class: 'gal-grid' });
           for (const a of X().galleryImages()) {
-            if (who && a.galleryChar !== who) continue;
+            if (who && !X().galChars(a).includes(who)) continue;
             const ok = P.gallery[a.id];
             const isNew = ok && X().isNew(a.id);
             grid.appendChild(ok ? el('button', { class: 'gal-tile' + (isNew ? ' is-new' : ''), style: { backgroundImage: `url("${VN.assetUrl(a.id)}")` }, 'aria-label': a.name, onclick: (e) => { e.stopPropagation(); X().seenNew(a.id); view(a); draw(); } }, isNew ? el('span', { class: 'gal-new' }, VN.tp('Neu')) : null) : el('div', { class: 'gal-tile locked' }, '?'));
@@ -338,6 +338,9 @@
         slider('Textgröße', 'textScale', 80, 160, 100, (v) => v + ' %'),
         chk('Textbox gut lesbar (deckend)', 'solidBox'),
         chk('Ruhige Darstellung', 'calm', 'kein Wackeln'),
+        chk('Weniger Effekte', 'lessFx', 'ohne Blitze'),
+        el('div', { class: 'set-row' }, el('span', null, 'Farbhilfe (Farbenblind)'), el('select', { class: 'set-select', style: { maxWidth: '100%' }, onchange: (e) => { S().cb = e.target.value; H.saveSettings(); applyA11y(); } },
+          ...(VN.A11y ? VN.A11y.TYPES : [['', 'aus']]).map(([v, l]) => el('option', { value: v, selected: (S().cb || '') === v }, l))), el('span', { class: 'set-val' })),
         chk('Untertitel für Geräusche', 'captions'),
         chk('Texte ohne Stimme vorlesen', 'tts'),
         H.sysBtn('Zurück', () => { if (R()) R().overlay = null; if (fromMenu) H.settingsScreen(fromMenu === 'menu'); else H.settingsScreen(); }));
@@ -347,6 +350,7 @@
       if (!st) return;
       st.classList.toggle('a11y-solid', !!S().solidBox);
       st.classList.toggle('a11y-calm', !!S().calm);
+      if (VN.A11y) VN.A11y.applyPlayer(st, S());
     };
 
     return {

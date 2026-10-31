@@ -10,6 +10,7 @@
       const id = ID();
       const c = id.cfg();
       const rs = opts.rs;
+      if (opts.test) id.start(rs); // Probelauf im Editor: läuft immer
       const tt = (x) => (opts.test ? VN.t(x) : VN.tp(x));
       const tr = (key, t) => (VN.tr ? VN.tr(key, t || '') : t || '');
       const box = el('div', { class: 'id-screen', onclick: (e) => e.stopPropagation() });
@@ -17,7 +18,7 @@
       let timer = 0;
       const close = () => { clearInterval(timer); box.remove(); if (opts.onClose) opts.onClose(); };
       box._done = close;
-      const unit = c.mode === 'gametime' ? tt('Tageszeit') : tt('Min.');
+      const unit = tt(id.unitShort());
       const chipCur = (cur, n, cls) => { const cu = VN.project.currencies.find((x) => x.id === cur); return el('span', { class: 'id-cost ' + (cls || '') }, cu && cu.image && VN.assetUrl(cu.image) ? el('span', { class: 'mc-ico', style: { backgroundImage: `url("${VN.assetUrl(cu.image)}")` } }) : el('span', { class: 'mc-dot', style: { background: (cu && cu.color) || '#e8c86a' } }), id.fmtNum(n)); };
       const float = (anchor, text) => {
         const r = anchor.getBoundingClientRect(), b = box.getBoundingClientRect();
@@ -42,7 +43,8 @@
           cu > 1 ? el('span', { class: 'id-boost', title: tt('Das aktuelle Ziel dauert länger als geplant – alles läuft schneller.') }, '⚡ ×' + String(cu).replace('.', ',')) : null,
           el('div', { style: { flex: '1' } }),
           opts.test ? el('span', { class: 'id-test' }, tt('Probelauf'),
-            ...[[10, '+10'], [60, '+60']].map(([u, l]) => el('button', { class: 'id-ff', onclick: () => { id.produce(rs, u); const g = id.checkMilestones(rs); changed(g); } }, l + ' ' + unit))) : null);
+            ...[[10, '+10'], [60, '+60']].map(([u, l]) => el('button', { class: 'id-ff', onclick: () => { id.produce(rs, u / id.perMin()); const g = id.checkMilestones(rs); changed(g); } }, l + ' ' + unit))) : null);
+        if (!id.running(rs)) head.appendChild(el('div', { class: 'id-wait' }, '⏸ ' + tt(c.startWhen === 'action' ? 'Der Aufbau startet erst durch ein Ereignis in der Geschichte.' : 'Der Aufbau startet, sobald es in der Geschichte so weit ist.')));
         // Gebäude
         const grid = el('div', { class: 'id-grid' });
         for (const b of c.buildings) {
@@ -136,10 +138,10 @@
       // Probelauf: eigene Uhr (im Spiel tickt die Produktion im Spieler weiter, auch bei geschlossenem Fenster)
       if (!opts.static) timer = setInterval(() => {
         if (!box.isConnected) { clearInterval(timer); return; }
-        if (opts.test && c.mode !== 'gametime') { id.produce(rs, 1 / 60); const g = id.checkMilestones(rs); if (g.reached.length) changed(g); }
+        if (opts.test && c.mode !== 'gametime') { if (id.checkStart(rs)) changed([]); id.produce(rs, 1 / 60); const g = id.checkMilestones(rs); if (g.reached.length) changed(g); }
         updateNums();
       }, 1000);
-      return { box, close, refresh: updateNums };
+      return { box, close, refresh: updateNums, redraw: () => draw() };
     }
   };
 
@@ -159,6 +161,7 @@
       if (!r || !ID().on()) return;
       const st = ID().state(r.rs);
       const now = Date.now();
+      if (ID().checkStart(r.rs) && screen) screen.redraw();
       const dt = Math.max(0, Math.min(5000, now - (st.last || now)));
       st.last = now;
       let got = {};
@@ -180,7 +183,7 @@
       const st = ID().state(r.rs);
       const c = ID().cfg();
       const now = Date.now();
-      if (c.mode === 'offline' && st.last && now - st.last > 60000) {
+      if (c.mode === 'offline' && ID().running(r.rs) && st.last && now - st.last > 60000) {
         const mins = Math.min((now - st.last) / 60000, (Number(c.offlineMax) || 8) * 60);
         const got = ID().produce(r.rs, mins, (Number(c.offlinePct) || 0) / 100);
         const g = Object.entries(got).map(([id, n]) => ({ kind: 'money', id, count: n }));
@@ -198,6 +201,7 @@
       const r = R();
       if (!r || !ID().on()) return resolve();
       VN.did(r.rs, 'screen', 'idle');
+      if (ID().cfg().startWhen === 'firstOpen') ID().start(r.rs);
       r.overlay = 'idle';
       H.uiSound('open');
       H.stage().classList.add('in-panel');

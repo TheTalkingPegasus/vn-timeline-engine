@@ -219,6 +219,51 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
       // Hilfe: alle Meldungen lassen sich sammeln
       try { Help.all(); } catch (e) { out.push('Fehlerliste stürzt ab: ' + e.message); }
     } catch (e) { out.push('0.7-Prüfung stürzt ab: ' + String(e && e.stack || e).split('\\n').slice(0, 3).join(' | ')); }
+    // 0.7.4: Aufbau-Start und Takt, Hub-Dialog, Format kopieren, Galerie mit mehreren Figuren, Storyboard, Farbfilter, KI-Anleitung
+    try {
+      VN.project = VN.migrate({ title: 'T074', scenes: [], assets: [{ id: 'img1', kind: 'image', name: 'Bild', file: 'assets/b.png' }], vars: [{ id: 'v1', name: 'Tag', type: 'num', start: 0 }], currencies: [{ id: 'g', name: 'Gold', start: 0 }] });
+      const pp = VN.project;
+      pp.idle = { enabled: true, mode: 'realtime', catchup: 0, tick: 'sec', startWhen: 'cond', startConds: [{ type: 'var', var: 'v1', op: '>=', value: 1 }],
+        buildings: [{ id: 'A', name: 'Hütte', max: 5, start: 1, costs: [{ cur: 'g', amount: 10 }], grow: 2, prods: [{ cur: 'g', amount: 1 }], conds: [] }], milestones: [] };
+      VN.migrate(pp);
+      const I = VN.Idle, r = VN.newRunState();
+      I.produce(r, 1);
+      ok((r.money.g || 0) === 0, '0.7.4 Aufbau: produziert, obwohl er noch nicht gestartet ist');
+      r.vars.v1 = 1;
+      ok(I.checkStart(r) === true && I.running(r), '0.7.4 Aufbau: startet nicht, wenn die Bedingung stimmt');
+      I.produce(r, 1);
+      ok(r.money.g === 60, '0.7.4 Aufbau: Takt pro Sekunde falsch (' + r.money.g + ' statt 60 pro Minute)');
+      pp.idle.tick = 'hour'; I.produce(r, 60);
+      ok(r.money.g === 61, '0.7.4 Aufbau: Takt pro Stunde falsch (' + r.money.g + ')');
+      pp.idle.startWhen = 'action'; const r2 = VN.newRunState();
+      ok(!I.running(r2) && I.issues().some((x) => /nie starten/.test(x.text)), '0.7.4 Aufbau: fehlende Start-Aktion wird nicht gemeldet');
+      VN.applyActions([{ type: 'idleStart' }], r2, 't');
+      ok(I.running(r2), '0.7.4 Aufbau: Aktion „Aufbau starten“ wirkt nicht');
+      // Hub-Dialog: Szene mit @return, über dem Hub, Kanten im Pfad
+      const hub = VN.newHubScene('Hub');
+      const d = VN.newHubDialog(hub);
+      hub.events = hub.events || [];
+      hub.events.push({ id: 'e1', trigger: 'first', mode: 'scene', scene: d.id, conds: [], lines: [] });
+      ok(d.next === '@return' && d.overHub && d.tracks.dialog.length === 2, '0.7.4 Hub-Dialog: neue Szene falsch angelegt');
+      ok(VN.edgesOf(hub).some((x) => x.to === d.id) && VN.edgesOf(d).some((x) => x.to === hub.id), '0.7.4 Hub-Dialog: fehlt im Pfad-Graph');
+      ok(!VN.Schema.check(pp).some((x) => x.level === 'error'), '0.7.4 Hub-Dialog: Projektprüfung meldet Fehler');
+      // Format kopieren
+      const c1 = { id: 'c1', start: 0, len: 3, x: 20, y: 5, scale: 140, rot: 10, flip: true, styles: { glow: { on: true } }, keys: [{ beat: 1, x: 40 }] };
+      const c2 = { id: 'c2', start: 2, len: 3, x: 80, scale: 100 };
+      FmtCopy.copy(c1); FmtCopy.apply(c2, { pos: true, scale: true, rot: false, flip: true, look: true, trans: false, idle: false, keys: true });
+      ok(c2.x === 20 && c2.scale === 140 && c2.rot == null && c2.flip === true && c2.styles.glow.on && c2.keys[0].beat === 3, '0.7.4 Format kopieren: überträgt falsch ' + JSON.stringify(c2));
+      // Galerie: mehrere Figuren, Bild-Geschenk
+      const a = pp.assets[0];
+      VN.Extras.setGalChars(a, ['r1', 'r2']);
+      ok(VN.Extras.galChars(a).join() === 'r1,r2' && a.galleryChar === 'r1', '0.7.4 Galerie: mehrere Figuren werden nicht gespeichert');
+      // Storyboard wird nicht exportiert, Farbfilter, KI-Anleitung
+      pp.storyboard = { items: [{ id: 'sb1', kind: 'note', x: 0, y: 0, w: 10, h: 10, text: 'x' }] };
+      ok(Storyboard.cfg().items.length === 1, '0.7.4 Storyboard: Karten gehen verloren');
+      const m = VN.A11y.matrix('deutan', 'fix');
+      ok(m.length === 3 && m.every((row) => Math.abs(row[0] + row[1] + row[2] - 1) < 0.02) && Math.abs(m[0][0] - 1) > 0.05, '0.7.4 Farbhilfe: Matrix unplausibel (Grau bleibt nicht grau)');
+      const guide = VN.AIGuide.build();
+      ok(guide.includes('project.json') && guide.includes('idleStart') && guide.includes(d.id), '0.7.4 KI-Anleitung unvollständig');
+    } catch (e) { out.push('0.7.4-Prüfung stürzt ab: ' + String(e && e.stack || e).split('\\n').slice(0, 3).join(' | ')); }
     VN.project = prev;
     return JSON.stringify(out);
   })()`));
@@ -262,7 +307,7 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
         const nav = document.querySelector('#center button.active');
         const tabs = nav ? Array.from(nav.parentElement.children) : [];
         for (let i = 0; i < tabs.length; i++) await tryIt('Spielsysteme ' + i, () => { document.querySelector('#center button.active').parentElement.children[i].click(); });
-        for (const v of ['menu', 'transcript', 'figures', 'anim']) await tryIt('Ansicht ' + v, () => { VN.ui.view = v; });
+        for (const v of ['menu', 'transcript', 'storyboard', 'figures', 'anim']) await tryIt('Ansicht ' + v, () => { VN.ui.view = v; });
         if (window.Design) for (const [id] of Design.SECTIONS) await tryIt('Design ' + id, () => { VN.ui.view = 'design'; VN.ui.designSec = id; });
         VN.ui.view = 'scene'; VN.render();
         return JSON.stringify(fail);
@@ -387,13 +432,13 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
       const de = new Set(); for (const k of Object.keys(D)) for (const w of (k.match(/[A-Za-zÄÖÜäöüß]{4,}/g) || [])) if (!en.has(w.toLowerCase())) de.add(w);
       const found = new Set();
       const scan = () => { const tw = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT); let n; while ((n = tw.nextNode())) { const p = n.parentElement; if (!p || p.closest('script,style,textarea,[data-notr],.dlg-text,.dlg-name,.choice-btn,.clip-user') || !p.getClientRects().length) continue; const t = n.data.trim(); if (t && ((t.match(/[A-Za-zÄÖÜäöüß]{4,}/g) || []).some((w) => de.has(w)) || /[äöüß]/.test(t))) found.add(VN.ui.view + ' | ' + t.slice(0, 80)); } };
-      for (const v of ['scene', 'graph', 'systems', 'menu', 'design', 'transcript', 'figures', 'anim']) { VN.ui.view = v; VN.render(); await new Promise((r) => setTimeout(r, 80)); scan(); }
+      for (const v of ['scene', 'graph', 'systems', 'menu', 'design', 'transcript', 'storyboard', 'figures', 'anim']) { VN.ui.view = v; VN.render(); await new Promise((r) => setTimeout(r, 80)); scan(); }
       VN.ui.view = 'scene'; VN.render();
       return JSON.stringify([...found]);
     })()`));
     await js(`VN.I18n.set('de'); 1`);
     log(`${left.length ? '!' : '✓'} Englische Oberfläche: ${left.length} Stellen mit deutschen Wörtern (Projektinhalte können dabei sein)`);
-    for (const l of left.slice(0, 15)) log('    · ' + l);
+    for (const l of left.slice(0, Number(process.env.VN_LEFT_MAX) || 15)) log('    · ' + l);
   }
 
   // 7. Web-Export eines Projekts und Start im Browser-Fenster

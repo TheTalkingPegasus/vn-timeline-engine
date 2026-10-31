@@ -186,6 +186,7 @@
       if (o.skipUnused || slim) data.assets = data.assets.filter((a) => used.has(a.id));
       // Nur im Editor gebraucht
       delete data.hiddenHints;
+      delete data.storyboard; // nur für die Planung im Editor
       // Schlank: Daten ausgeschalteter Spielsysteme weglassen
       if (slim) for (const k of ['skills', 'combat', 'idle', 'quests', 'world']) if (data[k] && data[k].enabled === false) delete data[k];
       // Mitgelieferte Plugins mit Prüfsumme: Das Spiel lädt nur diese (außer Mods sind erlaubt)

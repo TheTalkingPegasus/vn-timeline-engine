@@ -352,6 +352,11 @@
       }
     } else {
       for (const o of s.objects || []) if (o.target) out.push({ to: o.target, label: o.name || 'Objekt', kind: 'hub', obj: o });
+      // Hub-Dialoge (Timeline-Szene über dem Hub) und der Weg zurück
+      for (const ev of s.events || []) if (ev.mode === 'scene' && ev.scene) out.push({ to: ev.scene, label: '💬 ' + (VN.scene(ev.scene) || {}).name, kind: 'event', ev });
+    }
+    if (s.type === 'story' && s.next === '@return') {
+      for (const h of VN.project.scenes) if (h.type === 'hub' && ((h.events || []).some((ev) => ev.mode === 'scene' && ev.scene === s.id) || (h.objects || []).some((o) => o.target === s.id))) out.push({ to: h.id, label: 'zurück', kind: 'back' });
     }
     return out.filter((e) => VN.scene(e.to));
   };
@@ -388,12 +393,25 @@
     });
   };
 
+  // Hub-Dialog (0.7.4): eine Timeline-Szene, die über dem Hub abläuft und danach zurückkehrt
+  VN.newHubDialog = (hub, name) => {
+    const cur = VN.ui.sceneId;
+    const n = VN.newStoryScene(name || (VN.t('Hub-Dialog') + ' · ' + hub.name));
+    n.next = '@return';
+    n.overHub = true;
+    n.beats = 2;
+    n.tracks.dialog.push({ id: VN.uid('c'), start: 0, len: 1, speaker: '', color: '#ffffff', text: VN.t('Neuer Text …'), speed: 40, actions: [] });
+    n.tracks.dialog.push({ id: VN.uid('c'), start: 1, len: 1, speaker: '', color: '#ffffff', text: VN.t('Neuer Text …'), speed: 40, actions: [] });
+    VN.ui.sceneId = cur;
+    return n;
+  };
+
   // Szenen-Auswahlfeld für Ziele
   VN.sceneSelect = (value, onChange, opts = {}) => {
     const sel = VN.el('select', { onchange: (e) => onChange(e.target.value || null) });
     sel.appendChild(VN.el('option', { value: '' }, opts.emptyLabel || '— keins —'));
     // Welt & Orte: nach einem Ereignis zurück an den Ort bzw. nach Hause
-    if (opts.world && VN.World && VN.World.on()) for (const [v, l] of [['@return', '↩ Zurück zum Ort (nach Ereignis)'], ['@home', '🏠 Nach Hause']]) { const o = VN.el('option', { value: v }, l); if (v === value) o.selected = true; sel.appendChild(o); }
+    if (opts.world) for (const [v, l] of [['@return', VN.World && VN.World.on() ? '↩ Zurück (zum Hub oder Ort)' : '↩ Zurück zum Hub'], ...(VN.World && VN.World.on() ? [['@home', '🏠 Nach Hause']] : [])]) { const o = VN.el('option', { value: v }, l); if (v === value) o.selected = true; sel.appendChild(o); }
     for (const s of VN.project.scenes) {
       if (opts.exclude && s.id === opts.exclude) continue;
       const o = VN.el('option', { value: s.id }, (s.type === 'hub' ? '⌂ ' : '') + s.name);

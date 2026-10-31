@@ -1,6 +1,6 @@
 {
   "name": "vn-timeline-engine",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "description": "Free visual novel engine in the style of a video editor (timeline), with plugins. English and German interface.",
   "main": "main.js",
   "scripts": {
@@ -119,6 +119,12 @@
         "owner": "TheTalkingPegasus",
         "repo": "vn-timeline-engine",
         "releaseType": "release"
+      }
+    ],
+    "extraFiles": [
+      {
+        "from": "docs/AI-GUIDE.md",
+        "to": "AI-GUIDE.md"
       }
     ]
   }

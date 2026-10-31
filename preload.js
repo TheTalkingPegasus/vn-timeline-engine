@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('vnApi', {
   pickAssets: (dir, kind) => ipcRenderer.invoke('asset:pick', { dir, kind }),
   copyAssets: (dir, paths) => ipcRenderer.invoke('asset:copy', { dir, paths }),
   saveText: (name, text, ext) => ipcRenderer.invoke('file:saveText', { name, text, ext }),
+  writeGuide: (text) => ipcRenderer.invoke('project:writeGuide', { text }),
   openText: (ext) => ipcRenderer.invoke('file:openText', { ext }),
   saveBinary: (name, bytes, ext) => ipcRenderer.invoke('file:saveBinary', { name, bytes, ext }),
   setUiLang: (l) => ipcRenderer.send('ui:lang', l),

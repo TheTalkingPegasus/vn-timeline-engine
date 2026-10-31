@@ -29,6 +29,8 @@
   // ---------- Bühne ----------
   const lookKey = (l) => (l ? [l.zoom, l.fx, l.fy, l.vignette, l.kenburns, l.daytime, l.depth, JSON.stringify(l.layers || []), JSON.stringify(l.styles || {}), JSON.stringify(l.tile || {}), VN.Life && run ? VN.Life.daytime(l, run.rs) : ''].join('|') : '');
   const showBg = (assetId, trans, dur, look) => {
+    // „Weniger Effekte“ (Spieler-Einstellung): Scherben, Blitze und Augen-Übergänge werden zum Überblenden
+    if (VN.settings && VN.settings.lessFx && ['shatter', 'flash', 'eyes', 'glitch'].includes(trans)) trans = 'fade';
     const key = assetId + '#' + lookKey(look);
     if (run.bgKey === key) return;
     run.bgKey = key;
@@ -616,6 +618,11 @@
       const ev = VN.World.pickEvent(run.rs, id);
       if (ev) { st.done[ev.id] = Date.now(); st.ret = id; return enterScene(ev.scene, 0, { noEvent: true }); }
     }
+    // Hub-Dialoge (0.7.4): von einem Hub in eine Story-Szene → „↩ Zurück“ führt wieder in diesen Hub
+    const prevScene = VN.scene(run.scene);
+    const fromHub = prevScene && prevScene.type === 'hub' && s.type === 'story';
+    if (fromHub) run.rs.hubRet = prevScene.id;
+    else if (s.type === 'hub') delete run.rs.hubRet;
     run.scene = id;
     run.beat = beat || 0;
     run.rs.seen[id] = true;
@@ -628,8 +635,10 @@
     if (window.VNPlugin) VNPlugin.hook('onSceneEnter', s, ctx());
     if (window.Perf) Perf.preloadAround(id);
     if (!opts.restored) autosave();
-    if (s.type === 'hub') { stopAmbient(); showFxExtra([]); return showHub(s, true); }
-    hubBox.innerHTML = '';
+    if (s.type === 'hub') { stopAmbient(); showFxExtra([]); return showHub(s, true, !!opts.returning); }
+    // Über dem Hub: Hub-Objekte bleiben sichtbar, aber nicht klickbar
+    if (s.overHub && (fromHub || hubBox.classList.contains('pl-hub-under'))) { hubBox.classList.add('pl-hub-under'); if (hubBox.parentNode !== world) world.insertBefore(hubBox, charsBox); }
+    else { hubBox.innerHTML = ''; hubUp(); }
     enterBeat(run.beat, opts);
   }
 
@@ -640,7 +649,7 @@
     choiceBox.hidden = true;
     updateInfo();
     const st = Stage.state(s, b);
-    if (st.bg) showBg(st.bg.asset, st.bg.trans, st.bg.dur, st.bg); else if (run.bg) showBg(null, 'fade', 0.5);
+    if (st.bg) showBg(st.bg.asset, st.bg.trans, st.bg.dur, st.bg); else if (run.bg && !(s.overHub && hubBox.classList.contains('pl-hub-under'))) showBg(null, 'fade', 0.5);
     showChars(st.chars, b);
     for (const [key, clip] of st.chars) if (clip.gestures && clip.gestures[b] && run.chars[key] && window.Anim) Anim.gesture(run.chars[key].el, clip.gestures[b]);
     showFx(st.fx);
@@ -675,14 +684,18 @@
     if (run.beat + 1 < s.beats) enterBeat(run.beat + 1);
     else if (WS && s.next === '@home' && VN.World.isLoc(VN.World.cfg().home)) { WS.ret = ''; enterScene(VN.World.cfg().home, 0); }
     else if (WS && (s.next === '@return' || (!s.next && WS.ret)) && VN.World.isLoc(WS.ret || WS.here)) { const t = WS.ret || WS.here; WS.ret = ''; enterScene(t, 0); }
+    else if (s.next === '@return' && run.rs.hubRet && VN.scene(run.rs.hubRet)) { const t = run.rs.hubRet; delete run.rs.hubRet; enterScene(t, 0, { returning: true }); }
     else if (s.next && VN.scene(s.next)) enterScene(s.next, 0);
     else showEnd();
   }
 
   const clearSpot = () => { if (run) { run.lockTo = null; run.event = null; } if (stage) stage.querySelectorAll('.pl-spot, .pl-pointer').forEach((n) => n.remove()); };
 
-  function showHub(s, entering) {
+  // Hub-Objekte liegen normal über der Welt; während eines Hub-Dialogs hinter den Figuren
+  function hubUp() { hubBox.classList.remove('pl-hub-under'); if (hubBox.parentNode === world) stage.insertBefore(hubBox, black); }
+  function showHub(s, entering, returning) {
     updateInfo();
+    hubUp();
     stopTyping();
     dlgBox.hidden = true;
     run.pendingChoice = null;
@@ -717,6 +730,7 @@
         onclick: async (e) => {
           e.stopPropagation();
           if (run.message || run.event || run.overlay || run.blocked) return;
+          if (run.scene !== s.id) return; // Hub liegt nur im Hintergrund (Hub-Dialog läuft)
           if (run.lockTo && run.lockTo !== o.id) return;
           if (run.lockTo === o.id) clearSpot();
           if (run.holding) { await E.useOn(o); return; }
@@ -760,19 +774,29 @@
       node.appendChild(hit);
       hubBox.appendChild(node);
     }
-    if (entering) runHubEvents(s);
+    if (entering) runHubEvents(s, !!returning);
+    else if (!run.event && !run.overlay && !run.message && !run.blocked) runHubEvents(s, true, true);
   }
 
   // Hub-Ereignisse (z. B. Tutorial)
-  function runHubEvents(s) {
+  // returning: zurück aus einem Hub-Dialog (dann laufen „bei jedem Betreten“-Ereignisse nicht erneut)
+  // onlyCond: nur Ereignisse „sobald … stimmt“ (nach einem Klick im Hub)
+  function runHubEvents(s, returning, onlyCond) {
     const queue = (s.events || []).filter((ev) => {
+      const trig = ev.trigger || 'first';
+      if (onlyCond && trig !== 'cond') return false;
+      if (returning && trig === 'always') return false;
+      if (trig !== 'always' && run.rs.seen['ev:' + ev.id]) return false;
+      if (trig === 'cond' && !(ev.conds || []).length) return false;
       if (!VN.checkConds(ev.conds, run.rs)) return false;
-      if ((ev.trigger || 'first') === 'first' && run.rs.seen['ev:' + ev.id]) return false;
+      if (ev.mode === 'scene') return !!(ev.scene && VN.scene(ev.scene) && ev.scene !== s.id);
       return ev.lines && ev.lines.length;
     });
     if (!queue.length) return;
     const ev = queue[0];
     run.rs.seen['ev:' + ev.id] = true;
+    // Timeline-Dialog: Story-Szene über dem Hub, danach zurück
+    if (ev.mode === 'scene') { const myRun = run; later(() => { if (run === myRun && run.scene === s.id && !run.event) enterScene(ev.scene, 0); }, 350); return; }
     run.event = { ev, i: 0, scene: s };
     const target = ev.spotlight ? s.objects.find((o) => o.id === ev.spotlight) : null;
     if (target) {
@@ -785,10 +809,31 @@
   function showEventLine() {
     const { ev, i, scene } = run.event;
     const l = ev.lines[i];
+    if (l.style === 'phone' || l.style === 'note') { showEventStyled(ev, i, l); return; }
     showDialog({ id: l.id, speaker: l.speaker, color: l.color || '#c4b2ff', text: l.text, speed: 40 }, { speaker: VN.tr(VN.speakerKey(l.speaker), l.speaker), text: VN.tr(l.id, l.text || '') });
     const target = ev.spotlight ? scene.objects.find((o) => o.id === ev.spotlight) : null;
     const box = dlgBox.querySelector('.dlg-box');
     if (box && target && target.y + target.h > 62) box.classList.add('top');
+  }
+  // Ereignis-Zeile als Handy-Nachricht oder Meldung (0.7.4)
+  function showEventStyled(ev, i, l) {
+    stopTyping();
+    dlgBox.hidden = true; dlgBox.innerHTML = ''; phoneBox.innerHTML = '';
+    const XF = (t) => (VN.Extras ? VN.Extras.fill(t, run.rs) : t);
+    const text = XF(VN.tr(l.id, l.text || ''));
+    const speaker = VN.tr(VN.speakerKey(l.speaker), l.speaker);
+    E.logLine({ id: l.id, speaker: l.speaker }, speaker, text);
+    run.curLine = l.id; run.curText = text;
+    if (l.style === 'phone') {
+      // zusammenhängende Handy-Zeilen dieses Ereignisses bis hierher
+      const lines = [];
+      for (let k = i; k >= 0 && ev.lines[k].style === 'phone'; k--) lines.unshift(ev.lines[k]);
+      phoneBox.appendChild(Fx.phoneEl(lines, { live: true, text: (x) => XF(VN.tr(x.id, x.text || '')), tr: (x) => VN.tr(VN.speakerKey(x.speaker), x.speaker) }));
+      uiSound('item');
+    } else {
+      phoneBox.appendChild(el('div', { class: 'pl-evnote' }, speaker ? el('strong', null, speaker) : null, el('span', null, text)));
+      uiSound('item');
+    }
   }
   function advanceEvent() {
     if (run.typing) return stopTyping(true);
@@ -797,6 +842,7 @@
     const ev = run.event.ev;
     run.event = null;
     dlgBox.hidden = true;
+    phoneBox.innerHTML = '';
     if (ev.spotlight && ev.lock) run.lockTo = ev.spotlight;
     else clearSpot();
   }
@@ -1191,6 +1237,15 @@
       if (opts.menu && !opts.noSplash && window.Theme) splash(go); else go();
     },
 
+    // Bild-Geschenk / Nachricht einer Figur aus einer Aktion (0.7.4)
+    charMessage(charId, m) {
+      const c = VN.Life && VN.Life.relChar(charId);
+      if (!run || !c || !m || !window.RelMsg) return Promise.resolve();
+      const myRun = run;
+      const prev = myRun.overlay;
+      myRun.overlay = 'relmsg';
+      return RelMsg.show(stage, c, m).then(() => { if (myRun === run && run.overlay === 'relmsg') run.overlay = prev || null; renderHud(); });
+    },
     // Nachricht einer Figur (Beziehungs-Meilenstein) – wartet, bis der Spieler sie schließt
     relMessage(charId, msId) {
       const c = VN.Life && VN.Life.relChar(charId);

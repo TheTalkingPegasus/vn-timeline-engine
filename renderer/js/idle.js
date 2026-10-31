@@ -9,11 +9,36 @@
   ID.MODES = [['realtime', 'Echtzeit, nur während gespielt wird'], ['offline', 'Echtzeit, auch bei geschlossenem Spiel'], ['gametime', 'Spielzeit (pro Tageszeit, braucht „Zeit & Kalender“)']];
   ID.cfg = () => {
     const p = P();
-    p.idle = Object.assign({ enabled: false, title: 'Aufbau', key: 'k', inMenu: false, mode: 'realtime', offlineMax: 8, offlinePct: 50, click: false, catchup: 100, warnMin: 20, buildings: [], milestones: [], hidden: false }, p.idle || {});
+    p.idle = Object.assign({ enabled: false, title: 'Aufbau', key: 'k', inMenu: false, mode: 'realtime', offlineMax: 8, offlinePct: 50, click: false, catchup: 100, warnMin: 20, buildings: [], milestones: [], hidden: false, tick: 'min', startWhen: 'always', startConds: [] }, p.idle || {});
     return p.idle;
   };
   ID.on = () => !!(P() && P().idle && P().idle.enabled);
-  ID.unit = () => (ID.cfg().mode === 'gametime' ? 'Tageszeit' : 'Minute');
+  ID.unit = () => (ID.cfg().mode === 'gametime' ? 'Tageszeit' : ({ sec: 'Sekunde', min: 'Minute', hour: 'Stunde' }[ID.cfg().tick] || 'Minute'));
+  // Takt (0.7.4): Mengen gelten pro Sekunde, Minute oder Stunde. Intern wird weiter in Minuten gerechnet.
+  ID.TICKS = [['sec', 'pro Sekunde'], ['min', 'pro Minute'], ['hour', 'pro Stunde']];
+  ID.perMin = () => (ID.cfg().mode === 'gametime' ? 1 : ({ sec: 60, min: 1, hour: 1 / 60 }[ID.cfg().tick] || 1));
+  ID.unitShort = () => (ID.cfg().mode === 'gametime' ? 'Tageszeit' : ({ sec: 'Sek.', min: 'Min.', hour: 'Std.' }[ID.cfg().tick] || 'Min.'));
+  // Start (0.7.4): sofort, beim ersten Öffnen des Aufbaus, sobald Bedingungen stimmen oder per Aktion
+  ID.STARTS = [['always', 'sofort beim Spielstart'], ['firstOpen', 'erst beim ersten Öffnen des Aufbaus'], ['cond', 'sobald Bedingungen stimmen (z. B. nach einem Dialog)'], ['action', 'erst durch die Aktion „🏰 Aufbau starten“']];
+  ID.running = (rs) => {
+    const c = ID.cfg();
+    if (!c.startWhen || c.startWhen === 'always') return true;
+    return !!ID.state(rs).started;
+  };
+  // Bedingungen prüfen (läuft mit der Uhr und nach Aktionen); true, wenn der Aufbau gerade gestartet ist
+  ID.checkStart = (rs) => {
+    const c = ID.cfg();
+    if (!ID.on() || ID.running(rs) || c.startWhen !== 'cond') return false;
+    if (!(c.startConds || []).length || !VN.checkConds(c.startConds, rs)) return false;
+    return ID.start(rs);
+  };
+  ID.start = (rs) => {
+    const st = ID.state(rs);
+    if (st.started) return false;
+    st.started = true;
+    st.last = Date.now();
+    return true;
+  };
   ID.building = (id) => ID.cfg().buildings.find((b) => b.id === id) || null;
   const curOf = (id) => (P().currencies || []).find((c) => c.id === id) || null;
   ID.curName = (id) => { const c = curOf(id); return c ? (VN.tr ? VN.tr(c.id + ':name', c.name) : c.name) : '?'; };
@@ -80,14 +105,16 @@
     return out;
   };
   // Produziert für „units“ Einheiten (Minuten oder Tageszeiten). Bruchteile werden gesammelt, ins Geld kommen ganze Zahlen.
+  // units = Minuten (bzw. Tageszeiten). Die Mengen der Gebäude gelten pro Takt (Sekunde/Minute/Stunde).
   ID.produce = (rs, units, factor) => {
-    if (!ID.on() || !(units > 0)) return {};
+    if (!ID.on() || !(units > 0) || !ID.running(rs)) return {};
     const st = ID.state(rs);
     const rate = ID.rate(rs);
+    const pm = ID.perMin();
     const got = {};
     for (const [cur, perUnit] of Object.entries(rate)) {
       if (!curOf(cur)) continue;
-      const x = (st.frac[cur] || 0) + perUnit * units * (factor == null ? 1 : factor);
+      const x = (st.frac[cur] || 0) + perUnit * pm * units * (factor == null ? 1 : factor);
       const whole = Math.floor(x);
       st.frac[cur] = x - whole;
       if (whole > 0) { VN.addMoney(rs, cur, whole, true); got[cur] = whole; }
@@ -172,9 +199,10 @@
   const previewRun = (opts) => {
     const c = ID.cfg();
     const rs = VN.newRunState();
-    ID.state(rs);
-    const step = 0.25; // Viertel-Einheit
-    const limit = opts.limit || 600;
+    ID.state(rs).started = true;
+    const hourly = c.mode !== 'gametime' && c.tick === 'hour';
+    const step = hourly ? 15 : 0.25; // Viertel-Einheit (bei Stunden-Takt Viertelstunden)
+    const limit = opts.limit || (hourly ? 60 * 24 * 14 : 600);
     const out = [];
     let t = 0;
     // Rohstoffe ohne Einnahme, die aber gebraucht werden, zählen dreifach (sonst kauft der Test sich arm)
@@ -208,7 +236,8 @@
   ID.fmtTime = (units) => {
     if (units == null) return '∞';
     if (ID.cfg().mode === 'gametime') return Math.ceil(units) + ' ' + (Math.ceil(units) === 1 ? 'Tageszeit' : 'Tageszeiten');
-    if (units < 1) return '< 1 Min.';
+    if (units < 1) return ID.cfg().tick === 'sec' ? Math.max(1, Math.round(units * 60)) + ' Sek.' : '< 1 Min.';
+    if (units >= 60 * 24) return Math.floor(units / 1440) + ' T. ' + Math.round((units % 1440) / 60) + ' Std.';
     if (units < 60) return Math.round(units) + ' Min.';
     return Math.floor(units / 60) + ' Std. ' + Math.round(units % 60) + ' Min.';
   };
@@ -266,6 +295,16 @@
     apply: (a, rs, gains) => { if (window.Player && Player.openIdle && gains) gains.pending.push(() => Player.openIdle()); },
     text: () => '🏰 Aufbau öffnen', row: () => {}
   });
+  VN.registerAction('idleStart', {
+    label: '🏰 Aufbau starten', on: () => ID.on() && ID.cfg().startWhen === 'action', make: () => ({}),
+    apply: (a, rs, gains) => { if (ID.start(rs) && gains) gains.push({ kind: 'text', text: '🏰 ' + VN.tr('idle:title', ID.cfg().title || VN.tp('Aufbau')) + ' ' + VN.tp('läuft jetzt') }); },
+    text: () => '🏰 Aufbau starten', row: () => {}
+  });
+  VN.registerCond('idleRunning', {
+    label: '🏰 Aufbau läuft', on: () => ID.on() && ID.cfg().startWhen !== 'always', make: () => ({}),
+    check: (c, rs) => ID.on() && ID.running(rs),
+    text: () => '🏰 Aufbau läuft', row: () => {}
+  });
   VN.registerAction('idleBuild', {
     label: '🏰 Gebäude ausbauen (geschenkt)', on: ID.on, make: () => ({ building: '' }),
     apply: (a, rs, gains) => { const b = ID.building(a.building); if (b && ID.build(rs, b, true) && gains) gains.push({ kind: 'text', text: '🏰 ' + b.name + ' · ' + VN.tp('Stufe') + ' ' + ID.level(rs, b) }); },
@@ -292,8 +331,8 @@
   });
   VN.registerAction('idleProduce', {
     label: '🏰 Zeit überspringen (Produktion)', on: ID.on, make: () => ({ units: 60 }),
-    apply: (a, rs, gains) => { const got = ID.produce(rs, Number(a.units) || 0); if (gains) for (const [cur, n] of Object.entries(got)) gains.push({ kind: 'money', id: cur, count: n }); },
-    text: (a) => '🏰 ' + (a.units || 0) + ' ' + (ID.cfg().mode === 'gametime' ? 'Tageszeiten' : 'Min.') + ' Produktion',
+    apply: (a, rs, gains) => { const got = ID.produce(rs, (Number(a.units) || 0) / ID.perMin()); if (gains) for (const [cur, n] of Object.entries(got)) gains.push({ kind: 'money', id: cur, count: n }); },
+    text: (a) => '🏰 ' + (a.units || 0) + ' ' + (ID.cfg().mode === 'gametime' ? 'Tageszeiten' : ID.unitShort()) + ' Produktion',
     row: (row, a, sel, inp) => row.appendChild(inp(a.units != null ? a.units : 60, (v) => VN.mutate(() => { a.units = Number(v) || 0; }), 'number'))
   });
 
@@ -308,6 +347,7 @@
     for (const c of b.conds || []) { const pr = VN.condProblem(c); if (pr) out.push('Freischalten: ' + pr); }
     return out;
   };
+  ID.usedSomewhere = (type) => { let found = false; const walk = (o, d) => { if (found || !o || typeof o !== 'object' || d > 14) return; if (Array.isArray(o)) { for (const x of o) walk(x, d + 1); return; } if (o.type === type) { found = true; return; } for (const k in o) if (o[k] && typeof o[k] === 'object') walk(o[k], d + 1); }; walk(VN.project, 0); return found; };
   ID.unlockedSomewhere = (b) => { let found = false; const walk = (o, d) => { if (found || !o || typeof o !== 'object' || d > 14) return; if (Array.isArray(o)) { for (const x of o) walk(x, d + 1); return; } if (o.type === 'idleUnlock' && o.building === b.id) { found = true; return; } for (const k in o) if (o[k] && typeof o[k] === 'object') walk(o[k], d + 1); }; walk(VN.project, 0); return found; };
   ID.issues = () => {
     const out = [];
@@ -315,6 +355,8 @@
     const c = ID.cfg();
     if (!P().currencies.length) out.push({ text: 'Aufbau: keine Währungen (Rohstoffe) angelegt' });
     if (c.mode === 'gametime' && !(VN.Life && VN.Life.timeOn())) out.push({ text: 'Aufbau: Spielzeit-Modus braucht „Zeit & Kalender“' });
+    if (c.startWhen === 'cond' && !(c.startConds || []).length) out.push({ text: 'Aufbau: Start „sobald Bedingungen stimmen“, aber es ist keine Bedingung eingetragen – er würde nie starten.' });
+    if (c.startWhen === 'action' && !ID.usedSomewhere('idleStart')) out.push({ text: 'Aufbau: Start „durch die Aktion“, aber die Aktion „🏰 Aufbau starten“ kommt nirgends vor – er würde nie starten.' });
     const made = new Set(); for (const b of c.buildings) for (const x of b.prods || []) if (x.cur && Number(x.amount) > 0) made.add(x.cur);
     const needed = new Set(); for (const b of c.buildings) for (const x of b.costs || []) if (x.cur && Number(x.amount) > 0) needed.add(x.cur);
     for (const cur of needed) if (!made.has(cur)) out.push({ text: (VN.I18n && VN.I18n.lang === 'en' ? 'Building: ' : 'Aufbau: ') + ID.curName(cur) + ' ' + VN.t('wird zum Bauen gebraucht, aber kein Gebäude stellt es her') });
