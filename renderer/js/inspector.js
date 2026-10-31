@@ -313,7 +313,7 @@
     waitEditor(c) {
       const w = c.waitFor;
       const box = el('div', { class: 'opt-card' + (w ? ' wait-on' : '') },
-        el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!w, onchange: (e) => VN.mutate(() => { if (e.target.checked) c.waitFor = { conds: [{ type: 'did', what: 'screen', key: 'inv' }], hint: VN.t('Öffne dein Inventar mit I.'), glow: 'inv', auto: false }; else delete c.waitFor; }) }),
+        el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!w, onchange: (e) => VN.mutate(() => { if (e.target.checked) c.waitFor = { conds: [{ type: 'did', what: 'screen', key: 'inv' }], hint: VN.t('Öffne dein Inventar mit I.'), glow: 'inv', auto: false, before: true }; else delete c.waitFor; }) }),
           el('strong', null, VN.t('Weiter erst, wenn …'))),
         el('div', { class: 'muted small' }, VN.t('Das Spiel bleibt bei dieser Zeile stehen, bis der Spieler etwas getan hat – z. B. das Inventar geöffnet oder etwas angezogen. Gut für Tutorials im eigenen Spiel.')));
       if (!w) return box;
@@ -326,8 +326,23 @@
           (() => { const s = el('select', { onchange: (e) => VN.mutate(() => { w.glow = e.target.value; }) }); for (const [k, l] of [['', VN.t('— keiner —')], ['inv', VN.t('Inventar')], ['menu', VN.t('Menü')]]) { const o = el('option', { value: k }, l); if (k === (w.glow || '')) o.selected = true; s.appendChild(o); } return s; })(),
           el('span', { class: 'muted small' }, VN.t('Hinweis')),
           (() => { const s = el('select', { onchange: (e) => VN.mutate(() => { w.pos = e.target.value; }) }); for (const [k, l] of [['top', VN.t('oben')], ['middle', VN.t('Mitte')]]) { const o = el('option', { value: k }, l); if (k === (w.pos || 'top')) o.selected = true; s.appendChild(o); } return s; })()),
-        el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!w.auto, onchange: (e) => VN.mutate(() => { w.auto = e.target.checked; }) }), VN.t('Danach automatisch weiter (sonst mit Klick)')));
+        el('div', { class: 'logic-row' }, el('span', { class: 'muted small', style: { width: '90px' } }, VN.t('Wann')),
+          (() => { const s = el('select', { style: { flex: '1' }, onchange: (e) => VN.mutate(() => { w.before = e.target.value === 'before'; }) }); for (const [k, l] of [['before', VN.t('Diese Zeile erst zeigen, wenn erledigt')], ['after', VN.t('Diese Zeile zeigen, dann warten')]]) { const o = el('option', { value: k }, l); if (k === (w.before ? 'before' : 'after')) o.selected = true; s.appendChild(o); } return s; })()),
+        w.before ? null : el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!w.auto, onchange: (e) => VN.mutate(() => { w.auto = e.target.checked; }) }), VN.t('Danach automatisch weiter (sonst mit Klick)')),
+        ...Inspector.waitWarnings(w));
       return box;
+    },
+
+    // Stolperfallen bei „Weiter erst, wenn …“
+    waitWarnings(w) {
+      const out = [];
+      for (const c of w.conds || []) {
+        const it = (c.type === 'did' && (c.what === 'use' || c.what === 'equip')) || c.type === 'worn' ? VN.project.items.find((x) => x.id === (c.key || c.item)) : null;
+        if (c.type === 'did' && c.what === 'use' && it && it.slot && VN.Equip && VN.Equip.on()) out.push(el('div', { class: 'hint-box warn-box' }, VN.tf('„{name}“ ist ein Ausrüstungs-Gegenstand. Zum Anziehen besser „👕 Trägt Gegenstand“ nehmen – „benutzt“ heißt: im Inventar auf „Benutzen“ geklickt.', { name: it.name })));
+        if (c.type === 'did' && c.what === 'use' && it && (!it.use || it.use.consume !== false)) out.push(el('div', { class: 'hint-box warn-box' }, VN.tf('Achtung: „{name}“ wird beim Benutzen verbraucht und ist danach weg. Ändern unter Spielsysteme → Gegenstände → Benutzen … → „Wird dabei verbraucht“.', { name: it.name })));
+        if ((c.type === 'worn' || (c.type === 'did' && c.what === 'equip')) && !(VN.Equip && VN.Equip.on())) out.push(el('div', { class: 'hint-box warn-box' }, VN.t('Das Spielsystem „Ausrüstung“ ist aus – unter Spielsysteme → Übersicht einschalten.')));
+      }
+      return out;
     },
 
     hubObject(s, o) {

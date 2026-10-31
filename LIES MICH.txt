@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.7.2
+VN Timeline Engine · Prototyp 0.7.3
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,15 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.7.3 · Ausrüstung mit Aktionen und Boni, „Weiter erst, wenn …“ verbessert
+- „Weiter erst, wenn …“: neue Auswahl „Diese Zeile erst zeigen, wenn erledigt“ – z. B. das Lob
+  „Das passt dir wie angegossen“ erscheint erst, wenn der Kittel wirklich angezogen ist.
+  Warnhinweise im Editor bei typischen Stolperfallen.
+- Ausrüstungs-Gegenstände: Aktionen beim Anziehen und Ablegen (z. B. Ort freischalten, Quest-Abschnitt,
+  Beziehungspunkte – „verkleidet und darf nun hinein“) und Boni, solange getragen (mehr ♥, Geld,
+  Kampfwerte …). Gegenstände → Spalte „Ausrüsten“ → „…“.
+- „Benutzen“ im Inventar abschaltbar, bei Ausrüstung standardmäßig aus – Kleidung verschwindet nicht mehr.
 
 NEU IN 0.7.2 · Ausrüstung, „Weiter erst, wenn …“, neue Auslöser
 - Neues Spielsystem „Ausrüstung“ (Spielsysteme → Übersicht): Plätze wie Kopf, Körper, Hand, Schmuck

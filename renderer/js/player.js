@@ -296,7 +296,7 @@
     stage.querySelectorAll('.pl-wait').forEach((x) => x.remove());
     stage.querySelectorAll('.pl-ctrl button.wait-glow').forEach((x) => x.classList.remove('wait-glow'));
   };
-  const startWait = (clip) => {
+  const startWait = (clip, onMet) => {
     stopWait();
     const w = clip && clip.waitFor;
     if (!w || !(w.conds || []).length || VN.checkConds(w.conds, run.rs)) return;
@@ -308,6 +308,7 @@
     waitTick = setInterval(() => {
       if (run !== myRun || !run || run.curLine !== clip.id) { clearInterval(waitTick); waitTick = 0; return; }
       if (!VN.checkConds(w.conds, run.rs)) return;
+      if (onMet) { clearInterval(waitTick); waitTick = 0; run.waitFor = null; hint.remove(); stage.querySelectorAll('.pl-ctrl button.wait-glow').forEach((x) => x.classList.remove('wait-glow')); if (!run.overlay) onMet(); else run.afterOverlay = onMet; return; }
       hint.classList.add('done');
       hint.lastChild.textContent = VN.tp('Erledigt! Klicken zum Weiterlesen.');
       clearInterval(waitTick); waitTick = 0;
@@ -323,6 +324,14 @@
     dlgBox.innerHTML = '';
     phoneBox.innerHTML = '';
     if (!clip) { stopWait(); dlgBox.hidden = true; run.curLine = null; run.curText = ''; return; }
+    // „Weiter erst, wenn …“ mit „Zeile erst zeigen, wenn erledigt“: Zeile bleibt verborgen, bis die Bedingung stimmt
+    const wf = clip.waitFor;
+    if (!override && wf && wf.before && (wf.conds || []).length && !VN.checkConds(wf.conds, run.rs)) {
+      dlgBox.hidden = true;
+      run.curLine = clip.id; run.curText = '';
+      startWait(clip, () => showDialog(clip));
+      return;
+    }
     const s = VN.scene(run.scene);
     const chars = Object.entries(run.chars).filter(([, v]) => v.clip).map(([k, v]) => [k, v.clip]);
     run.speakingChar = null;
@@ -871,7 +880,7 @@
 
   // ---------- Bildschirme: Hauptmenü, Pause, Speichern/Laden, Einstellungen ----------
   const uiSound = (k) => { if (window.Theme) Theme.sound(k); };
-  const closeOverlay = () => { if (!overlayBox.hidden) uiSound('close'); overlayBox.innerHTML = ''; overlayBox.hidden = true; overlayBox.removeAttribute('style'); if (run) run.overlay = null; };
+  const closeOverlay = () => { if (!overlayBox.hidden) uiSound('close'); overlayBox.innerHTML = ''; overlayBox.hidden = true; overlayBox.removeAttribute('style'); if (run) { run.overlay = null; if (run.afterOverlay) { const f = run.afterOverlay; run.afterOverlay = null; setTimeout(f, 250); } } };
   let panelKind = 'pause';
   const panel = (title, ...children) => {
     if (overlayBox.hidden) uiSound('open');
@@ -1009,7 +1018,7 @@
     overlayBox.innerHTML = '';
     overlayBox.removeAttribute('style');
     uiSound('open');
-    overlayBox.appendChild(Systems.inventoryEl(run.rs, { onClose: toggleInventory, onUse: (it) => E.useItem(it), onCombine: (a, b) => { const r = E.combine(a, b, run.rs); renderHud(); return r; }, canUse: (it) => VN.Extras.canUse(it) || (VN.scene(run.scene) || {}).type === 'hub' && (VN.scene(run.scene).objects || []).some((o) => o.useItem === it.id) }));
+    overlayBox.appendChild(Systems.inventoryEl(run.rs, { onClose: toggleInventory, onUse: (it) => E.useItem(it), onCombine: (a, b) => { const r = E.combine(a, b, run.rs); renderHud(); return r; }, canUse: (it) => VN.Extras.canUse(it) || (VN.Extras.offersUse(it) && (VN.scene(run.scene) || {}).type === 'hub' && (VN.scene(run.scene).objects || []).some((o) => o.useItem === it.id)) }));
     overlayBox.hidden = false;
     run.overlay = 'inv';
     VN.did(run.rs, 'screen', 'inv');
@@ -1273,6 +1282,17 @@
       return Promise.resolve();
     },
     askName: (a) => E.askName(a),
+    // Aktionen von außen (z. B. beim Anziehen eines Gegenstands): ausführen, Meldung zeigen, Hub auffrischen
+    async runActions(list, key) {
+      if (!run || !(list || []).length) return;
+      const myRun = run;
+      const g = await doActions(list, key);
+      if (myRun !== run || !g) return;
+      showGains(g);
+      const s = VN.scene(run.scene);
+      if (s && s.type === 'hub' && !run.overlay) showHub(s, false);
+      renderHud();
+    },
     openMap: () => WD.openMap(),
     openQuests: () => NT.questScreen(false),
     openSkills: (tree) => SKP.screen(tree || null, false),

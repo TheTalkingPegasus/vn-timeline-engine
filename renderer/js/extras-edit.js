@@ -94,6 +94,7 @@
       card.append(el('strong', null, 'Benutzen: ' + it.name),
         el('div', { class: 'muted small' }, 'Im Inventar erscheint „Benutzen“, sobald hier mindestens eine Aktion steht (z. B. Heiltrank: Leben + 20). Für „Schlüssel auf Tür“ stellst du das am Hub-Objekt ein (Abschnitt „Gegenstand benutzen“).'),
         VN.actionEditor(it.use.actions, 'Beim Benutzen'),
+        el('label', { class: 'check' }, chk(VN.Extras.offersUse(it), (v) => { it.use.offer = v; }), VN.t('Im Inventar „Benutzen“ anbieten') + (it.slot ? ' ' + VN.t('(bei Ausrüstung standardmäßig aus)') : '')),
         el('label', { class: 'check' }, chk(it.use.consume !== false, (v) => { it.use.consume = v; }), 'Wird dabei verbraucht'),
         el('div', { class: 'field' }, el('div', { class: 'lbl' }, 'Meldung (optional)'), txt(it.use.text, (v) => { it.use.text = v; }, null, 'z. B. „Du fühlst dich gestärkt.“')),
         el('div', { class: 'row gap8', style: { justifyContent: 'flex-end' } }, el('button', { class: 'btn primary', onclick: close }, 'Fertig')));

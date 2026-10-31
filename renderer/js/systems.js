@@ -123,11 +123,11 @@
       const p = VN.project;
       body.appendChild(el('p', { class: 'muted' }, 'Alle Gegenstände des Spiels. Namen und Beschreibungen erscheinen automatisch im Transkript. Vergeben werden sie über Aktionen oder Loot-Tabellen.'));
       const eqOn = !!(VN.Equip && VN.Equip.on());
-      body.appendChild(table('150px minmax(110px, 1.2fr) 130px ' + (eqOn ? '120px ' : '') + '64px 60px 60px 1.3fr 88px 36px', ['Bild', 'Name', 'Kategorie', ...(eqOn ? ['Ausrüsten'] : []), 'Stapelbar', 'Max', 'Wert', 'Beschreibung', '', ''], p.items.map((it) => [
+      body.appendChild(table('150px minmax(110px, 1.2fr) 130px ' + (eqOn ? '150px ' : '') + '64px 60px 60px 1.3fr 88px 36px', ['Bild', 'Name', 'Kategorie', ...(eqOn ? ['Ausrüsten'] : []), 'Stapelbar', 'Max', 'Wert', 'Beschreibung', '', ''], p.items.map((it) => [
         imgSel(it.image, (v) => { it.image = v; }),
         txt(it.name, (x) => { it.name = x || 'Gegenstand'; }),
         catSel(it),
-        ...(eqOn ? [sel(it.slot || '', [['', '— nein —'], ...VN.Equip.slots().map((sl) => [sl.id, (sl.icon ? sl.icon + ' ' : '') + sl.name])], (v) => { if (v) it.slot = v; else delete it.slot; })] : []),
+        ...(eqOn ? [el('div', { class: 'row gap4' }, sel(it.slot || '', [['', '— nein —'], ...VN.Equip.slots().map((sl) => [sl.id, (sl.icon ? sl.icon + ' ' : '') + sl.name])], (v) => { if (v) it.slot = v; else delete it.slot; }), it.slot ? el('button', { class: 'btn tiny' + ((it.wearActs || []).length || (it.wearFx || []).length ? ' primary' : ''), title: VN.t('Beim Anziehen, Ablegen, Boni'), onclick: () => Systems.wearModal && Systems.wearModal(it) }, '…') : null)] : []),
         chk(it.stack, (x) => { it.stack = x; }),
         num(it.max, (x) => { it.max = x; }, { width: '60px' }),
         num(it.value, (x) => { it.value = x; }, { width: '60px' }),

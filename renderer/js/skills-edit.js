@@ -34,6 +34,9 @@
     return field(label, num(e[key], (v) => { e[key] = v || 0; }));
   };
 
+  // auch für Ausrüstungs-Boni (equip-edit.js)
+  window.Systems.skillParamInput = (e, pa) => paramInput(e, pa);
+
   const nodeBox = (t, n) => {
     const box = el('div', { class: 'opt-card sk-insp' });
     const probs = SK().nodeProblems(t, n);
