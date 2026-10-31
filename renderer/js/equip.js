@@ -19,12 +19,60 @@
   EQ.wear = (rs, itemId) => {
     const it = EQ.item(itemId);
     if (!it || !it.slot || !EQ.slot(it.slot) || !((rs.inv[itemId] || 0) > 0)) return false;
+    const prev = EQ.inSlot(rs, it.slot);
+    if (prev === itemId) return true;
+    if (prev) EQ.takeOff(rs, it.slot);
     EQ.state(rs)[it.slot] = itemId;
     VN.did(rs, 'equip', itemId);
+    EQ.fire(rs, it, 'wear');
     if (window.VNPlugin && Object.keys(VNPlugin.plugins).length) setTimeout(() => VNPlugin.hook('onEquip', itemId, it.slot, VNPlugin.makeCtx(rs)), 0);
     return true;
   };
-  EQ.takeOff = (rs, slotId) => { const st = EQ.state(rs); const had = st[slotId]; delete st[slotId]; return !!had; };
+  EQ.takeOff = (rs, slotId) => {
+    const st = EQ.state(rs);
+    const had = st[slotId];
+    delete st[slotId];
+    if (had) { const it = EQ.item(had); if (it) EQ.fire(rs, it, 'remove'); }
+    return !!had;
+  };
+  // Aktionen beim Anziehen / Ablegen („Verkleidet – jetzt darf ich ins Labor“). Auf Wunsch nur beim ersten Mal.
+  EQ.fire = (rs, it, kind) => {
+    const list = kind === 'wear' ? it.wearActs : it.removeActs;
+    if (!(list || []).length) return;
+    rs.eqFired = rs.eqFired || {};
+    const k = kind + ':' + it.id;
+    if (kind === 'wear' && it.wearOnce && rs.eqFired[k]) return;
+    rs.eqFired[k] = (rs.eqFired[k] || 0) + 1;
+    if (window.Player && Player.running && Player.state && Player.state.rs === rs) Player.runActions(list, 'eq:' + k);
+    else VN.applyActions(list, rs, 'eq:' + k);
+  };
+  // Boni solange getragen: gleiche Wirkungen wie bei Skilltrees (z. B. mehr ♥ bei einer Figur, mehr Geld, Kampfwerte)
+  EQ.EFFECTS = () => {
+    const all = (VN.Skills && VN.Skills.effectsAll) ? VN.Skills.effectsAll() : {};
+    const out = {};
+    for (const [k, d] of Object.entries(all)) if (d.key && d.value && !d.once) out[k] = d;
+    return out;
+  };
+  EQ.sum = (rs, key, sub) => {
+    const res = { pct: 0, add: 0 };
+    if (!rs || !EQ.on()) return res;
+    const E = EQ.EFFECTS();
+    for (const s of EQ.slots()) {
+      const id = EQ.inSlot(rs, s.id);
+      const it = id && EQ.item(id);
+      if (!it) continue;
+      for (const fx of it.wearFx || []) {
+        const d = E[fx.eff];
+        if (!d) continue;
+        let k;
+        try { k = d.key(fx); } catch (er) { continue; }
+        if (k !== key && !(sub && k === key + ':' + sub)) continue;
+        const v = Number(d.value(fx)) || 0;
+        if (d.mode === 'add') res.add += v; else res.pct += v;
+      }
+    }
+    return res;
+  };
 
   // ---------- Projekt-Daten ----------
   const baseMig = VN.migrate;

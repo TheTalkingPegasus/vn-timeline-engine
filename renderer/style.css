@@ -1794,7 +1794,7 @@ code { font-family: Consolas, "JetBrains Mono", monospace; background: var(--bg3
 
 /* ---------- „Weiter erst, wenn …“ ---------- */
 .pl-wait { position: absolute; left: 50%; transform: translateX(-50%); z-index: 40; display: flex; align-items: center; gap: 1.2cqh; padding: 1.2cqh 2.4cqh; border-radius: 1.4cqh; background: rgba(20, 21, 26, 0.92); border: 2px solid var(--accent, #e8a43a); color: #fff; font-size: 2.4cqh; box-shadow: 0 0.8cqh 3cqh rgba(0,0,0,0.5); pointer-events: none; animation: pl-wait-in 0.35s ease-out; max-width: 80%; }
-.pl-wait.pos-top { top: 9cqh; }
+.pl-wait.pos-top { top: 16cqh; }
 .pl-wait.pos-middle { top: 42%; }
 .pl-wait-ic { font-size: 3cqh; animation: pl-wait-bob 1.2s ease-in-out infinite; }
 .pl-wait.done { border-color: #5cc98a; }
@@ -1808,3 +1808,4 @@ code { font-family: Consolas, "JetBrains Mono", monospace; background: var(--bg3
 /* Platz für „Schließen“ unten, Bild im Detail nicht zu groß (sonst verdeckt der Knopf die Aktionen) */
 .inv-box:has(> .inv-close) { padding-bottom: 8.5cqh; }
 .inv-big { max-height: 17cqh; }
+.hint-box.warn-box { border-left: 3px solid #e8b84a; background: rgba(232, 184, 74, 0.08); margin-top: 6px; }

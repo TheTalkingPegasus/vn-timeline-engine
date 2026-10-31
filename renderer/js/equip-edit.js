@@ -35,6 +35,42 @@
       el('button', { class: 'btn tiny', onclick: () => { VN.ui.sysTab = 'inv'; VN.render(); } }, VN.t('Inventar-Vorschau ansehen →'))));
   };
 
+  // Gegenstand: was passiert beim Anziehen/Ablegen, welche Boni gibt er, solange er getragen wird
+  S.wearModal = (it) => {
+    const back = el('div', { class: 'modal-back', onclick: (e) => { if (e.target === back) back.remove(); } });
+    const card = el('div', { class: 'modal', style: { width: '660px', maxHeight: '84vh', overflow: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' } });
+    const draw = () => {
+      card.innerHTML = '';
+      it.wearActs = it.wearActs || []; it.removeActs = it.removeActs || []; it.wearFx = it.wearFx || [];
+      const E = EQ().EFFECTS();
+      const fxRows = it.wearFx.map((fx, i) => {
+        const d = E[fx.eff];
+        const row = el('div', { class: 'opt-card', style: { margin: '0' } },
+          el('div', { class: 'row gap8' },
+            (() => { const s = el('select', { style: { flex: '1' }, onchange: (e) => VN.mutate(() => { it.wearFx[i] = { eff: e.target.value }; }) }); for (const [k, x] of Object.entries(E)) { const o = el('option', { value: k }, VN.t(x.label)); if (k === fx.eff) o.selected = true; s.appendChild(o); } return s; })(),
+            el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { it.wearFx.splice(i, 1); }) }, '×')));
+        if (d) row.appendChild(el('div', { class: 'sk-grid2' }, ...(d.params || []).filter((pa) => pa[2] !== 'actions').map((pa) => S.skillParamInput ? S.skillParamInput(fx, pa) : el('span'))));
+        return row;
+      });
+      card.append(
+        el('div', { class: 'row gap8' }, el('strong', { style: { flex: '1', fontSize: '16px' } }, '👕 ' + it.name), el('button', { class: 'btn primary', onclick: () => { back.remove(); VN.render(); } }, VN.t('Fertig'))),
+        el('div', { class: 'muted small' }, VN.t('Was passiert, wenn der Spieler diesen Gegenstand anzieht oder ablegt – z. B. „Verkleidet: Jetzt darf ich ins Labor“ (Ort freischalten, Quest-Abschnitt erledigt, Beziehungspunkte). Für „nur verkleidet hinein“ an der Tür die Bedingung „👕 Trägt Gegenstand“ nutzen.')),
+        VN.actionEditor(it.wearActs, VN.t('Beim Anziehen ausführen')),
+        el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!it.wearOnce, onchange: (e) => VN.mutate(() => { it.wearOnce = e.target.checked; }) }), VN.t('Nur beim ersten Anziehen (sonst jedes Mal)')),
+        VN.actionEditor(it.removeActs, VN.t('Beim Ablegen ausführen')),
+        el('div', { class: 'sec-title' }, VN.t('Boni, solange getragen')),
+        el('div', { class: 'muted small' }, VN.t('Gleiche Wirkungen wie bei Skilltrees, z. B. mehr ♥ bei einer Figur, mehr Geld, bessere Preise oder Kampfwerte.')),
+        ...fxRows,
+        el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { it.wearFx.push({ eff: Object.keys(E).includes('relPct') ? 'relPct' : Object.keys(E)[0] }); }) }, '+ ' + VN.t('Bonus')));
+    };
+    draw();
+    back.appendChild(card);
+    document.body.appendChild(back);
+    // Änderungen im Fenster sofort zeichnen
+    const orig = VN.render;
+    VN.render = function () { orig.apply(this, arguments); if (back.isConnected) draw(); else VN.render = orig; };
+  };
+
   if (window.Help) Help.sources.push(() => EQ().issues().map((x) => Object.assign({ level: 'warn', area: 'Ausrüstung', topic: 'system', go: () => { VN.ui.view = 'systems'; VN.ui.sysTab = 'equip'; VN.render(); } }, x)));
 
   if (VN.Life) {

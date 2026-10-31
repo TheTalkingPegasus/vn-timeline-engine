@@ -186,15 +186,19 @@
   };
   // VN.bonus('money.gain', 50, rs, 'cur_gold') → Wert mit allen passenden Boni (allgemein + speziell)
   VN.bonus = (key, base, rs, sub) => {
-    if (!rs || !SK.on()) return base;
-    const a = SK.sum(rs, key), b = sub ? SK.sum(rs, key + ':' + sub) : { pct: 0, add: 0 };
-    return base * (1 + (a.pct + b.pct) / 100) + a.add + b.add;
+    if (!rs) return base;
+    let pct = 0, add = 0;
+    if (SK.on()) { const a = SK.sum(rs, key), b = sub ? SK.sum(rs, key + ':' + sub) : { pct: 0, add: 0 }; pct += a.pct + b.pct; add += a.add + b.add; }
+    // Getragene Ausrüstung kann dieselben Boni geben (equip.js)
+    if (VN.Equip && VN.Equip.on()) { const e = VN.Equip.sum(rs, key, sub); pct += e.pct; add += e.add; }
+    if (!pct && !add) return base;
+    return base * (1 + pct / 100) + add;
   };
 
   // Geld: Einnahmen bekommen den Verdienst-Bonus (raw = ohne Bonus, z. B. Erstattungen)
   const baseAdd = VN.addMoney;
   VN.addMoney = (rs, id, n, raw) => {
-    if (!raw && n > 0 && SK.on()) n = Math.round(VN.bonus('money.gain', n, rs, id));
+    if (!raw && n > 0 && (SK.on() || (VN.Equip && VN.Equip.on()))) n = Math.round(VN.bonus('money.gain', n, rs, id));
     return baseAdd(rs, id, n);
   };
 

@@ -71,7 +71,9 @@
   // ---------- Gegenstände benutzen und kombinieren ----------
   X.combos = () => (VN.project.combos = VN.project.combos || []);
   X.comboFor = (a, b) => X.combos().find((c) => (c.a === a && c.b === b) || (c.a === b && c.b === a));
-  X.canUse = (it) => !!(it && it.use && (it.use.actions || []).length);
+  // „Benutzen“ im Inventar anbieten? Bei Ausrüstungs-Gegenständen standardmäßig nein (sonst wäre Kleidung nach „Benutzen“ weg)
+  X.offersUse = (it) => !!it && (it.use && it.use.offer != null ? it.use.offer !== false : !(it.slot && VN.Equip && VN.Equip.on()));
+  X.canUse = (it) => !!(it && it.use && X.offersUse(it) && (it.use.actions || []).length);
 
   // ---------- Bedingungen ----------
   const itemName = (id) => { const it = VN.project.items.find((x) => x.id === id); return it ? it.name : '?'; };

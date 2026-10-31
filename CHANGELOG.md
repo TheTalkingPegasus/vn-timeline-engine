@@ -2,6 +2,18 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.7.3 – Equipment actions and bonuses, “Continue only when …” improved
+- “Continue only when …”: new choice “Show this line only once it's done” (default for new setups) – the
+  line, e.g. a reaction, appears only after the condition is met; works even if it is met inside the
+  inventory. Warnings in the editor for common pitfalls (item is used up, “used” vs. “wears”, equipment off).
+- Equipment items: actions when put on / taken off (optionally only the first time) – e.g. unlock a place,
+  complete a quest step, relationship points (“in disguise, now I may enter”) – and bonuses while worn
+  (same effects as skill trees: more ♥ with a character, more money, prices, combat stats …).
+  Items → Equip column → “…”.
+- Items: “Offer ‘Use’ in the inventory” can be switched off; for equipment it is off by default, so clothes
+  are no longer used up by accident.
+- The wait hint no longer overlaps the item notification.
+
 ## 0.7.2 – Equipment, “Continue only when …”, new triggers
 - New game system “Equipment” (Game systems → Overview): slots like head, body, hand, jewellery (freely
   definable), items get a slot (Items → “Equip” column). In the inventory the player equips and takes off
