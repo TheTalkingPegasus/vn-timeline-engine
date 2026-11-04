@@ -3,7 +3,7 @@ VN Timeline Engine · Prototyp 0.9.5
 (English: see README.txt)
 
 STARTEN (Windows)
-Am einfachsten: "VN-Timeline-Engine-Setup-0.7.0.exe" starten. Das Setup legt auf Wunsch eine
+Am einfachsten: "VN-Timeline-Engine-Setup-<Version>.exe" starten. Das Setup legt auf Wunsch eine
 Desktop-Verknüpfung an, einen Eintrag im Startmenü, und ab jetzt kommen Updates automatisch.
 Ohne Installation (ZIP):
 1. Den ganzen Ordner aus der ZIP entpacken (nicht direkt aus der ZIP starten).

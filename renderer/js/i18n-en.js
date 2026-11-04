@@ -3874,7 +3874,8 @@ window.VN_I18N_EN = {
 "Nur einmal": "Only once",
 "Jedes Mal": "Every time",
 "Höchstens … mal": "At most … times",
-"Einmal pro Tag": "Once per day"
+"Einmal pro Tag": "Once per day",
+"Gerät „{d}“ nutzt die Taste H – die ist auch „🏠 Zuhause“ bei Welt & Orte. Andere Taste wählen, z. B. P.": "Device “{d}” uses the key H – that is also “🏠 Home” in World & locations. Pick another key, e.g. P."
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",

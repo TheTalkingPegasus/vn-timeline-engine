@@ -11,18 +11,27 @@ every column is one click of the player. Free, source available (VN Timeline Eng
 
 ## Download
 
-Get the Windows version from the **[Releases](../../releases)** page: unzip the whole folder and start
-`VN Timeline Engine.exe`. Because the program isn’t code-signed, Windows may show
-“Windows protected your PC” → **More info** → **Run anyway**.
+Get the Windows version from the **[Releases](../../releases)** page:
+- **Recommended:** `VN-Timeline-Engine-Setup-<version>.exe` – installs with a desktop shortcut, and from then on
+  updates arrive automatically (only the changes are downloaded).
+- **Without installing:** the ZIP – unzip the whole folder and start `VN Timeline Engine.exe`.
+
+Because the program isn’t code-signed, Windows may show “Windows protected your PC” → **More info** → **Run anyway**.
 
 ## Features
 
 **Editor**
 - Timeline with tracks for background, characters, effects, camera, video, dialogue, choices, music, voices and sound effects
 - Paths view with all scenes and branches, chapters, search and a path check that finds dead ends
-- Hub scenes (point & click places), conditions and actions everywhere (“If → Then”)
+- Hub scenes (point & click places) with clickable objects (also invisible hitboxes), backgrounds per time of day,
+  particles, events (“when” and “how often”) and hub dialogues – full timeline scenes that play over the hub and come back
+- Conditions and actions everywhere (“If → Then”), choices that grey out or hide what was already asked, placed anywhere
 - Bones: animate a character from a single image (breathing, swaying, hair and wings with physics), blinking, lip sync
+- Jointed puppets: build a character from body parts like in After Effects – pins as joints, bones per part, idle motion
+  (breathing, jiggle, sway), an eraser for clean edges, and puppet-style posing in the animation editor
 - Layer characters with expressions and outfits, animation editor for gestures and cutscenes
+- Storyboard planning board, asset folders, copy & paste clips between scenes, copy a character’s format, free transform with snapping
+- Spell-check suggestions on right-click, colour-blind preview for the editor
 - Design: speech bubbles, buttons, windows, fonts, sounds, mouse cursor – right-click anything to restyle it
 - Transcript with translations, CSV export/import, speaker script and subtitles
 - Text import: paste finished dialogue (`Name: Text` or a Ren'Py script) and get clips, choices and scenes
@@ -36,7 +45,15 @@ Get the Windows version from the **[Releases](../../releases)** page: unzip the 
 - Skill trees paid with money, level-up points or custom points – effects on money, shops, relationships, jobs, travel, minigames and stats
 - Turn-based combat in side view: party of up to four, levels, abilities, elements, loot, story mode, test battle and 100× simulation
 - Building (idle): buildings produce resources, upgrades, goals that move the story forward, offline progress and a time preview
-- Bundled plugins: Jobs and six minigames (click reflex, memory, puzzle, cooking & brewing, coin toss, petals)
+- Equipment: wear items in slots (head, body, hand …) with bonuses and actions
+- **Devices:** an in-game phone or computer (desktop with windows and taskbar) with apps – messages, inventory,
+  relationships, gallery, quests, map … and your own apps (notes, mails, websites). Fully designable, optional PIN or password
+- **Messages that persist across scenes:** contacts, conversations with different lines per story route, replies the
+  player picks, hidden messages, messages only for the phone or only for the computer, and messages that unlock
+  locations, items or quests when read
+- Time of day, seasons and ambient sounds; game over screen with retry
+- Bundled plugins: Jobs and seven minigames (click reflex, memory, puzzle, cooking & brewing, coin toss, petals,
+  quicktime circle) – minigames can be won or lost and made easier with skill tree perks or equipment
 
 **For players** (in every game automatically): history, auto mode, skip, save slots, quick save,
 reading & accessibility options, graphics quality, sound output, language switch.
@@ -56,6 +73,7 @@ engine source code. Inside the engine, *Project ▾ → 🤖 Guide for AI* creat
 | ![World map](docs/screenshots/en/world-map.png) | ![Quest log](docs/screenshots/en/quest-log.png) |
 | ![Quest editor](docs/screenshots/en/quests-editor.png) | ![Design of game systems](docs/screenshots/en/design-game-systems.png) |
 | ![Minigame](docs/screenshots/en/minigame.png) | ![Bones](docs/screenshots/en/bones.png) |
+| ![Phone with messages](docs/screenshots/en/phone.png) | ![Computer with windows](docs/screenshots/en/computer.png) |
 
 ## Run from source
 
@@ -74,7 +92,7 @@ npm run build:win
 
 The result lands in `dist/`.
 
-Run the test suite (13 projects from version 0.3 until today, opened, converted, played and exported):
+Run the test suite (16 projects from version 0.3 until today, opened, converted, played and exported):
 
 ```bash
 npm test            # on Linux without a display: xvfb-run -a npm test
@@ -118,7 +136,7 @@ Games you make with VN Timeline Engine are yours. You can sell them, and you don
 ## Deutsch
 
 **Visual Novels bauen wie im Schnittprogramm.** Bilder, Texte und Töne liegen als Clips auf einer Timeline –
-jede Spalte ist ein Klick des Spielers. Kostenlos, Quellcode offen (VN Timeline Engine Lizenz), Oberfläche auf Deutsch und Englisch.
+jede Spalte ist ein Klick des Spielers. Kostenlos, Quellcode einsehbar (VN Timeline Engine Lizenz), Oberfläche auf Deutsch und Englisch.
 
 ![Editor mit Timeline](docs/screenshots/de/editor-timeline.png)
 
@@ -126,18 +144,31 @@ jede Spalte ist ein Klick des Spielers. Kostenlos, Quellcode offen (VN Timeline 
 
 ### Herunterladen
 
-Die Windows-Version gibt es unter **[Releases](../../releases)**: den ganzen Ordner entpacken und
-`VN Timeline Engine.exe` starten. Weil das Programm nicht signiert ist, zeigt Windows evtl.
-„Der Computer wurde durch Windows geschützt“ → **Weitere Informationen** → **Trotzdem ausführen**.
+Die Windows-Version gibt es unter **[Releases](../../releases)**:
+- **Empfohlen:** `VN-Timeline-Engine-Setup-<Version>.exe` – installiert mit Desktop-Verknüpfung, danach kommen Updates
+  automatisch (es werden nur die Änderungen geladen).
+- **Ohne Installation:** die ZIP – den ganzen Ordner entpacken und `VN Timeline Engine.exe` starten.
+
+Weil das Programm nicht signiert ist, zeigt Windows evtl. „Der Computer wurde durch Windows geschützt“ →
+**Weitere Informationen** → **Trotzdem ausführen**.
 
 ### Was drin ist
 
 - **Editor:** Timeline mit Spuren für Hintergrund, Figuren, Effekte, Kamera, Video, Dialog, Auswahl, Musik, Stimmen und Sounds ·
-  Pfade mit allen Szenen und Verzweigungen · Hub-Szenen · „Wenn → Dann“ überall · Bones-Animation aus einem einzigen Bild,
-  Blinzeln, Lippensync · Ebenen-Figuren · Animations-Editor · Design per Rechtsklick · Transkript mit Übersetzungen ·
+  Pfade mit allen Szenen und Verzweigungen · Hub-Szenen mit Objekten (auch unsichtbare Hitboxen), Hintergrund je Tageszeit,
+  Partikeln, Ereignissen („wann“ und „wie oft“) und Hub-Dialogen · „Wenn → Dann“ überall · Auswahl, die Gefragtes ausgraut
+  oder ausblendet und sich frei platzieren lässt · Bones-Animation aus einem einzigen Bild, Blinzeln, Lippensync ·
+  **Gliederpuppen** aus Körperteilen wie in After Effects (Pins als Gelenke, Bones je Teil, Idle, Radierer, Puppenspiel im
+  Animations-Editor) · Ebenen-Figuren · Storyboard · Medien-Ordner · Clips zwischen Szenen kopieren · Format kopieren ·
+  Frei transformieren · Rechtschreib-Vorschläge · Design per Rechtsklick · Transkript mit Übersetzungen ·
   Tutorial mit Tour und „Lernen“ mit 11 Themen
-- **Spielsysteme (einzeln einschaltbar):** Inventar, Geld & Läden, Loot, Zeit & Kalender, Beziehungen mit Stufen und Geschenken,
-  Erfolge, Galerie, Werte, Glossar, Welt & Orte mit Weltkarte, Questlog, Skilltrees, rundenbasierter Kampf, Aufbau (Idle), Jobs und sechs Minispiele
+- **Spielsysteme (einzeln einschaltbar):** Inventar, Geld & Läden, Loot, Zeit & Kalender mit Jahreszeiten und Ambient-Sounds,
+  Beziehungen mit Stufen und Geschenken, Erfolge, Galerie, Werte, Glossar, Welt & Orte mit Weltkarte, Questlog, Skilltrees,
+  rundenbasierter Kampf, Aufbau (Idle), Ausrüstung, Game Over, Jobs und sieben Minispiele (auch verlierbar, mit Perks leichter)
+- **Geräte:** Handy oder Computer im Spiel mit Apps (Nachrichten, Inventar, Beziehungen, Galerie, Quests, Karte … und eigene
+  Apps), komplett gestaltbar, auf Wunsch mit PIN oder Passwort · **Nachrichten über Szenen hinweg** mit Kontakten,
+  Routen-Varianten, Antworten zum Auswählen, versteckten Nachrichten, Nachrichten nur fürs Handy oder nur für den PC –
+  und Nachrichten, die beim Lesen Orte, Gegenstände oder Quests freischalten
 - **Für Spieler:** Verlauf, Auto, Skip, Spielstände, Schnellspeichern, Lesen & Barrierefreiheit, Grafikqualität, Tonausgabe
 - **Export:** Windows-Spiel mit eigener `.exe` oder Web-Spiel für itch.io
 - **Plugins** in einfachem JavaScript – Anleitung in [`templates/PLUGINS.md`](templates/PLUGINS.md)
@@ -147,6 +178,7 @@ Die Windows-Version gibt es unter **[Releases](../../releases)**: den ganzen Ord
 |---|---|
 | ![Pfade](docs/screenshots/de/pfade.png) | ![Auswahl im Spiel](docs/screenshots/de/spiel-auswahl.png) |
 | ![Weltkarte](docs/screenshots/de/weltkarte.png) | ![Questlog](docs/screenshots/de/questlog.png) |
+| ![Handy mit Nachrichten](docs/screenshots/de/handy.png) | ![Computer mit Fenstern](docs/screenshots/de/computer.png) |
 
 ### Sprache
 

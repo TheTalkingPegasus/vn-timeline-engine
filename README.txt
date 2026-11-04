@@ -6,7 +6,7 @@ Build visual novels like in a video editor: images, text and sound lie as clips 
 Each column is one click of the player.
 
 GETTING STARTED (Windows)
-Easiest: run "VN-Timeline-Engine-Setup-0.7.0.exe". It can create a desktop shortcut and a Start menu
+Easiest: run "VN-Timeline-Engine-Setup-<version>.exe". It can create a desktop shortcut and a Start menu
 entry, and from then on updates arrive automatically.
 Without installing (ZIP):
 1. Unzip the whole folder (don't start it from inside the ZIP).
@@ -16,16 +16,14 @@ Without installing (ZIP):
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
 
-NEW IN 0.7.0 · Public prototype
-- Windows setup with desktop shortcut and automatic updates (only changes are downloaded).
-- Help messages with fix buttons, 💡 explanations and a problem list.
-- Right-click hub objects: "Connect with …" and building blocks like "Can be bought …" (price,
-  confirmation, only once) – no variables needed. Buildings can be unlocked by an action.
-- Relationship milestones: messages (phone, bubble, window), pictures into the gallery, "New" glow,
-  gallery filter by character; all designable with sounds.
-- Studio intro with several logos (image/video), transitions and jingle; character height slider and
-  dragging on the stage; pause menu entries can be hidden; export switches "Allow mods" and "Scope".
-- New license from 0.7 (LICENSE / LIZENZ.txt). See CHANGELOG.md for everything.
+NEW IN 0.9 · Phone & computer, messages, puppets and more
+- Devices: an in-game phone or computer with apps (messages, inventory, gallery, quests, map … and own apps),
+  fully designable, optional PIN or password.
+- Messages that persist across scenes: route variants, replies to pick, hidden messages, messages per device,
+  messages that unlock locations, items or quests when read.
+- Jointed puppets from body parts with pins, bones, idle motion and an eraser; hub dialogues, hub particles,
+  hub events with "how often"; choices that grey out/hide and can be placed anywhere; seasons, ambient sounds,
+  game over; seven minigames; spell-check suggestions. Full list: CHANGELOG.md.
 
 LANGUAGE
 The interface is available in English and German. English is the default.
@@ -37,10 +35,13 @@ Editor
 - Timeline with tracks for background, characters, effects, camera, video, dialogue, choices,
   music, voices and sound effects. Extra tracks for group scenes, track templates.
 - Paths view: all scenes as bubbles with branches, chapters, search, path check.
-- Hub scenes: places to click around with objects, conditions and actions.
+- Hub scenes: places to click around with objects (also invisible hitboxes), backgrounds per time of day,
+  particles, events (when / how often) and hub dialogues (timeline scenes over the hub).
+- Choices: grey out or hide what was already asked, place them anywhere, reorder answers.
 - If → Then everywhere: variables, items, money, loot tables, conditions and actions.
 - Characters: Bones (skeleton animation from a single image), blinking, lip sync,
-  layer characters with expressions and outfits.
+  layer characters with expressions and outfits, jointed puppets from body parts (pins, bones, idle, eraser).
+- Storyboard, asset folders, copy & paste clips between scenes, copy format, free transform, spell-check suggestions.
 - Animation editor: idle loops, gestures, cutscenes (live or rendered as video).
 - Design: speech bubbles, buttons, windows, fonts, sounds, mouse cursor, studio logo.
 - Transcript: every text with an ID, translations, CSV export/import, speaker script, subtitles (SRT).
@@ -59,7 +60,9 @@ Game systems (switch on what you need)
   loot, story mode; test battle and 100× simulation in the editor.
 - Building (idle): buildings produce resources, get upgraded, goals move the story forward; real time,
   offline or game time; time preview in the editor.
-- Bundled plugins: Jobs and six minigames. Write your own plugins in JavaScript (see PLUGINS.en.md).
+- Equipment, seasons and ambient sounds, game over screen.
+- Devices: phone or computer with apps, lock code; messages across scenes with routes, replies and unlocks.
+- Bundled plugins: Jobs and seven minigames. Write your own plugins in JavaScript (see PLUGINS.en.md).
 For players (in every game automatically)
 - History, auto mode, skip, quick save, save slots, settings, reading & accessibility options,
   graphics quality, sound output.
@@ -68,7 +71,7 @@ Export
 
 KEYS
 Editor: Ctrl+S · Ctrl+Z / Ctrl+Y · Del · Arrow left/right · Bones: Enter finishes a chain
-Game:   Click/Space continue · Esc pause menu · I inventory · Q quest log · M map · H home
+Game:   Click/Space continue · Esc pause menu · I inventory · Q quest log · M map · H home · phone/computer: own key
         L history · A auto · S skip · C stats · B relationships · F5/F9 quick save/load · F2 values (testing)
 
 PROJECTS

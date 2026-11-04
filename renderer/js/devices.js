@@ -48,7 +48,7 @@
     return d;
   };
   DV.defaultApps = (kind) => Object.keys(DV.BUILTIN).filter((k) => k !== 'app' && (k === 'messages' || k === 'log' || DV.BUILTIN[k].on()) && !(kind === 'desktop' && k === 'log')).map((k) => DV.fixApp({ id: VN.uid('app'), type: k }));
-  DV.newDevice = (kind) => DV.fixDev({ id: VN.uid('dev'), kind, name: kind === 'desktop' ? VN.t('Computer') : VN.t('Handy'), key: kind === 'desktop' ? '' : (DV.list().some((d) => d.key === 'h') ? '' : 'h'), hud: kind !== 'desktop', inMenu: kind !== 'desktop', apps: DV.defaultApps(kind) });
+  DV.newDevice = (kind) => DV.fixDev({ id: VN.uid('dev'), kind, name: kind === 'desktop' ? VN.t('Computer') : VN.t('Handy'), key: kind === 'desktop' ? '' : (() => { const k = VN.World && VN.World.on() ? 'p' : 'h'; return DV.list().some((d) => d.key === k) ? '' : k; })(), hud: kind !== 'desktop', inMenu: kind !== 'desktop', apps: DV.defaultApps(kind) });
   DV.newContact = () => ({ id: VN.uid('ct'), name: VN.t('Neuer Kontakt'), char: '', avatar: '', color: '#3d8bfd', status: '' });
   DV.newThread = (contact) => ({ id: VN.uid('th'), name: VN.t('Unterhaltung'), contact: contact || '', auto: false, conds: [], msgs: [{ id: VN.uid('cm'), from: 'them', text: VN.t('Hey, bist du wach?'), image: '', conds: [] }], replies: [] });
 
@@ -296,6 +296,7 @@
     if (!DV.list().length) out.push({ text: VN.t('Geräte sind eingeschaltet, aber es gibt noch kein Gerät.') });
     const keys = {};
     for (const d of DV.list()) {
+      if (d.key && d.key.toLowerCase() === 'h' && VN.World && VN.World.on()) out.push({ text: VN.tf('Gerät „{d}“ nutzt die Taste H – die ist auch „🏠 Zuhause“ bei Welt & Orte. Andere Taste wählen, z. B. P.', { d: d.name }) });
       if (d.key) { if (keys[d.key]) out.push({ text: VN.tf('Zwei Geräte nutzen dieselbe Taste „{k}“.', { k: d.key.toUpperCase() }) }); keys[d.key] = 1; }
       for (const a of d.apps) if (a.type === 'app' && !(a.actions || []).length && !a.text && !a.pic && !a.title) out.push({ text: VN.tf('Eigene App „{a}“ auf „{d}“ macht nichts (keine Seite, keine Aktion).', { a: a.name || '?', d: d.name }) });
     }
