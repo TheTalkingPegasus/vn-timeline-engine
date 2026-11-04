@@ -1,7 +1,7 @@
 // Baut die Web-Version des Editors nach web-build/ (zum Ausprobieren ohne Installation, z. B. auf GitHub Pages).
 // Aufruf: node tools/build-web.js
 // Enthält: Oberfläche (renderer/), web-editor.js als Ersatz für die Desktop-Schnittstelle, mitgelieferte Plugins,
-// Beispiel-, Tutorial- und Lernprojekt (Deutsch und Englisch) und JSZip für ZIP-Download und Web-Export.
+// Beispiel-, Tutorial- und Lernprojekt (Deutsch, Englisch, Spanisch, Japanisch) und JSZip für ZIP-Download und Web-Export.
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -57,7 +57,7 @@ fs.writeFileSync(path.join(out, '.nojekyll'), '');
 const { createDemoProject } = require(path.join(root, 'demo.js'));
 const { createTutorialProject } = require(path.join(root, 'tutorial.js'));
 const index = {};
-for (const lang of ['de', 'en']) {
+for (const lang of ['de', 'en', 'es', 'ja']) {
   const L = require(path.join(root, 'project-lang.js'))(rd, () => lang);
   for (const kind of ['demo', 'tutorial', 'learn']) {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'vnweb-'));

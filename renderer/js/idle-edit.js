@@ -154,7 +154,7 @@
 
   S.idleTab = (body) => {
     const c = ID().cfg();
-    body.appendChild(el('p', { class: 'muted' }, el('span', null, 'Aufbau wie in Idle- und Aufbauspielen: Gebäude produzieren Rohstoffe (deine Währungen), werden mit steigenden Kosten ausgebaut, und erreichte Ziele treiben die Geschichte voran – z. B. ein Königreich aufbauen, um das Burgfräulein zu beeindrucken.'), ' ', el('span', null, VN.t('Geöffnet wird er über die Aktion „🏰 Aufbau öffnen“, z. B. an einem Objekt im Hub.') + (c.key ? ' ' + (VN.I18n && VN.I18n.lang === 'en' ? 'Key ' + c.key.toUpperCase() + ' also works.' : 'Taste ' + c.key.toUpperCase() + ' geht auch.') : ''))));
+    body.appendChild(el('p', { class: 'muted' }, el('span', null, 'Aufbau wie in Idle- und Aufbauspielen: Gebäude produzieren Rohstoffe (deine Währungen), werden mit steigenden Kosten ausgebaut, und erreichte Ziele treiben die Geschichte voran – z. B. ein Königreich aufbauen, um das Burgfräulein zu beeindrucken.'), ' ', el('span', null, VN.t('Geöffnet wird er über die Aktion „🏰 Aufbau öffnen“, z. B. an einem Objekt im Hub.') + (c.key ? ' ' + VN.t('Taste') + ' ' + c.key.toUpperCase() + (VN.I18n && VN.I18n.lang === 'de' ? ' geht auch.' : '') : ''))));
     const iss = ID().issues();
     if (iss.length) body.appendChild(Help.sysBox(iss));
     if (!c.buildings.length && !c.milestones.length) {

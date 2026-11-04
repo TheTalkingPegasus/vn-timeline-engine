@@ -153,7 +153,8 @@
     const files = idx[name] || [];
     for (const f of files) { const r = await fetch('samples/' + name + '/' + f.split('/').map(encodeURIComponent).join('/')); if (r.ok) await fsys.write(f, await r.blob()); }
   };
-  const lang = () => (window.VN && VN.I18n && VN.I18n.lang === 'de' ? 'de' : 'en');
+  const lang = () => (window.VN && VN.I18n && ['de', 'en', 'es', 'ja'].includes(VN.I18n.lang) ? VN.I18n.lang : 'en');
+  const docLang = () => (lang() === 'de' ? 'de' : 'en');
   const createProject = async (sample, extra) => {
     const meta = Object.assign({ id: newId(), kind: 'idb', name: T('Neues Projekt'), created: Date.now(), updated: Date.now() }, extra || {});
     const fsys = idbFs(meta.id);
@@ -367,14 +368,14 @@
       async list() { if (!cur.fs) return []; return (await cur.fs.list('plugins/')).map((p) => p.slice(8)).filter((f) => !f.includes('/') && /\.js$/i.test(f)); },
       async read(name) { const b = cur.fs && (await cur.fs.read('plugins/' + String(name).split('/').pop())); return b ? b.text() : ''; },
       async write(name, text) { if (!cur.fs || !/\.js$/i.test(String(name || ''))) return false; const rel = 'plugins/' + String(name).split('/').pop(); const blob = toBlob(text, rel); await cur.fs.write(rel, blob); urlFor(rel, blob); return true; },
-      async addExample() { for (const f of ['schlossknacken.js', 'PLUGINS.md']) { const rel = 'plugins/' + f; if (await cur.fs.exists(rel)) continue; const r = await fetch('templates/' + (f === 'PLUGINS.md' && lang() === 'en' ? 'PLUGINS.en.md' : f)); if (r.ok) { const b = typed(await r.blob(), f); await cur.fs.write(rel, b); urlFor(rel, b); } } return true; },
+      async addExample() { for (const f of ['schlossknacken.js', 'PLUGINS.md']) { const rel = 'plugins/' + f; if (await cur.fs.exists(rel)) continue; const r = await fetch('templates/' + (f === 'PLUGINS.md' && docLang() === 'en' ? 'PLUGINS.en.md' : f)); if (r.ok) { const b = typed(await r.blob(), f); await cur.fs.write(rel, b); urlFor(rel, b); } } return true; },
       async bundledText(name) { const f = String(name).split('/').pop(); if (!['jobs.js', 'minispiele.js'].includes(f)) return null; const r = await fetch('templates/' + f); return r.ok ? r.text() : null; },
       async addBundled(name, force) {
         const f = String(name).split('/').pop();
         if (!['jobs.js', 'minispiele.js'].includes(f) || !cur.fs) return false;
         const rel = 'plugins/' + f;
         if (force || !(await cur.fs.exists(rel))) { const r = await fetch('templates/' + f); if (!r.ok) return false; const b = typed(await r.blob(), f); await cur.fs.write(rel, b); urlFor(rel, b); }
-        if (!(await cur.fs.exists('plugins/PLUGINS.md'))) { const r = await fetch('templates/' + (lang() === 'en' ? 'PLUGINS.en.md' : 'PLUGINS.md')); if (r.ok) await cur.fs.write('plugins/PLUGINS.md', await r.blob()); }
+        if (!(await cur.fs.exists('plugins/PLUGINS.md'))) { const r = await fetch('templates/' + (docLang() === 'en' ? 'PLUGINS.en.md' : 'PLUGINS.md')); if (r.ok) await cur.fs.write('plugins/PLUGINS.md', await r.blob()); }
         return true;
       }
     },
@@ -393,10 +394,12 @@
   const welcome = async () => {
     const card = document.querySelector('#welcome .welcome-card');
     if (!card || card.querySelector('.web-note')) return;
+    // Deutsche Texte direkt ins DOM: die Oberflächen-Übersetzung tauscht sie aus, auch beim Sprachwechsel
+    const W = (x) => x;
     const h = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
     const note = h('div', 'web-note');
-    note.append(h('strong', null, '🌐 ' + T('Web-Version')), h('span', null, ' ' + T('Läuft ohne Installation. Projekte werden in diesem Browser gespeichert – lade sie über „Projekt ▾ → Als ZIP herunterladen“ als Sicherung herunter.') + ' '));
-    const a = h('a', null, T('Desktop-Version herunterladen'));
+    note.append(h('strong', null, '🌐 ' + W('Web-Version')), h('span', null, ' ' + W('Läuft ohne Installation. Projekte werden in diesem Browser gespeichert – lade sie über „Projekt ▾ → Als ZIP herunterladen“ als Sicherung herunter.') + ' '));
+    const a = h('a', null, W('Desktop-Version herunterladen'));
     a.href = 'https://github.com/TheTalkingPegasus/vn-timeline-engine/releases/latest';
     a.target = '_blank'; a.rel = 'noopener';
     note.appendChild(a);
@@ -405,17 +408,17 @@
     const recent = all.filter((m) => !m.learn).slice(0, 4);
     if (recent.length) {
       const box = h('div', 'web-recent');
-      box.appendChild(h('div', 'muted small', T('Zuletzt bearbeitet')));
+      box.appendChild(h('div', 'muted small', W('Zuletzt bearbeitet')));
       for (const m of recent) {
         const b = h('button', 'btn web-pbtn');
-        b.append(h('span', 'web-pname', m.name || '?'), h('span', 'muted small', m.kind === 'fsa' ? '📁 ' + T('Ordner auf dem PC') : '🌐 ' + T('im Browser')));
+        b.append(h('span', 'web-pname', m.name || '?'), h('span', 'muted small', m.kind === 'fsa' ? '📁 ' + W('Ordner auf dem PC') : '🌐 ' + W('im Browser')));
         b.onclick = async () => { try { const r = await openMeta(m); if (r) App.load(r.dir, r.data); } catch (e) { VN.toast(String(e.message || e)); } };
         box.appendChild(b);
       }
       card.insertBefore(box, card.querySelector('.welcome-actions').nextSibling);
     }
     const foot = card.querySelector('p.muted.small:last-child');
-    if (foot) foot.textContent = T('Projekte werden automatisch gespeichert – im Browser oder (Chrome/Edge) direkt in einem Ordner auf dem PC.');
+    if (foot) foot.textContent = W('Projekte werden automatisch gespeichert – im Browser oder (Chrome/Edge) direkt in einem Ordner auf dem PC.');
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(welcome, 50)); else setTimeout(welcome, 50);
   window.VNWebEditor = { cur, Reg, projectZip, openFolder, openMeta, refreshWelcome: () => { document.querySelectorAll('.web-note, .web-recent').forEach((n) => n.remove()); welcome(); } };

@@ -389,8 +389,7 @@
       { label: '🤖 Anleitung für KI …', hint: 'ChatGPT, Gemini, Grok …', action: () => VN.AIGuide.open() },
       'sep',
       { head: 'Sprache · Language' },
-      { label: (VN.I18n.lang === 'en' ? '✓ ' : '　') + 'English', action: () => VN.I18n.set('en') },
-      { label: (VN.I18n.lang === 'de' ? '✓ ' : '　') + 'Deutsch', action: () => VN.I18n.set('de') }
+      ...[['en', 'English'], ['de', 'Deutsch'], ['es', 'Español'], ['ja', '日本語']].map(([l, n]) => ({ label: (VN.I18n.lang === l ? '✓ ' : '　') + n, action: () => VN.I18n.set(l) }))
     ]);
   };
   $('b-undo').onclick = () => VN.undo();

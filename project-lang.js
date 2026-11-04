@@ -1,54 +1,67 @@
 // Übersetzung von Dialogen und Beispielprojekten (Hauptprozess und Bau der Web-Version)
 // const L = require('./project-lang')(rendererDir, () => lang) → L.T(text), L.enProject(data)
+// Sprachen: de (Original), en, es, ja. Fehlt ein Text auf Spanisch oder Japanisch, gilt die englische Fassung.
 module.exports = (rendererDir, getLang) => {
   const fs = require('fs');
   const path = require('path');
-let I18N = null, I18RE = null, I18N_CONTENT = {};
-const loadI18n = () => {
-  if (I18N) return;
-  I18N = {};
-  try {
-    const s = fs.readFileSync(path.join(rendererDir, 'js', 'i18n-en.js'), 'utf8');
-    const m = s.match(/window\.VN_I18N_EN = ([\s\S]*?);\nwindow\.VN_I18N_EN_FRAG = ([\s\S]*?);\n/);
-    I18N = JSON.parse(m[1]);
-    const mc = s.match(/window\.VN_I18N_EN_CONTENT = ([\s\S]*?);\n/);
-    I18N_CONTENT = mc ? JSON.parse(mc[1]) : {};
-    const L = 'A-Za-zÄÖÜäöüß';
-    const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    I18RE = new RegExp(JSON.parse(m[2]).map((k) => (new RegExp('^[' + L + ']').test(k) ? '(?<![' + L + '-])' : '') + esc(k) + (new RegExp('[' + L + ']$').test(k) ? '(?![' + L + '-])' : '')).join('|'), 'g');
-  } catch (e) { console.warn('Übersetzung nicht geladen', e.message); }
-};
-const T = (s) => {
-  if (getLang() !== 'en' || typeof s !== 'string' || !s) return s;
-  loadI18n();
-  const core = s.trim();
-  if (I18N[core] !== undefined) return s.replace(core, I18N[core]);
-  return I18RE ? s.replace(I18RE, (m) => I18N[m] || m) : s;
-};
-
-// Beispiel-, Tutorial- und Lernprojekt auf Englisch: alle bekannten Texte austauschen
-const SKIP_KEYS = new Set(['id', 'asset', 'file', 'ref', 'scene', 'target', 'font', 'titleFont', 'action', 'kind', 'type', 'mode', 'preset', 'translations', 'rigs', 'blinks', 'mouths', 'plugins', 'next', 'startScene']);
-const enProject = (data) => {
-  if (getLang() !== 'en' || !data) return data;
-  loadI18n();
-  const X = (v) => { if (typeof v !== 'string') return v; const k = v.trim(); const r = I18N_CONTENT[k] !== undefined ? I18N_CONTENT[k] : I18N[k]; return r !== undefined ? v.replace(k, r) : v; };
-  const walk = (o) => {
-    if (Array.isArray(o)) { for (let i = 0; i < o.length; i++) { if (typeof o[i] === 'string') o[i] = X(o[i]); else walk(o[i]); } return; }
-    if (!o || typeof o !== 'object') return;
-    for (const k of Object.keys(o)) {
-      if (SKIP_KEYS.has(k)) continue;
-      if (typeof o[k] === 'string') o[k] = X(o[k]); else walk(o[k]);
-    }
+  const cache = {};
+  const read = (l) => { try { return fs.readFileSync(path.join(rendererDir, 'js', 'i18n-' + l + '.js'), 'utf8'); } catch (e) { return ''; } };
+  const load = (l) => {
+    if (cache[l]) return cache[l];
+    const t = { D: {}, C: {}, RE: null };
+    try {
+      const s = read('en');
+      const m = s.match(/window\.VN_I18N_EN = ([\s\S]*?);\nwindow\.VN_I18N_EN_FRAG = ([\s\S]*?);\n/);
+      t.D = JSON.parse(m[1]);
+      const mc = s.match(/window\.VN_I18N_EN_CONTENT = ([\s\S]*?);\n/);
+      t.C = mc ? JSON.parse(mc[1]) : {};
+      if (l !== 'en') {
+        const U = l.toUpperCase();
+        const x = read(l);
+        const ml = x.match(new RegExp('window\\.VN_I18N_' + U + ' = ([\\s\\S]*?);\\nwindow\\.VN_I18N_' + U + '_CONTENT = ([\\s\\S]*?);\\n'));
+        if (ml) { Object.assign(t.D, JSON.parse(ml[1])); Object.assign(t.C, JSON.parse(ml[2])); }
+      }
+      const L = 'A-Za-zÄÖÜäöüß';
+      const esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      t.RE = new RegExp(JSON.parse(m[2]).map((k) => (new RegExp('^[' + L + ']').test(k) ? '(?<![' + L + '-])' : '') + esc(k) + (new RegExp('[' + L + ']$').test(k) ? '(?![' + L + '-])' : '')).join('|'), 'g');
+    } catch (e) { console.warn('Übersetzung nicht geladen', e.message); }
+    cache[l] = t;
+    return t;
   };
-  const oldTr = (data.translations || {}).en || {};
-  walk(data);
-  if (data.theme && data.theme.speakers) { const sp = {}; for (const [k, v] of Object.entries(data.theme.speakers)) sp[X(k)] = v; data.theme.speakers = sp; }
-  // Übersetzungen umdrehen: Englisch wird Original, Deutsch die Übersetzung
-  const de = {};
-  for (const [id, t] of Object.entries(oldTr)) if (t && t.src) de[id] = { text: t.src, src: X(t.src), ok: true };
-  data.languages = Object.keys(de).length ? ['en', 'de'] : ['en'];
-  data.translations = Object.keys(de).length ? { de } : {};
-  return data;
-};
+  const lang = () => { const l = getLang(); return ['en', 'es', 'ja'].includes(l) ? l : l === 'de' ? 'de' : 'en'; };
+  const T = (s) => {
+    const l = lang();
+    if (l === 'de' || typeof s !== 'string' || !s) return s;
+    const t = load(l);
+    const core = s.trim();
+    if (t.D[core] !== undefined) return s.replace(core, t.D[core]);
+    return t.RE ? s.replace(t.RE, (m) => t.D[m] || m) : s;
+  };
+
+  // Beispiel-, Tutorial- und Lernprojekt in der Sprache der Oberfläche: alle bekannten Texte austauschen
+  const SKIP_KEYS = new Set(['id', 'asset', 'file', 'ref', 'scene', 'target', 'font', 'titleFont', 'action', 'kind', 'type', 'mode', 'preset', 'translations', 'rigs', 'blinks', 'mouths', 'plugins', 'next', 'startScene']);
+  const enProject = (data) => {
+    const l = lang();
+    if (l === 'de' || !data) return data;
+    const t = load(l);
+    const X = (v) => { if (typeof v !== 'string') return v; const k = v.trim(); const r = t.C[k] !== undefined ? t.C[k] : t.D[k]; return r !== undefined ? v.replace(k, r) : v; };
+    const walk = (o) => {
+      if (Array.isArray(o)) { for (let i = 0; i < o.length; i++) { if (typeof o[i] === 'string') o[i] = X(o[i]); else walk(o[i]); } return; }
+      if (!o || typeof o !== 'object') return;
+      for (const k of Object.keys(o)) {
+        if (SKIP_KEYS.has(k)) continue;
+        if (typeof o[k] === 'string') o[k] = X(o[k]); else walk(o[k]);
+      }
+    };
+    const oldTr = (data.translations || {}).en || {};
+    walk(data);
+    if (data.theme && data.theme.speakers) { const sp = {}; for (const [k, v] of Object.entries(data.theme.speakers)) sp[X(k)] = v; data.theme.speakers = sp; }
+    // Übersetzungen umdrehen: die Oberflächensprache wird Original, Deutsch die Übersetzung
+    const de = {};
+    for (const [id, tt] of Object.entries(oldTr)) if (tt && tt.src) de[id] = { text: tt.src, src: X(tt.src), ok: true };
+    data.languages = Object.keys(de).length ? [l, 'de'] : [l];
+    data.translations = Object.keys(de).length ? { de } : {};
+    return data;
+  };
   return { T, enProject };
 };

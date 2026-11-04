@@ -573,6 +573,24 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     for (const l of left.slice(0, Number(process.env.VN_LEFT_MAX) || 15)) log('    · ' + l);
   }
 
+  // 6b. Spanische und japanische Oberfläche: alle Ansichten bauen sich fehlerfrei auf und sind übersetzt
+  if (lastRich) {
+    for (const [l, want] of [['es', 'Probar escena'], ['ja', 'シーンをテスト']]) {
+      const r = JSON.parse(await js(`(async () => {
+        const err = [];
+        VN.I18n.set(${JSON.stringify(l)}); await new Promise((r) => setTimeout(r, 150));
+        for (const v of ['scene', 'graph', 'systems', 'menu', 'design', 'transcript', 'storyboard', 'figures', 'anim']) { try { VN.ui.view = v; VN.render(); } catch (e) { err.push(v + ': ' + e.message); } await new Promise((r) => setTimeout(r, 60)); }
+        VN.ui.view = 'scene'; VN.render(); await new Promise((r) => setTimeout(r, 100));
+        const btn = document.getElementById('b-play-scene').textContent;
+        const t = VN.t('Neues Projekt');
+        VN.I18n.set('de');
+        return JSON.stringify({ err, btn, t });
+      })()`));
+      if (r.err.length || !r.btn.includes(want)) general.push(`Oberfläche ${l}: ` + (r.err.join('; ') || 'Knopf „' + r.btn + '“'));
+      else log(`✓ Oberfläche ${l}: alle Ansichten, „${r.btn.trim()}“, ${r.t}`);
+    }
+  }
+
   // 7. Web-Export eines Projekts und Start im Browser-Fenster
   try {
     const proj = JSON.parse(await js('JSON.stringify(VN.project)'));

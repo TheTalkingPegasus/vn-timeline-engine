@@ -2,7 +2,10 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
-## 0.9.6 – Web version: try the engine in the browser
+## 0.9.6 – Web version: try the engine in the browser · Spanish and Japanese
+- The interface is now also available in **Spanish** and **Japanese** (Español / 日本語 on the start screen or under
+  Project ▾ → Language): menus, windows, hints, tour, tutorial, learning project and example project. Exported games
+  show their menus in Spanish or Japanese when the game’s language is es or ja.
 - The editor now also runs in the browser, without installing: https://thetalkingpegasus.github.io/vn-timeline-engine/
   Projects are stored in the browser (IndexedDB) – or, in Chrome and Edge, directly in a project folder on the PC,
   exactly like the desktop version. Tutorial, learning project and example project work as usual.
@@ -11,6 +14,8 @@ All notable changes. German details: `LIES MICH.txt`.
 - Import by button or drag & drop, testing, plugins, bundled minigames and the web export (as a ZIP, ready for itch.io)
   work in the browser. The Windows export needs the desktop version.
 - Built automatically from every change and published on GitHub Pages (tools/build-web.js, workflow “Web-Version”).
+- With longer interface texts the tab bar at the top gets narrower instead of covering the logo and project name.
+- Fixed: the clip inspector showed “Step 1 bis 5” in the English interface.
 
 ## 0.9.5 – Particles in hubs, how often hub events run, hard cut for characters
 - Hub events (short lines or timeline dialogues) now have “When” (on entering the hub / as soon as “Only if” is met)

@@ -362,11 +362,11 @@
     if (c.startWhen === 'action' && !ID.usedSomewhere('idleStart')) out.push({ text: 'Aufbau: Start „durch die Aktion“, aber die Aktion „🏰 Aufbau starten“ kommt nirgends vor – er würde nie starten.' });
     const made = new Set(); for (const b of c.buildings) for (const x of b.prods || []) if (x.cur && Number(x.amount) > 0) made.add(x.cur);
     const needed = new Set(); for (const b of c.buildings) for (const x of b.costs || []) if (x.cur && Number(x.amount) > 0) needed.add(x.cur);
-    for (const cur of needed) if (!made.has(cur)) out.push({ text: (VN.I18n && VN.I18n.lang === 'en' ? 'Building: ' : 'Aufbau: ') + ID.curName(cur) + ' ' + VN.t('wird zum Bauen gebraucht, aber kein Gebäude stellt es her') });
+    for (const cur of needed) if (!made.has(cur)) out.push({ text: VN.t('Aufbau') + ': ' + ID.curName(cur) + ' ' + VN.t('wird zum Bauen gebraucht, aber kein Gebäude stellt es her') });
     if (c.buildings.length && !c.buildings.some((b) => Number(b.start) > 0 || !(b.costs || []).some((x) => Number(x.amount) > 0) || (b.costs || []).every((x) => (P().currencies.find((cu) => cu.id === x.cur) || {}).start >= x.amount))) out.push({ text: 'Aufbau: kein Gebäude ist zu Beginn bezahlbar (Startgeld oder Startstufe fehlt)' });
     for (const b of c.buildings) if (b.unlockBy === 'action' && !ID.unlockedSomewhere(b)) out.push({ text: VN.tf('Gebäude „{name}“ soll durch eine Aktion freigeschaltet werden, aber das passiert nirgends.', { name: b.name }), topic: 'idleUnlock' });
-    for (const b of c.buildings) for (const pr of ID.buildingProblems(b)) out.push({ text: (VN.I18n && VN.I18n.lang === 'en' ? 'Building' : 'Gebäude') + ' „' + b.name + '“: ' + VN.t(pr) });
-    for (const m of c.milestones) { if (!(m.conds || []).length) out.push({ text: (VN.I18n && VN.I18n.lang === 'en' ? 'Goal' : 'Ziel') + ' „' + m.name + '“: ' + VN.t('keine Bedingung') }); for (const cd of m.conds || []) { const pr = VN.condProblem(cd); if (pr) out.push({ text: 'Ziel „' + m.name + '“: ' + pr }); } }
+    for (const b of c.buildings) for (const pr of ID.buildingProblems(b)) out.push({ text: VN.t('Gebäude') + ' „' + b.name + '“: ' + VN.t(pr) });
+    for (const m of c.milestones) { if (!(m.conds || []).length) out.push({ text: VN.t('Ziel') + ' „' + m.name + '“: ' + VN.t('keine Bedingung') }); for (const cd of m.conds || []) { const pr = VN.condProblem(cd); if (pr) out.push({ text: 'Ziel „' + m.name + '“: ' + pr }); } }
     return out;
   };
 

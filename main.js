@@ -37,7 +37,7 @@ const PL = require('./project-lang')(path.join(__dirname, 'renderer'), () => uiL
 const T = PL.T;
 const enProject = PL.enProject;
 const saveProjectFile = (dir, data) => { fs.writeFileSync(path.join(dir, 'project.json'), JSON.stringify(data, null, 2), 'utf8'); return data; };
-ipcMain.on('ui:lang', (_e, l) => { uiLang = l === 'de' ? 'de' : 'en'; });
+ipcMain.on('ui:lang', (_e, l) => { uiLang = ['de', 'en', 'es', 'ja'].includes(l) ? l : 'en'; });
 const trOpts = (o) => {
   if (!o || typeof o !== 'object') return o;
   const r = { ...o };
@@ -210,7 +210,7 @@ function createWindow() {
 function makeFolders(dir) {
   const de = ['Bilder/Figuren', 'Bilder/Hintergründe', 'Bilder/Objekte', 'Videos', 'Musik', 'Soundeffekte', 'Stimmen', 'Schriften'];
   const en = ['Images/Characters', 'Images/Backgrounds', 'Images/Objects', 'Videos', 'Music', 'Sound effects', 'Voices', 'Fonts'];
-  for (const f of uiLang === 'en' ? en : de) { try { fs.mkdirSync(path.join(dir, 'assets', f), { recursive: true }); } catch (e) { /* egal */ } }
+  for (const f of uiLang === 'de' ? de : en) { try { fs.mkdirSync(path.join(dir, 'assets', f), { recursive: true }); } catch (e) { /* egal */ } }
 }
 
 function copyIntoProject(dir, sources) {
@@ -256,14 +256,14 @@ ipcMain.handle('project:new', async (_e, { demo, tutorial }) => {
   let data = null;
   if (tutorial) data = createTutorialProject(dir);
   else if (demo) data = createDemoProject(dir);
-  if (data && uiLang === 'en') saveProjectFile(dir, enProject(data));
+  if (data && uiLang !== 'de') saveProjectFile(dir, enProject(data));
   approve(dir);
   return { dir, data };
 });
 
 // Lernprojekt: fester Ordner, wird beim ersten Mal aus dem Beispielprojekt angelegt
 ipcMain.handle('project:learn', async () => {
-  const dir = process.env.VN_LEARN_DIR || path.join(app.getPath('documents'), 'VN Timeline Engine', uiLang === 'en' ? 'Learning project' : 'Lernprojekt');
+  const dir = process.env.VN_LEARN_DIR || path.join(app.getPath('documents'), 'VN Timeline Engine', uiLang === 'de' ? 'Lernprojekt' : uiLang === 'es' ? 'Proyecto de aprendizaje' : uiLang === 'ja' ? '学習プロジェクト' : 'Learning project');
   const file = path.join(dir, 'project.json');
   approve(dir);
   if (fs.existsSync(file)) { try { return { dir, data: JSON.parse(fs.readFileSync(file, 'utf8')) }; } catch (e) { /* neu anlegen */ } }
@@ -406,7 +406,7 @@ function warnIfInProgramDir(dir) {
   const rel = path.relative(prog, dir);
   if (rel.startsWith('..') || path.isAbsolute(rel)) return;
   warnedDirs.add(dir);
-  const en = uiLang === 'en';
+  const en = uiLang !== 'de';
   dialog.showMessageBox(win, {
     type: 'warning',
     title: en ? 'Project inside the program folder' : 'Projekt im Programmordner',
@@ -515,7 +515,7 @@ ipcMain.handle('plugins:write', (_e, { name, text }) => {
   fs.writeFileSync(path.join(pluginsDir(), path.basename(name)), text, 'utf8');
   return true;
 });
-const pluginsDoc = () => (uiLang === 'en' ? 'PLUGINS.en.md' : 'PLUGINS.md');
+const pluginsDoc = () => (uiLang === 'de' ? 'PLUGINS.md' : 'PLUGINS.en.md');
 ipcMain.handle('plugins:addExample', () => {
   fs.mkdirSync(pluginsDir(), { recursive: true });
   for (const f of ['schlossknacken.js', 'PLUGINS.md']) {
@@ -633,14 +633,14 @@ async function exportWebTo(dest, data, files) {
   fs.unlinkSync(path.join(dest, 'project.json'));
   const rd = path.join(__dirname, 'renderer');
   fs.mkdirSync(path.join(dest, 'engine'), { recursive: true });
-  const engineFiles = ['style.css', 'js/web-boot.js', 'js/i18n-en.js', 'js/core.js', 'js/i18n.js', 'js/audioout.js', 'js/logic.js', 'js/life.js', 'js/extras.js', 'js/did.js', 'js/equip.js', 'js/world.js', 'js/quests.js', 'js/skills.js', 'js/combat.js', 'js/idle.js', 'js/devices.js', 'js/theme.js', 'js/a11y.js', 'js/uipresets.js', 'js/uidesign.js', 'js/perf.js', 'js/fx.js', 'js/stage.js', 'js/systems.js', 'js/rig.js', 'js/anim.js', 'js/puppet.js', 'js/blink.js', 'js/plugins.js', 'js/menu.js', 'js/player-audio.js', 'js/player-menus.js', 'js/player-extras.js', 'js/player-world.js', 'js/relmsg.js', 'js/player-notify.js', 'js/player-skills.js', 'js/player-combat.js', 'js/player-idle.js', 'js/player.js', 'js/schema.js'];
+  const engineFiles = ['style.css', 'js/web-boot.js', 'js/i18n-en.js', 'js/i18n-es.js', 'js/i18n-ja.js', 'js/core.js', 'js/i18n.js', 'js/audioout.js', 'js/logic.js', 'js/life.js', 'js/extras.js', 'js/did.js', 'js/equip.js', 'js/world.js', 'js/quests.js', 'js/skills.js', 'js/combat.js', 'js/idle.js', 'js/devices.js', 'js/theme.js', 'js/a11y.js', 'js/uipresets.js', 'js/uidesign.js', 'js/perf.js', 'js/fx.js', 'js/stage.js', 'js/systems.js', 'js/rig.js', 'js/anim.js', 'js/puppet.js', 'js/blink.js', 'js/plugins.js', 'js/menu.js', 'js/player-audio.js', 'js/player-menus.js', 'js/player-extras.js', 'js/player-world.js', 'js/relmsg.js', 'js/player-notify.js', 'js/player-skills.js', 'js/player-combat.js', 'js/player-idle.js', 'js/player.js', 'js/schema.js'];
   for (const f of engineFiles) await fs.promises.copyFile(path.join(rd, f), path.join(dest, 'engine', path.basename(f)));
   fs.writeFileSync(path.join(dest, 'engine', 'game-data.js'), 'window.VN_GAME = ' + JSON.stringify(data) + ';', 'utf8');
   try { fs.copyFileSync(path.join(__dirname, 'LICENSE'), path.join(dest, 'engine', 'LICENSE.txt')); } catch (e) { /* Lizenzdatei fehlt in der Entwicklung */ }
   const plugins = Object.entries(data.plugins || {}).filter(([, v]) => v && v.enabled).map(([k]) => k);
   const esc = (t) => String(t).replace(/[<&>]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
   const html = `<!doctype html>\n<html lang="${(data.languages && data.languages[0]) || 'de'}">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>${esc(data.title || 'Spiel')}</title>\n<link rel="stylesheet" href="engine/style.css">\n<style>html,body{background:#000;overflow:hidden}</style>\n</head>\n<body>\n<div id="player"></div><div id="toast"></div><div id="ctxmenu" hidden></div>\n` +
-    ['game-data.js', 'web-boot.js', 'i18n-en.js', 'core.js', 'i18n.js', 'audioout.js', 'logic.js', 'life.js', 'extras.js', 'did.js', 'equip.js', 'world.js', 'quests.js', 'skills.js', 'combat.js', 'idle.js', 'devices.js', 'theme.js', 'a11y.js', 'uipresets.js', 'uidesign.js', 'perf.js', 'fx.js', 'stage.js', 'systems.js', 'rig.js', 'anim.js', 'puppet.js', 'blink.js', 'plugins.js', 'menu.js', 'player-audio.js', 'player-menus.js', 'player-extras.js', 'player-world.js', 'relmsg.js', 'player-notify.js', 'player-skills.js', 'player-combat.js', 'player-idle.js', 'schema.js'].map((f) => `<script src="engine/${f}"></script>`).join('\n') + '\n' +
+    ['game-data.js', 'web-boot.js', 'i18n-en.js', 'i18n-es.js', 'i18n-ja.js', 'core.js', 'i18n.js', 'audioout.js', 'logic.js', 'life.js', 'extras.js', 'did.js', 'equip.js', 'world.js', 'quests.js', 'skills.js', 'combat.js', 'idle.js', 'devices.js', 'theme.js', 'a11y.js', 'uipresets.js', 'uidesign.js', 'perf.js', 'fx.js', 'stage.js', 'systems.js', 'rig.js', 'anim.js', 'puppet.js', 'blink.js', 'plugins.js', 'menu.js', 'player-audio.js', 'player-menus.js', 'player-extras.js', 'player-world.js', 'relmsg.js', 'player-notify.js', 'player-skills.js', 'player-combat.js', 'player-idle.js', 'schema.js'].map((f) => `<script src="engine/${f}"></script>`).join('\n') + '\n' +
     plugins.map((f) => `<script>VNPlugin._current = ${JSON.stringify(f)};</script><script src="plugins/${encodeURIComponent(f)}"></script>`).join('\n') + '\n<script src="engine/player.js"></script>\n<script>VNWeb.start();</script>\n</body>\n</html>\n';
   fs.writeFileSync(path.join(dest, 'index.html'), html, 'utf8');
   if (String((data.languages || ['de'])[0]).startsWith('de')) fs.writeFileSync(path.join(dest, 'LIES MICH.txt'), 'Web-Version von "' + (data.title || 'Spiel') + '"\r\n\r\nFür itch.io: diesen Ordner als ZIP hochladen und "This file will be played in the browser" wählen.\r\nLokal testen: index.html im Browser öffnen. Manche Browser blockieren dabei Bones-Animationen; auf itch.io oder einem Webserver funktioniert alles.\r\n', 'utf8');
@@ -686,7 +686,7 @@ function runAutotest() {
   const shots = process.env.VN_SHOTS || dir;
   fs.mkdirSync(dir, { recursive: true });
   approve(dir);
-  const testLang = process.env.VN_UILANG === 'en' ? 'en' : 'de';
+  const testLang = ['en', 'es', 'ja'].includes(process.env.VN_UILANG) ? process.env.VN_UILANG : 'de';
   uiLang = testLang;
   const data = enProject(process.env.VN_TUTORIAL ? createTutorialProject(dir) : createDemoProject(dir));
   win.webContents.on('console-message', (e) => { if (!/GPU stall|GL Driver/.test(e.message)) console.log('[renderer]', e.message); });
