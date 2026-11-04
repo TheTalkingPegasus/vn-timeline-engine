@@ -354,6 +354,12 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
         const c2 = D.open(hb, { dev: pc, rs: rr, preview: true, app: 'messages' });
         ok(hb.querySelector('.dv-desk .dv-win .dv-crow') && hb.querySelectorAll('.dv-desk .dv-msg').length === 3, '0.9.0 Computer: Nachrichten-Fenster falsch');
         c2.close(); hb.remove();
+        // 0.9.4: Aktionen beim Lesen einer Nachricht (einmal)
+        pp.chats.threads.push({ id: 't_ra', name: 'RA', contact: 'c_a', msgs: [{ id: 'm_ra', from: 'them', text: 'Tipp', actions: [{ type: 'setVar', var: 'v_rt', value: false }] }] });
+        VN.migrate(pp); D.deliver(rr, 't_ra');
+        ok(D.readActions(rr, 'c_a').length === 0, '0.9.4 Aktion läuft schon vor dem Lesen');
+        D.markRead(rr, 'c_a', ph);
+        ok(D.readActions(rr, 'c_a').length === 1 && D.readActions(rr, 'c_a').length === 0, '0.9.4 Aktion beim Lesen nicht genau einmal');
         // 0.9.3: Unterhaltung nur für den Computer
         pp.chats.threads.push({ id: 't_pc', name: 'PC', contact: 'c_a', devs: [pc.id], msgs: [{ id: 'm_pc', from: 'them', text: 'nur am PC' }], replies: [{ id: 'r_pc', text: 'ok' }] });
         VN.migrate(pp);

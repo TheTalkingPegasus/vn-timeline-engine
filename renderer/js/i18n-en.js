@@ -3862,7 +3862,8 @@ window.VN_I18N_EN = {
 "Entsperren": "Unlock",
 "🔓 Gerät entsperrt": "🔓 Device unlocked",
 "🔓 Gerät entsperren": "🔓 Unlock device",
-"entsperrt": "unlocked"
+"entsperrt": "unlocked",
+"Beim Lesen dieser Nachricht ausführen (z. B. Ort freischalten)": "Run when this message is read (e.g. unlock a location)"
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",

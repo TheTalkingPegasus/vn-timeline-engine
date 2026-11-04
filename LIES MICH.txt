@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.3
+VN Timeline Engine · Prototyp 0.9.4
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,12 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.4 · Nachrichten schalten Dinge frei
+- Jede Chat-Nachricht kann beim Lesen Aktionen ausführen – genau einmal, wie eine Dialogzeile: Ort freischalten,
+  Gegenstand geben, Quest starten oder weiterführen, ♥-Punkte, Variable setzen oder in eine Szene springen (das
+  Gerät schließt sich und die Szene startet). ⚡-Knopf neben jeder Nachricht unter Spielsysteme → Nachrichten.
+- Szenen, zu denen Apps, Nachrichten oder Antworten springen, gelten in den Pfaden und in der Prüfung als erreichbar.
 
 NEU IN 0.9.3 · Nachrichten je Gerät, versteckte Nachrichten, gesperrte Geräte
 - Stille Unterhaltungen: keine Meldung und keine Ungelesen-Zahl – der Spieler findet sie nur, wenn er selbst

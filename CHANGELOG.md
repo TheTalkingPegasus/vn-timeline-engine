@@ -2,6 +2,12 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.4 – Messages can unlock things
+- Every chat message can run actions when the player reads it – exactly once, like a dialogue line: unlock a
+  location, give an item, start or advance a quest, change ♥ points, set a variable, or jump to a scene (the device
+  closes and the scene starts). ⚡ button next to each message in Game systems → Messages.
+- Scenes reached from apps, messages or replies count as reachable in Paths and the problem list.
+
 ## 0.9.3 – Messages per device, hidden messages, locked devices
 - Silent conversations: no notification and no unread count – the player only finds them by looking
   (e.g. hidden mails on a PC). Checkbox “silent (hidden)” on the conversation.
