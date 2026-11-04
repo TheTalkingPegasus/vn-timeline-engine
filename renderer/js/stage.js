@@ -241,7 +241,9 @@
       if (st.bg && st.bg.vignette) stage.appendChild(VN.vignetteEl(st.bg));
       if (st.fx && st.fx.filter) stage.appendChild(stage.querySelector('.fx-filter'));
       if (st.fx && st.fx.particles) { const n = Stage.fxEl(st.fx); n.dataset.clip = st.fx.id; stage.appendChild(n); }
-      for (const [, c] of st.fxX || []) { if (c.filter) continue; const n = Stage.fxEl(c); n.dataset.clip = c.id; (c.particles ? stage : fxBox).appendChild(n); }
+      for (const [, c] of st.fxX || []) { if (c.filter) continue; const n = Stage.fxEl(c); n.dataset.clip = c.id; (c.particles || c.eyes ? stage : fxBox).appendChild(n); }
+      // Augen auf/zu immer ganz vorne über allen Effekten (0.7.7)
+      stage.querySelectorAll(':scope > .fx-eyes').forEach((n) => { n.style.zIndex = '4'; stage.appendChild(n); });
       if (st.cam) Fx.applyCam(world, st.cam, 0);
       if (st.video && st.video.layer === 'front' && vidOk(st.video)) { const v = Stage.videoEl(st.video, false); v.dataset.clip = st.video.id; stage.appendChild(v); }
       // Licht passend zur Szene

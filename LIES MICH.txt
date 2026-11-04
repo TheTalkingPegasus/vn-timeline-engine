@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.7.6
+VN Timeline Engine · Prototyp 0.7.7
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,12 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.7.7 · Effekt-Ebenen in Reihenfolge
+- Augen auf / zu / blinzeln liegen jetzt immer vor allen anderen Effekt-Ebenen (Partikel, Glut, Licht) – z. B.
+  ist die Glut erst zu sehen, wenn die Augen aufgehen. Dialog und Handy bleiben davor.
+- Effekt-Ebenen folgen der Reihenfolge in der Timeline: Eine Effekt-Spur weiter unten liegt weiter vorne
+  (wie bei Figuren).
 
 NEU IN 0.7.6 · Gliederpuppen, Fehlerbehebungen
 - Neu: Gliederpuppen (Figuren → Gliederpuppen). Figuren aus einzelnen Körperteilen wie Ebenen in After Effects:
