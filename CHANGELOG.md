@@ -2,6 +2,27 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.7.6 – Jointed puppets, bug fixes
+- New: **jointed puppets** (Characters → Jointed puppets). Build a character from separate body parts like layers
+  in After Effects: drag images onto the board, drag each part's red joint pin onto the joint and release it over
+  the parent part (forearm → upper arm → torso). Children follow their parent. Per part: idle motion (sway,
+  breathe, bob, jiggle that swings after the parent moves), own bones from the bones editor, rest rotation,
+  hide, mirrored copy (left arm → right arm). “Try out” rotates parts around their pins, Shift = IK.
+- Animation editor: an actor can be a jointed puppet. Puppeteering on the stage: drag a part or its end point to
+  rotate it around its pin, Shift + drag = IK (the chain follows the mouse), coordinate arrows (X, Y, free) move
+  the whole figure, double-click pins a limb so it stays in place while the body moves. Keyframes per part
+  (rotation, offset), “whole pose as keyframe”, “rest pose”.
+- Timeline: “Type of character” → jointed puppet; idle animation and gestures as with bones characters.
+  Works in exported games.
+- Fix: World & locations – the checkboxes in the base settings could not be switched (fixed with 0.7.5,
+  now covered by a test).
+- Fix: going from one hub to the hub dialogue of another hub (room change) showed the previous hub's objects
+  and hitboxes behind it. Now the hub the dialogue belongs to is shown, and the player returns there.
+- Fix: backgrounds sometimes vanished, turned into a single colour or flickered – a delayed fade timer hid the
+  new image when the player clicked on during a transition (especially with time-of-day tints).
+- Fix: “Scene … is not reachable from the start” no longer appears for locations on the world map and scenes
+  reached by travel actions; the message now says “is never entered”.
+
 ## 0.7.5 – Fix: settings jumped back
 - Fix: “Building starts”, “Amounts apply” (per second/minute/hour) and other settings jumped back after
   choosing (the choice landed in an outdated copy of the settings). The same cause is fixed for skill trees,

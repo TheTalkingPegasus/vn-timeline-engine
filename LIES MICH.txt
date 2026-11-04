@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.7.5
+VN Timeline Engine · Prototyp 0.7.6
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,27 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.7.6 · Gliederpuppen, Fehlerbehebungen
+- Neu: Gliederpuppen (Figuren → Gliederpuppen). Figuren aus einzelnen Körperteilen wie Ebenen in After Effects:
+  Bilder auf die Fläche ziehen, den roten Gelenk-Pin jedes Teils auf das Gelenk ziehen und über dem Eltern-Teil
+  loslassen (Unterarm → Oberarm → Torso). Kinder bewegen sich mit. Pro Teil: Idle (Wackeln, Atmen, Wippen,
+  Jiggle, das nach Bewegungen nachschwingt), eigene Bones aus dem Bones-Editor, Drehung in Ruhe, Ausblenden,
+  gespiegelt kopieren (linker Arm → rechter Arm). „Ausprobieren“ dreht Teile um ihre Pins, Umschalt = IK.
+- Animations-Editor: Darsteller kann eine Gliederpuppe sein. Puppenspiel auf der Bühne: Teil oder Endpunkt
+  ziehen = um den Pin drehen, Umschalt + ziehen = IK (die Kette folgt der Maus), Koordinatenpfeile (X, Y, frei)
+  bewegen die ganze Figur, Doppelklick pinnt ein Glied fest – es bleibt an Ort und Stelle, wenn sich der Körper
+  bewegt. Keyframes pro Teil (Drehung, Versatz), „Ganze Pose als Keyframe“, „Grundpose“.
+- Timeline: „Art der Figur“ → Gliederpuppe; Idle-Animation und Gesten wie bei Figuren mit Bones.
+  Läuft auch im exportierten Spiel.
+- Fix: Welt & Orte – die Häkchen der Grundeinstellungen ließen sich nicht umschalten (mit 0.7.5 behoben,
+  jetzt mit Test abgesichert).
+- Fix: Von einem Hub in den Hub-Dialog eines anderen Hubs (Raumwechsel) blieben Objekte und Hitboxen des alten
+  Hubs sichtbar. Jetzt erscheint der Hub, zu dem der Dialog gehört, und danach geht es dorthin.
+- Fix: Hintergründe verschwanden manchmal, wurden einfarbig oder flackerten – ein verspäteter Überblend-Timer
+  blendete beim schnellen Weiterklicken das neue Bild aus (besonders mit Tageszeit-Färbung).
+- Fix: „Szene … ist vom Start aus nicht erreichbar“ erscheint nicht mehr für Orte der Weltkarte und Szenen, die
+  per Reise-Aktion erreicht werden; die Meldung heißt jetzt „wird nirgends betreten“.
 
 NEU IN 0.7.5 · Fix: Aufbau-Einstellungen
 - Fix: „Aufbau startet“, „Mengen gelten“ (pro Sekunde/Minute/Stunde) und andere Einstellungen sprangen

@@ -87,6 +87,9 @@
       if (anim.bg && VN.assetUrl(anim.bg)) sc.bgImg = await Anim.loadImg(VN.assetUrl(anim.bg));
       for (const actor of anim.actors || []) {
         const it = { actor, inst: null, img: null };
+        // Gliederpuppe (0.7.6)
+        const pup = actor.puppet && window.Puppet && Puppet.get(actor.puppet);
+        if (pup) { it.pupDef = pup; it.pup = await Puppet.load(pup); it.st = {}; sc.items.push(it); continue; }
         if (actor.asset && window.Rig && Rig.has(actor.asset)) {
           const cv = Rig.canvasFor(actor.asset, { boneAmp: 100 }, { manual: true });
           it.inst = await cv._inst.ready;
@@ -129,7 +132,17 @@
         ctx.rotate(pl.rot * Math.PI / 180);
         if (a.flip) ctx.scale(-1, 1);
         let map = null;
-        if (it.inst) {
+        if (it.pup) {
+          const pup = Puppet.get(a.puppet) || it.pupDef;
+          const bb = Puppet.bounds(pup);
+          const k = boxH / bb.h;
+          const base = Puppet.m.mul(Puppet.m.S(k, k), Puppet.m.T(-(bb.x + bb.w / 2), -(bb.y + bb.h)));
+          const pose = opts.pose || Puppet.poseAt(a, t);
+          const out = Puppet.draw(ctx, pup, it.pup, base, t, dt, pose, it.st);
+          const m = ctx.getTransform(), cm = [m.a, m.b, m.c, m.d, m.e, m.f];
+          it.pmats = {}; for (const [pid, pm] of Object.entries(out)) it.pmats[pid] = Puppet.m.mul(cm, pm);
+          it.pbase = Puppet.m.mul(cm, base);
+        } else if (it.inst) {
           Rig.renderAt(it.inst, t, dt, Anim.angles(a, t));
           const P = Rig.PAD, cv = it.inst.cv;
           const cvH = boxH * (1 + 2 * P), cvW = cvH * cv.width / cv.height;

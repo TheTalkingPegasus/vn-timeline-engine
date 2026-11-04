@@ -213,11 +213,14 @@
 
     // ---------- Animationen am Figuren-Clip (Idle, Gesten) ----------
     animFields(s, c) {
-      if (!c.asset || !VN.project.rigs[c.asset] || c.set) return null;
-      const all = VN.project.anims || [];
+      const isPup = !!(c.puppet && window.Puppet && Puppet.get(c.puppet));
+      if (!isPup && (!c.asset || !VN.project.rigs[c.asset] || c.set)) return null;
+      // Gliederpuppen: nur Animationen, in denen diese Puppe mitspielt; Bilder mit Bones: alle anderen
+      const forMe = (a) => (isPup ? (a.actors || []).some((x) => x.puppet === c.puppet) : !(a.actors || []).every((x) => x.puppet));
+      const all = (VN.project.anims || []).filter(forMe);
       const idles = all.filter((a) => a.type === 'idle'), gests = all.filter((a) => a.type === 'gesture');
       const beat = VN.ui.beat >= c.start && VN.ui.beat < c.start + c.len ? VN.ui.beat : c.start;
-      const box = el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Animation (Bones)'),
+      const box = el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, isPup ? 'Animation (Gliederpuppe)' : 'Animation (Bones)'),
         field('Idle-Animation (Dauer-Schleife)', sel(c.idleAnim || '', [['', '— nur Atmen/Schwanken —'], ...idles.map((a) => [a.id, '∞ ' + a.name])], (v) => VN.mutate(() => { if (v) c.idleAnim = v; else delete c.idleAnim; }))),
         field('Geste bei Schritt ' + (beat + 1), sel((c.gestures || {})[beat] || '', [['', '— keine —'], ...gests.map((a) => [a.id, '✋ ' + a.name])], (v) => VN.mutate(() => { c.gestures = c.gestures || {}; if (v) c.gestures[beat] = v; else delete c.gestures[beat]; }))));
       if (!all.length) box.appendChild(el('div', { class: 'muted small' }, 'Bewegungen baust du oben im Reiter „Animation“.'));
@@ -229,8 +232,12 @@
     figureFields(s, c) {
       const figs = VN.project.figures || [];
       const box = el('div', { class: 'opt-card' },
-        field('Art der Figur', sel(c.set ? 'set:' + c.set : 'img', [['img', 'Einzelnes Bild'], ...figs.map((f) => ['set:' + f.id, '◆ ' + f.name + ' (Ebenen)'])], (v) => VN.mutate(() => { if (v === 'img') delete c.set; else { c.set = v.slice(4); c.pick = c.pick || {}; } }))));
-      if (!figs.length) box.appendChild(el('div', { class: 'muted small' }, 'Ebenen-Figuren (Körper, Gesicht, Outfit) legst du oben unter „Figuren“ an.'));
+        field('Art der Figur', sel(c.puppet ? 'pup:' + c.puppet : c.set ? 'set:' + c.set : 'img', [['img', 'Einzelnes Bild'], ...figs.map((f) => ['set:' + f.id, '◆ ' + f.name + ' (Ebenen)']), ...(VN.project.puppets || []).map((f) => ['pup:' + f.id, '🦴 ' + f.name + ' (Gliederpuppe)'])], (v) => VN.mutate(() => {
+          delete c.set; delete c.puppet;
+          if (v.startsWith('set:')) { c.set = v.slice(4); c.pick = c.pick || {}; } else if (v.startsWith('pup:')) c.puppet = v.slice(4);
+        }))));
+      if (!figs.length && !(VN.project.puppets || []).length) box.appendChild(el('div', { class: 'muted small' }, 'Ebenen-Figuren (Körper, Gesicht, Outfit) und Gliederpuppen (Körperteile mit Gelenken) legst du oben unter „Figuren“ an.'));
+      if (c.puppet) box.appendChild(el('div', { class: 'row gap8' }, el('span', { class: 'muted small', style: { flex: '1' } }, 'Idle-Bewegung und Gesten kommen aus dem Animations-Editor (Darsteller = diese Gliederpuppe).'), el('button', { class: 'btn tiny', onclick: () => { VN.ui.view = 'bones'; VN.ui.figSub = 'puppet'; VN.ui.pupSel = c.puppet; VN.render(); } }, '✏ Puppe bearbeiten')));
       const f = c.set && Stage.figure(c.set);
       if (!f) return box;
       const beat = VN.ui.beat >= c.start && VN.ui.beat < c.start + c.len ? VN.ui.beat : c.start;

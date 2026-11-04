@@ -34,6 +34,7 @@
     p.figures = p.figures || [];
     p.anims = p.anims || [];
     p.poses = p.poses || [];
+    p.puppets = p.puppets || [];
     p.mouths = p.mouths || {};
     p.glossary = p.glossary || [];
     p.chat = p.chat || { me: '' };

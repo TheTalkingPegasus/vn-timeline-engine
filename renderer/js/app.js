@@ -105,7 +105,7 @@
           el('span', { class: 'dot', style: { background: s.type === 'hub' ? '#f0f0f3' : '#4fb3c8' } }),
           el('span', { class: 'name' }, s.name, m && m !== true ? el('span', { class: 'sc-hit' }, m) : null),
           p.startScene === s.id ? el('span', { class: 'badge' }, 'START') : null,
-          reach.has(s.id) ? null : el('span', { class: 'badge gray', title: 'Vom Start aus nicht erreichbar' }, '!'));
+          reach.has(s.id) ? null : el('span', { class: 'badge gray', title: 'Wird nirgends betreten (kein Weg führt hierher)' }, '!'));
         it.addEventListener('dragstart', (e) => { e.dataTransfer.setData('vn/scene', s.id); e.dataTransfer.effectAllowed = 'move'; });
         it.addEventListener('contextmenu', (e) => {
           e.preventDefault();

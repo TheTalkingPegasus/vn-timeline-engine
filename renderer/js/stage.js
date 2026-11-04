@@ -87,7 +87,10 @@
       box.style.transform = 'translateX(-50%)';
       if (window.Fx) Fx.placeChar(box, pr); else { box.style.left = pr.x + '%'; box.style.height = (88 * pr.scale / 100) + '%'; }
       const url = VN.assetUrl(clip.asset);
-      if (clip.set) {
+      if (clip.puppet && window.Puppet && Puppet.get(clip.puppet)) {
+        // Gliederpuppe (0.7.6): Körperteile mit Gelenken, Idle und Gesten
+        box.appendChild(Puppet.canvasFor(clip.puppet, clip, box));
+      } else if (clip.set) {
         box.appendChild(Stage.figureEl(clip, ctx.beat, ctx.rs));
       } else if (url && window.Rig && Rig.has(clip.asset) && clip.bones !== false) {
         const cv = Rig.canvasFor(clip.asset, clip, window.Anim ? { extraFn: Anim.extraFnFor(clip, box) } : {});

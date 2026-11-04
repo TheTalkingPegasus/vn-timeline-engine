@@ -2,7 +2,7 @@
 (function () {
   const { el } = VN;
   const NW = 200, NH = 70;
-  const COLORS = { next: '#4fb3c8', choice: '#f0a35e', hub: '#e8c86a', event: '#c58cf0', back: '#7fd09a', battle: '#e0605a' };
+  const COLORS = { next: '#4fb3c8', choice: '#f0a35e', hub: '#e8c86a', event: '#c58cf0', back: '#7fd09a', battle: '#e0605a', action: '#7fd09a' };
   let zoom = 1;
 
   const Graph = (window.Graph = {

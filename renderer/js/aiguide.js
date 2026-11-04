@@ -116,6 +116,10 @@
       '```json', J({ id: 'h_ai1', type: 'hub', name: 'Guild hall', bg: '<asset id>', music: null, objects: [{ id: 'o_ai1', name: 'Door', asset: '<asset id|null>', x: 70, y: 30, w: 12, h: 40, rot: 0, shape: 'rect', hover: 'glow', target: '<scene id|null>', message: '', conds: [], actions: [], styles: {} }], events: [] }), '```', '',
       '- Object position/size in % of the screen. `target` = scene opened on click. A story scene with `next: "@return"` returns to the hub afterwards.',
       '- Events run when the hub is entered: `{ id, trigger: "first"|"always"|"cond", conds, mode: "lines"|"scene", lines: [{ id, speaker, text, style: ""|"phone"|"note" }], scene: "<story scene id>" }`. `mode: "scene"` plays a whole timeline over the hub (characters, phone chat, choices) and comes back. `trigger: "cond"` fires once as soon as `conds` are true, also while the player is in the hub.', '');
+    L.push('## Jointed puppets (characters made of body parts)', '',
+      '`puppets: [{ id, name, parts: [...] }]`. Each part: `{ id, name, asset, parent: "<part id>"|null, x, y, w, h, ax, ay, rot, idle: { type: "none"|"sway"|"breathe"|"bob"|"jiggle", amp, speed, phase }, bones: true|false, flipX, hidden }`.',
+      '- `x`, `y` = top-left of the image in puppet pixels (rest pose), `w`, `h` = drawn size, `ax`, `ay` = joint pin inside the image. A part rotates around its pin; children follow their parent. Array order = drawing order (last = front).',
+      '- Use on the timeline: a character clip with `puppet: "<puppet id>"` (instead of `asset`). Idle/gesture animations: an actor with `puppet: "<puppet id>"` and `parts: { "<part id>": [{ t, r, x, y, e }] }` (r = rotation in degrees, x/y = offset in pixels); optional `pins: { "<part id>": true }` keeps limbs in place in the editor.', '');
     L.push('## Conditions (`conds` arrays – all must be true)', '', condList(), '', 'Operators: `>=`, `>`, `<=`, `<`, `==`, `!=`.', '');
     L.push('## Actions (`actions` arrays – run in order)', '', actionList(), '');
     L.push('## Game systems', '', systems(p, opts.generic), '',

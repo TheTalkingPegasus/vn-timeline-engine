@@ -264,6 +264,35 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
       ok(m.length === 3 && m.every((row) => Math.abs(row[0] + row[1] + row[2] - 1) < 0.02) && Math.abs(m[0][0] - 1) > 0.05, '0.7.4 Farbhilfe: Matrix unplausibel (Grau bleibt nicht grau)');
       const guide = VN.AIGuide.build();
       ok(guide.includes('project.json') && guide.includes('idleStart') && guide.includes(d.id), '0.7.4 KI-Anleitung unvollständig');
+      // 0.7.6: Gliederpuppen – Kinder folgen dem Eltern-Teil, IK erreicht das Ziel, Umriss
+      {
+        const pup = { id: 'pz', name: 'P', parts: [
+          { id: 't', name: 'Torso', asset: null, parent: null, x: -50, y: 0, w: 100, h: 200, ax: 50, ay: 190, rot: 0, idle: { type: 'none' } },
+          { id: 'o', name: 'Oberarm', asset: null, parent: 't', x: 40, y: 0, w: 20, h: 100, ax: 10, ay: 10, rot: 0, idle: { type: 'none' } },
+          { id: 'u', name: 'Unterarm', asset: null, parent: 'o', x: 40, y: 90, w: 20, h: 100, ax: 10, ay: 10, rot: 0, idle: { type: 'none' } }] };
+        pp.puppets = [pup];
+        const ap = Puppet.m.ap;
+        const m0 = Puppet.solve(pup, {}, null, null, 0);
+        const elbow0 = ap(m0.u, 10, 10);
+        ok(Math.abs(elbow0[0] - 50) < 0.01 && Math.abs(elbow0[1] - 100) < 0.01, '0.7.6 Gliederpuppe: Ruhe-Lage falsch ' + elbow0);
+        const m1 = Puppet.solve(pup, { o: { r: 90, x: 0, y: 0 } }, null, null, 0);
+        const elbow1 = ap(m1.u, 10, 10);
+        ok(Math.abs(elbow1[0] - (-40)) < 0.5 && Math.abs(elbow1[1] - 10) < 0.5, '0.7.6 Gliederpuppe: Kind folgt dem gedrehten Eltern-Teil nicht ' + elbow1.map(Math.round));
+        const pose = {};
+        Puppet.ik(pup, pose, 'u', Puppet.tip(pup.parts[2]), [120, 60], { links: 2 });
+        const tip = Puppet.tipWorld(pup, pose, 'u');
+        ok(Math.hypot(tip[0] - 120, tip[1] - 60) < 2, '0.7.6 Gliederpuppe: IK erreicht das Ziel nicht ' + tip.map(Math.round));
+        const bb = Puppet.bounds(pup);
+        ok(bb.h >= 200 && bb.w >= 100, '0.7.6 Gliederpuppe: Umriss falsch');
+        pup.parts[0].parent = 'u';
+        Puppet.order(pup);
+        ok(!pup.parts[0].parent || !pup.parts[1].parent, '0.7.6 Gliederpuppe: Kreis aus Eltern-Teilen wird nicht aufgelöst');
+        // Erreichbarkeit: Orte der Weltkarte zählen als erreichbar
+        const loc = VN.newHubScene('Ort'); loc.loc = { unlock: 'start' };
+        pp.world = pp.world || {}; pp.world.enabled = true;
+        ok(VN.reachable().has(loc.id), '0.7.6 Pfade: Ort der Weltkarte gilt als nicht erreichbar');
+        pp.world.enabled = false;
+      }
     } catch (e) { out.push('0.7.4-Prüfung stürzt ab: ' + String(e && e.stack || e).split('\\n').slice(0, 3).join(' | ')); }
     VN.project = prev;
     return JSON.stringify(out);
