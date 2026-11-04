@@ -363,6 +363,36 @@
       // Figuren auf der Bühne ziehen: waagerecht = Position, senkrecht = Höhe (bei einem Keyframe im aktuellen Schritt wird der Keyframe geändert)
       stage.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
+        // Auswahl-Fenster verschieben (0.9.1): ziehen = Position (Alt = ohne Einrasten)
+        const cb = e.target.closest && e.target.closest('.choice-box');
+        if (cb) {
+          const f = VN.findClip(s, cb.dataset.clip);
+          if (!f || f.track.lock) return;
+          const c = f.clip;
+          e.preventDefault();
+          const r = stage.getBoundingClientRect(), b = cb.getBoundingClientRect();
+          const px = (b.left + b.width / 2 - r.left) / r.width * 100, py = (b.top + b.height / 2 - r.top) / r.height * 100;
+          const hw = b.width / 2 / r.width * 100, hh = b.height / 2 / r.height * 100;
+          const y0 = VN.choiceYDefault(c);
+          let nx = px, ny = py;
+          VN.drag(e, (dx, dy, ev) => {
+            nx = Math.round(Math.max(hw + 2, Math.min(100 - hw - 2, px + dx / r.width * 100)));
+            ny = Math.round(Math.max(hh + 1.5, Math.min(100 - hh - 1.5, py + dy / r.height * 100)));
+            let gx = null, gy = null;
+            if (!(ev && ev.altKey)) {
+              if (Math.abs(nx - 50) < 2) { nx = 50; gx = 50; }
+              if (Math.abs(ny - y0) < 2) { ny = y0; gy = null; }
+            }
+            Story.guides(stage, gx, gy);
+            cb.style.left = nx + '%';
+            cb.style.top = ny + '%';
+          }, (dx, dy, moved) => {
+            Story.guides(stage, null, null);
+            if (!moved) { VN.ui.sel = c.id; VN.render(); return; }
+            VN.mutate(() => { if (nx === 50) delete c.chX; else c.chX = nx; if (ny === y0) delete c.chY; else c.chY = ny; VN.ui.sel = c.id; });
+          });
+          return;
+        }
         const hit = Story.hitTest(stage, e.clientX, e.clientY);
         const f = hit && VN.findClip(s, hit);
         if (!f || VN.tbase(f.track) !== 'char' || f.track.lock) return;
