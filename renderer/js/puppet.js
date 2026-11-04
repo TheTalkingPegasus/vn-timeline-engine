@@ -50,10 +50,51 @@
   // Endpunkt eines Teils (für IK und Griffe): eingestellt oder dem Pin gegenüber
   P.tip = (p) => (p.tx != null ? [p.tx, p.ty] : [p.w - p.ax, p.h - p.ay]);
 
+  // ---------- Pins folgen den Bones des Eltern-Teils (0.7.8) ----------
+  // Hat das Eltern-Teil Bones, verformt es sich (Atmen, Schwanken, Physik). Der Pin eines Kindes wandert dann mit
+  // der verformten Stelle mit und dreht sich mit ihr. Gemessen wird an den nächsten Gitterpunkten des Bones-Netzes.
+  const near = (inst, mx, my) => {
+    const key = Math.round(mx) + ',' + Math.round(my);
+    const c = inst._pinNear || (inst._pinNear = new Map());
+    if (c.has(key)) return c.get(key);
+    const { pos, count } = inst.mesh;
+    const best = [];
+    for (let i = 0; i < count; i++) {
+      const d = (pos[i * 2] - mx) ** 2 + (pos[i * 2 + 1] - my) ** 2;
+      if (best.length < 4) { best.push([d, i]); best.sort((a, b) => a[0] - b[0]); } else if (d < best[3][0]) { best[3] = [d, i]; best.sort((a, b) => a[0] - b[0]); }
+    }
+    let sum = 0;
+    const out = best.map(([d, i]) => { const w = 1 / (d + 1); sum += w; return [i, w]; });
+    for (const o of out) o[1] /= sum || 1;
+    c.set(key, out);
+    return out;
+  };
+  // Verschiebung (in Pixeln des Teils) eines Punktes u, v durch die aktuelle Verformung
+  const shiftAt = (inst, p, u, v) => {
+    const { mesh, out } = inst;
+    if (!mesh || !out) return [0, 0];
+    const kx = mesh.w / p.w, ky = mesh.h / p.h, PAD = window.Rig ? Rig.PAD : 0.15;
+    let dx = 0, dy = 0;
+    for (const [i, w] of near(inst, u * kx, v * ky)) { dx += w * (out[i * 2] - mesh.w * PAD - mesh.pos[i * 2]); dy += w * (out[i * 2 + 1] - mesh.h * PAD - mesh.pos[i * 2 + 1]); }
+    return [dx / kx, dy / ky];
+  };
+  P.deformFn = (pup, res) => (parentId, u, v) => {
+    const inst = res && res.rigs && res.rigs[parentId];
+    const p = P.part(pup, parentId);
+    if (!inst || !inst.ok || !p) return null;
+    const [dx, dy] = shiftAt(inst, p, u, v);
+    // Drehung der Stelle aus zwei Nachbarpunkten
+    const s = Math.max(6, Math.min(p.w, p.h) * 0.08);
+    const [ax, ay] = shiftAt(inst, p, u + s, v), [bx, by] = shiftAt(inst, p, u, v + s);
+    const r1 = Math.atan2(ay - dy, s + ax - dx), r2 = Math.atan2(-(bx - dx), s + by - dy);
+    return { dx, dy, da: ((r1 + r2) / 2) / D2R };
+  };
+
   // ---------- Pose berechnen ----------
   // pose: { [partId]: { r, x, y } } – Drehung in Grad, Versatz in Pixeln (im Eltern-Bild)
+  // deform (optional): Verformung durch Bones der Eltern-Teile (siehe P.deformFn)
   // Liefert { [partId]: Matrix } (eigenes Bild → Puppen-Fläche)
-  P.solve = (pup, pose, t, st, dt) => {
+  P.solve = (pup, pose, t, st, dt, deform) => {
     const mats = {};
     pose = pose || {};
     for (const p of P.order(pup)) {
@@ -70,8 +111,9 @@
         const par = P.part(pup, p.parent);
         // Pin dieses Teils, ausgedrückt im Bild des Eltern-Teils (Ruhe-Lage) – so wandert er mit dem Eltern-Teil mit
         const [lx, ly] = ap(inv(P.rest(par)), p.x + p.ax, p.y + p.ay);
-        base = mul(mats[p.parent], T(lx + ox, ly + oy));
-        local = (p.rot || 0) - (par.rot || 0);
+        const df = deform ? deform(par.id, lx, ly) : null;
+        base = mul(mats[p.parent], T(lx + ox + (df ? df.dx : 0), ly + oy + (df ? df.dy : 0)));
+        local = (p.rot || 0) - (par.rot || 0) + (df ? df.da : 0);
       } else {
         base = T(p.x + p.ax + ox, p.y + p.ay + oy);
         local = p.rot || 0;
@@ -132,7 +174,9 @@
   // ---------- Zeichnen ----------
   // base: Matrix Puppen-Fläche → Canvas. Liefert die Matrizen (eigenes Bild → Canvas) je Teil.
   P.draw = (ctx, pup, res, base, t, dt, pose, st, opts = {}) => {
-    const mats = P.solve(pup, pose, t, st, dt);
+    // Bones zuerst verformen, damit die Pins der Kinder der Verformung folgen
+    if (res) for (const p of pup.parts) { const inst = res.rigs[p.id]; if (inst && !(opts.override && opts.override[p.id])) Rig.renderAt(inst, t || 0, dt || 0, null); }
+    const mats = P.solve(pup, pose, t, st, dt, res ? P.deformFn(pup, res) : null);
     const out = {};
     const keep = ctx.getTransform();
     const k = [keep.a, keep.b, keep.c, keep.d, keep.e, keep.f];
@@ -144,8 +188,9 @@
       const W = mul(k, p.flipX ? mul(M, [-1, 0, 0, 1, p.w, 0]) : M);
       ctx.setTransform(W[0], W[1], W[2], W[3], W[4], W[5]);
       const inst = res && res.rigs[p.id];
-      if (inst) {
-        Rig.renderAt(inst, t || 0, dt || 0, null);
+      const ov = opts.override && opts.override[p.id];
+      if (ov) ctx.drawImage(ov, 0, 0, p.w, p.h);
+      else if (inst) {
         ctx.drawImage(inst.cv, -PAD * p.w, -PAD * p.h, p.w * (1 + 2 * PAD), p.h * (1 + 2 * PAD));
       } else {
         const im = res && res.imgs[p.id];

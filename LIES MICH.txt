@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.7.7
+VN Timeline Engine · Prototyp 0.7.8
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,14 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.7.8 · Gliederpuppen: Pins folgen den Bones, Radierer
+- Gliederpuppen: Die Pins der Kind-Teile folgen jetzt den Bones des Eltern-Teils. Atmet, schwankt oder schwingt
+  der Torso über seine Bones, bleiben Arme und Kopf dran und drehen sich mit, statt sich zu versetzen.
+- Neuer Radierer im Gliederpuppen-Baukasten (🧽): harte Kanten und Übergänge an einem Teil wegmalen, Größe und
+  Kantenweichheit einstellbar, dazu „Wiederherstellen“, um das Original zurückzumalen. Strg + Mausrad ändert
+  die Pinselgröße. Speichern legt eine neue Bilddatei an – das Original bleibt erhalten und lässt sich jederzeit
+  zurückholen; Bones und Blinzeln werden übernommen.
 
 NEU IN 0.7.7 · Bugfix: Effekt-Ebenen in Reihenfolge
 - Augen auf / zu / blinzeln liegen jetzt immer vor allen anderen Effekt-Ebenen (Partikel, Glut, Licht) – z. B.

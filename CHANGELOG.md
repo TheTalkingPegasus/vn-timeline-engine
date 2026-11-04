@@ -2,6 +2,14 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.7.8 – Jointed puppets: pins follow bones, eraser
+- Jointed puppets: pins of child parts now follow the bones of their parent part. When the torso breathes,
+  sways or swings via its bones, arms and head stay attached and turn with it instead of drifting apart.
+- New eraser in the puppet builder (🧽): paint away hard edges and transitions on a part, with adjustable size
+  and edge softness, plus “Restore” to paint the original back. Ctrl + mouse wheel changes the brush size.
+  Saving creates a new image file – the original is kept and can be brought back any time; bones and blinking
+  are carried over.
+
 ## 0.7.7 – Bugfix: effect layers in order
 - Eyes open / close / blink now always lie in front of every other effect layer (particles, glow, light), so
   e.g. embers only become visible when the eyes open. They stay below dialogue and phone.
