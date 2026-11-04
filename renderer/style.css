@@ -2041,3 +2041,16 @@ body.cbsim-tritan #center .stage, body.cbsim-tritan #player { filter: url(#vn-cb
 .dv-pill.on { background: var(--accent); color: var(--accent-ink, #000); }
 .stage .choice-box { cursor: move; }
 .stage .choice-box:hover { outline: 1px dashed var(--accent); outline-offset: 0.8cqh; }
+/* Minispiel Quicktime-Kreis (0.9.2) */
+.mg-area.mg-qt { display: flex; align-items: center; justify-content: center; cursor: pointer; height: 56cqh; }
+.mg-qt-svg { height: 92%; aspect-ratio: 1; overflow: visible; }
+.mg-qt-disk { fill: rgba(255,255,255,0.06); stroke: rgba(255,255,255,0.75); stroke-width: 3; }
+.mg-qt-zone { fill: var(--sys-accent, #4fd17a); fill-opacity: 0.55; stroke: var(--sys-accent, #4fd17a); stroke-width: 2; transition: d 0.25s; }
+.mg-qt-svg.in .mg-qt-zone { fill-opacity: 0.85; }
+.mg-qt-hand { stroke: #fff; stroke-width: 5; stroke-linecap: round; }
+.mg-qt-hub { fill: #fff; }
+.mg-qt-flash { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 4cqh; font-weight: 800; pointer-events: none; opacity: 0; text-shadow: 0 0.3cqh 1cqh rgba(0,0,0,0.6); }
+.mg-qt-flash.hit { color: #6fe39a; } .mg-qt-flash.miss { color: #ff6b6b; }
+.mg-qt-flash.show { animation: mgQtPop 0.7s ease-out; }
+@keyframes mgQtPop { 0% { opacity: 0; transform: translate(-50%, -30%) scale(0.7); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 100% { opacity: 0; transform: translate(-50%, -90%) scale(1); } }
+.mg-qt-hint { position: absolute; bottom: 1.2cqh; left: 0; right: 0; text-align: center; font-size: 1.8cqh; opacity: 0.6; pointer-events: none; }

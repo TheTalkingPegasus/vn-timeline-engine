@@ -103,12 +103,12 @@
     // Mitgelieferte Plugins aktuell halten: unveränderte alte Versionen still ersetzen,
     // selbst geänderte nur auf Wunsch (Knopf im Plugin-Reiter)
     BUNDLED_FILES: ['jobs.js', 'minispiele.js'],
-    KNOWN_OLD: { 'minispiele.js': ['91d6ffff', '8a6bc3dc'], 'jobs.js': ['322ce80e', '1e08ad44'] },
+    KNOWN_OLD: { 'minispiele.js': ['91d6ffff', '8a6bc3dc', 'dd6b9029', 'daadc030'], 'jobs.js': ['322ce80e', '1e08ad44'] },
     hash(t) { t = String(t || '').replace(/\r\n/g, '\n'); let x = 2166136261; for (let i = 0; i < t.length; i++) { x ^= t.charCodeAt(i); x = Math.imul(x, 16777619); } return (x >>> 0).toString(16); },
     updates: {},
     async checkBundled() {
       const p = VN.project;
-      if (!VN.api.plugins.bundledText) return;
+      if (!VN.api || !VN.api.plugins || !VN.api.plugins.bundledText) return;
       VNPlugin.updates = {};
       let changed = [];
       for (const f of VNPlugin.BUNDLED_FILES) {

@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototype 0.9.1
+VN Timeline Engine · Prototype 0.9.2
 ====================================
 (Deutsch: siehe LIES MICH.txt)
 

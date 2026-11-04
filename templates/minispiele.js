@@ -1,5 +1,5 @@
 // Mitgeliefertes Plugin: Minispiele
-// Klick-Reflex, Memory, Puzzle, Kochen & Brauen, Münzwurf, Blütenblätter zupfen.
+// Klick-Reflex, Memory, Puzzle, Kochen & Brauen, Münzwurf, Blütenblätter zupfen, Quicktime-Kreis.
 // Jedes Minispiel liefert ein Ergebnis { score: 0…1, ok } – für Jobs (Lohn), Beziehungen oder Pfade.
 // Bilder sind überall austauschbar (leer = eingebaute Grafik). Du darfst die Datei frei ändern.
 (function () {
@@ -46,8 +46,8 @@
   VNPlugin.register({
     id: ID,
     name: 'Minispiele',
-    version: '1.3',
-    description: 'Sechs Minispiele mit Ergebnis (0–100 % oder geschafft/nicht geschafft): Klick-Reflex, Memory, Puzzle, Kochen & Brauen, Münzwurf, Blütenblätter.',
+    version: '1.4',
+    description: 'Sieben Minispiele mit Ergebnis (0–100 % oder geschafft/nicht geschafft): Klick-Reflex, Memory, Puzzle, Kochen & Brauen, Münzwurf, Blütenblätter, Quicktime-Kreis.',
     // Aussehen je Minispiel (Design → Spielsysteme, oder Rechtsklick aufs Fenster im Probelauf)
     designs: {
       reflex: { label: 'Klick-Reflex', icon: '🎯', images: [['bildZiel', 'Ziel'], ['bildFalle', 'Falle']] },
@@ -55,9 +55,126 @@
       puzzle: { label: 'Puzzle', icon: '🧩', images: [['bild', 'Puzzle-Bild (sonst aktueller Hintergrund)']] },
       kochen: { label: 'Kochen & Brauen', icon: '🍲', images: [['bildTopf', 'Topf / Kessel']] },
       muenze: { label: 'Münzwurf', icon: '🪙', images: [['bildKopf', 'Kopf'], ['bildZahl', 'Zahl']] },
-      bluete: { label: 'Blütenblätter', icon: '🌼', images: [['bildBlatt', 'Blütenblatt'], ['bildMitte', 'Mitte']] }
+      bluete: { label: 'Blütenblätter', icon: '🌼', images: [['bildBlatt', 'Blütenblatt'], ['bildMitte', 'Mitte']] },
+      zeiger: { label: 'Quicktime-Kreis', icon: '⏱', images: [['bildScheibe', 'Scheibe'], ['bildZeiger', 'Zeiger']] }
+    },
+    // Perks für Skilltrees und Ausrüstung (Spielsysteme → Skilltrees / Gegenstand „Boni, solange getragen“)
+    skillEffects: {
+      zeigerZone: { cat: 'minigame', label: 'Quicktime-Kreis: größere Trefferfläche', params: [['pct', '+ %', 'number', 20]], key: () => 'minispiele.zeiger.zone', mode: 'pct', value: (e) => Number(e.pct) || 0, text: (e, l) => '+' + (Number(e.pct) || 0) * l + ' % Trefferfläche (Quicktime-Kreis)' },
+      zeigerLangsam: { cat: 'minigame', label: 'Quicktime-Kreis: Zeiger langsamer', params: [['pct', '− %', 'number', 15]], key: () => 'minispiele.zeiger.tempo', mode: 'pct', value: (e) => -(Number(e.pct) || 0), text: (e, l) => '−' + (Number(e.pct) || 0) * l + ' % Zeiger-Tempo (Quicktime-Kreis)' },
+      zeigerFehler: { cat: 'minigame', label: 'Quicktime-Kreis: mehr Fehlversuche', params: [['amount', '+', 'number', 1]], key: () => 'minispiele.zeiger.fehler', mode: 'add', value: (e) => Number(e.amount) || 0, text: (e, l) => '+' + (Number(e.amount) || 0) * l + ' Fehlversuch(e) (Quicktime-Kreis)' }
     },
     actions: {
+      // ---------- Quicktime-Kreis ----------
+      // Ein Zeiger dreht sich, im richtigen Moment die Taste drücken, wenn er in der markierten Fläche steht.
+      // Nach jedem Treffer springt die Fläche an eine neue Stelle.
+      zeiger: {
+        label: 'Quicktime-Kreis', minigame: true,
+        params: [
+          { key: 'schwierigkeit', label: 'Schwierigkeit', type: 'select', options: [['leicht', 'Leicht'], ['mittel', 'Mittel'], ['schwer', 'Schwer'], ['extrem', 'Extrem']], default: 'mittel' },
+          { key: 'treffer', label: 'Treffer nötig', type: 'number', default: 5 },
+          { key: 'fehler', label: 'Fehlversuche erlaubt', type: 'number', default: 2 },
+          { key: 'tempo', label: 'Tempo Umdrehungen/Min (0 = wie Schwierigkeit)', type: 'number', default: 0 },
+          { key: 'flaeche', label: 'Trefferfläche Grad (0 = wie Schwierigkeit)', type: 'number', default: 0 },
+          { key: 'steigend', label: 'Nach jedem Treffer schneller', type: 'select', options: [['ja', 'Ja'], ['nein', 'Nein']], default: 'ja' },
+          { key: 'richtung', label: 'Richtung wechselt nach Treffer', type: 'select', options: [['nein', 'Nein'], ['ja', 'Ja']], default: 'nein' },
+          { key: 'zeitlimit', label: 'Zeitlimit s (0 = keins)', type: 'number', default: 0 },
+          { key: 'hilfe', label: 'Mit Gegenstand leichter', type: 'item', default: '' },
+          { key: 'hilfeProzent', label: 'Gegenstand: Fläche + % / Tempo − %', type: 'number', default: 30 },
+          { key: 'titel', label: 'Titel (leer = „Im richtigen Moment drücken!“)', type: 'text', default: '' },
+          { key: 'bildScheibe', label: 'Bild Scheibe', type: 'image', default: '' },
+          { key: 'bildZeiger', label: 'Bild Zeiger', type: 'image', default: '' },
+          resultParam
+        ],
+        run(params, ctx) {
+          return new Promise((resolve) => {
+            const F = frame(ctx, params.titel || 'Im richtigen Moment drücken!', '46%', 'zeiger');
+            const D = { leicht: { rpm: 30, zone: 60, step: 0.06 }, mittel: { rpm: 42, zone: 42, step: 0.08 }, schwer: { rpm: 58, zone: 28, step: 0.1 }, extrem: { rpm: 76, zone: 18, step: 0.12 } }[params.schwierigkeit] || { rpm: 42, zone: 42, step: 0.08 };
+            const B = (k, base) => (ctx.bonus ? ctx.bonus(k, base) : base);
+            const helper = params.hilfe && ctx.items && ctx.items.count(params.hilfe) > 0;
+            const hp = helper ? Math.max(0, Math.min(80, Number(params.hilfeProzent) || 0)) / 100 : 0;
+            let rpm = Math.max(5, B('minispiele.zeiger.tempo', Number(params.tempo) || D.rpm) * (1 - hp));
+            const zone = Math.max(8, Math.min(180, B('minispiele.zeiger.zone', Number(params.flaeche) || D.zone) * (1 + hp)));
+            const need = Math.max(1, Math.round(Number(params.treffer) || 5));
+            const allowed = Math.max(0, Math.round(B('minispiele.zeiger.fehler', Math.max(0, Number(params.fehler) || 0))));
+            const limit = Math.max(0, Number(params.zeitlimit) || 0) * 1000;
+            const el = F.el, NS = 'http://www.w3.org/2000/svg';
+            const sv = (tag, at) => { const n = document.createElementNS(NS, tag); for (const k in at) n.setAttribute(k, at[k]); return n; };
+            F.area.classList.add('mg-qt');
+            const svg = sv('svg', { viewBox: '-110 -110 220 220', class: 'mg-qt-svg' });
+            const disk = pic(ctx, 'zeiger', 'bildScheibe', params), hand = pic(ctx, 'zeiger', 'bildZeiger', params);
+            if (disk) svg.appendChild(sv('image', { href: disk, x: -100, y: -100, width: 200, height: 200 }));
+            else svg.appendChild(sv('circle', { r: 96, class: 'mg-qt-disk' }));
+            const arc = sv('path', { class: 'mg-qt-zone' });
+            svg.appendChild(arc);
+            const handG = sv('g', {});
+            if (hand) handG.appendChild(sv('image', { href: hand, x: -12, y: -98, width: 24, height: 104 }));
+            else handG.appendChild(sv('line', { x1: 0, y1: 8, x2: 0, y2: -92, class: 'mg-qt-hand' }));
+            svg.appendChild(handG);
+            svg.appendChild(sv('circle', { r: 7, class: 'mg-qt-hub' }));
+            F.area.appendChild(svg);
+            const flash = el('div', { class: 'mg-qt-flash' });
+            F.area.appendChild(flash);
+            const hint = el('div', { class: 'mg-qt-hint' }, 'Leertaste, Enter oder Klick');
+            F.area.appendChild(hint);
+            const bar = limit ? F.el('div', { class: 'mg-timebar' }, F.el('span')) : null;
+            if (bar) F.o.el.insertBefore(bar, F.area);
+            // Winkel: 0 = oben, im Uhrzeigersinn
+            const pt = (a, r) => [Math.sin(a * Math.PI / 180) * r, -Math.cos(a * Math.PI / 180) * r];
+            let zStart = 0, ang = 0, dir = 1, hits = 0, miss = 0, done = false, perfect = 0, last = performance.now(), t0 = last, cool = 0;
+            const drawZone = () => {
+              const [x1, y1] = pt(zStart, 96), [x2, y2] = pt(zStart + zone, 96);
+              arc.setAttribute('d', `M0 0 L${x1.toFixed(2)} ${y1.toFixed(2)} A96 96 0 ${zone > 180 ? 1 : 0} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} Z`);
+            };
+            // neue Stelle: nicht direkt dort, wo der Zeiger gerade ist
+            const moveZone = () => { let a, tries = 0; do { a = rnd(0, 360); tries++; } while (tries < 20 && Math.abs((((a + zone / 2 - ang) % 360) + 540) % 360 - 180) < 70); zStart = a; drawZone(); };
+            const upd = () => { F.info.textContent = 'Treffer: ' + hits + ' / ' + need + '   ·   Fehlversuche: ' + miss + ' / ' + allowed + (helper ? '   ·   🔧 Hilfe aktiv' : ''); };
+            const inZone = () => { const d = (((ang - zStart) % 360) + 360) % 360; return { ok: d <= zone, center: Math.abs(d - zone / 2) <= zone * 0.18 }; };
+            const end = (ok) => {
+              done = true;
+              window.removeEventListener('keydown', onKey, true);
+              const score = ok ? Math.min(1, 0.6 + 0.4 * (1 - miss / (allowed + 1)) + perfect * 0.02) : Math.min(0.49, hits / need * 0.5);
+              F.finish({ score, ok }, ok ? (miss ? 'Geschafft!' : 'Perfekt – kein Fehler!') : 'Daneben … ' + hits + ' von ' + need, resolve, params.ergebnis);
+            };
+            const press = () => {
+              if (done || performance.now() < cool) return;
+              cool = performance.now() + 120;
+              const r = inZone();
+              if (r.ok) {
+                hits++; if (r.center) perfect++;
+                flash.textContent = r.center ? 'Perfekt!' : 'Treffer!'; flash.className = 'mg-qt-flash hit';
+                ctx.sound && ctx.sound('sfx_schloss_klick', 60);
+                if (hits >= need) { upd(); return end(true); }
+                if (params.steigend !== 'nein') rpm *= 1 + D.step;
+                if (params.richtung === 'ja') dir = -dir;
+                moveZone();
+              } else {
+                miss++;
+                flash.textContent = 'Daneben!'; flash.className = 'mg-qt-flash miss';
+                F.area.animate([{ transform: 'translateX(-1cqh)' }, { transform: 'translateX(1cqh)' }, { transform: 'none' }], { duration: 200 });
+                if (miss > allowed) { upd(); return end(false); }
+              }
+              void flash.offsetWidth; flash.classList.add('show');
+              upd();
+            };
+            const onKey = (e) => { if (e.key === ' ' || e.key === 'Enter' || e.key === 'e' || e.key === 'E') { e.preventDefault(); e.stopPropagation(); press(); } };
+            window.addEventListener('keydown', onKey, true);
+            F.area.addEventListener('mousedown', (e) => { e.stopPropagation(); press(); });
+            const tick = (now) => {
+              if (done) return;
+              const dt = Math.min(0.05, (now - last) / 1000); last = now;
+              ang = (ang + dir * rpm * 6 * dt + 360) % 360;
+              handG.setAttribute('transform', 'rotate(' + ang.toFixed(2) + ')');
+              svg.classList.toggle('in', inZone().ok);
+              if (limit) { const f = (now - t0) / limit; bar.firstChild.style.width = Math.max(0, 100 - f * 100) + '%'; if (f >= 1) return end(false); }
+              requestAnimationFrame(tick);
+            };
+            moveZone(); upd();
+            requestAnimationFrame(tick);
+          });
+        }
+      },
+
       // ---------- Klick-Reflex ----------
       reflex: {
         label: 'Klick-Reflex', minigame: true,
@@ -533,9 +650,10 @@
           ['puzzle', '🧩', 'Ein Bild wird automatisch zerschnitten und gemischt. Ohne eigenes Bild nimmt es den aktuellen Hintergrund.', 'Teile pro Reihe, Puzzleteile oder Quadrate, Drehen, Vorschau, Zeitlimit'],
           ['kochen', '🍲', 'Zutaten aus dem Inventar in Topf oder Kessel, dann schneiden, rühren und Hitze halten. Mit Rezeptbuch.', 'Küche oder Alchemie, einfach oder mit Schritten, eigenes Topf-Bild · Rezepte unten'],
           ['muenze', '🪙', 'Kopf oder Zahl – fair, gewichtet oder vom Drehbuch festgelegt. Optional mit Geld-Einsatz.', 'Zufall, Chance, Einsatz und Währung, Bilder für beide Seiten'],
-          ['bluete', '🌼', '„Liebt mich, liebt mich nicht“ – die Blattzahl sorgt für ein echtes 50:50.', 'Zufall, eigene Texte, Bilder für Blatt und Mitte']
+          ['bluete', '🌼', '„Liebt mich, liebt mich nicht“ – die Blattzahl sorgt für ein echtes 50:50.', 'Zufall, eigene Texte, Bilder für Blatt und Mitte'],
+          ['zeiger', '⏱', 'Ein Zeiger dreht sich – im richtigen Moment drücken, wenn er in der markierten Fläche steht. Die Fläche springt nach jedem Treffer weiter. Leichter durch Skilltree-Perks, Ausrüstung oder einen Hilfs-Gegenstand.', 'Schwierigkeit, Tempo, Größe der Fläche, Treffer, Fehlversuche, schneller werden, Richtungswechsel, Zeitlimit, Hilfs-Gegenstand, eigene Bilder']
         ];
-        body.appendChild(el('p', { class: 'muted' }, 'Sechs Minispiele. Du startest sie über „+ Aktion“ → „Minispiele: …“ – in einer Antwort, an einem Hub-Objekt, in einem Dialog oder als Minispiel eines Jobs. Einstellungen und Bilder wählst du direkt an der Aktion. Jedes Spiel liefert ein Ergebnis von 0–100 % (Feld „Ergebnis in“ → Variable).'));
+        body.appendChild(el('p', { class: 'muted' }, 'Sieben Minispiele. Du startest sie über „+ Aktion“ → „Minispiele: …“ – in einer Antwort, an einem Hub-Objekt, in einem Dialog oder als Minispiel eines Jobs. Einstellungen und Bilder wählst du direkt an der Aktion. Jedes Spiel liefert ein Ergebnis von 0–100 % (Feld „Ergebnis in“ → Variable).'));
         const grid = el('div', { class: 'mg-cards' });
         for (const [key, icon, desc, opts] of GAMES) {
           const a = self && self.actions[key];

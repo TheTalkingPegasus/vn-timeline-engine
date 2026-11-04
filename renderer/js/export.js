@@ -16,7 +16,6 @@
 
   VN.aspectName = (w, h) => { for (const k of Object.keys(ASPECTS)) { const [a, b] = k.split(':').map(Number); if (Math.abs(w / h - a / b) < 0.01) return k; } return 'eigen'; };
   const fmtMB = (b) => (b >= 1024 * 1024 * 1024 ? (b / 1024 / 1024 / 1024).toFixed(1).replace('.', ',') + ' GB' : b >= 10 * 1024 * 1024 ? Math.round(b / 1024 / 1024) + ' MB' : b >= 1024 * 1024 ? (b / 1024 / 1024).toFixed(1).replace('.', ',') + ' MB' : b > 0 ? Math.max(1, Math.round(b / 1024)) + ' KB' : '0 KB');
-  VN.fmtMB = fmtMB;
 
   // Welche Dateien werden wirklich benutzt?
   const usedAssets = (p) => {
