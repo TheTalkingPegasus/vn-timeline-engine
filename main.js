@@ -223,6 +223,13 @@ function createWindow() {
 }
 
 // Kopiert Dateien in den assets-Ordner des Projekts, ohne bestehende zu überschreiben
+// Ordnerstruktur für neue Projekte (0.8.0) – nur zur Übersicht für Nutzer, die Engine braucht sie nicht
+function makeFolders(dir) {
+  const de = ['Bilder/Figuren', 'Bilder/Hintergründe', 'Bilder/Objekte', 'Videos', 'Musik', 'Soundeffekte', 'Stimmen', 'Schriften'];
+  const en = ['Images/Characters', 'Images/Backgrounds', 'Images/Objects', 'Videos', 'Music', 'Sound effects', 'Voices', 'Fonts'];
+  for (const f of uiLang === 'en' ? en : de) { try { fs.mkdirSync(path.join(dir, 'assets', f), { recursive: true }); } catch (e) { /* egal */ } }
+}
+
 function copyIntoProject(dir, sources) {
   const assetsDir = path.join(dir, 'assets');
   fs.mkdirSync(assetsDir, { recursive: true });
@@ -231,6 +238,9 @@ function copyIntoProject(dir, sources) {
     const kind = kindOf(src);
     if (!kind) continue;
     const base = path.basename(src);
+    // Liegt die Datei schon im Projektordner (z. B. assets/Bilder/Figuren), wird sie dort benutzt statt kopiert (0.8.0)
+    const relIn = path.relative(dir, src);
+    if (relIn && !relIn.startsWith('..') && !path.isAbsolute(relIn)) { out.push({ name: path.parse(base).name, kind, file: relIn.replace(/\\/g, '/') }); continue; }
     let name = base;
     let i = 1;
     while (fs.existsSync(path.join(assetsDir, name))) {
@@ -259,6 +269,7 @@ ipcMain.handle('project:new', async (_e, { demo, tutorial }) => {
     if (c.response !== 1) return null;
   }
   fs.mkdirSync(path.join(dir, 'assets'), { recursive: true });
+  makeFolders(dir);
   let data = null;
   if (tutorial) data = createTutorialProject(dir);
   else if (demo) data = createDemoProject(dir);

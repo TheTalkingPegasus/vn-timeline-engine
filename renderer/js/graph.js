@@ -258,7 +258,9 @@
             ev.preventDefault();
             ev.stopPropagation();
             const items = [{ head: s.name + ' → ' + t.name }];
-            if (e.kind === 'choice') {
+            if (e.kind === 'choice' && e.index < 0) {
+              items.push({ label: 'Verbindung entfernen', danger: true, action: () => VN.mutate(() => { delete e.clip.allDone; }) });
+            } else if (e.kind === 'choice') {
               items.push({ label: 'Alternativer Pfad: neue Szene', hint: '„' + e.label + '“', action: () => VN.mutate(() => { const n = VN.createAltScene(s, e.label); e.clip.options[e.index].target = n.id; VN.ui.graphSel = n.id; }) });
               items.push({ label: 'Verbindung entfernen', danger: true, action: () => VN.mutate(() => { e.clip.options[e.index].target = null; }) });
             } else if (e.kind === 'next') {

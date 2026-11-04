@@ -484,7 +484,13 @@
     if (VN.Quests && VN.Quests.on()) VN.Quests.emit(VN.Quests.update(run.rs), gains);
     skillPts(gains);
     if (VN.Extras) VN.Extras.checkAch(run.rs);
-    if (gains.time && run.bg && run.bgClip !== undefined) { const b = run.bg, l = run.bgClip; run.bgKey = null; showBg(b, 'fade', 1.4, l); }
+    if (gains.time) {
+      // Zeit vergangen: Hub-Hintergrund der neuen Tageszeit, Tageszeit-Färbung, Ambient-Sounds (0.8.0)
+      const sc = VN.scene(run.scene);
+      if (sc && sc.type === 'hub') { run.bgKey = null; showBg(VN.Life ? VN.Life.hubBg(sc, run.rs) : sc.bg, 'fade', 1.4, sc.bgLook); }
+      else if (run.bg && run.bgClip !== undefined) { const b = run.bg, l = run.bgClip; run.bgKey = null; showBg(b, 'fade', 1.4, l); }
+      if (sc) showAmbient([...(sc.type === 'story' ? Stage.state(sc, run.beat).musicX || [] : []), ...ambNow(sc)]);
+    }
     renderHud();
     renderDebug();
     if (gains.pending && gains.pending.length) {
@@ -502,7 +508,7 @@
     if (run.jump) {
       const j = run.jump;
       run.jump = null;
-      if (j === '@end') showEnd(); else enterScene(j, 0);
+      if (j === '@end') showEnd(); else if (j === '@gameover') showEnd({ over: true }); else enterScene(j, 0);
       return null;
     }
     return gains;
@@ -513,17 +519,25 @@
     choiceBox.innerHTML = '';
     choiceBox.hidden = false;
     const box = el('div', { class: 'choice-box' });
+    let shown = 0;
     for (const o of clip.options) {
       const ok = VN.checkConds(o.conds, run.rs);
       if (!ok && o.hideLocked) continue;
+      // Schon gewählt (0.8.0): ausblenden oder ausgrauen – z. B. Fragen an eine Figur im Hub
+      const picked = !!(run.rs.picked && run.rs.picked[o.id]);
+      const ap = VN.afterPick(clip, o);
+      if (picked && ap === 'hide') continue;
+      shown++;
       box.appendChild(el('button', {
-        class: 'choice-btn' + (ok ? '' : ' locked'),
+        class: 'choice-btn' + (ok ? '' : ' locked') + (picked && ap === 'grey' ? ' picked' : ''),
         title: ok ? '' : (o.conds || []).map(VN.condText).join(' und '),
         onmouseenter: () => { if (ok) uiSound('hover'); },
         onclick: async (e) => {
           e.stopPropagation();
           if (!ok || run.blocked) return;
           uiSound('click');
+          run.rs.picked = run.rs.picked || {};
+          run.rs.picked[o.id] = true;
           choiceBox.hidden = true;
           run.choicesShown = false;
           run.pendingChoice = null;
@@ -538,6 +552,14 @@
       }, Fx.plain(VN.Extras ? VN.Extras.fill(VN.tr(o.id, o.text || 'Option'), run.rs) : VN.tr(o.id, o.text || 'Option'))));
     }
     if (window.Theme) Theme.styleChoices(box, Theme.choice(clip));
+    VN.placeChoices(box, clip);
+    // Alle Antworten schon gewählt und ausgeblendet: weiter wie eingestellt
+    if (!shown) {
+      choiceBox.hidden = true; run.choicesShown = false; run.pendingChoice = null;
+      const t = clip.allDone && VN.scene(clip.allDone);
+      later(() => { if (t) enterScene(clip.allDone, 0); else nextBeat(); }, 10);
+      return;
+    }
     // Zeitlimit: Balken läuft ab, dann wird die Standard-Antwort gewählt
     if (clip.timer > 0) {
       const bar = el('span');
@@ -650,7 +672,7 @@
     if (window.VNPlugin) VNPlugin.hook('onSceneEnter', s, ctx());
     if (window.Perf) Perf.preloadAround(id);
     if (!opts.restored) autosave();
-    if (s.type === 'hub') { stopAmbient(); showFxExtra([]); return showHub(s, true, !!opts.returning); }
+    if (s.type === 'hub') { showAmbient(ambNow(s)); showFxExtra([]); return showHub(s, true, !!opts.returning); }
     // Über dem Hub: Hub-Objekte bleiben sichtbar, aber nicht klickbar. Gehört der Dialog zu einem anderen Hub
     // (Raumwechsel), wird dieser Hub dahinter gezeigt – nicht der alte (0.7.6).
     const owner = s.overHub ? hubOwner(s, fromHub ? prevScene : null) : null;
@@ -685,7 +707,7 @@
       if ((t.base !== 'voice' && t.base !== 'sfx') || !VN.trackOn(s, t, tl)) continue;
       for (const c of s.tracks[t.key] || []) if (c.start === b && c.asset) { playOnce(c.asset, c.vol, c.delay, t.base, c.in, c.out, t.key === 'voice' ? c : null); if (t.base === 'sfx' && c.caption) E.caption(VN.tr(c.id + ':cap', c.caption)); }
     }
-    showAmbient(st.musicX || []);
+    showAmbient([...(st.musicX || []), ...ambNow(s)]);
     showFxExtra(st.fxX || []);
     if (window.VNPlugin) VNPlugin.hook('onBeat', s, b, ctx());
     if (run.blocked === 'video') { run.pendingDialog = st.dialog; } else showDialog(st.dialog);
@@ -713,6 +735,8 @@
 
   const clearSpot = () => { if (run) { run.lockTo = null; run.event = null; } if (stage) stage.querySelectorAll('.pl-spot, .pl-pointer').forEach((n) => n.remove()); };
 
+  // Ambient-Sounds der Zeit & Kalender (Tageszeit, Jahreszeit, Ort)
+  const ambNow = (s) => (VN.Life && VN.Life.ambientNow ? VN.Life.ambientNow(run.rs, s) : []);
   // Hub-Objekte liegen normal über der Welt; während eines Hub-Dialogs hinter den Figuren
   function hubUp() { hubBox.classList.remove('pl-hub-under'); if (hubBox.parentNode === world) stage.insertBefore(hubBox, black); }
   // Zu welchem Hub gehört ein Hub-Dialog? Fest zugeordnet, sonst der Hub, dessen Ereignis/Objekt ihn startet
@@ -727,7 +751,7 @@
   function showHub(s, entering, returning, under) {
     run.hubShown = s.id;
     if (under) {
-      showBg(s.bg, 'fade', 0.6, s.bgLook);
+      showBg(VN.Life ? VN.Life.hubBg(s, run.rs) : s.bg, 'fade', 0.6, s.bgLook);
       if (s.music) playMusic({ asset: s.music, vol: 70, loop: true, carry: true, fade: 1 });
     } else {
       updateInfo();
@@ -742,7 +766,7 @@
       showVideo(null);
       phoneBox.innerHTML = '';
       applyCamera({ cam: null }, 0);
-      showBg(s.bg, 'fade', 0.8, s.bgLook);
+      showBg(VN.Life ? VN.Life.hubBg(s, run.rs) : s.bg, 'fade', 0.8, s.bgLook);
       if (s.music) playMusic({ asset: s.music, vol: 70, loop: true, carry: true, fade: 1 });
       else if (A.music && !A.music.carry) stopMusic(1);
       stopVoice();
@@ -753,12 +777,14 @@
       if (o.once === 'hide' && run.rs.seen['obj:' + o.id]) continue;
       const url = VN.assetUrl(o.asset);
       const hovUrl = o.hoverAsset ? VN.assetUrl(o.hoverAsset) : '';
-      const look = url ? el('img', { src: url, draggable: 'false', class: hovUrl ? 'base' : null }) : el('div', { class: 'ph' }, VN.tr(o.id + ':name', o.name || 'Objekt'));
-      VN.applyLook(look, o);
+      // Unsichtbare Klickfläche (0.8.0): nichts zu sehen, nur anklickbar
+      const inv = !!o.invisible;
+      const look = inv ? el('span') : url ? el('img', { src: url, draggable: 'false', class: hovUrl ? 'base' : null }) : el('div', { class: 'ph' }, VN.tr(o.id + ':name', o.name || 'Objekt'));
+      if (!inv) VN.applyLook(look, o);
       const node = el('div', {
-        class: 'pl-hobj' + ((o.hover || 'glow') !== 'none' ? ' hover-' + (o.hover || 'glow') : '') + (hovUrl ? ' has-hov' : ''),
+        class: 'pl-hobj' + (!inv && (o.hover || 'glow') !== 'none' ? ' hover-' + (o.hover || 'glow') : '') + (hovUrl && !inv ? ' has-hov' : '') + (inv ? ' invisible' : ''),
         style: { left: o.x + '%', top: o.y + '%', width: o.w + '%', height: o.h + '%', transform: 'rotate(' + (o.rot || 0) + 'deg)', pointerEvents: 'none' }
-      }, look, hovUrl ? el('img', { src: hovUrl, draggable: 'false', class: 'hov' }) : null, o.name ? el('div', { class: 'tip' }, VN.tr(o.id + ':name', o.name)) : null);
+      }, look, hovUrl && !inv ? el('img', { src: hovUrl, draggable: 'false', class: 'hov' }) : null, o.name && !inv ? el('div', { class: 'tip' }, VN.tr(o.id + ':name', o.name)) : null);
       if (o.glowColor) node.style.setProperty('--glow', o.glowColor);
       const hit = el('div', {
         style: { position: 'absolute', inset: '0', borderRadius: o.shape === 'ellipse' ? '50%' : '0', pointerEvents: 'auto', cursor: window.Theme ? Theme.cursor('hub', 'pointer') : 'pointer' },
@@ -885,16 +911,29 @@
     else clearSpot();
   }
 
-  function showEnd() {
+  function showEnd(opts = {}) {
     if (run && run.replay) return endReplay();
     stopTyping();
     stopAmbient();
     run.ended = true;
     const hasMenu = VN.project.mainMenu && VN.project.mainMenu.enabled !== false;
-    stage.appendChild(el('div', { class: 'pl-end' },
-      el('h2', null, 'ENDE'),
-      el('div', { class: 'muted', style: { fontSize: '2.4cqh' } }, 'Danke fürs Spielen!'),
+    // Game Over (0.8.0): eigener Titel, Text, Bild und „Nochmal versuchen“ (Szene von vorn)
+    const G = VN.project.gameOver || {};
+    const retryAt = run.scene;
+    const bgUrl = opts.over && G.bg && VN.assetUrl(G.bg);
+    stage.appendChild(el('div', { class: 'pl-end' + (opts.over ? ' over' : ''), style: bgUrl ? { backgroundImage: `linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.7)), url("${bgUrl}")` } : null },
+      el('h2', null, opts.over ? VN.tr('gameover:title', G.title || 'GAME OVER') : 'ENDE'),
+      el('div', { class: 'muted', style: { fontSize: '2.4cqh' } }, opts.over ? VN.tr('gameover:text', G.text || VN.tp('Das war wohl nichts …')) : 'Danke fürs Spielen!'),
       el('div', { class: 'row' },
+        opts.over && G.retry !== false && VN.scene(retryAt) ? el('button', { class: 'btn primary', onclick: (e) => {
+          e.stopPropagation();
+          stage.querySelectorAll('.pl-end').forEach((n) => n.remove());
+          run.ended = false;
+          // Aktionen dieser Szene dürfen wieder laufen
+          const sc = VN.scene(retryAt);
+          if (sc && sc.type === 'story') for (const c of sc.tracks.dialog || []) delete run.rs.fired[c.id];
+          enterScene(retryAt, 0);
+        } }, VN.tp('Nochmal versuchen')) : null,
         hasMenu ? el('button', { class: 'btn primary', onclick: (e) => { e.stopPropagation(); showMainMenu(); } }, 'Hauptmenü') : el('button', { class: 'btn primary', onclick: (e) => { e.stopPropagation(); newGame(session.startScene); } }, 'Nochmal von vorn'),
         VN.gameMode ? null : el('button', { class: 'btn', onclick: (e) => { e.stopPropagation(); Player.close(); } }, 'Zurück zum Editor'))));
   }
@@ -1285,6 +1324,8 @@
       myRun.overlay = 'relmsg';
       return RelMsg.show(stage, c, m).then(() => { if (myRun === run && run.overlay === 'relmsg') run.overlay = prev || null; renderHud(); });
     },
+    // Nach den laufenden Aktionen in eine andere Szene oder einen Hub wechseln (Aktion „➜ Zu Szene oder Hub“)
+    setJump(id) { if (run) run.jump = id; },
     // Nachricht einer Figur (Beziehungs-Meilenstein) – wartet, bis der Spieler sie schließt
     relMessage(charId, msId) {
       const c = VN.Life && VN.Life.relChar(charId);

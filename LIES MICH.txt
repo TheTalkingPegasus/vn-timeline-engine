@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.7.8
+VN Timeline Engine · Prototyp 0.8.0
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,37 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.8.0 · Auswahl, Ordner, Kopieren & Einfügen, Tages- und Jahreszeiten
+Auswahl und Hubs
+- Schon gewählte Antworten können grau werden („schon gefragt“, weiter wählbar) oder verschwinden – für die ganze
+  Auswahl oder pro Antwort. Ideal für Hub-Dialoge, in denen man eine Figur Dinge fragt. Optional ein Ziel, wenn
+  alle Antworten weg sind.
+- Auswahl nach links oder rechts schieben (Regler und Knöpfe), sie bleibt immer im Bild.
+- Neue Aktion „➜ Zu Szene oder Hub wechseln“ – z. B. bei „Beim Erreichen dieses Dialogs“, auch zu Hubs (nicht
+  nur zu Orten).
+- Hub-Objekte können unsichtbar sein: nur Klickfläche, kein Rahmen, kein Leuchten, kein Name.
+- Neue Hintergründe und Figuren-Clips beginnen mit hartem Schnitt statt Überblenden.
+- Jobs-Plugin 1.3: Bedingungen „Rang im Job mindestens“ (Beförderung) und „Schichten gearbeitet“ – z. B. „Objekt
+  nur sichtbar, wenn Kellner oder höher“.
+Minispiele
+- Jedes Minispiel kann bei Sieg oder Niederlage weiterleiten: zu einer Szene, einem Hub oder zum neuen
+  Game-Over-Bildschirm (Titel, Text, Hintergrund, „Nochmal versuchen“; einstellbar unter Hauptmenü).
+- Kochen & Brauen (Minispiele-Plugin 1.3): eigener Titel, Knopf und Rezeptbuch (z. B. „Mixen“ an der Bar statt
+  „Brauen“) und Schwierigkeit leicht / mittel / schwer.
+Schneller arbeiten
+- Ordner und Unterordner in der Dateiliste: anlegen, umbenennen, auflösen, Dateien auf Ordner ziehen, Rechtsklick
+  → in Ordner verschieben. Dateien in Unterordnern von „assets“ auf dem PC landen automatisch im gleichen Ordner.
+- Neue Projekte bekommen eine Ordnerstruktur auf dem PC (Bilder/Figuren, Bilder/Hintergründe, Bilder/Objekte,
+  Videos, Musik, Soundeffekte, Stimmen, Schriften). Dateien, die schon im Projektordner liegen, werden direkt
+  benutzt statt noch einmal kopiert.
+- Timeline-Clips in andere Szenen kopieren: Strg+C kopiert den gewählten Clip (oder den ganzen Schritt), Strg+V
+  fügt ihn beim aktuellen Schritt in jeder Szene ein; auch im Rechtsklick-Menü des Clips.
+Zeit & Kalender
+- Hubs können je Tageszeit einen eigenen Hintergrund haben; er wechselt sofort, wenn im Hub Zeit vergeht.
+- Jahreszeiten (Namen, Länge in Tagen, Start) mit der Bedingung „Zeit / Kalender → Jahreszeit“; die Jahreszeit
+  steht bei der Uhrzeit.
+- Ambient-Sounds je Tageszeit und Jahreszeit, überall, nur in Hubs oder in einer Szene – mit weichem Übergang.
 
 NEU IN 0.7.8 · Gliederpuppen: Pins folgen den Bones, Radierer
 - Gliederpuppen: Die Pins der Kind-Teile folgen jetzt den Bones des Eltern-Teils. Atmet, schwankt oder schwingt

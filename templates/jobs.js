@@ -24,7 +24,7 @@
   VNPlugin.register({
     id: ID,
     name: 'Jobs',
-    version: '1.2',
+    version: '1.3',
     description: 'Arbeiten gehen: Zeit vergeht, Geld kommt. Mit Voraussetzungen, Zufallsereignissen, Minispiel und Beförderung. Einstellungen unter Spielsysteme → Jobs.',
     // Unterschalter in der Übersicht
     subSwitches() {
@@ -91,6 +91,27 @@
           await new Promise((res) => o.el.appendChild(el('button', { class: 'btn primary job-btn', onclick: () => { o.close(); res(); } }, 'Weiter')));
           return { score, ok: true };
         }
+      }
+    },
+    // Bedingungen (1.3): Beförderungs-Rang und Schichten – z. B. „Objekt nur sichtbar, wenn Kellner oder höher“
+    conditions: {
+      rang: {
+        label: 'Rang im Job mindestens',
+        params: [
+          { key: 'job', label: 'Job', type: 'select', get options() { return data().jobs.map((j) => [j.id, j.name]); }, default: '' },
+          { key: 'rang', label: 'Rang (1 = Einstieg)', type: 'number', default: 2 }
+        ],
+        check(p, ctx) { const job = data().jobs.find((j) => j.id === p.job) || data().jobs[0]; if (!job) return false; const st = (ctx.state.jobs || {})[job.id]; return (st ? st.rank : 0) + 1 >= (Number(p.rang) || 1); },
+        text(p) { const job = data().jobs.find((j) => j.id === p.job) || data().jobs[0]; const r = job && (job.ranks || [])[(Number(p.rang) || 1) - 1]; return (job ? job.name : 'Job') + ': ab ' + (r ? r.title : 'Rang ' + p.rang); }
+      },
+      schichten: {
+        label: 'Schichten gearbeitet',
+        params: [
+          { key: 'job', label: 'Job', type: 'select', get options() { return [['', 'irgendein Job'], ...data().jobs.map((j) => [j.id, j.name])]; }, default: '' },
+          { key: 'anzahl', label: 'mindestens', type: 'number', default: 3 }
+        ],
+        check(p, ctx) { const all = ctx.state.jobs || {}; const n = p.job ? ((all[p.job] || {}).shifts || 0) : Object.values(all).reduce((s, x) => s + (x.shifts || 0), 0); return n >= (Number(p.anzahl) || 0); },
+        text(p) { const job = data().jobs.find((j) => j.id === p.job); return (job ? job.name : 'Jobs') + ': ≥ ' + p.anzahl + ' Schichten'; }
       }
     },
     hooks: {},

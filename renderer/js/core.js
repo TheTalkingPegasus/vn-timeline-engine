@@ -343,13 +343,14 @@
   };
 
   // Ausgehende Verbindungen einer Szene
-  VN.SCENE_ACTIONS = ['travel'];
+  VN.SCENE_ACTIONS = ['travel', 'goto'];
   VN.edgesOf = (s) => {
     const out = [];
     if (s.type === 'story') {
       if (s.next) out.push({ to: s.next, label: 'weiter', kind: 'next' });
       for (const c of s.tracks.choice || []) {
         c.options.forEach((o, i) => { if (o.target) out.push({ to: o.target, label: o.text || 'Option', kind: 'choice', clip: c, index: i }); });
+        if (c.allDone) out.push({ to: c.allDone, label: '✓ alle gefragt', kind: 'choice', clip: c, index: -1 });
       }
     } else {
       for (const o of s.objects || []) if (o.target) out.push({ to: o.target, label: o.name || 'Objekt', kind: 'hub', obj: o });
@@ -357,7 +358,8 @@
       for (const ev of s.events || []) if (ev.mode === 'scene' && ev.scene) out.push({ to: ev.scene, label: '💬 ' + (VN.scene(ev.scene) || {}).name, kind: 'event', ev });
     }
     // Aktionen, die zu einer Szene bringen (z. B. „📍 Zu Ort gehen“), zählen als Weg
-    const walk = (o, d) => { if (!o || typeof o !== 'object' || d > 12) return; if (Array.isArray(o)) { for (const x of o) walk(x, d + 1); return; } if (o.type && VN.SCENE_ACTIONS.includes(o.type) && o.scene) out.push({ to: o.scene, label: '📍', kind: 'action' }); for (const k in o) if (k !== 'tracks' && o[k] && typeof o[k] === 'object') walk(o[k], d + 1); };
+    const walk = (o, d) => { if (!o || typeof o !== 'object' || d > 12) return; if (Array.isArray(o)) { for (const x of o) walk(x, d + 1); return; } if (o.type && VN.SCENE_ACTIONS.includes(o.type) && o.scene) out.push({ to: o.scene, label: '📍', kind: 'action' });
+      if (o.type === 'plugin') { if (o.onWin) out.push({ to: o.onWin, label: '🏆', kind: 'action' }); if (o.onLose) out.push({ to: o.onLose, label: '☠', kind: 'action' }); } for (const k in o) if (k !== 'tracks' && o[k] && typeof o[k] === 'object') walk(o[k], d + 1); };
     if (s.type === 'story') for (const k of Object.keys(s.tracks || {})) walk(s.tracks[k], 0); else { walk(s.objects, 0); walk(s.events, 0); }
     if (s.type === 'story' && s.next === '@return') {
       for (const h of VN.project.scenes) if (h.type === 'hub' && ((h.events || []).some((ev) => ev.mode === 'scene' && ev.scene === s.id) || (h.objects || []).some((o) => o.target === s.id))) out.push({ to: h.id, label: 'zurück', kind: 'back' });
@@ -404,6 +406,17 @@
   // Fehlende Felder ergänzen, ohne das Objekt zu ersetzen (0.7.5). Wer sich das Objekt beim Zeichnen merkt,
   // ändert sonst später eine veraltete Kopie – die Auswahl springt dann zurück.
   VN.fill = (obj, def) => { const o = obj && typeof obj === 'object' ? obj : {}; for (const k of Object.keys(def)) if (o[k] === undefined) o[k] = def[k]; return o; };
+
+  // Auswahl waagerecht verschieben (0.8.0): Mitte der Auswahl in % der Bildbreite
+  VN.placeChoices = (box, clip) => {
+    const x = clip && clip.chX != null ? Math.max(5, Math.min(95, Number(clip.chX))) : null;
+    if (x == null || x === 50) return;
+    // nie über den Bildrand hinaus: die Breite der Auswahl beachten
+    const w = parseFloat(box.style.width) || 46;
+    box.style.left = Math.max(w / 2 + 2, Math.min(100 - w / 2 - 2, x)) + '%';
+  };
+  // Nach dem Wählen: '' = normal, 'grey' = ausgrauen (weiter wählbar), 'hide' = ausblenden
+  VN.afterPick = (clip, o) => (o.afterPick != null && o.afterPick !== '' ? o.afterPick : (clip && clip.afterPick) || '');
 
   // Hub-Dialog (0.7.4): eine Timeline-Szene, die über dem Hub abläuft und danach zurückkehrt
   VN.newHubDialog = (hub, name) => {
