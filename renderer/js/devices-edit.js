@@ -223,6 +223,7 @@
         el('textarea', { rows: 1, onchange: (e) => VN.mutate(() => { m.text = e.target.value; }) }, m.text || ''),
         sel(m.image, imgOpts('— Bild —'), (v) => { m.image = v; }, { width: '90px' }),
         condBtn(m.conds, 'Zeile nur, wenn … (z. B. Route)'),
+        actBtn(m.actions || (m.actions = []), 'Beim Lesen dieser Nachricht ausführen (z. B. Ort freischalten)'),
         el('button', { class: 'btn tiny', disabled: i === 0, onclick: () => VN.mutate(() => { t.msgs.splice(i, 1); t.msgs.splice(i - 1, 0, m); }) }, '↑'),
         el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { t.msgs.splice(i, 1); }) }, '×')));
     });

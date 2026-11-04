@@ -63,7 +63,7 @@
     if (!Array.isArray(p.chats.threads)) p.chats.threads = [];
     for (const t of p.chats.threads) {
       VN.fill(t, { conds: [], msgs: [], replies: [], devs: [] });
-      for (const m of t.msgs) VN.fill(m, { id: VN.uid('cm'), from: 'them', text: '', image: '', conds: [] });
+      for (const m of t.msgs) VN.fill(m, { id: VN.uid('cm'), from: 'them', text: '', image: '', conds: [], actions: [] });
       for (const r of t.replies) VN.fill(r, { id: VN.uid('cr'), text: '', conds: [], actions: [], next: '' });
     }
     return p;
@@ -105,8 +105,19 @@
   // Gelesen: auf einem Gerät nur das, was dort zu sehen ist
   DV.markRead = (rs, cid, dev) => {
     const S = DV.st(rs), l = S.log[cid] || [];
-    if (!dev) { S.seen[cid] = l.length; return; }
+    if (!dev) { l.forEach((e) => { e.r = 1; }); S.seen[cid] = l.length; return; }
     l.forEach((e, i) => { if (!isRead(S, cid, e, i) && DV.visible(e, dev)) e.r = 1; });
+  };
+  // Aktionen von Nachrichten, die gelesen wurden und noch nicht ausgeführt sind (0.9.4) – z. B. Ort freischalten
+  DV.readActions = (rs, cid) => {
+    const out = [];
+    for (const e of DV.log(rs, cid)) {
+      if (!e.m || e.ax || !e.r) continue;
+      const th = DV.thread(e.th), m = th && (th.msgs || []).find((x) => x.id === e.m);
+      e.ax = 1;
+      if (m && (m.actions || []).length) out.push(...m.actions);
+    }
+    return out;
   };
   DV.waiting = (rs, cid, dev) => { const id = DV.st(rs).wait[cid]; const th = id && DV.thread(id); return th && DV.onDev(th, dev) ? id : null; };
   // Kontakte mit Verlauf, zuletzt aktive zuerst
@@ -130,7 +141,7 @@
     const at = stamp(rs), added = [];
     for (const m of th.msgs || []) {
       if (!VN.checkConds(m.conds || [], rs)) continue;
-      added.push(push(rs, c.id, Object.assign({ me: m.from === 'me', x: m.text || '', id: m.id + ':text', img: m.image || '', th: th.id, at }, th.silent ? { q: 1 } : {})));
+      added.push(push(rs, c.id, Object.assign({ me: m.from === 'me', x: m.text || '', id: m.id + ':text', img: m.image || '', th: th.id, m: m.id, at }, th.silent ? { q: 1 } : {})));
     }
     S.got[th.id] = 1;
     if ((th.replies || []).some((r) => VN.checkConds(r.conds || [], rs))) S.wait[c.id] = th.id;
@@ -266,6 +277,16 @@
       row.appendChild(sel(a.thread || '', thOpts(), (v) => VN.mutate(() => { a.thread = v; })));
       row.appendChild(el('label', { class: 'check small' }, el('input', { type: 'checkbox', checked: !!a.quiet, onchange: (e) => VN.mutate(() => { a.quiet = e.target.checked; }) }), 'ohne Meldung'));
     }
+  });
+
+  // Szenen, zu denen Apps, Nachrichten oder Antworten springen, gelten als erreichbar (Pfade, Prüfung)
+  VN.reachRoots = VN.reachRoots || [];
+  VN.reachRoots.push(() => {
+    if (!DV.on()) return [];
+    const out = [];
+    const walk = (x, d) => { if (!x || typeof x !== 'object' || d > 10) return; if (Array.isArray(x)) { for (const y of x) walk(y, d + 1); return; } if (x.type && VN.SCENE_ACTIONS.includes(x.type) && x.scene) out.push(x.scene); for (const k in x) walk(x[k], d + 1); };
+    walk(DV.cfg().list, 0); walk(DV.threads(), 0);
+    return out;
   });
 
   // ---------- Prüfungen ----------
@@ -447,7 +468,7 @@
         let shown = total - nx.added.length;
         const step = () => {
           if (closed || !wrap.isConnected) { typing = null; return; }
-          if (shown >= total) { typing = null; DV.markRead(rs, cid, d); draw(); refreshBadges(); return; }
+          if (shown >= total) { typing = null; DV.markRead(rs, cid, d); draw(); refreshBadges(); runRead(); return; }
           const e = DV.log(rs, cid)[shown];
           draw(shown);
           const dots = el('div', { class: 'dv-msg typing' + (e.me ? ' me' : '') }, el('i'), el('i'), el('i'));
@@ -457,8 +478,16 @@
         };
         typing = setTimeout(step, 350);
       };
+      // Gelesene Nachrichten können etwas freischalten (Ort, Quest, Gegenstand …)
+      const runRead = () => {
+        if (o.preview || !H.apply) return;
+        const list = DV.readActions(rs, cid);
+        if (!list.length) return;
+        setTimeout(() => { if (closed) return; const x = H.apply(list, 'chat:' + cid); if (x && x.close) close(); else { refreshBadges(); if (wrap.isConnected) drawReplies(false); } }, 400);
+      };
       DV.markRead(rs, cid, d);
       draw();
+      runRead();
       return wrap;
     };
     // Liste aller Unterhaltungen

@@ -1205,6 +1205,7 @@
     if (!run || !d || devCtl) return resolve([]);
     const myRun = run, pend = [];
     run.overlay = 'device';
+    for (const n of stage.querySelectorAll('.dv-note-wrap')) n.remove();
     VN.did(run.rs, 'screen', 'device:' + d.id);
     const fresh = DV().autoCheck(run.rs);
     const ctl = DV().open(stage, { dev: d, rs: run.rs, app: o.app, contact: o.contact, before: gainBox, H: {
