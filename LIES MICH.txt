@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.4
+VN Timeline Engine · Prototyp 0.9.5
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,11 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.5 · Harter Schnitt bei Figuren
+- Behoben: Beim Wechsel eines Figuren-Bildes mit Auftritt „Sofort“ war trotzdem ein kurzes Überblenden vom alten zum
+  neuen Bild zu sehen. Jetzt bleibt das alte Bild stehen, bis das neue fertig ist, und wird im selben Moment ersetzt.
+  Eine Figur mit Auftritt „Sofort“ verschwindet auch sofort.
 
 NEU IN 0.9.4 · Nachrichten schalten Dinge frei
 - Jede Chat-Nachricht kann beim Lesen Aktionen ausführen – genau einmal, wie eine Dialogzeile: Ort freischalten,

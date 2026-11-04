@@ -131,10 +131,22 @@
     }
   };
 
-  const removeChar = (key) => {
+  // Figur entfernen. instant = harter Schnitt (0.9.5): kein Ausblenden. waitFor = neues Bild – das alte bleibt,
+  // bis das neue wirklich gezeichnet werden kann (sonst blitzt kurz der Hintergrund durch)
+  const removeChar = (key, instant, waitFor) => {
     const c = run.chars[key];
     if (!c) return;
     delete run.chars[key];
+    if (instant) {
+      const imgs = waitFor ? [...waitFor.querySelectorAll('img')] : [];
+      if (!imgs.length) { c.el.remove(); return; }
+      waitFor.style.visibility = 'hidden';
+      let done = false;
+      const swap = () => { if (done) return; done = true; waitFor.style.visibility = ''; c.el.remove(); };
+      Promise.all(imgs.map((i) => (i.decode ? i.decode().catch(() => {}) : Promise.resolve()))).then(swap);
+      later(swap, 250);
+      return;
+    }
     c.el.style.transition = 'opacity 0.3s';
     c.el.style.opacity = '0';
     later(() => c.el.remove(), 320);
@@ -165,9 +177,13 @@
         cur.clip = clip;
         continue;
       }
-      if (cur) removeChar(key);
+      // Harter Schnitt: neues Bild „Sofort“ ersetzt das alte ohne Überblenden; verschwindet eine Figur, deren Auftritt
+      // „Sofort“ war, ist sie auch sofort weg
+      const cut = clip ? (clip.trans === 'cut' || clip.dur === 0) : !!(cur && cur.clip && (cur.clip.trans === 'cut' || cur.clip.dur === 0));
+      if (cur && !clip) removeChar(key, cut);
       if (!clip) continue;
       const node = Stage.charEl(clip, 'pl-char' + (clip.idle && clip.idle !== 'none' ? ' idle-' + clip.idle : ''), { beat, rs: run.rs });
+      if (cur) removeChar(key, cut, cut ? node : null);
       const x = pr.x;
       const dur = clip.dur != null ? clip.dur : 0.6;
       const targetOp = String(pr.opacity / 100);
@@ -177,7 +193,7 @@
         void node.offsetWidth;
         node.style.transition = `left ${dur}s cubic-bezier(.2,.8,.2,1)`;
         node.style.left = x + '%';
-      } else if (clip.trans !== 'cut') {
+      } else if (!cut) {
         node.style.opacity = '0';
         void node.offsetWidth;
         node.style.transition = `opacity ${dur}s`;

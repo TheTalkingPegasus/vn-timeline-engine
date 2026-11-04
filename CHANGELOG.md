@@ -2,6 +2,11 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.5 – Hard cut for characters
+- Fixed: switching a character picture set to “Instant” still showed a short fade from the old picture to the new
+  one. The old picture now stays until the new one is ready and is then replaced in the same frame. A character
+  whose entrance is “Instant” also disappears instantly.
+
 ## 0.9.4 – Messages can unlock things
 - Every chat message can run actions when the player reads it – exactly once, like a dialogue line: unlock a
   location, give an item, start or advance a quest, change ♥ points, set a variable, or jump to a scene (the device
