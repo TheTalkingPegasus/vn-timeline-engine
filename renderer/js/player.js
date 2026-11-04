@@ -40,6 +40,12 @@
     const cur = bgLayers[run.bgIndex];
     const next = bgLayers[1 - run.bgIndex];
     run.bgIndex = 1 - run.bgIndex;
+    // Ein späterer Wechsel macht die Aufräum-Schritte dieses Wechsels ungültig (0.7.6). Sonst blendet ein
+    // verspäteter Timer das gerade sichtbare Bild aus – Hintergrund weg, nur noch Farbe, Flackern.
+    const gen = run.bgGen = (run.bgGen || 0) + 1;
+    const hideCur = () => { if (run && run.bgGen === gen && bgLayers[run.bgIndex] !== cur) { cur.style.transition = 'none'; cur.style.opacity = '0'; } };
+    // Laufende Übergänge der Ebene, die gleich neu befüllt wird, sofort beenden
+    next.style.transition = 'none';
     const url = VN.assetUrl(assetId);
     dur = dur != null ? dur : 1;
     const v = VN.vignetteEl(look || {});
@@ -88,14 +94,14 @@
       cur.style.transition = 'none'; cur.style.opacity = '0';
     } else if (trans === 'mask') {
       next.style.transition = 'none'; next.style.opacity = '1';
-      Fx.maskReveal(next, look.mask || 'wipe-right', look.mask === 'custom' ? look.maskAsset : null, dur, look.maskSoft != null ? look.maskSoft / 100 : 0.12).then(() => { if (bgLayers[run ? run.bgIndex : 0] === next) { cur.style.transition = 'none'; cur.style.opacity = '0'; } });
+      Fx.maskReveal(next, look.mask || 'wipe-right', look.mask === 'custom' ? look.maskAsset : null, dur, look.maskSoft != null ? look.maskSoft / 100 : 0.12).then(hideCur);
     } else if (trans === 'eyes') {
       // Augen schließen, Bild wechseln, Augen öffnen
       next.style.transition = 'none'; next.style.opacity = '0';
       const ov = Fx.eyesEl(Object.assign({}, Fx.EYE_DEF, look || {}, { eyes: 'blink', eyesDur: dur, eyesBlinks: 0 }), true);
       ov.classList.add('pl-eyes-trans');
       stage.appendChild(ov);
-      later(() => { next.style.opacity = '1'; cur.style.transition = 'none'; cur.style.opacity = '0'; }, dur * 500);
+      later(() => { if (run.bgGen !== gen) return; next.style.opacity = '1'; hideCur(); }, dur * 500);
       later(() => ov.remove(), dur * 1000 + 100);
     } else if (trans === 'shatter') {
       // Bildschirm zerspringt: Momentaufnahme des alten Bildes zerbricht über dem neuen
@@ -109,9 +115,10 @@
       black.style.transition = `opacity ${dur / 2}s`;
       black.style.opacity = '1';
       later(() => {
-        next.style.transition = 'none'; next.style.opacity = '1';
-        cur.style.transition = 'none'; cur.style.opacity = '0';
         black.style.opacity = '0';
+        if (run.bgGen !== gen) return;
+        next.style.transition = 'none'; next.style.opacity = '1';
+        hideCur();
       }, dur * 500);
     } else {
       next.style.transition = 'none';
@@ -119,7 +126,7 @@
       void next.offsetWidth;
       next.style.transition = `opacity ${dur}s`;
       next.style.opacity = '1';
-      later(() => { cur.style.transition = 'none'; cur.style.opacity = '0'; }, dur * 1000);
+      later(hideCur, dur * 1000);
     }
   };
 
@@ -636,9 +643,16 @@
     if (window.Perf) Perf.preloadAround(id);
     if (!opts.restored) autosave();
     if (s.type === 'hub') { stopAmbient(); showFxExtra([]); return showHub(s, true, !!opts.returning); }
-    // Über dem Hub: Hub-Objekte bleiben sichtbar, aber nicht klickbar
-    if (s.overHub && (fromHub || hubBox.classList.contains('pl-hub-under'))) { hubBox.classList.add('pl-hub-under'); if (hubBox.parentNode !== world) world.insertBefore(hubBox, charsBox); }
-    else { hubBox.innerHTML = ''; hubUp(); }
+    // Über dem Hub: Hub-Objekte bleiben sichtbar, aber nicht klickbar. Gehört der Dialog zu einem anderen Hub
+    // (Raumwechsel), wird dieser Hub dahinter gezeigt – nicht der alte (0.7.6).
+    const owner = s.overHub ? hubOwner(s, fromHub ? prevScene : null) : null;
+    const ownBg = owner && Stage.state(s, run.beat).bg;
+    if (owner && !ownBg) {
+      if (run.hubShown !== owner.id || !hubBox.childNodes.length) showHub(owner, false, false, true);
+      run.rs.hubRet = owner.id;
+      hubBox.classList.add('pl-hub-under');
+      if (hubBox.parentNode !== world) world.insertBefore(hubBox, charsBox);
+    } else { hubBox.innerHTML = ''; run.hubShown = null; hubUp(); if (owner) run.rs.hubRet = owner.id; }
     enterBeat(run.beat, opts);
   }
 
@@ -693,12 +707,27 @@
 
   // Hub-Objekte liegen normal über der Welt; während eines Hub-Dialogs hinter den Figuren
   function hubUp() { hubBox.classList.remove('pl-hub-under'); if (hubBox.parentNode === world) stage.insertBefore(hubBox, black); }
-  function showHub(s, entering, returning) {
-    updateInfo();
-    hubUp();
-    stopTyping();
-    dlgBox.hidden = true;
-    run.pendingChoice = null;
+  // Zu welchem Hub gehört ein Hub-Dialog? Fest zugeordnet, sonst der Hub, dessen Ereignis/Objekt ihn startet
+  function hubOwner(s, prev) {
+    const hubs = VN.project.scenes.filter((h) => h.type === 'hub');
+    if (s.hubOwner) { const h = hubs.find((x) => x.id === s.hubOwner); if (h) return h; }
+    const uses = (h) => (h.events || []).some((ev) => ev.mode === 'scene' && ev.scene === s.id) || (h.objects || []).some((o) => o.target === s.id);
+    if (prev && uses(prev)) return prev;
+    return hubs.find(uses) || prev || null;
+  }
+  // under: nur Hintergrund und Objekte zeichnen (Hub liegt hinter einem Hub-Dialog), keine Ereignisse
+  function showHub(s, entering, returning, under) {
+    run.hubShown = s.id;
+    if (under) {
+      showBg(s.bg, 'fade', 0.6, s.bgLook);
+      if (s.music) playMusic({ asset: s.music, vol: 70, loop: true, carry: true, fade: 1 });
+    } else {
+      updateInfo();
+      hubUp();
+      stopTyping();
+      dlgBox.hidden = true;
+      run.pendingChoice = null;
+    }
     if (entering) {
       for (const k of Object.keys(run.chars)) removeChar(k);
       showFx(null);
@@ -774,6 +803,7 @@
       node.appendChild(hit);
       hubBox.appendChild(node);
     }
+    if (under) return;
     if (entering) runHubEvents(s, !!returning);
     else if (!run.event && !run.overlay && !run.message && !run.blocked) runHubEvents(s, true, true);
   }

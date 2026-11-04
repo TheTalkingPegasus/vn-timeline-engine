@@ -343,6 +343,7 @@
   };
 
   // Ausgehende Verbindungen einer Szene
+  VN.SCENE_ACTIONS = ['travel'];
   VN.edgesOf = (s) => {
     const out = [];
     if (s.type === 'story') {
@@ -355,16 +356,23 @@
       // Hub-Dialoge (Timeline-Szene über dem Hub) und der Weg zurück
       for (const ev of s.events || []) if (ev.mode === 'scene' && ev.scene) out.push({ to: ev.scene, label: '💬 ' + (VN.scene(ev.scene) || {}).name, kind: 'event', ev });
     }
+    // Aktionen, die zu einer Szene bringen (z. B. „📍 Zu Ort gehen“), zählen als Weg
+    const walk = (o, d) => { if (!o || typeof o !== 'object' || d > 12) return; if (Array.isArray(o)) { for (const x of o) walk(x, d + 1); return; } if (o.type && VN.SCENE_ACTIONS.includes(o.type) && o.scene) out.push({ to: o.scene, label: '📍', kind: 'action' }); for (const k in o) if (k !== 'tracks' && o[k] && typeof o[k] === 'object') walk(o[k], d + 1); };
+    if (s.type === 'story') for (const k of Object.keys(s.tracks || {})) walk(s.tracks[k], 0); else { walk(s.objects, 0); walk(s.events, 0); }
     if (s.type === 'story' && s.next === '@return') {
       for (const h of VN.project.scenes) if (h.type === 'hub' && ((h.events || []).some((ev) => ev.mode === 'scene' && ev.scene === s.id) || (h.objects || []).some((o) => o.target === s.id))) out.push({ to: h.id, label: 'zurück', kind: 'back' });
     }
     return out.filter((e) => VN.scene(e.to));
   };
 
+  // Weitere Einstiege außer der Startszene (0.7.6): z. B. Orte der Weltkarte, die man per Reise erreicht.
+  // Systeme hängen sich hier an (VN.reachRoots.push(() => [ids])).
+  VN.reachRoots = VN.reachRoots || [];
   VN.reachable = () => {
     const seen = new Set();
     const start = VN.scene(VN.project.startScene) ? VN.project.startScene : (VN.project.scenes[0] && VN.project.scenes[0].id);
     const q = start ? [start] : [];
+    for (const fn of VN.reachRoots) { try { for (const id of fn() || []) if (VN.scene(id)) q.push(id); } catch (e) { /* egal */ } }
     while (q.length) {
       const id = q.shift();
       if (seen.has(id)) continue;
@@ -403,6 +411,7 @@
     const n = VN.newStoryScene(name || (VN.t('Hub-Dialog') + ' · ' + hub.name));
     n.next = '@return';
     n.overHub = true;
+    n.hubOwner = hub.id;
     n.beats = 2;
     n.tracks.dialog.push({ id: VN.uid('c'), start: 0, len: 1, speaker: '', color: '#ffffff', text: VN.t('Neuer Text …'), speed: 40, actions: [] });
     n.tracks.dialog.push({ id: VN.uid('c'), start: 1, len: 1, speaker: '', color: '#ffffff', text: VN.t('Neuer Text …'), speed: 40, actions: [] });

@@ -86,7 +86,7 @@
             el('button', { class: 'btn primary', onclick: () => AnimEd.create('idle') }, '+ Idle-Animation'),
             el('button', { class: 'btn', onclick: () => AnimEd.create('gesture') }, '+ Geste'),
             el('button', { class: 'btn', onclick: () => AnimEd.create('scene') }, '+ Zwischensequenz')),
-          el('div', { class: 'muted small' }, 'Figuren brauchen dafür Bones (Reiter „Figuren“ → „Bones & Blinzeln“).')));
+          el('div', { class: 'muted small' }, 'Figuren brauchen dafür Bones (Reiter „Figuren“ → „Bones & Blinzeln“) – oder du nimmst eine Gliederpuppe aus Körperteilen (Reiter „Figuren“ → „Gliederpuppen“).')));
         return;
       }
       const t = Math.max(0, Math.min(a.dur, ui().animT || 0));
@@ -117,7 +117,7 @@
 
     // Bühne zeichnen (läuft, solange die Ansicht offen ist)
     async startStage(a, stage, canvas, svg) {
-      const key = JSON.stringify([a.id, a.bg, (a.actors || []).map((x) => x.asset)]);
+      const key = JSON.stringify([a.id, a.bg, (a.actors || []).map((x) => [x.asset, x.puppet, x.puppet && window.Puppet && Puppet.get(x.puppet) ? Puppet.get(x.puppet).parts.map((p) => [p.asset, p.bones]) : null])]);
       if (AnimEd._scKey !== key) { AnimEd._scKey = key; AnimEd._sc = null; AnimEd._scP = Anim.build(a).then((sc) => { if (AnimEd._scKey === key) AnimEd._sc = sc; return sc; }); }
       const sc = AnimEd._sc || await AnimEd._scP;
       if (!sc || !canvas.isConnected) return;
@@ -162,6 +162,7 @@
       const [bx, by] = m.base;
       const mk = (tag, at) => { const n = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(at)) n.setAttribute(k, v); svg.appendChild(n); return n; };
       if (a.type === 'scene') mk('circle', { cx: bx, cy: by, r: 7, fill: 'none', stroke: '#8fc3f0', 'stroke-width': 2, 'stroke-dasharray': '3 2' });
+      if (m.it.pup) { AnimEd.drawPuppet(mk, m, actor); return; }
       if (!m.map || !m.it.inst) return;
       AnimEd._joints = [];
       const angs = Anim.angles(actor, ui().animT || 0);
@@ -178,12 +179,26 @@
     },
 
     bindStage(stage, svg, sc, a) {
+      stage.ondblclick = (e) => {
+        // Gliederpuppe: Doppelklick auf ein Teil = festpinnen / lösen
+        const actor = actorOf(a);
+        if (!actor || !actor.puppet) return;
+        const r = svg.getBoundingClientRect();
+        const kx = (svg.viewBox.baseVal && svg.viewBox.baseVal.width ? svg.viewBox.baseVal.width / r.width : 1);
+        const hit = AnimEd.pupHit(actor, (e.clientX - r.left) * kx, (e.clientY - r.top) * kx);
+        if (!hit || hit.kind !== 'part') return;
+        const pup = Puppet.get(actor.puppet), part = Puppet.part(pup, hit.pid);
+        if (!part || !part.parent) return;
+        VN.mutate(() => { actor.pins = actor.pins || {}; if (actor.pins[part.id]) delete actor.pins[part.id]; else actor.pins[part.id] = true; });
+        VN.toast(actor.pins[part.id] ? VN.tf('„{name}“ festgepinnt', { name: part.name }) : VN.tf('„{name}“ gelöst', { name: part.name }));
+      };
       stage.onmousedown = (e) => {
         if (e.button !== 0) return;
         const r = svg.getBoundingClientRect();
         const kx = (svg.viewBox.baseVal && svg.viewBox.baseVal.width ? svg.viewBox.baseVal.width / r.width : 1);
         const px = (e.clientX - r.left) * kx, py = (e.clientY - r.top) * kx;
         const actor = actorOf(a);
+        if (actor && actor.puppet && AnimEd.pupDown(e, px, py, r, kx, a, actor)) return;
         const hit = (AnimEd._joints || []).slice().reverse().find((j) => Math.hypot(j.tx - px, j.ty - py) < 12);
         const t = ui().animT || 0;
         if (hit && actor) {
@@ -235,7 +250,11 @@
     rows(a) {
       const actor = actorOf(a);
       const rows = [];
-      if (actor) {
+      const pup = actor && actor.puppet && window.Puppet && Puppet.get(actor.puppet);
+      if (pup) {
+        rows.push({ id: 'move', label: 'Bewegung', keys: actor.move || (actor.move = []), color: '#8fc3f0' });
+        for (const p of pup.parts) rows.push({ id: 'part:' + p.id, label: p.name + ((actor.pins || {})[p.id] ? ' 📌' : ''), keys: (actor.parts || {})[p.id] || [], part: p.id, color: '#e86aa0' });
+      } else if (actor) {
         rows.push({ id: 'move', label: 'Bewegung', keys: actor.move || (actor.move = []), color: '#8fc3f0' });
         const rig = rigOf(actor);
         const names = rig ? rig.bones.map((b) => b.name) : Object.keys(actor.bones || {});
@@ -269,21 +288,22 @@
         const lane = el('div', { class: 'tl-lane an-lane', style: { width: W + 'px', backgroundImage: `repeating-linear-gradient(90deg, #22242b 0 1px, transparent 1px ${PX / 2}px)` } });
         row.keys.forEach((k, i) => {
           const sel = ui().animKey && ui().animKey.row === row.id && Math.abs(ui().animKey.t - k.t) < 0.001;
-          const d = el('div', { class: 'an-key' + (sel ? ' sel' : ''), title: k.t.toFixed(2) + ' s' + (k.a != null ? ' · ' + k.a + '°' : ''), style: { left: k.t * PX + 'px', background: row.color } });
+          const d = el('div', { class: 'an-key' + (sel ? ' sel' : ''), title: k.t.toFixed(2) + ' s' + (k.a != null ? ' · ' + k.a + '°' : '') + (k.r != null ? ' · ' + Math.round(k.r * 10) / 10 + '°' : ''), style: { left: k.t * PX + 'px', background: row.color } });
           d.addEventListener('mousedown', (e) => {
             e.stopPropagation();
             if (e.button !== 0) return;
             const t0 = k.t;
             ui().animKey = { row: row.id, t: k.t };
             if (row.bone) ui().animBone = row.bone;
+            if (row.part) ui().animPart = row.part;
             VN.drag(e, (dx) => { k.t = Math.max(0, Math.min(a.dur, Math.round((t0 + dx / PX) * 20) / 20)); d.style.left = k.t * PX + 'px'; },
               (dx, dy, moved) => { if (!moved) { ui().animT = k.t; VN.render(); return; } const nt = k.t; k.t = t0; VN.mutate(() => { k.t = nt; row.keys.sort((x, y) => x.t - y.t); ui().animKey = { row: row.id, t: nt }; ui().animT = nt; }); });
           });
           d.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); VN.mutate(() => { row.keys.splice(row.keys.indexOf(k), 1); ui().animKey = null; }); });
           lane.appendChild(d);
         });
-        lane.addEventListener('mousedown', (e) => { ui().animPlay = false; if (row.bone) ui().animBone = row.bone; scrub(e, lane); });
-        inner.appendChild(el('div', { class: 'tl-row an-row' + (row.bone && ui().animBone === row.bone ? ' sel' : '') },
+        lane.addEventListener('mousedown', (e) => { ui().animPlay = false; if (row.bone) ui().animBone = row.bone; if (row.part) ui().animPart = row.part; scrub(e, lane); });
+        inner.appendChild(el('div', { class: 'tl-row an-row' + ((row.bone && ui().animBone === row.bone) || (row.part && ui().animPart === row.part) ? ' sel' : '') },
           el('div', { class: 'tl-head' }, el('span', { class: 'sw', style: { background: row.color } }), row.label), lane));
       }
       // Audiospur
@@ -307,10 +327,144 @@
       tl.appendChild(scroll);
       return tl;
     },
+    // ---------- Gliederpuppen (0.7.6): Puppenspiel ----------
+    // Griffe: Pin (Gelenk) und Endpunkt je Teil, Koordinatenpfeile am Wurzel-Teil
+    drawPuppet(mk, m, actor) {
+      const pup = Puppet.get(actor.puppet);
+      if (!pup || !m.it.pmats) return;
+      const ap = Puppet.m.ap, ms = m.it.pmats;
+      const H = { parts: [], gizmo: null, actor: actor.id };
+      for (const p of pup.parts) {
+        const M = ms[p.id];
+        if (!M) continue;
+        const [px, py] = ap(M, p.ax, p.ay), [tx, ty] = ap(M, ...Puppet.tip(p));
+        const par = p.parent && ms[p.parent] && Puppet.part(pup, p.parent);
+        if (par) { const [qx, qy] = ap(ms[par.id], par.ax, par.ay); mk('line', { x1: qx, y1: qy, x2: px, y2: py, stroke: 'rgba(255,110,110,0.45)', 'stroke-width': 2 }); }
+        const sel = ui().animPart === p.id;
+        const keyed = ((actor.parts || {})[p.id] || []).length;
+        const pinned = (actor.pins || {})[p.id];
+        mk('line', { x1: px, y1: py, x2: tx, y2: ty, stroke: sel ? '#e8a43a' : keyed ? '#f0a0c8' : 'rgba(255,255,255,0.55)', 'stroke-width': sel ? 3.5 : 2, 'stroke-linecap': 'round', 'stroke-dasharray': sel ? '' : '4 3' });
+        mk('circle', { cx: px, cy: py, r: 4, fill: par ? '#ff6e6e' : '#e8a43a', stroke: '#fff', 'stroke-width': 1.5 });
+        if (pinned) mk('rect', { x: tx - 6, y: ty - 6, width: 12, height: 12, fill: '#4fb3c8', stroke: '#fff', 'stroke-width': 2 });
+        else mk('circle', { cx: tx, cy: ty, r: sel ? 7.5 : 6, fill: sel ? '#e8a43a' : keyed ? '#e86aa0' : '#2b2e38', stroke: '#fff', 'stroke-width': 2, class: 'an-handle' });
+        H.parts.push({ pid: p.id, px, py, tx, ty });
+      }
+      // Koordinatenpfeile am ersten Wurzel-Teil: ganze Figur verschieben (X, Y oder frei)
+      const root = Puppet.roots(pup)[0];
+      if (root && ms[root.id]) {
+        const [gx, gy] = ap(ms[root.id], root.ax, root.ay);
+        const L = 46;
+        mk('line', { x1: gx, y1: gy, x2: gx + L, y2: gy, stroke: '#ff5a5a', 'stroke-width': 3 });
+        mk('path', { d: `M${gx + L + 9},${gy} L${gx + L - 2},${gy - 6} L${gx + L - 2},${gy + 6} Z`, fill: '#ff5a5a' });
+        mk('line', { x1: gx, y1: gy, x2: gx, y2: gy - L, stroke: '#5ad06a', 'stroke-width': 3 });
+        mk('path', { d: `M${gx},${gy - L - 9} L${gx - 6},${gy - L + 2} L${gx + 6},${gy - L + 2} Z`, fill: '#5ad06a' });
+        mk('rect', { x: gx - 7, y: gy - 7, width: 14, height: 14, fill: '#e8c84a', stroke: '#fff', 'stroke-width': 2 });
+        H.gizmo = { x: gx, y: gy, L, root: root.id };
+      }
+      AnimEd._pupH = H;
+    },
+    // Was liegt unter dem Mauszeiger? Pfeile, Endpunkt-Griff oder Teil
+    pupHit(actor, px, py) {
+      const H = AnimEd._pupH;
+      if (!H || H.actor !== actor.id) return null;
+      const g = H.gizmo;
+      if (g) {
+        if (Math.abs(px - g.x) < 9 && Math.abs(py - g.y) < 9) return { kind: 'move', axis: 'xy', pid: g.root };
+        if (px > g.x + 8 && px < g.x + g.L + 12 && Math.abs(py - g.y) < 7) return { kind: 'move', axis: 'x', pid: g.root };
+        if (py < g.y - 8 && py > g.y - g.L - 12 && Math.abs(px - g.x) < 7) return { kind: 'move', axis: 'y', pid: g.root };
+      }
+      const h = H.parts.slice().reverse().find((x) => Math.hypot(x.tx - px, x.ty - py) < 11);
+      if (h) return { kind: 'part', pid: h.pid, grab: 'tip' };
+      // Treffer auf dem Bild eines Teils (oberstes zuerst)
+      const pup = Puppet.get(actor.puppet);
+      const m = (AnimEd._maps || []).find((x) => x.it.actor === actor);
+      if (!pup || !m || !m.it.pmats) return null;
+      for (let i = pup.parts.length - 1; i >= 0; i--) {
+        const p = pup.parts[i], M = m.it.pmats[p.id];
+        if (!M || p.hidden) continue;
+        const [u, v] = Puppet.m.ap(Puppet.m.inv(M), px, py);
+        if (u >= 0 && v >= 0 && u <= p.w && v <= p.h) return { kind: 'part', pid: p.id, grab: 'body' };
+      }
+      return null;
+    },
+    pupDown(e, px, py, r, kx, a, actor) {
+      const hit = AnimEd.pupHit(actor, px, py);
+      if (!hit) return false;
+      const pup = Puppet.get(actor.puppet);
+      const m = (AnimEd._maps || []).find((x) => x.it.actor === actor);
+      if (!pup || !m || !m.it.pbase) return false;
+      e.preventDefault();
+      const t = ui().animT || 0;
+      ui().animPart = hit.pid;
+      const toPup = (x, y) => Puppet.m.ap(Puppet.m.inv(m.it.pbase), x, y);
+      const p0 = toPup(px, py);
+      const pose0 = Puppet.poseAt(actor, t);
+      const part = Puppet.part(pup, hit.pid);
+      const mats0 = Puppet.solve(pup, pose0, null, null, 0);
+      const local = Puppet.m.ap(Puppet.m.inv(mats0[part.id]), p0[0], p0[1]);
+      const piv = Puppet.m.ap(mats0[part.id], part.ax, part.ay);
+      const a0 = Math.atan2(p0[1] - piv[1], p0[0] - piv[0]);
+      const pins = Object.keys(actor.pins || {}).filter((k) => actor.pins[k] && k !== part.id && Puppet.part(pup, k));
+      const fixed = {}; for (const pid of pins) fixed[pid] = Puppet.tipWorld(pup, pose0, pid);
+      const before = JSON.stringify(actor.parts || {});
+      actor.parts = actor.parts || {};
+      const write = (pose) => {
+        for (const p of pup.parts) {
+          const n = pose[p.id], o = pose0[p.id] || { r: 0, x: 0, y: 0 };
+          if (!n) continue;
+          if (Math.abs((n.r || 0) - (o.r || 0)) < 0.05 && Math.abs((n.x || 0) - (o.x || 0)) < 0.05 && Math.abs((n.y || 0) - (o.y || 0)) < 0.05 && !(actor.parts[p.id] || []).some((k) => Math.abs(k.t - t) < 0.03)) continue;
+          AnimEd.setKey(actor.parts[p.id] = actor.parts[p.id] || [], t, { r: Math.round((n.r || 0) * 10) / 10, x: Math.round((n.x || 0) * 10) / 10, y: Math.round((n.y || 0) * 10) / 10 });
+        }
+      };
+      VN.drag(e, (dx, dy, ev) => {
+        const [qx, qy] = toPup((ev.clientX - r.left) * kx, (ev.clientY - r.top) * kx);
+        const pose = JSON.parse(JSON.stringify(pose0));
+        const ps = pose[part.id] || (pose[part.id] = { r: 0, x: 0, y: 0 });
+        if (hit.kind === 'move' || (!part.parent && !ev.shiftKey && hit.grab === 'body')) {
+          // Koordinatenpfeile: ganze Figur bewegen (nur X, nur Y oder frei)
+          if (hit.axis !== 'y') ps.x = (ps.x || 0) + qx - p0[0];
+          if (hit.axis !== 'x') ps.y = (ps.y || 0) + qy - p0[1];
+        } else if (ev.shiftKey) Puppet.ik(pup, pose, part.id, local, [qx, qy], { links: 3 });
+        else { let d = (Math.atan2(qy - piv[1], qx - piv[0]) - a0) * 180 / Math.PI; if (d > 180) d -= 360; if (d < -180) d += 360; ps.r = (ps.r || 0) + d; }
+        Puppet.keepPins(pup, pose, pins, fixed);
+        write(pose);
+      }, (dx, dy, moved) => {
+        if (!moved) { VN.render(); return; }
+        const after = JSON.stringify(actor.parts);
+        actor.parts = JSON.parse(before);
+        VN.mutate(() => { actor.parts = JSON.parse(after); ui().animKey = { row: 'part:' + part.id, t }; });
+      });
+      return true;
+    },
+    // Darsteller wählen: Bild (mit oder ohne Bones) oder Gliederpuppe
+    actorPick(ac) {
+      const s = el('select', { onchange: (e) => VN.mutate(() => {
+        const v = e.target.value;
+        if (v.startsWith('pup:')) { ac.puppet = v.slice(4); ac.parts = ac.parts || {}; } else { delete ac.puppet; ac.asset = v.slice(4) || null; }
+      }) });
+      const pups = (VN.project.puppets || []);
+      if (pups.length) { const g = el('optgroup', { label: VN.t('Gliederpuppen') }); for (const p of pups) g.appendChild(el('option', { value: 'pup:' + p.id, selected: ac.puppet === p.id }, '🦴 ' + p.name)); s.appendChild(g); }
+      const g2 = el('optgroup', { label: VN.t('Bilder') });
+      g2.appendChild(el('option', { value: 'img:', selected: !ac.puppet && !ac.asset }, VN.t('— kein Bild —')));
+      for (const im of VN.assetsOf('image')) g2.appendChild(el('option', { value: 'img:' + im.id, selected: !ac.puppet && ac.asset === im.id }, im.name + (VN.project.rigs[im.id] ? ' 🦴' : '')));
+      s.appendChild(g2);
+      return s;
+    },
+    puppetCard(a, actor, t) {
+      const pup = Puppet.get(actor.puppet);
+      const pins = Object.keys(actor.pins || {}).filter((k) => actor.pins[k] && Puppet.part(pup, k));
+      return el('div', { class: 'pup-anim-help' },
+        el('div', { class: 'muted small' }, 'Puppenspiel: Teil oder Endpunkt ziehen = um den Pin drehen · Umschalt + ziehen = IK (Kette folgt der Maus) · Pfeile (rot X, grün Y, gelb frei) = ganze Figur verschieben · Doppelklick auf ein Teil = festpinnen (bleibt an Ort und Stelle, wenn sich der Körper bewegt).'),
+        pins.length ? el('div', { class: 'row gap4', style: { flexWrap: 'wrap' } }, el('span', { class: 'muted small' }, '📌'), ...pins.map((pid) => el('button', { class: 'btn tiny', title: VN.t('Lösen'), onclick: () => VN.mutate(() => { delete actor.pins[pid]; }) }, Puppet.part(pup, pid).name + ' ×'))) : null,
+        el('div', { class: 'row gap8', style: { flexWrap: 'wrap' } },
+          el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { actor.parts = actor.parts || {}; for (const p of pup.parts) AnimEd.setKey(actor.parts[p.id] = actor.parts[p.id] || [], t, { r: 0, x: 0, y: 0 }); }) }, '↺ Grundpose bei ' + t.toFixed(2) + ' s'),
+          el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const ps = Puppet.poseAt(actor, t); actor.parts = actor.parts || {}; for (const p of pup.parts) { const v = ps[p.id] || { r: 0, x: 0, y: 0 }; AnimEd.setKey(actor.parts[p.id] = actor.parts[p.id] || [], t, { r: v.r, x: v.x, y: v.y }); } }) }, '◆ Ganze Pose als Keyframe'),
+          el('button', { class: 'btn tiny', onclick: () => { VN.ui.view = 'bones'; VN.ui.figSub = 'puppet'; VN.ui.pupSel = pup.id; VN.render(); } }, '✏ Puppe bearbeiten')));
+    },
     movePlayhead(t) { const p = document.querySelector('.an-playhead'); if (p) p.style.left = (150 + t * PX) + 'px'; },
     actorSelect(a) {
       const s = el('select', { class: 'small-input', onchange: (e) => { ui().animActor = e.target.value; ui().animBone = null; VN.render(); } });
-      for (const ac of a.actors) { const o = el('option', { value: ac.id }, (VN.asset(ac.asset) || {}).name || 'Darsteller'); if (ac === actorOf(a)) o.selected = true; s.appendChild(o); }
+      for (const ac of a.actors) { const o = el('option', { value: ac.id }, ac.puppet && Puppet.get(ac.puppet) ? '🦴 ' + Puppet.get(ac.puppet).name : (VN.asset(ac.asset) || {}).name || 'Darsteller'); if (ac === actorOf(a)) o.selected = true; s.appendChild(o); }
       return s;
     },
 
@@ -334,10 +488,11 @@
       const acCard = el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, a.type === 'scene' ? 'Darsteller' : 'Figur'));
       for (const ac of a.actors) {
         const on = ac === actor;
+        const pupA = ac.puppet && window.Puppet && Puppet.get(ac.puppet);
         acCard.appendChild(el('div', { class: 'logic-row' + (on ? ' an-ac-sel' : ''), onclick: () => { ui().animActor = ac.id; VN.render(); } },
-          el('span', { class: 'mini-thumb', style: { backgroundImage: `url("${VN.assetUrl(ac.asset)}")` } }),
-          (() => { const s = VN.assetSelect('image', ac.asset, (v) => VN.mutate(() => { ac.asset = v; })); s.onclick = (e) => e.stopPropagation(); return s; })(),
-          VN.project.rigs[ac.asset] ? el('span', { class: 'chip green' }, 'Bones') : el('span', { class: 'chip' }, 'ohne Bones'),
+          el('span', { class: 'mini-thumb', style: { backgroundImage: `url("${VN.assetUrl(pupA ? (pupA.parts[0] || {}).asset : ac.asset) || ''}")` } }),
+          (() => { const s = AnimEd.actorPick(ac); s.onclick = (e) => e.stopPropagation(); return s; })(),
+          pupA ? el('span', { class: 'chip green' }, '🦴 ' + VN.t('Puppe')) : VN.project.rigs[ac.asset] ? el('span', { class: 'chip green' }, 'Bones') : el('span', { class: 'chip' }, 'ohne Bones'),
           a.type === 'scene' ? el('button', { class: 'btn tiny danger', onclick: (e) => { e.stopPropagation(); VN.mutate(() => { a.actors = a.actors.filter((x) => x !== ac); }); } }, '×') : null));
       }
       if (a.type === 'scene') acCard.appendChild(el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const img = VN.assetsOf('image').find((x) => VN.project.rigs[x.id]) || VN.assetsOf('image')[0]; const ac = { id: VN.uid('ac'), asset: img ? img.id : null, x: 50, y: 0, scale: 100, flip: false, bones: {}, move: [] }; a.actors.push(ac); ui().animActor = ac.id; }) }, '+ Darsteller'));
@@ -347,7 +502,8 @@
           el('div', { class: 'grid2' },
             field('Größe %', el('input', { type: 'number', value: Math.round(pl.scale), onchange: (e) => VN.mutate(() => { if (a.type === 'scene') AnimEd.setKey(actor.move = actor.move || [], t, { scale: Number(e.target.value) }); else actor.scale = Number(e.target.value); }) })),
             el('label', { class: 'check', style: { alignSelf: 'flex-end' } }, el('input', { type: 'checkbox', checked: !!actor.flip, onchange: (e) => VN.mutate(() => { actor.flip = e.target.checked; }) }), 'Spiegeln')),
-          !rig ? el('div', { class: 'muted small' }, 'Diese Figur hat noch keine Bones. ', el('button', { class: 'btn tiny', onclick: () => App.openBones(actor.asset) }, 'Bones einrichten')) : null);
+          !rig && !actor.puppet ? el('div', { class: 'muted small' }, 'Diese Figur hat noch keine Bones. ', el('button', { class: 'btn tiny', onclick: () => App.openBones(actor.asset) }, 'Bones einrichten')) : null);
+        if (actor.puppet && Puppet.get(actor.puppet)) acCard.appendChild(AnimEd.puppetCard(a, actor, t));
       }
       box.appendChild(acCard);
 
@@ -357,7 +513,7 @@
         const row = AnimEd.rows(a).find((r) => r.id === kSel.row);
         const k = row && row.keys.find((x) => Math.abs(x.t - kSel.t) < 0.001);
         if (k) {
-          const flds = row.id === 'move' ? [['x', 'X %'], ['y', 'Höhe %'], ['scale', 'Größe %'], ['rot', 'Drehung °'], ['opacity', 'Deckkraft']] : row.id === 'cam' ? [['zoom', 'Zoom %'], ['panX', 'Schwenk X'], ['panY', 'Schwenk Y'], ['rot', 'Drehung °']] : [['a', 'Winkel °']];
+          const flds = row.id === 'move' ? [['x', 'X %'], ['y', 'Höhe %'], ['scale', 'Größe %'], ['rot', 'Drehung °'], ['opacity', 'Deckkraft']] : row.id === 'cam' ? [['zoom', 'Zoom %'], ['panX', 'Schwenk X'], ['panY', 'Schwenk Y'], ['rot', 'Drehung °']] : row.part ? [['r', 'Drehung °'], ['x', 'Versatz X'], ['y', 'Versatz Y']] : [['a', 'Winkel °']];
           box.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, '◆ Keyframe · ' + row.label),
             el('div', { class: 'kf-grid' },
               el('label', null, el('span', { class: 'muted small' }, 'Zeit s'), el('input', { type: 'number', step: 0.05, value: k.t, onchange: (e) => VN.mutate(() => { k.t = Math.max(0, Math.min(a.dur, Number(e.target.value))); row.keys.sort((x, y) => x.t - y.t); ui().animKey = { row: row.id, t: k.t }; }) })),

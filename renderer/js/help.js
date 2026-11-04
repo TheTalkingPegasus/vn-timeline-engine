@@ -63,7 +63,7 @@
     const out = [];
     // Szenen
     const reach = VN.reachable();
-    for (const s of p.scenes) if (!reach.has(s.id)) out.push({ level: 'warn', area: 'Pfade', topic: 'unreachable', key: 'unreach:' + s.id, text: VN.tf('Szene „{name}“ ist vom Start aus nicht erreichbar.', { name: s.name }), go: () => App.openScene(s.id),
+    for (const s of p.scenes) if (!reach.has(s.id)) out.push({ level: 'warn', area: 'Pfade', topic: 'unreachable', key: 'unreach:' + s.id, text: VN.tf('Szene „{name}“ wird nirgends betreten – kein Weg vom Start, keine Reise, kein Objekt, keine Aktion führt dorthin.', { name: s.name }), go: () => App.openScene(s.id),
       fixes: [{ label: 'Im Pfade-Plan zeigen', run: () => { VN.ui.view = 'graph'; VN.ui.graphSel = s.id; VN.render(); } }, { label: 'Als Startszene festlegen', run: () => VN.mutate(() => { p.startScene = s.id; }) }] });
     for (const s of p.scenes) {
       if (s.type !== 'story') continue;
@@ -120,8 +120,8 @@
   // ---------- Erklärungen ----------
   Help.topic('unreachable', {
     title: 'Szene nicht erreichbar',
-    what: 'Keine Antwort, kein „Danach weiter zu“, kein Hub-Objekt und keine Aktion führt vom Start aus zu dieser Szene. Spieler sehen sie nie.',
-    why: 'Die Engine verfolgt alle Wege ab der Startszene. Kommt sie nirgends bei dieser Szene an, erscheint die Meldung.',
+    what: 'Keine Antwort, kein „Danach weiter zu“, kein Hub-Objekt, kein Hub-Dialog, keine Reise und keine Aktion führt zu dieser Szene. Spieler sehen sie nie.',
+    why: 'Die Engine verfolgt alle Wege ab der Startszene. Orte der Weltkarte zählen als erreichbar (man reist hin), ebenso alles, was von dort aus weitergeht. Kommt sie trotzdem nirgends bei dieser Szene an, erscheint die Meldung.',
     fix: ['Eine Antwort, ein Hub-Objekt oder „Danach weiter zu“ auf diese Szene zeigen lassen.', 'Oder die Szene als Startszene festlegen, wenn das Spiel hier beginnen soll.', 'Ist es eine Szene, die du nur zum Testen angelegt hast, kannst du die Meldung ausblenden.'],
     examples: [{ title: 'Szene an eine Antwort hängen', steps: ['Szene mit der Auswahl öffnen.', 'Auf die Antwort klicken.', 'Rechts bei „Ziel“ die Szene wählen.'] },
       { title: 'Szene von einem Hub aus öffnen', steps: ['Hub-Szene öffnen und ein Objekt anlegen (z. B. eine Tür).', 'Bei „Beim Klick“ die Aktion „Zu Szene springen“ wählen.', 'Die Szene auswählen.'] }],

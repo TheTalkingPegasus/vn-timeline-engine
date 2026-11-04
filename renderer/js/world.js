@@ -94,6 +94,11 @@
     return out;
   };
 
+  // Orte sind über die Weltkarte erreichbar, sobald sie freigeschaltet werden (ab Start oder per Aktion) –
+  // sie gelten also nicht als „vom Start aus nicht erreichbar“. Ob ein Ort nie freigeschaltet wird, meldet die Welt-Prüfung.
+  VN.reachRoots = VN.reachRoots || [];
+  VN.reachRoots.push(() => (W.on() ? W.locs().map((s) => s.id) : []));
+
   // ---------- Pfade: Ereignisse und Reisen als Verbindungen ----------
   const baseEdges = VN.edgesOf;
   VN.edgesOf = (s) => {

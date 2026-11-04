@@ -162,7 +162,7 @@
         box.appendChild(Tools.videoInspector(s, c, t, assetField, timing));
       } else if (tb === 'char') {
         box.append(Tools.figureFields(s, c),
-          c.set ? null : assetField('Figur-Bild', 'image', c.asset, set(c, 'asset')),
+          c.set || c.puppet ? null : assetField('Figur-Bild', 'image', c.asset, set(c, 'asset')),
           field('Name der Figur (für Sprecher)', text(c.name, set(c, 'name'), (VN.asset(c.asset) || {}).name || 'z. B. Ray')),
           range('Position', c.x != null ? c.x : 50, 0, 100, 1, (v) => Math.round(v * 10) / 10 + ' %', set(c, 'x'), { free: true, lo: -50, hi: 150 }),
           range('Höhe', c.y || 0, -40, 60, 1, (v) => (v > 0 ? '+' : '') + Math.round(v * 10) / 10 + ' %', set(c, 'y'), { free: true, lo: -100, hi: 100 }),

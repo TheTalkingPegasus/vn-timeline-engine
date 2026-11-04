@@ -522,7 +522,7 @@
         const img = node.querySelector('img'), cv = node.querySelector('canvas');
         const sr = stage.getBoundingClientRect();
         let r0 = (img || node).getBoundingClientRect();
-        if (!img && cv) { const cr = cv.getBoundingClientRect(), nr0 = node.getBoundingClientRect(), w = cr.width * nr0.height / Math.max(1, cr.height); r0 = { left: cr.left + (cr.width - w) / 2, right: cr.left + (cr.width + w) / 2, top: nr0.top, bottom: nr0.bottom, width: w }; }
+        if (!img && cv) { const cr = cv.getBoundingClientRect(), nr0 = node.getBoundingClientRect(), w = cv._pup && window.Puppet ? cr.width * Puppet.widthShare(cv._pup.pup.id) : cr.width * nr0.height / Math.max(1, cr.height); r0 = { left: cr.left + (cr.width - w) / 2, right: cr.left + (cr.width + w) / 2, top: nr0.top, bottom: nr0.bottom, width: w }; }
         if (!r0.width || !sr.width) return;
         const L = Math.max(r0.left, sr.left + 2), T = Math.max(r0.top, sr.top + 2), R = Math.min(r0.right, sr.right - 2), B = Math.min(r0.bottom, sr.bottom - 2);
         if (R - L < 6 || B - T < 6) return;

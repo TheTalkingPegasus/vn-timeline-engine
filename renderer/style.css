@@ -1884,3 +1884,20 @@ body.cbsim-tritan #center .stage, body.cbsim-tritan #player { filter: url(#vn-cb
 .a11y-opt input { margin-top: 3px; }
 .ai-modal { width: 640px; }
 .ai-pre { max-height: 300px; overflow: auto; background: var(--bg); border: 1px solid var(--line2); border-radius: 8px; padding: 10px; font-size: 11px; white-space: pre-wrap; margin: 0; color: var(--muted2); }
+/* Gliederpuppen (0.7.6) */
+.pup-wrap { display: flex; flex: 1; min-height: 0; }
+.pup-list { width: 200px; flex: none; border-right: 1px solid var(--line); padding: 10px; display: flex; flex-direction: column; gap: 6px; overflow: auto; }
+.pup-main { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
+.pup-stage-wrap { flex: 1; min-height: 240px; margin: 0 14px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background-color: #17181d; background-image: linear-gradient(45deg, #1d1e24 25%, transparent 25%, transparent 75%, #1d1e24 75%), linear-gradient(45deg, #1d1e24 25%, transparent 25%, transparent 75%, #1d1e24 75%); background-size: 24px 24px; background-position: 0 0, 12px 12px; }
+.pup-stage-wrap.over { box-shadow: inset 0 0 0 2px var(--accent); }
+.pup-ed-canvas { display: block; width: 100%; height: 100%; outline: none; cursor: default; }
+.pup-help { text-align: center; padding: 8px 14px 12px; }
+.pup-layers { gap: 4px; }
+.pup-layer { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border-radius: 6px; cursor: pointer; }
+.pup-layer:hover { background: var(--bg3); }
+.pup-layer.on { background: var(--bg4); outline: 1px solid var(--accent); }
+.pup-layer .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pup-layer .btn.tiny { padding: 1px 5px; }
+.pup-indent { flex: none; border-left: 1px dotted var(--line2); align-self: stretch; }
+.pup-anim-help { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.pup-canvas { position: absolute; left: 50%; display: block; width: auto; pointer-events: none; }
