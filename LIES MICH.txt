@@ -21,6 +21,10 @@ NEU IN 0.9.7 · Gepackte Spieldateien
   „mods“ neben dem Spiel ersetzt die gleichnamige Datei; dort liegt eine Liste aller Dateien für Modder).
 - Funktioniert für Windows- und Web-Spiele (auch in der Browser-Version). Gepackte Web-Spiele brauchen einen Webserver
   (z. B. itch.io) und zeigen beim Laden einen Fortschritt. Große Videos und Musik werden aus dem Paket gestreamt.
+- Entwickler-Konsole: Befehle funktionieren auch auf Englisch (help, jump, set …); in englischer, spanischer oder
+  japanischer Oberfläche zeigt „help“ diese Namen.
+- Übersetzungen korrigiert: japanischer Tageszähler („1日目“), einheitlich links/rechts bei Knochen auf Spanisch,
+  ein Begriff für „Stufe“ auf Japanisch.
 
 NEU IN 0.9.6 · Web-Version: die Engine im Browser ausprobieren · Spanisch und Japanisch
 - Die Oberfläche gibt es jetzt auch auf Spanisch und Japanisch (Español / 日本語 auf dem Startbildschirm oder unter

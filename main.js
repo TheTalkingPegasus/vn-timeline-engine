@@ -248,6 +248,15 @@ function createWindow() {
       // Auf das Hauptmenü warten (Start-Logos können dauern)
       for (let i = 0; i < 60; i++) { await new Promise((r) => setTimeout(r, 500)); if (await win.webContents.executeJavaScript(`!!document.querySelector('.mm-btn')`)) break; }
       await new Promise((r) => setTimeout(r, 800)); await shot('g1_menu');
+      // Prüfung: Datei ganz und als Bereich (Range) über vnasset abrufen, Prüfsumme ausgeben
+      if (process.env.VN_GAMEFETCH) console.log('GAMEFETCH', await win.webContents.executeJavaScript(`(async () => {
+        const u = 'vnasset://project/' + ${JSON.stringify(process.env.VN_GAMEFETCH)}.split('/').map(encodeURIComponent).join('/');
+        const sum = (b) => { let h = 0; for (const x of new Uint8Array(b)) h = (h * 31 + x) >>> 0; return h; };
+        const a = await (await fetch(u)).arrayBuffer();
+        const r = await fetch(u, { headers: { Range: 'bytes=1000-2999' } });
+        const b = await r.arrayBuffer();
+        return JSON.stringify({ full: a.byteLength, fullSum: sum(a), status: r.status, range: b.byteLength, rangeSum: sum(b) });
+      })()`));
       await win.webContents.executeJavaScript(`(document.querySelector('.mm-btn') || document.body).click()`);
       await new Promise((r) => setTimeout(r, 2500)); await shot('g2_game');
       console.log('GAME ERRORS', await win.webContents.executeJavaScript('JSON.stringify(window.__vnErrors||[])'));
@@ -791,6 +800,7 @@ app.whenReady().then(async () => {
     fs.mkdirSync(tmp, { recursive: true });
     const data = createDemoProject(tmp);
     data.export = Object.assign({}, data.export || {}, { pack: process.env.VN_PACK_MODE || 'packmods' });
+    if (process.env.VN_PACK_BIG) { const big = Buffer.alloc(5 * 1024 * 1024 + 123); for (let i = 0; i < big.length; i++) big[i] = (i * 7 + (i >> 9)) & 255; fs.writeFileSync(path.join(tmp, 'assets', 'big.mp4'), big); data.assets.push({ id: 'bigtest', name: 'big', kind: 'video', file: 'assets/big.mp4' }); }
     projectDir = tmp;
     await copyGameFiles(path.join(process.env.VN_PACK_TEST, 'game'), data, [], { modsDir: path.join(process.env.VN_PACK_TEST, 'mods') });
     await exportWebTo(path.join(process.env.VN_PACK_TEST, 'web'), data, []);
