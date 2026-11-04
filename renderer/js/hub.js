@@ -58,6 +58,8 @@
       }
       else stage.appendChild(el('div', { class: 'placeholder', style: { inset: '6%', textAlign: 'center' } }, 'Kein Hintergrund – rechts einen wählen'));
 
+      // Partikel des Hubs als Vorschau (0.9.5)
+      if ((s.fx || []).some((c) => c.particles)) { const clip = el('div', { style: { position: 'absolute', inset: '0', overflow: 'hidden', pointerEvents: 'none', zIndex: '3' } }); for (const c of s.fx) if (c.particles) clip.appendChild(Stage.fxEl(c)); stage.appendChild(clip); }
       for (const o of s.objects) stage.appendChild(Hub.objEl(s, o, stage));
 
       stage.addEventListener('mousedown', (e) => {

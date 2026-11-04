@@ -242,6 +242,8 @@
     }
   };
 
+  // Partikel eines Hubs (0.9.5): Regen, Schnee, Glühwürmchen … – optional nur unter Bedingungen (Tageszeit, Jahreszeit …)
+  const hubFx = (s) => (s && s.type === 'hub' ? (s.fx || []).filter((c) => c.particles && VN.checkConds(c.conds || [], run.rs)).map((c) => ['hub:' + c.id, c]) : []);
   const showFx = (clip) => {
     const id = clip ? clip.id : null;
     if (run.fx && run.fx.id === id) return;
@@ -515,7 +517,7 @@
     if (gains.time) {
       // Zeit vergangen: Hub-Hintergrund der neuen Tageszeit, Tageszeit-Färbung, Ambient-Sounds (0.8.0)
       const sc = VN.scene(run.scene);
-      if (sc && sc.type === 'hub') { run.bgKey = null; showBg(VN.Life ? VN.Life.hubBg(sc, run.rs) : sc.bg, 'fade', 1.4, sc.bgLook); }
+      if (sc && sc.type === 'hub') { run.bgKey = null; showBg(VN.Life ? VN.Life.hubBg(sc, run.rs) : sc.bg, 'fade', 1.4, sc.bgLook); if (run.scene === sc.id) showFxExtra(hubFx(sc)); }
       else if (run.bg && run.bgClip !== undefined) { const b = run.bg, l = run.bgClip; run.bgKey = null; showBg(b, 'fade', 1.4, l); }
       if (sc) showAmbient([...(sc.type === 'story' ? Stage.state(sc, run.beat).musicX || [] : []), ...ambNow(sc)]);
     }
@@ -705,7 +707,7 @@
     if (window.VNPlugin) VNPlugin.hook('onSceneEnter', s, ctx());
     if (window.Perf) Perf.preloadAround(id);
     if (!opts.restored) autosave();
-    if (s.type === 'hub') { showAmbient(ambNow(s)); showFxExtra([]); return showHub(s, true, !!opts.returning); }
+    if (s.type === 'hub') { showAmbient(ambNow(s)); showFxExtra(hubFx(s)); return showHub(s, true, !!opts.returning); }
     // Über dem Hub: Hub-Objekte bleiben sichtbar, aber nicht klickbar. Gehört der Dialog zu einem anderen Hub
     // (Raumwechsel), wird dieser Hub dahinter gezeigt – nicht der alte (0.7.6).
     const owner = s.overHub ? hubOwner(s, fromHub ? prevScene : null) : null;
@@ -783,6 +785,7 @@
   // under: nur Hintergrund und Objekte zeichnen (Hub liegt hinter einem Hub-Dialog), keine Ereignisse
   function showHub(s, entering, returning, under) {
     run.hubShown = s.id;
+    if (!under && run.scene === s.id) showFxExtra(hubFx(s));
     if (under) {
       showBg(VN.Life ? VN.Life.hubBg(s, run.rs) : s.bg, 'fade', 0.6, s.bgLook);
       if (s.music) playMusic({ asset: s.music, vol: 70, loop: true, carry: true, fade: 1 });

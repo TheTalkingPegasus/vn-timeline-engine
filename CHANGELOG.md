@@ -2,7 +2,10 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
-## 0.9.5 – Hard cut for characters
+## 0.9.5 – Particles in hubs, hard cut for characters
+- Hubs can have particles: rain, snow, dust, sparks, petals or fireflies, several at once, with amount, speed, size,
+  wind and colour – optionally only under conditions (e.g. fireflies at night, snow in winter); they change as soon
+  as time passes in the hub. Shown live in the hub editor. Properties of the hub → “Particles”.
 - Fixed: switching a character picture set to “Instant” still showed a short fade from the old picture to the new
   one. The old picture now stays until the new one is ready and is then replaced in the same frame. A character
   whose entrance is “Instant” also disappears instantly.
