@@ -158,6 +158,14 @@
         rng('Ecken', m.btn.radius != null ? m.btn.radius : 1.4, 0, 5, 0.1, (v) => v + ' cqh', (v) => { m.btn.radius = v; }),
         field('Hover-Effekt', sel(m.btn.hover || 'glow', [['glow', 'Glühen'], ['grow', 'Vergrößern'], ['fill', 'Füllen'], ['none', 'Keiner']], (v) => { m.btn.hover = v; })),
         el('div', { class: 'hint-box' }, '„Fortsetzen“ lädt den neuesten Spielstand und ist ausgegraut, solange es keinen gibt. „Beenden“ schließt das fertige Spiel, beim Testen geht es zurück zum Editor.'));
+      // Game-Over-Bildschirm (0.8.0): erscheint, wenn ein Minispiel „Verloren → ☠ Game-Over-Bildschirm“ hat
+      const G = p.gameOver = p.gameOver || {};
+      box.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, '☠ Game-Over-Bildschirm'),
+        field('Titel', txt(G.title || 'GAME OVER', (v) => { G.title = v; })),
+        field('Text', txt(G.text || '', (v) => { G.text = v; })),
+        assetField('Hintergrund (optional)', 'image', G.bg, (v) => { G.bg = v; }),
+        el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: G.retry !== false, onchange: (e) => VN.mutate(() => { G.retry = e.target.checked; }) }), 'Knopf „Nochmal versuchen“ (startet die Szene neu)'),
+        el('div', { class: 'muted small' }, 'Wird benutzt, wenn bei einem Minispiel „Verloren → ☠ Game-Over-Bildschirm“ eingestellt ist. Statt dessen kannst du dort auch eine eigene Game-Over-Szene oder einen Hub wählen.')));
       return box;
     }
   });

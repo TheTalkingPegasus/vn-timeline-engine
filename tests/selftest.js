@@ -293,6 +293,28 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
         ok(VN.reachable().has(loc.id), '0.7.6 Pfade: Ort der Weltkarte gilt als nicht erreichbar');
         pp.world.enabled = false;
       }
+      // 0.8.0: Auswahl nach Wahl, Position, Ordner, Jahreszeit, Hub-Hintergrund, Ambient, Sprung-Aktion, Kopieren
+      {
+        ok(VN.afterPick({ afterPick: 'grey' }, {}) === 'grey' && VN.afterPick({ afterPick: 'grey' }, { afterPick: 'hide' }) === 'hide', '0.8.0 Auswahl: „Nach dem Wählen“ falsch');
+        const bx = document.createElement('div'); VN.placeChoices(bx, { chX: 5 });
+        ok(parseFloat(bx.style.left) >= 25, '0.8.0 Auswahl: links verschoben ragt über den Rand ' + bx.style.left);
+        ok(App.folderOf({ file: 'assets/Bilder/Figuren/ray.png' }) === 'Bilder/Figuren' && App.folderOf({ file: 'assets/x.png' }) === '' && App.folderOf({ file: 'assets/a/b.png', folder: 'Eigen' }) === 'Eigen', '0.8.0 Ordner: Zuordnung falsch');
+        pp.time = Object.assign(pp.time || {}, { enabled: true, seasonsOn: true, seasonDays: 2, startSeason: 0 }); VN.migrate(pp);
+        const rt = { time: { day: 3, slot: 1 } };
+        ok(VN.Life.season(rt) === 1, '0.8.0 Jahreszeit falsch berechnet: ' + VN.Life.season(rt));
+        const h2 = VN.newHubScene('Zimmer'); h2.bg = 'img1'; h2.bgSlots = { 1: 'img1x' };
+        pp.assets.push({ id: 'img1x', kind: 'image', name: 'Nacht', file: 'assets/n.png' });
+        ok(VN.Life.hubBg(h2, rt) === 'img1x' && VN.Life.hubBg(h2, { time: { day: 1, slot: 0 } }) === 'img1', '0.8.0 Hub-Hintergrund je Tageszeit falsch');
+        pp.time.ambient = [{ id: 'a1', asset: 'x', slot: 1, season: '', where: 'hubs', vol: 40 }];
+        ok(VN.Life.ambientNow(rt, h2).length === 1 && VN.Life.ambientNow({ time: { day: 3, slot: 0 } }, h2).length === 0 && VN.Life.ambientNow(rt, { type: 'story' }).length === 0, '0.8.0 Ambient-Sounds falsch gefiltert');
+        const st2 = VN.newStoryScene('Sprung'); st2.tracks.dialog = [{ id: 'gj', start: 0, len: 1, text: 'x', actions: [{ type: 'goto', scene: h2.id }] }];
+        ok(VN.edgesOf(st2).some((e) => e.to === h2.id), '0.8.0 Aktion „Zu Szene oder Hub“ fehlt im Pfad-Graph');
+        const st3 = VN.newStoryScene('Ziel'); st3.beats = 1;
+        Story.copyClips(st2, [{ clip: st2.tracks.dialog[0], track: VN.tracksOf(st2).find((t) => t.key === 'dialog') }], 'Test');
+        VN.project = pp; Story.pasteClips(st3, 0); Story.pasteClips(st3, 0);
+        ok(st3.tracks.dialog.length === 2 && st3.tracks.dialog[0].id !== 'gj' && st3.tracks.dialog[1].start === 1, '0.8.0 Kopieren/Einfügen falsch');
+        pp.time.enabled = false;
+      }
     } catch (e) { out.push('0.7.4-Prüfung stürzt ab: ' + String(e && e.stack || e).split('\\n').slice(0, 3).join(' | ')); }
     VN.project = prev;
     return JSON.stringify(out);

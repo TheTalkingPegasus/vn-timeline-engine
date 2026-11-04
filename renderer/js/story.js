@@ -179,8 +179,8 @@
       const remaining = Math.max(1, s.beats - beat);
       const base = { id: VN.uid('c'), start: beat };
       switch (VN.tbase(t)) {
-        case 'bg': return { ...base, len: remaining, asset: assetId || null, trans: 'fade', dur: 1 };
-        case 'char': return { ...base, len: remaining, asset: assetId || null, x: t.key === 'char1' ? 30 : t.key === 'char2' ? 70 : 50, scale: 100, trans: 'fade', dur: 0.6, idle: 'breathe', flip: false };
+        case 'bg': return { ...base, len: remaining, asset: assetId || null, trans: 'cut', dur: 1 };
+        case 'char': return { ...base, len: remaining, asset: assetId || null, x: t.key === 'char1' ? 30 : t.key === 'char2' ? 70 : 50, scale: 100, trans: 'cut', dur: 0.6, idle: 'breathe', flip: false };
         case 'dialog': {
           const prev = s.tracks.dialog.filter((d) => d.start < beat).sort((a, b) => b.start - a.start)[0];
           return { ...base, len: 1, speaker: prev ? prev.speaker : '', color: prev ? prev.color : '#ffffff', text: VN.t('Neuer Text …'), speed: 40, actions: [] };
@@ -235,6 +235,59 @@
         VN.ui.sel = copy.id;
         VN.ui.beat = copy.start;
       });
+    },
+
+    // ---------- Kopieren und Einfügen, auch in andere Szenen (0.8.0) ----------
+    // Zwischenablage: Clips mit Spur und Abstand zum ersten Schritt
+    copyClips(s, clips, label) {
+      if (!clips.length) return;
+      const first = Math.min(...clips.map((x) => x.clip.start));
+      Story.clipboard = { label, items: clips.map(({ clip, track }) => ({ base: VN.tbase(track), key: track.key, off: clip.start - first, clip: JSON.parse(JSON.stringify(clip)) })) };
+      VN.toast(VN.tf('{what} kopiert – in jeder Szene mit Strg+V einfügen', { what: label }));
+    },
+    copySelection(s) {
+      const f = VN.ui.sel && VN.findClip(s, VN.ui.sel);
+      if (f) Story.copyClips(s, [f], VN.t('Clip'));
+    },
+    // Alles, was in einem Schritt beginnt (Dialog, Figuren, Hintergrund, Ton …)
+    copyBeat(s, beat) {
+      const out = [];
+      for (const t of VN.tracksOf(s)) for (const c of s.tracks[t.key] || []) if (c.start === beat) out.push({ clip: c, track: t });
+      Story.copyClips(s, out, VN.tf('Schritt {n}', { n: beat + 1 }));
+    },
+    // Neue IDs für einen eingefügten Clip (auch Antworten und Keyframes behalten ihre Werte)
+    freshIds(c) {
+      c.id = VN.uid('c');
+      for (const o of c.options || []) o.id = VN.uid('opt');
+      return c;
+    },
+    pasteClips(s, beat) {
+      const cb = Story.clipboard;
+      if (!cb || !cb.items.length || !s || s.type !== 'story') return;
+      const tracks = VN.tracksOf(s);
+      const free = (key, start, len, skip) => !(s.tracks[key] || []).some((x) => x !== skip && x.start < start + len && start < x.start + x.len);
+      VN.mutate(() => {
+        let selId = null;
+        for (const it of cb.items) {
+          const t = tracks.find((x) => x.key === it.key) || tracks.find((x) => VN.tbase(x) === it.base);
+          if (!t) continue;
+          const c = Story.freshIds(JSON.parse(JSON.stringify(it.clip)));
+          let start = beat + it.off;
+          // Belegt? Dann der nächste freie Platz auf dieser Spur
+          while (!free(t.key, start, c.len)) start++;
+          const shift = start - c.start;
+          c.start = start;
+          if (c.keys) for (const k of c.keys) k.beat += shift;
+          if (c.picks) { const np = {}; for (const [b, v] of Object.entries(c.picks)) np[Number(b) + shift] = v; c.picks = np; }
+          if (c.gestures) { const ng = {}; for (const [b, v] of Object.entries(c.gestures)) ng[Number(b) + shift] = v; c.gestures = ng; }
+          s.tracks[t.key] = s.tracks[t.key] || [];
+          s.tracks[t.key].push(c);
+          s.beats = Math.max(s.beats, c.start + c.len);
+          if (!selId) selId = c.id;
+        }
+        VN.ui.sel = selId;
+      });
+      VN.toast(VN.tf('{what} eingefügt', { what: cb.label }));
     },
 
     // Keyframe mit den aktuellen Werten anlegen
@@ -657,6 +710,9 @@
         if (Design.hasTab(t)) items.push({ label: '🎨 Design ändern …', hint: t.key === 'dialog' ? 'Sprechblase' : t.key === 'choice' ? 'Buttons' : 'Textur', action: () => Design.openTab() }, 'sep');
         if (t.key === 'dialog') items.push({ label: 'Dialog danach einfügen', action: () => Story.addClip(s, t, c.start + 1) });
         items.push({ label: 'Duplizieren', action: () => Story.duplicateClip(s, c, t) });
+        items.push({ label: '📋 ' + VN.t('Kopieren'), hint: 'Strg+C', action: () => Story.copyClips(s, [{ clip: c, track: t }], VN.t('Clip')) });
+        items.push({ label: '📋 ' + VN.tf('Ganzen Schritt {n} kopieren', { n: c.start + 1 }), action: () => Story.copyBeat(s, c.start) });
+        if (Story.clipboard) items.push({ label: '📌 ' + VN.tf('Einfügen bei Schritt {n}', { n: VN.ui.beat + 1 }), hint: 'Strg+V', action: () => Story.pasteClips(s, VN.ui.beat) });
         items.push({ label: 'Löschen', hint: 'Entf', danger: true, action: () => Story.deleteClip(s, c.id) });
         VN.render();
         VN.menu(e.clientX, e.clientY, items);

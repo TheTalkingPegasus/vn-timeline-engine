@@ -76,6 +76,14 @@
   VN.registerCond = (type, def) => { VN.ext.conds[type] = def; };
   // def: { label, on?(): bool, apply(a, rs, gains, sourceKey), text(a), row(row, a, sel, inp), problem?(a), make?(): {...} }
   VN.registerAction = (type, def) => { VN.ext.actions[type] = def; };
+  // Zu einer beliebigen Szene oder einem Hub wechseln (0.8.0) – z. B. am Ende eines Dialogs zurück ins Zimmer
+  VN.registerAction('goto', {
+    label: '➜ Zu Szene oder Hub wechseln', make: () => ({ scene: '' }),
+    apply: (a) => { if (window.Player && Player.setJump && a.scene && VN.scene(a.scene) && !(VN.Idle && VN.Idle._sim)) Player.setJump(a.scene); },
+    text: (a) => { const s = VN.scene(a.scene); return '➜ ' + (s ? (s.type === 'hub' ? '⌂ ' : '') + s.name : '?'); },
+    problem: (a) => (VN.scene(a.scene) ? null : 'Szene fehlt'),
+    row: (row, a, sel) => row.appendChild(sel(a.scene || '', [['', '— Szene oder Hub —'], ...VN.project.scenes.map((s) => [s.id, (s.type === 'hub' ? '⌂ ' : '') + s.name])], (v) => VN.mutate(() => { a.scene = v; })))
+  });
   const extOn = (d) => { try { return !d.on || d.on(); } catch (e) { return false; } };
   VN.extCondTypes = (cur) => Object.entries(VN.ext.conds).filter(([k, d]) => extOn(d) || k === cur).map(([k, d]) => [k, d.label || k]);
   VN.extActionTypes = (cur) => Object.entries(VN.ext.actions).filter(([k, d]) => extOn(d) || k === cur).map(([k, d]) => [k, d.label || k]);
@@ -245,7 +253,12 @@
         const def = VNPlugin.actionDef(a.ref);
         if (!def) { console.warn('Plugin-Aktion fehlt: ' + a.ref); continue; }
         try {
-          const r = def.run(Object.assign({}, a.params || {}), VNPlugin.makeCtx(rs, def.plugin.id));
+          let r = def.run(Object.assign({}, a.params || {}), VNPlugin.makeCtx(rs, def.plugin.id));
+          // Minispiele (0.8.0): gewonnen / verloren → eigene Szene, Hub oder Game-Over-Bildschirm
+          if (def.minigame && (a.onWin || a.onLose)) {
+            const go = (res) => { const t = res && res.ok ? a.onWin : a.onLose; if (t && window.Player && Player.setJump && !(VN.Idle && VN.Idle._sim)) Player.setJump(t); return res; };
+            r = r && typeof r.then === 'function' ? r.then(go) : go(r);
+          }
           if (r && typeof r.then === 'function') gains.pending.push(r);
         } catch (e) { console.error('Plugin-Aktion ' + a.ref, e); }
       } else if (a.type === 'loot' && a.table) {
@@ -367,6 +380,8 @@
       for (const b of p.mainMenu.buttons) out.push({ id: 'menu:' + b.id, area: 'Hauptmenü', where: 'Button', who: 'Menü', text: b.label || '', set: (v) => { b.label = v; } });
     }
     for (const sp of speakers) out.push({ id: VN.speakerKey(sp), area: 'Figurennamen', where: 'Sprecher', who: 'Name', text: sp, set: null });
+    if (p.gameOver && p.gameOver.title) out.push({ id: 'gameover:title', area: 'Menü', where: 'Game Over', who: 'Titel', text: p.gameOver.title, set: (v) => { p.gameOver.title = v; } });
+    if (p.gameOver && p.gameOver.text) out.push({ id: 'gameover:text', area: 'Menü', where: 'Game Over', who: 'Text', text: p.gameOver.text, set: (v) => { p.gameOver.text = v; } });
     return out;
   };
 
@@ -457,6 +472,13 @@
         if (!def) row.appendChild(el('span', { class: 'muted small' }, 'Plugin nicht geladen'));
         a.params = a.params || {};
         VN.paramFields(row, (def && def.params) || [], a.params, sel, inp);
+        if (def && def.minigame) {
+          const opts = [['', 'weiter wie bisher'], ['@gameover', '☠ Game-Over-Bildschirm'], ...p.scenes.map((s) => [s.id, (s.type === 'hub' ? '⌂ ' : '') + s.name])];
+          row.appendChild(el('span', { class: 'muted small' }, VN.t('Gewonnen →')));
+          row.appendChild(sel(a.onWin || '', opts, (v) => VN.mutate(() => { if (v) a.onWin = v; else delete a.onWin; })));
+          row.appendChild(el('span', { class: 'muted small' }, VN.t('Verloren →')));
+          row.appendChild(sel(a.onLose || '', opts, (v) => VN.mutate(() => { if (v) a.onLose = v; else delete a.onLose; })));
+        }
       }
       if (VN.ext.actions[a.type]) { try { VN.ext.actions[a.type].row(row, a, sel, inp); } catch (e) { console.error(e); } }
       else if (VN.Life && VN.Life.actionRow(row, a, sel, inp)) { /* Lebenssimulation */ }

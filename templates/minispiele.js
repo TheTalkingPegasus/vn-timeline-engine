@@ -46,7 +46,7 @@
   VNPlugin.register({
     id: ID,
     name: 'Minispiele',
-    version: '1.2',
+    version: '1.3',
     description: 'Sechs Minispiele mit Ergebnis (0–100 % oder geschafft/nicht geschafft): Klick-Reflex, Memory, Puzzle, Kochen & Brauen, Münzwurf, Blütenblätter.',
     // Aussehen je Minispiel (Design → Spielsysteme, oder Rechtsklick aufs Fenster im Probelauf)
     designs: {
@@ -299,13 +299,21 @@
           { key: 'look', label: 'Aussehen', type: 'select', options: [['kueche', 'Küche (Topf)'], ['alchemie', 'Alchemie (Kessel)']], default: 'kueche' },
           { key: 'modus', label: 'Ablauf', type: 'select', options: [['einfach', 'Einfach: Zutaten rein, fertig'], ['ablauf', 'Mit Schritten (schneiden, rühren, Hitze)']], default: 'ablauf' },
           { key: 'bildTopf', label: 'Bild Topf/Kessel', type: 'image', default: '' },
+          // 1.3: Schwierigkeit und eigene Namen (z. B. „Mixen“ an der Bar statt „Brauen“)
+          { key: 'schwierigkeit', label: 'Schwierigkeit', type: 'select', options: [['leicht', 'Leicht'], ['mittel', 'Mittel'], ['schwer', 'Schwer']], default: 'mittel' },
+          { key: 'titel', label: 'Titel (leer = Küche / Alchemie-Tisch)', type: 'text', default: '' },
+          { key: 'knopf', label: 'Knopf (leer = Kochen / Brauen)', type: 'text', default: '' },
+          { key: 'buch', label: 'Rezeptbuch (leer = Standard)', type: 'text', default: '' },
           resultParam
         ],
         run(params, ctx) {
           return new Promise((resolve) => {
             const d = data(), p = ctx.project, rs = ctx.state;
             const alch = params.look === 'alchemie';
-            const F = frame(ctx, alch ? 'Alchemie-Tisch' : 'Küche', '70%', 'kochen');
+            // Schwierigkeit: Tempo, Trefferfenster, Hitze-Bereich und wie streng bewertet wird
+            const DF = { leicht: { speed: 1.0, win: 9, perfectWin: 4, beat: 180, zone: 26, perfect: 0.75, good: 0.3 }, mittel: { speed: 1.6, win: 6, perfectWin: 2.5, beat: 120, zone: 18, perfect: 0.85, good: 0.4 }, schwer: { speed: 2.4, win: 4, perfectWin: 1.8, beat: 80, zone: 12, perfect: 0.92, good: 0.55 } }[params.schwierigkeit] || null;
+            const DIF = DF || { speed: 1.6, win: 6, perfectWin: 2.5, beat: 120, zone: 18, perfect: 0.85, good: 0.4 };
+            const F = frame(ctx, params.titel || (alch ? 'Alchemie-Tisch' : 'Küche'), '70%', 'kochen');
             F.o.el.classList.add(alch ? 'mg-alch' : 'mg-kitchen');
             rs.recipesKnown = rs.recipesKnown || {};
             for (const r of d.recipes) if (r.known) rs.recipesKnown[r.id] = true;
@@ -323,14 +331,14 @@
               if (!have.length) shelf.appendChild(F.el('div', { class: 'mg-sub' }, 'Keine Zutaten im Inventar.'));
               const potEl = F.el('div', { class: 'mg-pot', style: potIm ? { backgroundImage: `url("${potIm}")` } : null }, potIm ? '' : (alch ? '⚗' : '🍲'),
                 F.el('div', { class: 'mg-potlist' }, ...pot.map((id, i) => { const it = p.items.find((x) => x.id === id); return F.el('span', { class: 'mg-in', onclick: (e) => { e.stopPropagation(); pot.splice(i, 1); draw(); } }, (it ? it.name : '?') + ' ×'); })));
-              const book = F.el('div', { class: 'mg-book' }, F.el('div', { class: 'mg-sub' }, alch ? 'Rezeptbuch der Tränke' : 'Kochbuch'),
+              const book = F.el('div', { class: 'mg-book' }, F.el('div', { class: 'mg-sub' }, params.buch || (alch ? 'Rezeptbuch der Tränke' : 'Kochbuch')),
                 ...d.recipes.map((r) => {
                   const known = rs.recipesKnown[r.id];
                   const res = p.items.find((x) => x.id === r.result);
                   return F.el('div', { class: 'mg-rec' + (known ? '' : ' unk') }, known ? (res ? res.name : r.name) + ': ' + (r.ingredients || []).map((id) => (p.items.find((x) => x.id === id) || {}).name || '?').join(' + ') : '??? (' + (r.ingredients || []).length + ' Zutaten)');
                 }));
               F.area.append(shelf, F.el('div', { class: 'mg-mid' }, potEl, F.el('div', { class: 'row gap8', style: { justifyContent: 'center' } },
-                F.el('button', { class: 'btn primary', disabled: !pot.length, onclick: (e) => { e.stopPropagation(); cook(); } }, alch ? 'Brauen' : 'Kochen'),
+                F.el('button', { class: 'btn primary', disabled: !pot.length, onclick: (e) => { e.stopPropagation(); cook(); } }, params.knopf || (alch ? 'Brauen' : 'Kochen')),
                 F.el('button', { class: 'btn', onclick: (e) => { e.stopPropagation(); F.o.close(); resolve({ score: 0, ok: false }); } }, 'Aufhören'))), book);
               F.info.textContent = 'Klicke Zutaten an, um sie hineinzugeben. Klick im Topf nimmt sie wieder heraus.';
             };
@@ -340,7 +348,7 @@
               for (const id of pot) { rs.inv[id] = (rs.inv[id] || 0) - 1; if (rs.inv[id] <= 0) delete rs.inv[id]; }
               let score = r ? 1 : 0;
               if (r && params.modus !== 'einfach') score = await steps(r.steps && r.steps.length ? r.steps : ['schneiden', 'ruehren', 'hitze']);
-              const q = !r ? 'fail' : score >= 0.85 ? 'perfect' : score >= 0.4 ? 'good' : 'fail';
+              const q = !r ? 'fail' : score >= DIF.perfect ? 'perfect' : score >= DIF.good ? 'good' : 'fail';
               const outId = q === 'perfect' && r.perfect ? r.perfect : q === 'fail' ? (r && r.fail) || d.fail : r.result;
               if (outId) ctx.items.give(outId, 1);
               if (r && q !== 'fail') rs.recipesKnown[r.id] = true;
@@ -370,20 +378,20 @@
                 let hits = 0, tries = 0, x = 0, dir = 1, mark = rnd(20, 80), stop = false;
                 const knife = F.el('div', { class: 'mg-knife' }, '🔪'), mk = F.el('div', { class: 'mg-mark', style: { left: mark + '%' } });
                 track.append(mk, knife);
-                const tk = () => { if (stop) return; x += dir * 1.6; if (x > 100 || x < 0) dir = -dir; knife.style.left = x + '%'; requestAnimationFrame(tk); };
+                const tk = () => { if (stop) return; x += dir * DIF.speed; if (x > 100 || x < 0) dir = -dir; knife.style.left = x + '%'; requestAnimationFrame(tk); };
                 requestAnimationFrame(tk);
-                F.area.onmousedown = (e) => { e.stopPropagation(); tries++; const d = Math.abs(x - mark); if (d < 6) { hits += d < 2.5 ? 1 : 0.7; mk.classList.add('hit'); } mark = rnd(15, 85); mk.style.left = mark + '%'; if (tries >= 3) { stop = true; F.area.onmousedown = null; res(Math.min(1, hits / 3)); } };
+                F.area.onmousedown = (e) => { e.stopPropagation(); tries++; const d = Math.abs(x - mark); if (d < DIF.win) { hits += d < DIF.perfectWin ? 1 : 0.7; mk.classList.add('hit'); } mark = rnd(15, 85); mk.style.left = mark + '%'; if (tries >= 3) { stop = true; F.area.onmousedown = null; res(Math.min(1, hits / 3)); } };
               } else if (kind === 'ruehren') {
                 const ring = F.el('div', { class: 'mg-ring' });
                 track.appendChild(ring);
                 let beats = 0, good = 0, last = performance.now(), litAt = 0, stop = false;
-                const per = 900;
+                const per = DIF.speed > 2 ? 720 : DIF.speed < 1.2 ? 1050 : 900;
                 const tk = (now) => { if (stop) return; if (now - last > per) { last = now; litAt = now; ring.classList.add('lit'); setTimeout(() => ring.classList.remove('lit'), 260); } requestAnimationFrame(tk); };
                 requestAnimationFrame(tk);
-                F.area.onmousedown = (e) => { e.stopPropagation(); beats++; const d = Math.min(Math.abs(performance.now() - litAt), Math.abs(performance.now() - (litAt + per))); good += d < 120 ? 1 : d < 240 ? 0.6 : 0; ring.animate([{ transform: 'rotate(0)' }, { transform: 'rotate(120deg)' }], { duration: 200 }); if (beats >= 6) { stop = true; F.area.onmousedown = null; res(Math.min(1, good / 6)); } };
+                F.area.onmousedown = (e) => { e.stopPropagation(); beats++; const d = Math.min(Math.abs(performance.now() - litAt), Math.abs(performance.now() - (litAt + per))); good += d < DIF.beat ? 1 : d < DIF.beat * 2 ? 0.6 : 0; ring.animate([{ transform: 'rotate(0)' }, { transform: 'rotate(120deg)' }], { duration: 200 }); if (beats >= 6) { stop = true; F.area.onmousedown = null; res(Math.min(1, good / 6)); } };
               } else {
                 let heat = 0, held = false, inZone = 0, t = 0, stop = false, last = performance.now();
-                const lo = rnd(45, 60), hi = lo + 18;
+                const lo = rnd(40, 62), hi = lo + DIF.zone;
                 const zone = F.el('div', { class: 'mg-zone', style: { left: lo + '%', width: (hi - lo) + '%' } }), needle = F.el('div', { class: 'mg-needle' });
                 const hb = F.el('div', { class: 'mg-hbar' });
                 track.append(zone, hb, needle);

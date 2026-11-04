@@ -1904,3 +1904,17 @@ body.cbsim-tritan #center .stage, body.cbsim-tritan #player { filter: url(#vn-cb
 /* 0.7.7: Augen-Effekte liegen über allen Effekt-Ebenen */
 .pl-eyesbox { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
 .pl-eyesbox .fx-layer { position: absolute; inset: 0; }
+/* 0.8.0: schon gewählte Antworten */
+.choice-btn.picked { opacity: 0.55; filter: saturate(0.4); }
+.choice-btn.picked::after { content: ' ✓'; opacity: 0.8; }
+.pl-hobj.invisible, .pl-hobj.invisible:hover { filter: none !important; transform: none !important; outline: none !important; box-shadow: none !important; background: transparent !important; }
+/* 0.8.0: Ordner in der Dateiliste */
+.af-bar { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; }
+.af-bar .af-hint { flex: 1; text-align: right; }
+.af-row { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; padding: 5px 6px; border-radius: 6px; background: var(--bg3); cursor: pointer; user-select: none; font-size: 12px; }
+.af-row:hover { background: var(--bg4); }
+.af-row.over, .af-root.over { outline: 2px solid var(--accent); }
+.af-row .af-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.af-arrow { width: 10px; color: var(--muted); }
+.af-root { grid-column: 1 / -1; padding: 6px 4px 2px; border-top: 1px dashed var(--line2); margin-top: 4px; }
+.asset.in-folder { border-left: 2px solid var(--accent); }

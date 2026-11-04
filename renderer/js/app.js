@@ -182,7 +182,41 @@
       if (tab === 'fx') { Tools.library(list); return; }
       const items = VN.assetsOf(tab);
       const empty = { image: 'Noch keine Bilder. Importieren oder hierher ziehen.', audio: 'Noch keine Audiodateien. Importieren oder hierher ziehen.', font: 'Noch keine Schriften (TTF, OTF, WOFF). Importieren oder hierher ziehen.', video: 'Noch keine Videos (WebM, MP4).' };
+      // Ordner (0.8.0): nur zur Übersicht im Editor – die Engine braucht sie nicht. Liegt eine Datei auf dem PC in einem
+      // Unterordner von „assets“, steht sie automatisch im gleichen Ordner.
+      const F = App.folders(tab);
+      const open = VN.ui.assetOpen = VN.ui.assetOpen || {};
+      list.appendChild(el('div', { class: 'af-bar' },
+        el('button', { class: 'btn tiny', title: VN.t('Neuer Ordner (mit / für Unterordner, z. B. Figuren/Ray)'), onclick: async () => { const n = await VN.prompt(VN.t('Name des Ordners (Unterordner mit /)'), ''); const f = App.cleanFolder(n); if (f) VN.mutate(() => { App.addFolder(tab, f); open[tab + ':' + f] = true; }); } }, '+ 📁'),
+        F.length ? el('button', { class: 'btn tiny', onclick: () => { const all = F.every((f) => open[tab + ':' + f]); for (const f of F) open[tab + ':' + f] = !all; App.renderAssets(); } }, F.every((f) => open[tab + ':' + f]) ? VN.t('alle zu') : VN.t('alle auf')) : null,
+        el('span', { class: 'muted small af-hint' }, F.length ? VN.t('Dateien auf einen Ordner ziehen') : '')));
       if (!items.length) list.appendChild(el('div', { class: 'empty-hint' }, empty[tab] || ''));
+      const folderOf = (a) => App.folderOf(a);
+      const visible = (f) => { const parts = f.split('/'); for (let i = 1; i < parts.length; i++) if (!open[tab + ':' + parts.slice(0, i).join('/')]) return false; return true; };
+      const dropOn = (node, folder) => {
+        node.addEventListener('dragover', (e) => { if (Array.from(e.dataTransfer.types).some((t) => t.startsWith('vn/asset-'))) { e.preventDefault(); node.classList.add('over'); } });
+        node.addEventListener('dragleave', () => node.classList.remove('over'));
+        node.addEventListener('drop', (e) => { const t = Array.from(e.dataTransfer.types).find((x) => x.startsWith('vn/asset-')); const id = t && e.dataTransfer.getData(t); node.classList.remove('over'); if (!id) return; e.preventDefault(); e.stopPropagation(); const a = VN.asset(id); if (a) VN.mutate(() => { a.folder = folder || ''; }); });
+      };
+      const rows = [];
+      for (const f of F) {
+        if (!visible(f)) continue;
+        const depth = f.split('/').length - 1;
+        const isOpen = !!open[tab + ':' + f];
+        const n = items.filter((a) => folderOf(a) === f).length;
+        const row = el('div', { class: 'af-row', style: { paddingLeft: (6 + depth * 12) + 'px' }, onclick: () => { open[tab + ':' + f] = !isOpen; App.renderAssets(); } },
+          el('span', { class: 'af-arrow' }, isOpen ? '▾' : '▸'), el('span', null, '📁'), el('span', { class: 'af-name' }, f.split('/').pop()), el('span', { class: 'muted small' }, n ? String(n) : ''));
+        row.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          VN.menu(e.clientX, e.clientY, [{ head: '📁 ' + f },
+            { label: VN.t('Unterordner …'), action: async () => { const nn = App.cleanFolder(await VN.prompt(VN.t('Name des Unterordners'), '')); if (nn) VN.mutate(() => { App.addFolder(tab, f + '/' + nn); open[tab + ':' + f] = true; }); } },
+            { label: VN.t('Umbenennen …'), action: async () => { const nn = App.cleanFolder(await VN.prompt(VN.t('Neuer Name'), f.split('/').pop())); if (nn) VN.mutate(() => App.renameFolder(tab, f, f.split('/').slice(0, -1).concat(nn).join('/'))); } },
+            { label: VN.t('Ordner auflösen'), hint: VN.t('Dateien bleiben'), danger: true, action: () => VN.mutate(() => App.removeFolder(tab, f)) }]);
+        });
+        dropOn(row, f);
+        rows.push([f, row]);
+      }
+      const assetNodes = [];
       for (const a of items) {
         const del = el('button', {
           class: 'del', title: 'Aus Projekt entfernen',
@@ -207,10 +241,60 @@
             el('span', { class: 'muted small' }, a.file.split('.').pop().toUpperCase()), del);
         node.addEventListener('dragstart', (e) => {
           e.dataTransfer.setData('vn/asset-' + a.kind, a.id);
-          e.dataTransfer.effectAllowed = 'copy';
+          e.dataTransfer.effectAllowed = 'copyMove';
         });
-        list.appendChild(node);
+        node.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          VN.menu(e.clientX, e.clientY, [{ head: a.name }, { label: VN.t('In Ordner verschieben:') },
+            { label: (folderOf(a) ? '　' : '✓ ') + VN.t('— kein Ordner —'), action: () => VN.mutate(() => { a.folder = ''; }) },
+            ...F.map((f) => ({ label: (folderOf(a) === f ? '✓ ' : '　') + '📁 ' + f, action: () => VN.mutate(() => { a.folder = f; }) })),
+            'sep', { label: VN.t('Neuer Ordner …'), action: async () => { const nn = App.cleanFolder(await VN.prompt(VN.t('Name des Ordners (Unterordner mit /)'), '')); if (nn) VN.mutate(() => { App.addFolder(tab, nn); a.folder = nn; open[tab + ':' + nn] = true; }); } }]);
+        });
+        assetNodes.push([folderOf(a), node]);
       }
+      // Ordner mit ihrem Inhalt, danach Dateien ohne Ordner
+      for (const [f, row] of rows) {
+        list.appendChild(row);
+        if (!open[tab + ':' + f]) continue;
+        const depth = f.split('/').length;
+        for (const [af, node] of assetNodes) if (af === f) { node.classList.add('in-folder'); node.style.marginLeft = Math.min(36, depth * 8) + 'px'; list.appendChild(node); }
+      }
+      const rootNodes = assetNodes.filter(([af]) => !af || !F.includes(af));
+      if (rows.length && rootNodes.length) { const sep = el('div', { class: 'af-root muted small' }, VN.t('Ohne Ordner')); dropOn(sep, ''); list.appendChild(sep); }
+      for (const [, node] of rootNodes) list.appendChild(node);
+    },
+
+    // ---------- Ordner der Dateiliste (0.8.0) ----------
+    cleanFolder(n) { return String(n || '').split('/').map((x) => x.trim().replace(/[\\:*?"<>|]/g, '')).filter(Boolean).join('/'); },
+    // Ordner aus der Datei auf dem PC (assets/Bilder/Figuren/ray.png → Bilder/Figuren), wenn keiner gewählt ist
+    folderOf(a) {
+      if (a.folder != null) return a.folder;
+      const parts = String(a.file || '').replace(/\\/g, '/').split('/');
+      if (parts[0] === 'assets') parts.shift();
+      parts.pop();
+      return parts.join('/');
+    },
+    folders(kind) {
+      const p = VN.project;
+      p.assetFolders = p.assetFolders || {};
+      const set = new Set(p.assetFolders[kind] || []);
+      for (const a of VN.assetsOf(kind)) { const f = App.folderOf(a); if (f) set.add(f); }
+      // Elternordner ergänzen
+      for (const f of [...set]) { const parts = f.split('/'); for (let i = 1; i < parts.length; i++) set.add(parts.slice(0, i).join('/')); }
+      return [...set].sort((x, y) => x.localeCompare(y, undefined, { sensitivity: 'base' }));
+    },
+    addFolder(kind, f) { const p = VN.project; p.assetFolders = p.assetFolders || {}; const l = p.assetFolders[kind] = p.assetFolders[kind] || []; if (!l.includes(f)) l.push(f); },
+    renameFolder(kind, from, to) {
+      const p = VN.project; const re = (x) => (x === from ? to : x.startsWith(from + '/') ? to + x.slice(from.length) : x);
+      p.assetFolders = p.assetFolders || {};
+      p.assetFolders[kind] = [...new Set([...(p.assetFolders[kind] || []), ...App.folders(kind)].map(re))];
+      for (const a of VN.assetsOf(kind)) { const f = App.folderOf(a); if (f === from || f.startsWith(from + '/')) a.folder = re(f); }
+    },
+    removeFolder(kind, f) {
+      const p = VN.project; const parent = f.split('/').slice(0, -1).join('/');
+      p.assetFolders = p.assetFolders || {};
+      p.assetFolders[kind] = App.folders(kind).filter((x) => x !== f && !x.startsWith(f + '/')).filter((x) => (p.assetFolders[kind] || []).includes(x));
+      for (const a of VN.assetsOf(kind)) { const af = App.folderOf(a); if (af === f || af.startsWith(f + '/')) a.folder = parent; }
     },
 
     async removeAsset(a) {
@@ -350,6 +434,12 @@
     if (typing) return;
     if (mod && e.key.toLowerCase() === 'z' && !e.shiftKey) { e.preventDefault(); VN.undo(); return; }
     if (mod && (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey))) { e.preventDefault(); VN.redo(); return; }
+    // Clips kopieren und in jede Szene einfügen (0.8.0)
+    if (mod && VN.ui.view === 'scene' && VN.curScene() && VN.curScene().type === 'story' && ['c', 'v'].includes(e.key.toLowerCase())) {
+      e.preventDefault();
+      if (e.key.toLowerCase() === 'c') { if (VN.ui.sel) Story.copySelection(VN.curScene()); else Story.copyBeat(VN.curScene(), VN.ui.beat); } else Story.pasteClips(VN.curScene(), VN.ui.beat);
+      return;
+    }
     if (VN.ui.view === 'bones') {
       if ((e.key === 'Delete' || e.key === 'Backspace') && VN.ui.boneSel) { e.preventDefault(); Bones.deleteBone(VN.ui.boneAsset, VN.ui.boneSel); }
       if (e.key === 'Enter' && VN.ui.boneTool === 'chain') { e.preventDefault(); Bones.finishChain(VN.ui.boneAsset); }

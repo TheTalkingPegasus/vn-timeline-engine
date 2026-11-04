@@ -216,6 +216,7 @@
             field('Führt zu', VN.sceneSelect(o.target, (v) => VN.mutate(() => { o.target = v; }), { exclude: s.id, emptyLabel: '— weiter in dieser Szene —' })),
             VN.condEditor(o.conds || (o.conds = []), 'Antwort nur verfügbar, wenn'),
             o.conds && o.conds.length ? check('Ausblenden statt ausgrauen, wenn nicht erfüllt', o.hideLocked, (v) => VN.mutate(() => { o.hideLocked = v; })) : null,
+            field('Nach dem Wählen', select(o.afterPick == null ? '' : o.afterPick, [['', '— wie bei der Auswahl eingestellt —'], ['none', 'bleibt normal'], ['grey', 'ausgrauen („schon gefragt“), weiter wählbar'], ['hide', 'ausblenden (nur einmal wählbar)']], (v) => VN.mutate(() => { if (v) o.afterPick = v; else delete o.afterPick; }))),
             VN.Life ? VN.Life.relField(o) : null,
             VN.actionEditor(o.actions || (o.actions = []), 'Bei Auswahl ausführen'),
             el('div', { class: 'row gap4' },
@@ -223,6 +224,12 @@
               el('button', { class: 'btn tiny danger', disabled: c.options.length <= 1, onclick: () => VN.mutate(() => { c.options.splice(i, 1); }) }, 'Entfernen'))));
         });
         box.appendChild(el('button', { class: 'btn', onclick: () => VN.mutate(() => { c.options.push({ id: VN.uid('opt'), text: VN.t('Neue Antwort'), target: null, conds: [], actions: [] }); }) }, '+ Antwort'));
+        box.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Anordnung und schon gewählte Antworten'),
+          range('Waagerechte Position', c.chX != null ? c.chX : 50, 5, 95, 1, (v) => (Math.round(v) === 50 ? 'Mitte' : Math.round(v) + ' %'), (v) => VN.mutate(() => { if (Math.round(v) === 50) delete c.chX; else c.chX = Math.round(v); })),
+          el('div', { class: 'row gap4' }, ...[['links', 22], ['Mitte', 50], ['rechts', 78]].map(([l, v]) => el('button', { class: 'btn tiny' + ((c.chX != null ? c.chX : 50) === v ? ' primary' : ''), onclick: () => VN.mutate(() => { if (v === 50) delete c.chX; else c.chX = v; }) }, VN.t(l)))),
+          field('Schon gewählte Antworten', select(c.afterPick || '', [['', 'bleiben normal'], ['grey', 'ausgrauen („schon gefragt“)'], ['hide', 'ausblenden']], (v) => VN.mutate(() => { if (v) c.afterPick = v; else delete c.afterPick; }))),
+          c.afterPick === 'hide' || c.options.some((o) => o.afterPick === 'hide') ? field('Wenn alle Antworten weg sind', VN.sceneSelect(c.allDone, (v) => VN.mutate(() => { if (v) c.allDone = v; else delete c.allDone; }), { exclude: s.id, emptyLabel: '— in dieser Szene weiter —' })) : null,
+          el('div', { class: 'muted small' }, 'Gut für Hub-Dialoge, in denen man eine Figur Dinge fragt: Gefragtes wird grau oder verschwindet. Zählt pro Spielstand.')));
         box.appendChild(Tools.choiceTimer(c));
         box.appendChild(field('Schritt', num(c.start + 1, (v) => VN.mutate(() => { c.start = Math.max(0, Math.round(v) - 1); s.beats = Math.max(s.beats, c.start + 1); }), { min: 1 })));
       } else if (tb === 'music') {
@@ -260,6 +267,7 @@
         field('Name', text(s.name, set(s, 'name'))),
         assetField('Hintergrund', 'image', s.bg, set(s, 'bg')),
         s.bg ? Inspector.designLink('Hintergrund bearbeiten') : null,
+        VN.Life && VN.Life.timeOn() ? Inspector.hubSlots(s) : null,
         assetField('Musik (Loop)', 'audio', s.music, set(s, 'music')),
         Inspector.startRow(s),
         Inspector.events(s),
@@ -268,6 +276,16 @@
           'Ein Ort, an dem der Spieler frei klickt. Bilder aus der Dateiliste auf die Bühne ziehen, um klickbare Objekte anzulegen. ',
           'Verschieben, an der Ecke skalieren, am Kreis oben drehen. Die Hitbox wandert immer mit.'),
         el('button', { class: 'btn danger', onclick: () => VN.deleteScene(s.id) }, 'Szene löschen'));
+    },
+
+    // Hintergrund je Tageszeit (0.8.0)
+    hubSlots(s) {
+      const T = VN.project.time;
+      s.bgSlots = s.bgSlots || {};
+      return el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Hintergrund je Tageszeit'),
+        ...T.slots.map((n, i) => el('div', { class: 'logic-row' }, el('span', { class: 'muted small', style: { width: '70px' } }, n),
+          VN.assetSelect('image', s.bgSlots[i] || '', (v) => VN.mutate(() => { if (v) s.bgSlots[i] = v; else delete s.bgSlots[i]; })))),
+        el('div', { class: 'muted small' }, 'Leer = normaler Hintergrund (mit automatischer Tageszeit-Färbung). Wechselt sofort, wenn im Hub Zeit vergeht.'));
     },
 
     cutRow(s, c, t) {
@@ -394,6 +412,7 @@
           field('Höhe %', num(Math.round(o.h * 10) / 10, set(o, 'h'), { min: 1, step: 0.5 }))),
         range('Drehung', o.rot || 0, -180, 180, 1, (v) => Math.round(v) + '°', set(o, 'rot')),
         field('Hitbox-Form', select(o.shape || 'rect', [['rect', 'Rechteck'], ['ellipse', 'Ellipse']], set(o, 'shape'))),
+        check('Unsichtbar im Spiel (nur Klickfläche, kein Rahmen, kein Leuchten, kein Name)', o.invisible, set(o, 'invisible')),
         VN.condEditor(o.conds || (o.conds = []), 'Objekt nur sichtbar, wenn'),
         el('div', { class: 'sec-title' }, 'Beim Klick'),
         window.Connect ? Connect.rulesUI(o) : null,

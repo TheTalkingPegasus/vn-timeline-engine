@@ -7,7 +7,7 @@
   const Life = (VN.Life = {
     // ---------- Grundeinstellungen ----------
     ensure(p) {
-      p.time = VN.fill(p.time, { enabled: false, slots: ['Morgen', 'Mittag', 'Abend', 'Nacht'].map(VN.t), days: ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'].map(VN.t), startDay: 0, startSlot: 0, hud: true, autoDaytime: true, dayMap: {} });
+      p.time = VN.fill(p.time, { enabled: false, slots: ['Morgen', 'Mittag', 'Abend', 'Nacht'].map(VN.t), days: ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'].map(VN.t), startDay: 0, startSlot: 0, hud: true, autoDaytime: true, dayMap: {}, seasonsOn: false, seasons: ['Frühling', 'Sommer', 'Herbst', 'Winter'].map(VN.t), seasonDays: 7, startSeason: 0, ambient: [] });
       p.economy = VN.fill(p.economy, { enabled: false });
       p.shops = p.shops || [];
       p.pluginData = p.pluginData || {};
@@ -26,7 +26,29 @@
     timeText(rs) {
       const T = VN.project.time;
       if (!rs || !rs.time) return '';
-      return VN.tr('time:day', 'Tag') + ' ' + rs.time.day + ' · ' + VN.tr('time:wd' + Life.weekday(rs), T.days[Life.weekday(rs)] || '') + ' · ' + VN.tr('time:slot' + rs.time.slot, T.slots[rs.time.slot] || '');
+      const se = Life.season(rs);
+      return VN.tr('time:day', 'Tag') + ' ' + rs.time.day + ' · ' + VN.tr('time:wd' + Life.weekday(rs), T.days[Life.weekday(rs)] || '') + ' · ' + VN.tr('time:slot' + rs.time.slot, T.slots[rs.time.slot] || '') + (se >= 0 ? ' · ' + VN.tr('time:season' + se, T.seasons[se] || '') : '');
+    },
+    // Jahreszeit (0.8.0): wechselt alle „seasonDays“ Tage, beginnend bei startSeason
+    season(rs) {
+      const T = VN.project.time;
+      if (!T.seasonsOn || !rs || !rs.time || !(T.seasons || []).length) return -1;
+      return ((Number(T.startSeason) || 0) + Math.floor((rs.time.day - 1) / Math.max(1, Number(T.seasonDays) || 7))) % T.seasons.length;
+    },
+    // Hintergrund eines Hubs zur aktuellen Tageszeit (0.8.0)
+    hubBg(s, rs) {
+      if (!s || !Life.timeOn() || !rs || !rs.time || !s.bgSlots) return s ? s.bg : null;
+      const id = s.bgSlots[rs.time.slot];
+      return id && VN.asset(id) ? id : s.bg;
+    },
+    // Ambient-Sounds, die gerade laufen sollen (Tageszeit, Jahreszeit, Ort)
+    ambientNow(rs, scene) {
+      const T = VN.project.time;
+      if (!Life.timeOn() || !rs || !rs.time) return [];
+      const se = Life.season(rs);
+      return (T.ambient || []).filter((a) => a.asset && (a.slot == null || a.slot === '' || Number(a.slot) === rs.time.slot) && (a.season == null || a.season === '' || Number(a.season) === se)
+        && (!a.where || a.where === 'all' || (a.where === 'hubs' && scene && scene.type === 'hub') || a.where === (scene && scene.id)))
+        .map((a) => ['amb:' + a.id, { asset: a.asset, vol: a.vol != null ? a.vol : 50, loop: true, fade: 2 }]);
     },
     // Tageszeit-Optik eines Hintergrunds: eigene Einstellung gewinnt, sonst aus der Spielzeit
     daytime(look, rs) {
@@ -56,7 +78,7 @@
       if (c.type === 'time') {
         if (!rs.time) Life.initRun(rs);
         const ops = { '>=': (a, b) => a >= b, '<=': (a, b) => a <= b, '==': (a, b) => a == b, '!=': (a, b) => a != b, '>': (a, b) => a > b, '<': (a, b) => a < b };
-        const cur = c.what === 'weekday' ? Life.weekday(rs) : c.what === 'day' ? rs.time.day : rs.time.slot;
+        const cur = c.what === 'weekday' ? Life.weekday(rs) : c.what === 'day' ? rs.time.day : c.what === 'season' ? Life.season(rs) : rs.time.slot;
         const f = ops[c.op || '=='];
         return f ? f(Number(cur), Number(c.value)) : false;
       }
@@ -66,19 +88,19 @@
       const T = VN.project.time;
       if (c.type === 'time') {
         if (c.what === 'day') return 'Tag ' + (c.op || '==') + ' ' + c.value;
-        const names = c.what === 'weekday' ? T.days : T.slots;
-        return (c.what === 'weekday' ? 'Wochentag ' : 'Tageszeit ') + ({ '==': 'ist', '!=': 'ist nicht' }[c.op || '=='] || c.op) + ' ' + (names[Number(c.value)] || '?');
+        const names = c.what === 'weekday' ? T.days : c.what === 'season' ? T.seasons : T.slots;
+        return (c.what === 'weekday' ? 'Wochentag ' : c.what === 'season' ? 'Jahreszeit ' : 'Tageszeit ') + ({ '==': 'ist', '!=': 'ist nicht' }[c.op || '=='] || c.op) + ' ' + (names[Number(c.value)] || '?');
       }
       return null;
     },
     condRow(row, c, sel, inp) {
       const T = VN.project.time;
       if (c.type !== 'time') return false;
-      row.appendChild(sel(c.what || 'slot', [['slot', 'Tageszeit'], ['weekday', 'Wochentag'], ['day', 'Tag Nr.']], (v) => VN.mutate(() => { c.what = v; c.value = v === 'day' ? 1 : 0; c.op = '=='; })));
+      row.appendChild(sel(c.what || 'slot', [['slot', 'Tageszeit'], ['weekday', 'Wochentag'], ['day', 'Tag Nr.'], ...(T.seasonsOn ? [['season', 'Jahreszeit']] : [])], (v) => VN.mutate(() => { c.what = v; c.value = v === 'day' ? 1 : 0; c.op = '=='; })));
       if (c.what === 'day') { row.appendChild(sel(c.op || '>=', VN.OPS.map((o) => [o, o]), (x) => VN.mutate(() => { c.op = x; }), { width: '58px' })); row.appendChild(inp(c.value, (x) => VN.mutate(() => { c.value = Number(x); }), 'number')); }
       else {
         row.appendChild(sel(c.op || '==', [['==', 'ist'], ['!=', 'ist nicht']], (x) => VN.mutate(() => { c.op = x; }), { width: '86px' }));
-        row.appendChild(sel(c.value || 0, (c.what === 'weekday' ? T.days : T.slots).map((n, i) => [i, n]), (x) => VN.mutate(() => { c.value = Number(x); })));
+        row.appendChild(sel(c.value || 0, (c.what === 'weekday' ? T.days : c.what === 'season' ? T.seasons : T.slots).map((n, i) => [i, n]), (x) => VN.mutate(() => { c.value = Number(x); })));
       }
       if (!T.enabled) row.appendChild(el('span', { class: 'muted small' }, '(Zeit ist aus)'));
       return true;
@@ -273,7 +295,26 @@
         strip.appendChild(el('div', { class: 'ts-cell ' + dt }, el('div', { class: 'small' }, VN.Life.timeText.call(null, st).replace(/^Tag /, 'T'))));
       }
       void rs;
+      // Jahreszeiten und Ambient-Sounds (0.8.0)
+      const seasons = el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Jahreszeiten'),
+        el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!T.seasonsOn, onchange: (e) => VN.mutate(() => { T.seasonsOn = e.target.checked; }) }), 'Jahreszeiten benutzen'),
+        T.seasonsOn ? el('div', { class: 'row gap4', style: { flexWrap: 'wrap' } }, ...T.seasons.map((d, i) => txt(d, (v) => { T.seasons[i] = v || 'Jahreszeit'; }, '96px'))) : null,
+        T.seasonsOn ? el('div', { class: 'logic-row' }, el('span', null, 'Jede Jahreszeit dauert'), el('input', { type: 'number', min: 1, value: T.seasonDays || 7, style: { width: '64px' }, onchange: (e) => VN.mutate(() => { T.seasonDays = Math.max(1, Number(e.target.value) || 7); }) }), el('span', null, 'Tage · Start:'), sel(T.startSeason || 0, T.seasons.map((d, i) => [i, d]), (v) => { T.startSeason = Number(v); })) : null,
+        el('div', { class: 'muted small' }, 'Prüfen mit der Bedingung „Zeit / Kalender → Jahreszeit“. Ambient-Sounds können pro Jahreszeit laufen.'));
+      T.ambient = T.ambient || [];
+      const amb = el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Ambient-Sounds (Vögel am Morgen, Grillen in der Nacht …)'),
+        el('div', { class: 'muted small' }, 'Laufen als Schleife leise unter der Musik, solange Tageszeit, Jahreszeit und Ort passen – und blenden beim Wechsel weich über.'));
+      for (const a of T.ambient) amb.appendChild(el('div', { class: 'logic-row' },
+        VN.assetSelect('audio', a.asset, (v) => VN.mutate(() => { a.asset = v; })),
+        sel(a.slot == null ? '' : a.slot, [['', 'jede Tageszeit'], ...T.slots.map((d, i) => [i, d])], (v) => { a.slot = v === '' ? '' : Number(v); }),
+        T.seasonsOn ? sel(a.season == null ? '' : a.season, [['', 'jede Jahreszeit'], ...T.seasons.map((d, i) => [i, d])], (v) => { a.season = v === '' ? '' : Number(v); }) : null,
+        sel(a.where || 'all', [['all', 'überall'], ['hubs', 'nur in Hubs'], ...p.scenes.map((s) => [s.id, 'nur: ' + (s.type === 'hub' ? '⌂ ' : '') + s.name])], (v) => { a.where = v; }),
+        el('input', { type: 'number', min: 0, max: 100, value: a.vol != null ? a.vol : 50, title: VN.t('Lautstärke %'), style: { width: '56px' }, onchange: (e) => VN.mutate(() => { a.vol = Math.max(0, Math.min(100, Number(e.target.value) || 0)); }) }),
+        el('button', { class: 'btn tiny', title: VN.t('Anhören'), onclick: () => VN.previewSound(a.asset) }, '▶'),
+        el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { T.ambient = T.ambient.filter((x) => x !== a); }) }, '×')));
+      amb.appendChild(el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { T.ambient.push({ id: VN.uid('amb'), asset: (VN.assetsOf('audio')[0] || {}).id || null, slot: '', season: '', where: 'all', vol: 50 }); }) }, '+ Ambient-Sound'));
       body.append(el('div', { class: 'grid2', style: { alignItems: 'start' } }, slots, el('div', { class: 'col gap8' }, days, start)),
+        el('div', { class: 'grid2', style: { alignItems: 'start' } }, seasons, amb),
         el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'So läuft die Zeit (Vorschau)'), strip,
           el('div', { class: 'muted small' }, 'Tipp: Eine Antwort „Schlafen gehen“ mit der Aktion „Zeit vergehen lassen → nächster Tag“ und Hub-Objekte mit der Bedingung „Tageszeit ist Abend“ – fertig ist ein Tagesablauf.')));
     },

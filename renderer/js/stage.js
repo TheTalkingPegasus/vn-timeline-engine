@@ -269,6 +269,7 @@
           box.appendChild(el('div', { class: 'choice-btn', title: target ? '→ ' + target.name : 'weiter in dieser Szene' }, Fx.plain(o.text || 'Option')));
         }
         if (window.Theme) Theme.styleChoices(box, Theme.choice(st.choice));
+        VN.placeChoices(box, st.choice);
         if (st.choice.timer) box.appendChild(el('div', { class: 'choice-timer' }, el('span', { style: { width: '62%' } })));
         stage.appendChild(box);
       }

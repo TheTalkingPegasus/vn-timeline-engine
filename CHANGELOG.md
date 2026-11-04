@@ -2,6 +2,36 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.8.0 – Choices, folders, copy & paste, times of day and seasons
+Choices and hubs
+- Already picked answers can turn grey (“already asked”, still pickable) or disappear – per choice or per
+  answer. Good for hub dialogues where you ask a character things. Optional target when every answer is gone.
+- Choices can be moved left or right (slider and presets), they always stay on screen.
+- New action “➜ Go to scene or hub” – e.g. at the end of a dialogue line, also to hubs (not only locations).
+- Hub objects can be invisible: just a click area, no frame, glow or name.
+- New backgrounds and character clips start with a hard cut instead of a fade.
+- Jobs plugin 1.3: conditions “Job rank at least” (promotions) and “Shifts worked” – e.g. “object only visible
+  if waiter or higher”.
+Minigames
+- Every minigame can lead somewhere when won or lost: a scene, a hub or the new game-over screen (title, text,
+  background, “Try again”; set up under Main menu).
+- Cooking & brewing (Minigames plugin 1.3): own title, button and recipe-book names (e.g. “Mix” at a bar
+  instead of “Brew”) and difficulty easy / medium / hard.
+Working faster
+- Folders and subfolders in the file list: create, rename, dissolve, drag files onto folders, right-click →
+  move to folder. Files in subfolders of “assets” on your PC appear in the same folder automatically.
+- New projects get a folder structure on the PC (Images/Characters, Images/Backgrounds, Images/Objects, Videos,
+  Music, Sound effects, Voices, Fonts). Files that are already inside the project folder are used in place instead
+  of being copied again.
+- Copy timeline clips into other scenes: Ctrl+C copies the selected clip (or the whole step), Ctrl+V pastes it at
+  the current step in any scene; also in the clip's right-click menu (“Copy”, “Copy whole step”, “Paste”).
+Time & calendar
+- Hubs can have their own background per time of day; it changes right away when time passes in the hub.
+- Seasons (names, length in days, start) with the condition “Time / calendar → Season”; the season is shown with
+  the time.
+- Ambient sounds per time of day and season, everywhere, only in hubs or in one scene – they cross-fade when time
+  changes.
+
 ## 0.7.8 – Jointed puppets: pins follow bones, eraser
 - Jointed puppets: pins of child parts now follow the bones of their parent part. When the torso breathes,
   sways or swings via its bones, arms and head stay attached and turn with it instead of drifting apart.
