@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.7
+VN Timeline Engine · Prototyp 0.9.8
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,18 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.8 · Bones für Ebenen-Figuren, feste Gelenke, Puppen-Vorlage „Mensch“
+- Ebenen-Figuren (Körper, Gesicht, Outfit) können jetzt Bones nutzen: Bones am Bild der untersten Ebene einrichten,
+  und alle Ebenen darüber – Gesicht, Kleidung, Accessoires – biegen und bewegen sich mit, auch Teile, die über den
+  Körper hinausragen (Umhang, weiter Rock, Hut). Idle-Animationen, Gesten, Animations-Editor, Blinzeln und Lippensync
+  funktionieren mit Outfits.
+- Gliederpuppen: Gelenke sind fest verankert. Angehängte Teile drehen sich nur um ihr Gelenk und rutschen nie weg –
+  auch nicht beim Animieren oder Wippen. Im Editor dreht Ziehen ein angehängtes Teil um sein Gelenk (Umschalt:
+  15°-Schritte, Alt: frei verschieben). Pro Puppe abschaltbar („Gelenke fest verankern“).
+- Neue Vorlage „Mensch“ für Gliederpuppen: graue Plätze für Kopf, Torso, Arme, Hände, Beine und Füße, schon mit
+  Gelenken verbunden. Bilder auf die Plätze ziehen – sie werden eingepasst, das Gelenk bleibt – dann Proportionen
+  anpassen.
 
 NEU IN 0.9.7 · Gepackte Spieldateien
 - Neue Export-Option „Spieldateien“: Nicht packen (wie bisher – Bilder, Töne und Dialoge liegen als normale Dateien

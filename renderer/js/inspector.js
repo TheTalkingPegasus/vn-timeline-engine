@@ -113,6 +113,23 @@
       return el('div', { class: 'insp' }, head, tab === 'design' ? designFn() : propsFn());
     },
 
+    // Ebenen-Figur am Clip (0.9.8): Bones der untersten Ebene mit Bones gelten für alle Ebenen
+    figBonesCard(c) {
+      const base = Stage.figureRigBase(Object.assign({}, c, { bones: true }), c.start);
+      const assets = Stage.figureAssets(c, c.start);
+      if (!base) {
+        const first = assets[0];
+        return el('div', { class: 'opt-card' },
+          el('div', { class: 'muted small' }, 'Bones für Ebenen-Figuren: Richte die Bones am Bild der untersten Ebene (z. B. Körper) ein. Alle Ebenen darüber – Gesicht, Kleidung, Accessoires – bewegen sich dann mit.'),
+          first ? el('button', { class: 'btn tiny', onclick: () => App.openBones(first) }, 'Bones für die Körper-Ebene einrichten') : null);
+      }
+      return el('div', { class: 'opt-card' },
+        check('Bones-Animation nutzen', c.bones !== false, (v) => VN.mutate(() => { c.bones = v; })),
+        range('Stärke der Bones-Bewegung', c.boneAmp != null ? c.boneAmp : 100, 0, 200, 5, (v) => Math.round(v) + ' %', set(c, 'boneAmp')),
+        el('div', { class: 'muted small' }, VN.tf('Knochen kommen vom Bild „{name}“ – alle Ebenen bewegen sich mit.', { name: (VN.asset(base) || {}).name || base })),
+        el('button', { class: 'btn tiny', onclick: () => App.openBones(base) }, 'Knochen bearbeiten'));
+    },
+
     designLink(what) {
       return el('button', { class: 'btn design-link', onclick: () => Design.openTab() }, el('span', null, '🎨 Design'), el('span', { class: 'muted small' }, what));
     },
@@ -174,7 +191,8 @@
           field('Bewegung im Stand', select(c.idle || 'none', [['none', 'Keine'], ['breathe', 'Atmen'], ['float', 'Schweben']], set(c, 'idle'))),
           Tools.keysEditor(s, c, t),
           Tools.animFields(s, c),
-          c.asset && VN.project.rigs[c.asset]
+          c.set ? Inspector.figBonesCard(c)
+          : c.asset && VN.project.rigs[c.asset]
             ? el('div', { class: 'opt-card' },
               check('Bones-Animation nutzen', c.bones !== false, (v) => VN.mutate(() => { c.bones = v; })),
               range('Stärke der Bones-Bewegung', c.boneAmp != null ? c.boneAmp : 100, 0, 200, 5, (v) => Math.round(v) + ' %', set(c, 'boneAmp')),

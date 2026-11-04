@@ -214,7 +214,9 @@
     // ---------- Animationen am Figuren-Clip (Idle, Gesten) ----------
     animFields(s, c) {
       const isPup = !!(c.puppet && window.Puppet && Puppet.get(c.puppet));
-      if (!isPup && (!c.asset || !VN.project.rigs[c.asset] || c.set)) return null;
+      // Ebenen-Figur (0.9.8): Animationen laufen über die Bones des untersten Bildes mit Bones
+      const figBase = c.set ? Stage.figureRigBase(c, c.start) : null;
+      if (!isPup && !figBase && (!c.asset || !VN.project.rigs[c.asset] || c.set)) return null;
       // Gliederpuppen: nur Animationen, in denen diese Puppe mitspielt; Bilder mit Bones: alle anderen
       const forMe = (a) => (isPup ? (a.actors || []).some((x) => x.puppet === c.puppet) : !(a.actors || []).every((x) => x.puppet));
       const all = (VN.project.anims || []).filter(forMe);

@@ -2,6 +2,16 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.8 – Bones for layered characters, firm joints, human puppet template
+- Layered characters (body, face, outfit) can now use bones: set up the bones on the image of the lowest layer and all
+  layers above – face, clothing, accessories – bend and move along, even parts that stick out beyond the body (cape,
+  wide skirt, hat). Idle animations, gestures, the animation editor, blinking and lip sync work with outfits.
+- Jointed puppets: joints are anchored firmly. Attached parts only rotate around their joint and never slide away –
+  also not when animating or bobbing. Dragging an attached part in the editor rotates it around its joint
+  (Shift: 15° steps, Alt: move freely). Can be switched off per puppet (“Anchor joints firmly”).
+- New template “Human” for jointed puppets: grey slots for head, torso, arms, hands, legs and feet, already connected
+  with joints. Drag images onto the slots – they are fitted in and the joint stays – then adjust the proportions.
+
 ## 0.9.7 – Packed game files
 - New export option “Game files”: **Don’t pack** (as before – images, sounds and dialogue lie as normal files in the
   game folder, good for modding), **Packed** (everything encrypted in one file, data.vnpak – makes copying harder and

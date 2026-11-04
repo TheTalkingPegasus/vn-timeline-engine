@@ -29,6 +29,56 @@
     return out;
   };
 
+  // Vorlage „Mensch“ (0.9.8): graue Plätze für Körperteile in menschlichen Proportionen, schon mit Gelenken
+  // verbunden. Bilder auf einen Platz ziehen → der Platz wird gefüllt (Bild eingepasst, Gelenk bleibt).
+  // Danach Pins, Größe und Drehung von Hand anpassen. Maße in Puppen-Pixeln, Figur ca. 1000 hoch.
+  // [Name, Breite, Höhe, Pin X/Y im Teil, Pin-Position in der Figur, Eltern-Name]
+  const HUMAN = () => {
+    const out = [];
+    const add = (name, w, h, ax, ay, px, py, parent) => out.push({ name, w, h, ax, ay, px, py, parent });
+    for (const [s, side] of [[-1, 'L'], [1, 'R']]) {
+      add('Oberschenkel ' + side, 90, 230, 45, 20, s * 60, 510, 'Torso');
+      add('Unterschenkel ' + side, 76, 230, 38, 15, s * 60, 720, 'Oberschenkel ' + side);
+      add('Fuß ' + side, 110, 60, 55, 12, s * 60, 935, 'Unterschenkel ' + side);
+    }
+    add('Torso', 240, 320, 120, 300, 0, 500, null);
+    add('Kopf', 180, 220, 90, 205, 0, 215, 'Torso');
+    for (const [s, side] of [[-1, 'L'], [1, 'R']]) {
+      add('Oberarm ' + side, 70, 200, 35, 20, s * 128, 232, 'Torso');
+      add('Unterarm ' + side, 60, 190, 30, 15, s * 128, 412, 'Oberarm ' + side);
+      add('Hand ' + side, 70, 90, 35, 10, s * 128, 587, 'Unterarm ' + side);
+    }
+    return out;
+  };
+  PupEd.newFromTemplate = () => VN.mutate(() => {
+    const pup = { id: VN.uid('pup'), name: VN.t('Mensch'), parts: [], template: 'human' };
+    const ids = {};
+    for (const d of HUMAN()) {
+      const p = { id: VN.uid('pp'), name: VN.t(d.name), slot: d.name, asset: null, parent: null, x: d.px - d.ax, y: d.py - d.ay, w: d.w, h: d.h, ax: d.ax, ay: d.ay, rot: 0, idle: { type: 'none', amp: 4, speed: 3, phase: 0 }, bones: true };
+      ids[d.name] = p.id;
+      pup.parts.push(Object.assign(p, { _par: d.parent }));
+    }
+    for (const p of pup.parts) { p.parent = p._par ? ids[p._par] : null; delete p._par; }
+    const torso = pup.parts.find((p) => p.slot === 'Torso');
+    if (torso) torso.idle = { type: 'breathe', amp: 2, speed: 3.6, phase: 0 };
+    list().push(pup); ui().pupSel = pup.id; ui().pupPart = null; ui().pupView = null; ui().pupTest = null;
+  });
+  // Bild in einen Platz einpassen: Seitenverhältnis bleibt, das Gelenk bleibt an seiner Stelle
+  PupEd.fillSlot = (pup, p, assetId) => {
+    const im = new Image();
+    const go = (nw, nh) => VN.mutate(() => {
+      const k = Math.min(p.w / nw, p.h / nh);
+      const w = Math.max(4, Math.round(nw * k)), h = Math.max(4, Math.round(nh * k));
+      const pinX = p.x + p.ax, pinY = p.y + p.ay;
+      const ax = Math.round(p.ax / p.w * w), ay = Math.round(p.ay / p.h * h);
+      Object.assign(p, { asset: assetId, w, h, ax, ay, x: pinX - ax, y: pinY - ay });
+      ui().pupPart = p.id;
+    });
+    im.onload = () => go(im.naturalWidth || p.w, im.naturalHeight || p.h);
+    im.onerror = () => go(p.w, p.h);
+    im.src = VN.assetUrl(assetId);
+  };
+
   PupEd.newPuppet = () => VN.mutate(() => {
     const pup = { id: VN.uid('pup'), name: VN.t('Neue Gliederpuppe'), parts: [] };
     list().push(pup); ui().pupSel = pup.id; ui().pupPart = null; ui().pupView = null;
@@ -76,7 +126,8 @@
     const side = el('div', { class: 'pup-list' }, el('div', { class: 'sec-title' }, 'Gliederpuppen'),
       ...list().map((x) => el('div', { class: 'list-item' + (x === pup ? ' active' : ''), onclick: () => { ui().pupSel = x.id; ui().pupPart = null; ui().pupView = null; ui().pupTest = null; VN.render(); } },
         el('span', { class: 'an-ico' }, '🦴'), el('span', { class: 'name' }, x.name), el('span', { class: 'muted small' }, x.parts.length + ' ' + VN.t('Teile')))),
-      el('button', { class: 'btn tiny primary', onclick: PupEd.newPuppet }, '+ Gliederpuppe'));
+      el('button', { class: 'btn tiny primary', onclick: PupEd.newPuppet }, '+ Gliederpuppe'),
+      el('button', { class: 'btn tiny', title: VN.t('Fertiges Raster mit Plätzen für Kopf, Torso, Arme und Beine – Bilder hineinziehen, dann Proportionen anpassen'), onclick: PupEd.newFromTemplate }, '+ Vorlage: Mensch'));
     body.appendChild(side);
     const main = el('div', { class: 'pup-main' });
     body.appendChild(main);
@@ -85,7 +136,10 @@
         el('div', { style: { fontSize: '40px' } }, '🦴'),
         el('h2', null, 'Gliederpuppen'),
         el('p', { class: 'muted' }, 'Setze eine Figur aus einzelnen Körperteilen zusammen – Kopf, Torso, Oberarm, Unterarm, Hand … – jedes Teil ein eigenes Bild mit transparentem Hintergrund. Verbinde die Teile mit Gelenk-Pins: Der Oberarm hängt an der Schulter, der Unterarm am Ellbogen. Dann lässt sich die Figur wie eine Puppe bewegen, im Animations-Editor animieren und im Spiel mit Idle-Bewegungen zeigen.'),
-        el('button', { class: 'btn primary', onclick: PupEd.newPuppet }, '+ Neue Gliederpuppe')));
+        el('div', { class: 'row gap8', style: { justifyContent: 'center' } },
+          el('button', { class: 'btn primary', onclick: PupEd.newFromTemplate }, '🧍 Vorlage: Mensch'),
+          el('button', { class: 'btn', onclick: PupEd.newPuppet }, '+ Leere Gliederpuppe')),
+        el('p', { class: 'muted small' }, 'Die Vorlage legt Plätze für Kopf, Torso, Arme, Hände, Beine und Füße an – schon mit Gelenken verbunden. Zieh deine Bilder einfach auf die grauen Plätze und pass danach Größe und Gelenke an.')));
       return;
     }
     const testing = !!ui().pupTest;
@@ -106,6 +160,8 @@
       ? 'Radierer: Teil wählen und über die Kante malen · Größe und Kantenweichheit rechts · „Wiederherstellen“ malt das Original zurück · Mausrad + Strg = Pinselgröße · Speichern legt eine neue Bilddatei an, das Original bleibt erhalten.'
       : testing
       ? 'Ausprobieren: Teil ziehen = um den Pin drehen · Umschalt + ziehen = IK (die Kette folgt der Maus) · Wurzel-Teil ziehen = ganze Figur verschieben. Nichts davon wird gespeichert.'
+      : Puppet.fixed(pup)
+      ? 'Bilder aus der Dateiliste hierher ziehen = neues Teil (auf einen grauen Platz = Platz füllen) · Wurzel-Teil ziehen = ganze Figur verschieben · angehängtes Teil ziehen = um sein Gelenk drehen (Umschalt: 15°-Schritte, Alt = frei verschieben) · roten Pin ziehen = Gelenk setzen; auf einem anderen Teil loslassen = daran anhängen · Entf = Teil löschen'
       : 'Bilder aus der Dateiliste hierher ziehen = neues Teil · Teil ziehen = verschieben (Kinder wandern mit, Alt = nur dieses Teil) · roten Pin ziehen = Gelenk setzen; auf einem anderen Teil loslassen = daran anhängen · Entf = Teil löschen'));
     PupEd.stage(pup, canvas, wrap);
   };
@@ -268,17 +324,31 @@
         }, () => VN.render());
         return;
       }
-      // Bauen: Teil verschieben (Kinder wandern mit, Alt = nur dieses Teil)
+      // Bauen: Teil verschieben (Kinder wandern mit, Alt = nur dieses Teil).
+      // Feste Gelenke (0.9.8): ein angehängtes Teil dreht sich beim Ziehen um sein Gelenk (mit allen Kindern),
+      // statt sich vom Eltern-Teil zu lösen. Alt verschiebt es trotzdem frei (Gelenk an eine andere Stelle setzen).
       const group = e.altKey ? [hit] : [hit, ...[...Puppet.descendants(pup, hit.id)].map((id) => Puppet.part(pup, id))];
-      const start = group.map((p) => [p.x, p.y]);
+      const start = group.map((p) => ({ x: p.x, y: p.y, rot: p.rot || 0 }));
+      const turn = !!(hit.parent && Puppet.fixed(pup) && !e.altKey);
+      const px0 = hit.x + hit.ax, py0 = hit.y + hit.ay;
+      const a0 = Math.atan2(y - py0, x - px0);
       VN.drag(e, (dx, dy, ev) => {
         const [qx, qy] = toPup(ev.clientX, ev.clientY);
-        group.forEach((p, i) => { p.x = Math.round(start[i][0] + qx - x); p.y = Math.round(start[i][1] + qy - y); });
+        if (turn) {
+          let d = Math.atan2(qy - py0, qx - px0) - a0;
+          if (ev.shiftKey) d = Math.round(d / (Math.PI / 12)) * (Math.PI / 12);
+          const c = Math.cos(d), sn = Math.sin(d);
+          group.forEach((p, i) => {
+            const wx = start[i].x + p.ax - px0, wy = start[i].y + p.ay - py0;
+            p.x = Math.round(px0 + c * wx - sn * wy - p.ax); p.y = Math.round(py0 + sn * wx + c * wy - p.ay);
+            p.rot = Math.round((start[i].rot + d * 180 / Math.PI) * 10) / 10;
+          });
+        } else group.forEach((p, i) => { p.x = Math.round(start[i].x + qx - x); p.y = Math.round(start[i].y + qy - y); });
       }, (dx, dy, moved) => {
         if (!moved) { VN.render(); return; }
-        const end = group.map((p) => [p.x, p.y]);
-        group.forEach((p, i) => { p.x = start[i][0]; p.y = start[i][1]; });
-        VN.mutate(() => { group.forEach((p, i) => { p.x = end[i][0]; p.y = end[i][1]; }); });
+        const end = group.map((p) => ({ x: p.x, y: p.y, rot: p.rot }));
+        group.forEach((p, i) => Object.assign(p, start[i]));
+        VN.mutate(() => { group.forEach((p, i) => Object.assign(p, end[i])); });
       });
     });
     canvas.addEventListener('mousemove', (e) => { const r = canvas.getBoundingClientRect(); PupEd._mouse = [e.clientX - r.left, e.clientY - r.top]; });
@@ -312,7 +382,10 @@
       const [x, y] = toPup(e.clientX, e.clientY);
       let id = e.dataTransfer.getData('vn/asset-image');
       if (!id) { const added = await VN.importPaths(VN.filePaths(e.dataTransfer)); const im = added.find((a) => a.kind === 'image'); if (!im) return; id = im.id; }
-      PupEd.addPart(pup, id, x, y);
+      // Auf einen leeren Platz der Vorlage gezogen: Platz füllen
+      const slot = hitPart(x, y);
+      if (slot && !slot.asset) PupEd.fillSlot(pup, slot, id);
+      else PupEd.addPart(pup, id, x, y);
     });
   };
 
@@ -354,7 +427,8 @@
       const notMine = new Set([p.id, ...Puppet.descendants(pup, p.id)]);
       box.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Teil · ' + p.name),
         field('Name', el('input', { type: 'text', value: p.name, onchange: (e) => VN.mutate(() => { p.name = e.target.value || 'Teil'; }) })),
-        field('Bild', VN.assetSelect('image', p.asset, (v) => VN.mutate(() => { p.asset = v; }))),
+        field('Bild', VN.assetSelect('image', p.asset, (v) => { if (!p.asset && v) PupEd.fillSlot(pup, p, v); else VN.mutate(() => { p.asset = v; }); })),
+        !p.asset ? el('div', { class: 'muted small' }, 'Leerer Platz: Bild aus der Dateiliste auf den grauen Platz ziehen oder hier wählen. Es wird eingepasst, das Gelenk bleibt.') : null,
         field('Hängt an (Eltern-Teil)', sel(p.parent || '', [['', '— nichts (Wurzel, z. B. Torso) —'], ...pup.parts.filter((x) => !notMine.has(x.id)).map((x) => [x.id, x.name])], (v) => { p.parent = v || null; })),
         el('div', { class: 'grid2' },
           field('X', num(p.x, (v) => { p.x = v; })), field('Y', num(p.y, (v) => { p.y = v; })),
@@ -379,6 +453,11 @@
         el('button', { class: 'btn tiny danger', onclick: () => PupEd.removePart(pup, p) }, 'Teil löschen')));
     } else box.appendChild(el('div', { class: 'hint-box' }, 'Teil auf der Fläche anklicken. Der rote Punkt ist sein Gelenk-Pin: auf das Gelenk ziehen und über dem Teil loslassen, an dem es hängen soll.'));
 
+    box.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Gelenke'),
+      el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: Puppet.fixed(pup), onchange: (e) => VN.mutate(() => { if (e.target.checked) delete pup.freeJoints; else pup.freeJoints = true; }) }), 'Gelenke fest verankern'),
+      el('div', { class: 'muted small' }, Puppet.fixed(pup)
+        ? 'Angehängte Teile bleiben immer an ihrem Gelenk: Sie drehen sich, rutschen aber nie weg – auch nicht beim Animieren oder Wippen.'
+        : 'Frei: Angehängte Teile dürfen sich auch verschieben (z. B. für Cartoon-Effekte). Gelenke können sich dabei lösen.')));
     box.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Verwenden'),
       el('div', { class: 'muted small' }, 'Timeline: Figuren-Clip → „Art der Figur“ → diese Gliederpuppe. Animieren: Reiter „Animation“ → Darsteller → „🦴 Gliederpuppe“.'),
       el('button', { class: 'btn tiny', onclick: () => PupEd.newAnim(pup, 'idle') }, '∞ Idle-Animation für diese Puppe'),

@@ -172,7 +172,13 @@
         if (clip.set) {
           const fig = cur.el.querySelector('.fig');
           const picks = JSON.stringify(Stage.figurePicks(clip, beat, run.rs));
-          if (fig && fig.dataset.picks !== picks) { const nf = Stage.figureEl(clip, beat, run.rs); fig.replaceWith(nf); }
+          if (fig && fig.dataset.picks !== picks) {
+            const nf = Stage.figureEl(clip, beat, run.rs, cur.el);
+            fig.replaceWith(nf);
+            // Mund neu anbringen (andere Ebenen können einen anderen Mund haben)
+            cur.el.querySelectorAll('.mouth-layer').forEach((x) => x.remove());
+            cur.el._mouth = Stage.figureMouth(cur.el, clip, beat, run.rs);
+          }
         }
         cur.clip = clip;
         continue;

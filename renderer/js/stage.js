@@ -64,21 +64,51 @@
       }
       return out;
     },
-    figureEl(clip, beat, rs) {
+    // Gewählte Bilder einer Ebenen-Figur (unten nach oben)
+    figureAssets(clip, beat, rs) {
       const f = Stage.figure(clip.set);
-      const inner = el('span', { class: 'char-inner fig' });
-      if (!f) return inner;
+      if (!f) return [];
       const picks = Stage.figurePicks(clip, beat, rs);
-      let first = true;
+      const out = [];
       for (const L of f.layers) {
         const o = L.options.find((x) => x.id === picks[L.id]);
-        if (!o || !o.asset || !VN.assetUrl(o.asset)) continue;
-        inner.appendChild(el('img', { class: first ? 'fig-base' : 'fig-layer', src: VN.assetUrl(o.asset), draggable: 'false' }));
-        first = false;
+        if (o && o.asset && VN.assetUrl(o.asset)) out.push(o.asset);
       }
+      return out;
+    },
+    // Ebenen-Figur mit Bones (0.9.8): das unterste gewählte Bild mit Bones gibt Knochen und Gewichte vor,
+    // alle Ebenen darüber werden mit derselben Verformung gezeichnet (gleiche Leinwand)
+    figureRigBase(clip, beat, rs) {
+      if (clip.bones === false || !window.Rig) return null;
+      return Stage.figureAssets(clip, beat, rs).find((a) => Rig.has(a)) || null;
+    },
+    figureEl(clip, beat, rs, box) {
+      const f = Stage.figure(clip.set);
+      const picks = Stage.figurePicks(clip, beat, rs);
+      const assets = Stage.figureAssets(clip, beat, rs);
+      const base = f ? Stage.figureRigBase(clip, beat, rs) : null;
+      if (base) {
+        const cv = Rig.canvasFor(base, clip, { layers: assets, blinkAsset: assets.find((a) => window.Blink && Blink.cfg(a)), extraFn: window.Anim && box ? Anim.extraFnFor(clip, box) : null });
+        cv.classList.add('fig');
+        cv.dataset.picks = JSON.stringify(picks);
+        if (clip.flip) cv.style.transform += ' scaleX(-1)';
+        return cv;
+      }
+      const inner = el('span', { class: 'char-inner fig' });
+      if (!f) return inner;
+      assets.forEach((a, i) => inner.appendChild(el('img', { class: i ? 'fig-layer' : 'fig-base', src: VN.assetUrl(a), draggable: 'false' })));
       inner.dataset.picks = JSON.stringify(picks);
       if (clip.flip) inner.style.transform = 'scaleX(-1)';
+      // Blinzeln ohne Bones: Einstellungen der ersten Ebene, die Augen markiert hat
+      const ba = window.Blink && assets.find((a) => Blink.cfg(a));
+      if (ba) Blink.attach(inner, ba);
       return inner;
+    },
+    // Lippensync für Ebenen-Figuren: Mund von der ersten Ebene, an der er markiert ist
+    figureMouth(box, clip, beat, rs) {
+      if (!window.Fx) return null;
+      const a = Stage.figureAssets(clip, beat, rs).find((x) => Fx.mouthCfg(x));
+      return a ? Fx.attachMouth(box, { asset: a, flip: clip.flip }) : null;
     },
 
     charEl(clip, cls, ctx = {}) {
@@ -91,7 +121,8 @@
         // Gliederpuppe (0.7.6): Körperteile mit Gelenken, Idle und Gesten
         box.appendChild(Puppet.canvasFor(clip.puppet, clip, box));
       } else if (clip.set) {
-        box.appendChild(Stage.figureEl(clip, ctx.beat, ctx.rs));
+        box.appendChild(Stage.figureEl(clip, ctx.beat, ctx.rs, box));
+        box._mouth = Stage.figureMouth(box, clip, ctx.beat, ctx.rs);
       } else if (url && window.Rig && Rig.has(clip.asset) && clip.bones !== false) {
         const cv = Rig.canvasFor(clip.asset, clip, window.Anim ? { extraFn: Anim.extraFnFor(clip, box) } : {});
         if (clip.flip) cv.style.transform += ' scaleX(-1)';

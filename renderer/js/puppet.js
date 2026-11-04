@@ -16,6 +16,9 @@
   const inv = (m) => { const d = m[0] * m[3] - m[1] * m[2] || 1e-9; return [m[3] / d, -m[1] / d, -m[2] / d, m[0] / d, (m[2] * m[5] - m[3] * m[4]) / d, (m[1] * m[4] - m[0] * m[5]) / d]; };
   P.m = { mul, T, R, S, ap, inv, I: [1, 0, 0, 1, 0, 0] };
 
+  // Feste Gelenke (0.9.8, Standard): Teile, die an einem anderen hängen, bleiben immer an ihrem Gelenk – sie drehen
+  // sich nur noch, verschieben sich nie (auch nicht durch Wippen oder alte Keyframes). Aus: pup.freeJoints = true.
+  P.fixed = (pup) => !(pup && pup.freeJoints);
   P.IDLE = [['none', 'Keine'], ['sway', 'Wackeln (pendelt)'], ['breathe', 'Atmen (dehnt sich)'], ['bob', 'Wippen (auf und ab)'], ['jiggle', 'Jiggle (schwingt nach)']];
   P.list = () => (VN.project && VN.project.puppets) || [];
   P.get = (id) => P.list().find((x) => x.id === id) || null;
@@ -102,9 +105,11 @@
       const id = p.idle || {};
       const amp = Number(id.amp) || 0, spd = Math.max(0.2, Number(id.speed) || 3), ph = (Number(id.phase) || 0) * D2R;
       const wave = t != null ? Math.sin(2 * Math.PI * t / spd + ph) : 0;
-      let rot = Number(ps.r) || 0, ox = Number(ps.x) || 0, oy = Number(ps.y) || 0, sx = 1, sy = 1;
+      const anchored = !!(p.parent && P.fixed(pup));
+      let rot = Number(ps.r) || 0, ox = anchored ? 0 : Number(ps.x) || 0, oy = anchored ? 0 : Number(ps.y) || 0, sx = 1, sy = 1;
       if (id.type === 'sway') rot += amp * wave;
-      else if (id.type === 'bob') oy += amp * wave;
+      // Wippen an einem festen Gelenk: federt in sich (dehnt sich entlang des Teils) statt vom Gelenk wegzurutschen
+      else if (id.type === 'bob') { if (anchored) sy += amp / 200 * wave; else oy += amp * wave; }
       else if (id.type === 'breathe') { sy += amp / 100 * wave; sx += amp / 250 * wave; }
       let base, local;
       if (p.parent && mats[p.parent]) {
@@ -195,7 +200,12 @@
       } else {
         const im = res && res.imgs[p.id];
         if (im) ctx.drawImage(im, 0, 0, p.w, p.h);
-        else if (opts.placeholder) { ctx.fillStyle = 'rgba(160,160,180,0.35)'; ctx.fillRect(0, 0, p.w, p.h); }
+        else if (opts.placeholder) {
+          // Leerer Platz (Vorlage): grau mit gestricheltem Rand und Namen
+          ctx.fillStyle = 'rgba(160,160,180,0.22)'; ctx.fillRect(0, 0, p.w, p.h);
+          ctx.strokeStyle = 'rgba(200,200,220,0.7)'; ctx.lineWidth = 2; ctx.setLineDash([6, 5]); ctx.strokeRect(1, 1, p.w - 2, p.h - 2); ctx.setLineDash([]);
+          if (p.name) { ctx.fillStyle = 'rgba(230,230,240,0.9)'; ctx.font = Math.max(11, Math.min(22, p.w / 6)) + 'px Segoe UI, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(p.name, p.w / 2, p.h / 2, p.w - 6); }
+        }
       }
     }
     ctx.setTransform(keep);

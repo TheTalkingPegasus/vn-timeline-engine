@@ -694,6 +694,8 @@ code { font-family: Consolas, "JetBrains Mono", monospace; background: var(--bg3
 .fig-preview { flex: 0 0 300px; display: flex; flex-direction: column; gap: 8px; }
 .fig-stage { position: relative; height: 420px; background: repeating-conic-gradient(#1a1b20 0 25%, #141519 0 50%) 0 0 / 20px 20px; border-radius: 10px; border: 1px solid var(--line); overflow: hidden; container-type: size; }
 .fig-stage .char { position: absolute; bottom: 0; }
+/* Mit Bones (0.9.8): Figur etwas kleiner, damit Hut und erhobene Arme in der Vorschau Platz haben */
+.fig-stage .char:has(> .rig-canvas) { bottom: 4%; height: 80% !important; }
 .mouth-body { flex: 1; display: flex; gap: 16px; padding: 14px; min-height: 0; }
 .mouth-stage { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; background: repeating-conic-gradient(#1a1b20 0 25%, #141519 0 50%) 0 0 / 20px 20px; border-radius: 10px; border: 1px solid var(--line); cursor: crosshair; overflow: hidden; container-type: size; }
 .mouth-stage > img { max-height: 100%; max-width: 100%; display: block; }
