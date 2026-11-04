@@ -2,7 +2,14 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
-## 0.9.2 – Reorder choice answers, safety check fixes
+## 0.9.2 – Quicktime minigame, spelling suggestions, reorder answers, fixes
+- New minigame “Quicktime circle” (Minigames plugin 1.4): a hand spins, press Space/Enter/click while it is inside
+  the marked area; the area jumps elsewhere after every hit. Difficulty (easy to extreme) sets speed and size of the
+  area, both also adjustable by hand, plus hits needed, misses allowed, speeding up, direction change, time limit and
+  own images. Easier with skill tree perks or worn equipment (bigger area, slower hand, more misses) or simply with
+  a helper item in the inventory.
+- Spelling: right-clicking a misspelled word in the editor now shows suggestions from the dictionary (on Windows the
+  system dictionary) and “Add to dictionary”, plus cut/copy/paste.
 - Answers of a choice can be moved up or down one position (↑ / ↓ on each answer).
 - Fixed: the developer console and the performance display in the finished game (Windows and web) crashed on
   memory sizes – a helper only existed in the editor.

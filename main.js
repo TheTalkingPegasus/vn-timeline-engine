@@ -190,6 +190,33 @@ function createWindow() {
     }
   }, gameData ? gameWindowOpts() : {}));
   Menu.setApplicationMenu(null);
+  // Rechtschreibung (0.9.2): Rechtsklick auf ein falsch geschriebenes Wort zeigt Vorschläge aus dem Wörterbuch
+  // (unter Windows das Wörterbuch des Systems). Nur im Editor, nicht im fertigen Spiel.
+  if (!gameData) {
+    try { if (process.platform !== 'win32' && process.platform !== 'darwin') win.webContents.session.setSpellCheckerLanguages(['de-DE', 'en-US']); } catch (e) { /* Sprache nicht verfügbar */ }
+    win.webContents.on('context-menu', (_e, p) => {
+      if (!p.isEditable) return;
+      const de = uiLang === 'de';
+      const T = (a, b) => (de ? a : b);
+      const items = [];
+      if (p.misspelledWord) {
+        const sug = (p.dictionarySuggestions || []).slice(0, 6);
+        for (const w of sug) items.push({ label: w, click: () => win.webContents.replaceMisspelling(w) });
+        if (!sug.length) items.push({ label: T('Keine Vorschläge', 'No suggestions'), enabled: false });
+        items.push({ label: T('„' + p.misspelledWord + '“ zum Wörterbuch hinzufügen', 'Add “' + p.misspelledWord + '” to dictionary'), click: () => win.webContents.session.addWordToSpellCheckerDictionary(p.misspelledWord) });
+        items.push({ type: 'separator' });
+      }
+      const f = p.editFlags || {};
+      items.push(
+        { label: T('Rückgängig', 'Undo'), role: 'undo', enabled: !!f.canUndo },
+        { type: 'separator' },
+        { label: T('Ausschneiden', 'Cut'), role: 'cut', enabled: !!f.canCut },
+        { label: T('Kopieren', 'Copy'), role: 'copy', enabled: !!f.canCopy },
+        { label: T('Einfügen', 'Paste'), role: 'paste', enabled: !!f.canPaste },
+        { label: T('Alles auswählen', 'Select all'), role: 'selectAll' });
+      Menu.buildFromTemplate(items).popup({ window: win });
+    });
+  }
   // Schließen: erst die Oberfläche ausstehende Änderungen speichern lassen (höchstens 4 s warten)
   let closeOk = !!gameData;
   win.on('close', (e) => {

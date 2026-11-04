@@ -14,7 +14,16 @@ Ohne Installation (ZIP):
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
 
-NEU IN 0.9.2 · Antworten umsortieren, Fehler aus dem Sicherheitscheck
+NEU IN 0.9.2 · Quicktime-Minispiel, Rechtschreib-Vorschläge, Antworten umsortieren, Fehlerbehebungen
+- Neues Minispiel „Quicktime-Kreis“ (Plugin Minispiele 1.4): Ein Zeiger dreht sich, im richtigen Moment Leertaste,
+  Enter oder Klick drücken, wenn er in der markierten Fläche steht. Nach jedem Treffer springt die Fläche weiter.
+  Die Schwierigkeit (leicht bis extrem) bestimmt Tempo und Größe der Fläche – beides auch frei einstellbar –, dazu
+  Treffer, erlaubte Fehlversuche, schneller werden, Richtungswechsel, Zeitlimit und eigene Bilder. Leichter durch
+  Skilltree-Perks oder getragene Ausrüstung (größere Fläche, langsamerer Zeiger, mehr Fehlversuche) oder einfach
+  mit einem Hilfs-Gegenstand im Inventar.
+- Rechtschreibung: Rechtsklick auf ein falsch geschriebenes Wort im Editor zeigt jetzt Vorschläge aus dem
+  Wörterbuch (unter Windows das Wörterbuch des Systems) und „Zum Wörterbuch hinzufügen“, dazu Ausschneiden,
+  Kopieren, Einfügen.
 - Die Antworten einer Auswahl lassen sich eine Position nach oben oder unten schieben (↑ / ↓ an jeder Antwort).
 - Behoben: Entwickler-Konsole und Leistungsanzeige im fertigen Spiel (Windows und Web) stürzten bei Speichergrößen
   ab – eine Hilfsfunktion gab es nur im Editor.
