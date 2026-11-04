@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.0
+VN Timeline Engine · Prototyp 0.9.1
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,13 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.1 · Auswahl-Fenster frei verschieben
+- Auswahl-Fenster lassen sich jetzt auch nach oben und unten verschieben und in der Breite ändern – pro Auswahl,
+  mit Vorlagen (oben, Mitte, unten) oder „wie im Design“. Vorher lagen sie immer in der Bildmitte.
+- Die Auswahl lässt sich direkt auf der Bühne mit der Maus ziehen (rastet in der Mitte ein, Alt = frei). Sie bleibt
+  dabei immer im Bild.
+- Neuer Knopf „Für alle Auswahlen im Projekt übernehmen“ überträgt Position und Breite auf alle anderen Auswahlen.
 
 NEU IN 0.9.0 · Geräte: Handy und Computer, Nachrichten über Szenen hinweg
 Geräte (Spielsysteme → Geräte)

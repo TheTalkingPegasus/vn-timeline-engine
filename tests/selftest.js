@@ -298,6 +298,8 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
         ok(VN.afterPick({ afterPick: 'grey' }, {}) === 'grey' && VN.afterPick({ afterPick: 'grey' }, { afterPick: 'hide' }) === 'hide', '0.8.0 Auswahl: „Nach dem Wählen“ falsch');
         const bx = document.createElement('div'); VN.placeChoices(bx, { chX: 5 });
         ok(parseFloat(bx.style.left) >= 25, '0.8.0 Auswahl: links verschoben ragt über den Rand ' + bx.style.left);
+        const by = document.createElement('div'); VN.placeChoices(by, { chY: 80, chW: 30 });
+        ok(by.style.top === '80%' && by.style.width === '30%', '0.9.1 Auswahl: senkrechte Position / Breite fehlt');
         ok(App.folderOf({ file: 'assets/Bilder/Figuren/ray.png' }) === 'Bilder/Figuren' && App.folderOf({ file: 'assets/x.png' }) === '' && App.folderOf({ file: 'assets/a/b.png', folder: 'Eigen' }) === 'Eigen', '0.8.0 Ordner: Zuordnung falsch');
         pp.time = Object.assign(pp.time || {}, { enabled: true, seasonsOn: true, seasonDays: 2, startSeason: 0 }); VN.migrate(pp);
         const rt = { time: { day: 3, slot: 1 } };

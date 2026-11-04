@@ -408,13 +408,29 @@
   VN.fill = (obj, def) => { const o = obj && typeof obj === 'object' ? obj : {}; for (const k of Object.keys(def)) if (o[k] === undefined) o[k] = def[k]; return o; };
 
   // Auswahl waagerecht verschieben (0.8.0): Mitte der Auswahl in % der Bildbreite
+  // Position der Auswahl pro Clip (0.8.0 waagerecht, 0.9.1 auch senkrecht und Breite). Ohne Angabe gilt das Design.
   VN.placeChoices = (box, clip) => {
-    const x = clip && clip.chX != null ? Math.max(5, Math.min(95, Number(clip.chX))) : null;
-    if (x == null || x === 50) return;
+    if (!clip) return;
+    if (clip.chW != null) box.style.width = Math.max(15, Math.min(95, Number(clip.chW))) + '%';
+    const x = clip.chX != null ? Math.max(5, Math.min(95, Number(clip.chX))) : null;
     // nie über den Bildrand hinaus: die Breite der Auswahl beachten
     const w = parseFloat(box.style.width) || 46;
-    box.style.left = Math.max(w / 2 + 2, Math.min(100 - w / 2 - 2, x)) + '%';
+    if (x != null && x !== 50) box.style.left = Math.max(w / 2 + 2, Math.min(100 - w / 2 - 2, x)) + '%';
+    if (clip.chY != null) box.style.top = Math.max(5, Math.min(95, Number(clip.chY))) + '%';
+    // senkrecht: sobald die Höhe bekannt ist, ganz ins Bild schieben
+    const fit = () => {
+      const par = box.parentElement;
+      if (!par || !box.offsetHeight) return;
+      const H = par.clientHeight, h = box.offsetHeight, half = h / 2 / H * 100;
+      const y = parseFloat(box.style.top || getComputedStyle(box).top) / (box.style.top ? 1 : H / 100);
+      if (!isFinite(y)) return;
+      const ny = Math.max(half + 1.5, Math.min(100 - half - 1.5, y));
+      if (Math.abs(ny - y) > 0.1) box.style.top = ny + '%';
+    };
+    requestAnimationFrame(fit);
   };
+  // Senkrechte Mitte der Auswahl ohne eigene Angabe (aus dem Design)
+  VN.choiceYDefault = (clip) => (window.Theme && Theme.choice ? Number(Theme.choice(clip).y) || 42 : 42);
   // Nach dem Wählen: '' = normal, 'grey' = ausgrauen (weiter wählbar), 'hide' = ausblenden
   VN.afterPick = (clip, o) => (o.afterPick != null && o.afterPick !== '' ? o.afterPick : (clip && clip.afterPick) || '');
 

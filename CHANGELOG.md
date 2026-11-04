@@ -2,6 +2,12 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.1 – Choices can be moved anywhere
+- Choice windows can now also be moved up and down and changed in width – per choice, with presets (top, centre,
+  bottom) or “as in design”. Before, they always covered the middle of the picture.
+- Drag a choice directly on the stage with the mouse (snaps to the centre, Alt = free). It always stays inside the picture.
+- New button “Apply to all choices in the project” copies position and width to every other choice.
+
 ## 0.9.0 – Devices: phone and computer, messages across scenes
 Devices (Game systems → Devices)
 - New game system: an in-game **phone** (portrait, status bar, app grid) or **computer** (desktop with icons,

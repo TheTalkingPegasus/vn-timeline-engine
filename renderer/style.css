@@ -2039,3 +2039,5 @@ body.cbsim-tritan #center .stage, body.cbsim-tritan #player { filter: url(#vn-cb
 .dv-msgrow.me textarea { border-color: var(--accent); }
 .dv-pill { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: rgba(127,127,127,0.18); }
 .dv-pill.on { background: var(--accent); color: var(--accent-ink, #000); }
+.stage .choice-box { cursor: move; }
+.stage .choice-box:hover { outline: 1px dashed var(--accent); outline-offset: 0.8cqh; }
