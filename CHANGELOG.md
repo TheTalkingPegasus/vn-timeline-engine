@@ -2,7 +2,7 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
-## 0.7.7 – Effect layers in order
+## 0.7.7 – Bugfix: effect layers in order
 - Eyes open / close / blink now always lie in front of every other effect layer (particles, glow, light), so
   e.g. embers only become visible when the eyes open. They stay below dialogue and phone.
 - Effect layers follow the timeline order: an effect track further down is drawn further in front (like
