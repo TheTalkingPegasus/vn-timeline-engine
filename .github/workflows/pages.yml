@@ -25,7 +25,8 @@ jobs:
         with:
           node-version: 20
       - name: JSZip installieren
-        run: npm install --no-save --ignore-scripts --omit=dev jszip@3.10.1
+        # Nur JSZip, getrennt vom Projekt installiert (sonst würde npm alle Entwicklungs-Pakete wie Electron laden)
+        run: npm install --prefix "$RUNNER_TEMP/jz" --ignore-scripts jszip@3.10.1 && mkdir -p node_modules && cp -r "$RUNNER_TEMP/jz/node_modules/jszip" node_modules/
       - name: Web-Version bauen
         run: node tools/build-web.js
       - uses: actions/configure-pages@v5
