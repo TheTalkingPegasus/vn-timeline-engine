@@ -1,75 +1,92 @@
-// Sprache der Oberfläche (Deutsch / Englisch).
+// Sprache der Oberfläche (Deutsch / Englisch / Spanisch / Japanisch).
 // Die Engine ist auf Deutsch geschrieben; dieser Übersetzer tauscht sichtbare Texte
-// im DOM gegen die englische Fassung aus i18n-en.js. Spielinhalte (Dialoge, Antworten …)
+// im DOM gegen die Fassung aus i18n-en.js / i18n-es.js / i18n-ja.js. Spielinhalte (Dialoge, Antworten …)
 // werden nie angefasst. Der Editor folgt der Einstellung „Sprache“, der Spieler im Spiel
-// folgt der Sprache des Spiels (Deutsch → deutsche Menüs, alles andere → englische).
+// folgt der Sprache des Spiels (de/en/es/ja → passende Menüs, alles andere → englische).
+// Fehlt ein Text in Spanisch oder Japanisch, wird die englische Fassung genommen.
 (function () {
   const VN = window.VN = window.VN || {};
-  const D = window.VN_I18N_EN || {};
+  const LANGS = ['de', 'en', 'es', 'ja'];
   const FRAG = window.VN_I18N_EN_FRAG || [];
-  const CONTENT_D = window.VN_I18N_EN_CONTENT || {};
   const LETTER = 'A-Za-zÄÖÜäöüß';
   const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  let fragRe = null;
-  const fragMap = new Map();
-  const buildFrag = () => {
-    if (fragRe || !FRAG.length) return;
-    const edge = /^[\s·:–—,]+|[\s·:–—,]+$/g;
-    const list = FRAG.filter((k) => { const c = k.replace(edge, ''); return c === k || D[c] === undefined || String(D[k]).replace(edge, '') !== D[c]; });
-    for (const k of list) fragMap.set(k, D[k]);
-    const alts = list.map((k) => {
-      let p = esc(k);
-      if (new RegExp('^[' + LETTER + ']').test(k)) p = '(?<![' + LETTER + '-])' + p;
-      if (new RegExp('[' + LETTER + ']$').test(k)) p = p + '(?![' + LETTER + '-])';
-      return p;
-    });
-    fragRe = new RegExp(alts.join('|'), 'g');
-  };
-
-  const cache = new Map();
   const PROPER = /^(Ray|English|Deutsch|Windows|Bones|Excel|YouTube|Chrome|Electron|Intel|Iris|VN|I)\b/;
   const SEG = /( · | – | — |: |, |\n| \(|\) |\)$|^\(| → | \/ )/;
   const cap = (de, out) => (/^[A-ZÄÖÜ]/.test(de) && /^[a-z]/.test(out) ? out[0].toUpperCase() + out.slice(1) : out);
-  const exact = (s) => {
-    const core = s.trim();
-    const hit = D[core];
-    if (hit === undefined) return null;
-    const i = s.indexOf(core);
-    return s.slice(0, i) + cap(core, hit) + s.slice(i + core.length);
+
+  // Ein Übersetzer je Sprache (Tabellen werden erst beim ersten Gebrauch zusammengesetzt)
+  const makers = {};
+  const tables = (l) => {
+    const EN = window.VN_I18N_EN || {};
+    if (l === 'en') return { D: EN, C: window.VN_I18N_EN_CONTENT || {} };
+    const U = l.toUpperCase();
+    return { D: Object.assign({}, EN, window['VN_I18N_' + U] || {}), C: Object.assign({}, window.VN_I18N_EN_CONTENT || {}, window['VN_I18N_' + U + '_CONTENT'] || {}) };
   };
-  // Übersetzt einen Text ins Englische: ganzer Text, dann Teilstücke (Label: Wert · …), dann Fragmente.
-  function en(s, exactOnly) {
-    if (typeof s !== 'string' || !s || !/[A-Za-zÄÖÜäöüß]/.test(s)) return s;
-    const ex = exact(s);
-    if (ex !== null) return ex;
-    const sym = /^([^A-Za-zÄÖÜäöüß0-9„"(]+)(.+)$/.exec(s);
-    if (sym) { const r = exact(sym[2]); if (r !== null) return sym[1] + r; }
-    if (exactOnly) return s;
-    const c = cache.get(s);
-    if (c !== undefined) return c;
-    buildFrag();
-    let out = s;
-    if (fragRe) out = out.replace(fragRe, (m, off, all) => {
-      let r = fragMap.get(m) || m;
-      // mitten im Satz: Substantive klein (3 Abschnitte → 3 sections)
-      if (off > 0 && /[0-9a-zäöüß] $/.test(all.slice(Math.max(0, off - 2), off)) && /^[A-Z][a-z]+\b/.test(r) && !PROPER.test(r)) r = r[0].toLowerCase() + r.slice(1);
-      return r;
-    });
-    const parts = out.split(SEG);
-    if (parts.length > 1) out = parts.map((p, i) => (i % 2 ? p : (exact(p) ?? p))).join('');
-    if (cache.size > 20000) cache.clear();
-    cache.set(s, out);
-    return out;
-  }
+  const maker = (l) => {
+    if (makers[l]) return makers[l];
+    const { D, C } = tables(l);
+    let fragRe = null;
+    const fragMap = new Map();
+    const cache = new Map();
+    const buildFrag = () => {
+      if (fragRe || !FRAG.length) return;
+      const edge = /^[\s·:–—,]+|[\s·:–—,]+$/g;
+      const list = FRAG.filter((k) => D[k] !== undefined).filter((k) => { const c = k.replace(edge, ''); return c === k || D[c] === undefined || String(D[k]).replace(edge, '') !== D[c]; });
+      for (const k of list) fragMap.set(k, D[k]);
+      const alts = list.map((k) => {
+        let p = esc(k);
+        if (new RegExp('^[' + LETTER + ']').test(k)) p = '(?<![' + LETTER + '-])' + p;
+        if (new RegExp('[' + LETTER + ']$').test(k)) p = p + '(?![' + LETTER + '-])';
+        return p;
+      });
+      fragRe = alts.length ? new RegExp(alts.join('|'), 'g') : null;
+    };
+    const exact = (s) => {
+      const core = s.trim();
+      const hit = D[core];
+      if (hit === undefined) return null;
+      const i = s.indexOf(core);
+      return s.slice(0, i) + cap(core, hit) + s.slice(i + core.length);
+    };
+    // Übersetzt einen Text: ganzer Text, dann Teilstücke (Label: Wert · …), dann Fragmente.
+    const tr = (s, exactOnly) => {
+      if (typeof s !== 'string' || !s || !/[A-Za-zÄÖÜäöüß]/.test(s)) return s;
+      const ex = exact(s);
+      if (ex !== null) return ex;
+      const sym = /^([^A-Za-zÄÖÜäöüß0-9„"(]+)(.+)$/.exec(s);
+      if (sym) { const r = exact(sym[2]); if (r !== null) return sym[1] + r; }
+      if (exactOnly) return s;
+      const c = cache.get(s);
+      if (c !== undefined) return c;
+      buildFrag();
+      let out = s;
+      if (fragRe) out = out.replace(fragRe, (m, off, all) => {
+        let r = fragMap.get(m) || m;
+        // mitten im Satz: Substantive klein (3 Abschnitte → 3 sections)
+        if (l !== 'ja' && off > 0 && /[0-9a-zäöüß] $/.test(all.slice(Math.max(0, off - 2), off)) && /^[A-Z][a-z]+\b/.test(r) && !PROPER.test(r)) r = r[0].toLowerCase() + r.slice(1);
+        return r;
+      });
+      const parts = out.split(SEG);
+      if (parts.length > 1) out = parts.map((p, i) => (i % 2 ? p : (exact(p) ?? p))).join('');
+      if (cache.size > 20000) cache.clear();
+      cache.set(s, out);
+      return out;
+    };
+    makers[l] = { tr, C };
+    return makers[l];
+  };
+  const trIn = (l, s, exactOnly) => (l === 'de' || !LANGS.includes(l) ? s : maker(l).tr(s, exactOnly));
+  const en = (s, exactOnly) => trIn('en', s, exactOnly);
 
   const KEY = 'vn-ui-lang';
   let uiLang = 'en';
-  try { const v = localStorage.getItem(KEY); if (v === 'de' || v === 'en') uiLang = v; } catch (e) { /* kein Speicher */ }
+  try { const v = localStorage.getItem(KEY); if (LANGS.includes(v)) uiLang = v; } catch (e) { /* kein Speicher */ }
 
   const playerLang = () => {
     const p = VN.project;
     const l = String(VN.lang || (p && p.languages && p.languages[0]) || 'de').toLowerCase();
-    return l.startsWith('de') ? 'de' : 'en';
+    const b = l.slice(0, 2);
+    return LANGS.includes(b) ? b : 'en';
   };
   const playerRoot = () => document.getElementById('player');
   const langFor = (node) => {
@@ -127,9 +144,9 @@
     const parent = n.parentElement;
     const lang = langFor(n);
     let out = orig;
-    if (lang === 'en') {
+    if (lang !== 'de') {
       const c = ctxOf(parent, true);
-      if (!c.skip) out = en(orig, c.exact || isUser(orig));
+      if (!c.skip) out = trIn(lang, orig, c.exact || isUser(orig));
     }
     if (out !== orig || st) textState.set(n, { orig, out });
     if (cur !== out) n.data = out;
@@ -145,7 +162,7 @@
       let orig = cur;
       if (s) { if (cur === s.out) orig = s.orig; }
       let out = orig;
-      if (lang === 'en') { c = c || ctxOf(elm); if (!c.skip) out = en(orig, c.exact || isUser(orig)); }
+      if (lang !== 'de') { c = c || ctxOf(elm); if (!c.skip) out = trIn(lang, orig, c.exact || isUser(orig)); }
       if (out !== orig || s) { st = st || {}; st[a] = { orig, out }; attrState.set(elm, st); }
       if (cur !== out) elm.setAttribute(a, out);
     }
@@ -187,7 +204,8 @@
     en,
     get lang() { return uiLang; },
     set(l) {
-      uiLang = l === 'de' ? 'de' : 'en';
+      uiLang = LANGS.includes(l) ? l : 'en';
+      document.documentElement.lang = uiLang;
       try { localStorage.setItem(KEY, uiLang); } catch (e) { /* egal */ }
       try { if (window.vnApi && window.vnApi.setUiLang) window.vnApi.setUiLang(uiLang); } catch (e) { /* egal */ }
       refresh();
@@ -195,17 +213,20 @@
       if (VN.render && VN.project) { try { VN.render(); } catch (e) { /* noch kein Projekt */ } }
     },
     refresh,
-    playerLang
+    playerLang,
+    langs: LANGS,
+    tr: (s, l) => trIn(l || uiLang, s)
   };
+  document.documentElement.lang = uiLang;
   // Text für Daten, die der Editor anlegt (Standardnamen, Lern-Inhalte): folgt der Editor-Sprache
   VN.t = (s) => {
-    if (uiLang !== 'en' || VN.gameMode || typeof s !== 'string') return s;
-    const c = CONTENT_D[s.trim()];
-    return c !== undefined ? s.replace(s.trim(), c) : en(s);
+    if (uiLang === 'de' || VN.gameMode || typeof s !== 'string') return s;
+    const c = maker(uiLang).C[s.trim()];
+    return c !== undefined ? s.replace(s.trim(), c) : trIn(uiLang, s);
   };
   // Mit Platzhaltern: VN.tf('Szene „{name}“ fehlt', { name }) – erst übersetzen, dann einsetzen
   VN.tf = (s, o) => String(VN.t(s)).replace(/\{(\w+)\}/g, (m, k) => (o && o[k] != null ? o[k] : m));
   // Text für den Spieler (folgt der Spielsprache)
-  VN.tp = (s) => (playerLang() === 'en' ? en(s) : s);
+  VN.tp = (s) => trIn(playerLang(), s);
   try { if (window.vnApi && window.vnApi.setUiLang) window.vnApi.setUiLang(uiLang); } catch (e) { /* egal */ }
 })();

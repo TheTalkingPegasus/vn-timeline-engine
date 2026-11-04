@@ -257,7 +257,7 @@
         return;
       }
       // Spielsysteme mit eigenem Bildschirm: echte Daten zeigen, sonst ein Beispiel (wird nicht gespeichert)
-      const hint = (sys) => stage.appendChild(el('div', { class: 'ud-sample' }, VN.t('Beispieldaten zur Vorschau') + ' · ' + VN.t('Eigene Inhalte legst du unter Spielsysteme') + ' → ' + VN.t(sys) + (VN.I18n && VN.I18n.lang === 'en' ? '' : ' an')));
+      const hint = (sys) => stage.appendChild(el('div', { class: 'ud-sample' }, VN.t('Beispieldaten zur Vorschau') + ' · ' + VN.t('Eigene Inhalte legst du unter Spielsysteme') + ' → ' + VN.t(sys) + (VN.I18n && VN.I18n.lang !== 'de' ? '' : ' an')));
       const sample = (build, show) => {
         const p = VN.project;
         const keep = { skills: p.skills, combat: p.combat, idle: p.idle, currencies: p.currencies };

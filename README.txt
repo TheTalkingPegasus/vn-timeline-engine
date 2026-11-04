@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototype 0.9.5
+VN Timeline Engine · Prototype 0.9.6
 ====================================
 (Deutsch: siehe LIES MICH.txt)
 
@@ -26,9 +26,9 @@ NEW IN 0.9 · Phone & computer, messages, puppets and more
   game over; seven minigames; spell-check suggestions. Full list: CHANGELOG.md.
 
 LANGUAGE
-The interface is available in English and German. English is the default.
-Switch on the start screen (top right) or under Project ▾ → Language.
-Menus inside a game follow the game's language (German game → German menus, otherwise English).
+The interface is available in English, German, Spanish and Japanese. English is the default.
+Switch on the start screen or under Project ▾ → Language.
+Menus inside a game follow the game's language (German, English, Spanish or Japanese; otherwise English).
 
 WHAT'S INSIDE
 Editor

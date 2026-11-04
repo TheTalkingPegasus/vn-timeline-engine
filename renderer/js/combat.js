@@ -455,8 +455,8 @@
     if (!c.heroes.length) out.push({ text: 'Kampf: noch keine Helden angelegt' });
     else if (!c.party.some((id) => CB.hero(id))) out.push({ text: 'Kampf: Startgruppe ist leer' });
     for (const h of c.heroes) for (const pr of CB.fighterProblems(h, 'hero')) out.push({ text: VN.t('Held') + ' „' + h.name + '“: ' + VN.t(pr) });
-    for (const e of c.enemies) for (const pr of CB.fighterProblems(e, 'enemy')) out.push({ text: (VN.I18n && VN.I18n.lang === 'en' ? 'Enemy' : 'Gegner') + ' „' + e.name + '“: ' + VN.t(pr) });
-    for (const b of c.battles) for (const pr of CB.battleProblems(b)) out.push({ text: (VN.I18n && VN.I18n.lang === 'en' ? 'Battle' : 'Kampf') + ' „' + b.name + '“: ' + VN.t(pr) });
+    for (const e of c.enemies) for (const pr of CB.fighterProblems(e, 'enemy')) out.push({ text: VN.t('Gegner') + ' „' + e.name + '“: ' + VN.t(pr) });
+    for (const b of c.battles) for (const pr of CB.battleProblems(b)) out.push({ text: VN.t('Kampf') + ' „' + b.name + '“: ' + VN.t(pr) });
     return out;
   };
 

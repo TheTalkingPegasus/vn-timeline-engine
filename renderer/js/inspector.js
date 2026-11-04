@@ -144,7 +144,7 @@
     clip(s, c, t) {
       const tb = VN.tbase(t);
       const box = el('div', { class: 'insp' },
-        el('div', null, el('h3', null, 'Clip · ' + t.label), el('div', { class: 'insp-sub' }, 'Schritt ' + (c.start + 1) + (c.len > 1 ? ' bis ' + (c.start + c.len) : ''))));
+        el('div', null, el('h3', null, 'Clip · ' + t.label), el('div', { class: 'insp-sub' }, c.len > 1 ? VN.tf('Schritt {a} bis {b}', { a: c.start + 1, b: c.start + c.len }) : 'Schritt ' + (c.start + 1))));
       const timing = el('div', { class: 'grid2' },
         field('Start (Schritt)', num(c.start + 1, (v) => VN.mutate(() => { c.start = Math.max(0, Math.round(v) - 1); s.beats = Math.max(s.beats, c.start + c.len); }), { min: 1 })),
         field('Dauer (Schritte)', num(c.len, (v) => VN.mutate(() => { c.len = Math.max(1, Math.round(v)); s.beats = Math.max(s.beats, c.start + c.len); }), { min: 1 })));

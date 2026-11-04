@@ -133,7 +133,7 @@
       const r = res.main;
       const lab = r.rate >= 90 ? ['Leicht', 'ok'] : r.rate >= 65 ? ['Mittel', 'mid'] : r.rate >= 35 ? ['Schwer', 'hard'] : ['Sehr schwer', 'bad'];
       box.appendChild(el('div', { class: 'cb-simhead' }, el('span', { class: 'cb-diff ' + lab[1] }, VN.t(lab[0])),
-        el('span', null, VN.t('Sieg in') + ' ' + r.rate + ' % · ' + VN.t('im Schnitt') + ' ' + String(r.rounds).replace('.', VN.I18n && VN.I18n.lang === 'en' ? '.' : ',') + ' ' + (VN.I18n && VN.I18n.lang === 'en' ? 'turns' : 'Runden') + (r.win ? ' · ' + r.hp + ' % ' + VN.t('LP übrig') : ''))));
+        el('span', null, VN.t('Sieg in') + ' ' + r.rate + ' % · ' + VN.t('im Schnitt') + ' ' + String(r.rounds).replace('.', VN.I18n && VN.I18n.lang !== 'de' && VN.I18n.lang !== 'es' ? '.' : ',') + ' ' + VN.t('Runden') + (r.win ? ' · ' + r.hp + ' % ' + VN.t('LP übrig') : ''))));
       const bars = el('div', { class: 'cb-bars' });
       for (const x of res.sweep) bars.appendChild(el('div', { class: 'cb-bar' + (x.lvl === res.lvl ? ' on' : ''), title: VN.t('Stufe') + ' ' + x.lvl + ': ' + x.rate + ' %' }, el('i', { style: { height: Math.max(3, x.rate) + '%' } }), el('span', null, String(x.lvl))));
       box.appendChild(el('div', { class: 'muted small' }, VN.t('Siegchance nach Stufe der Gruppe (Startgruppe, kluges Verhalten):')));
