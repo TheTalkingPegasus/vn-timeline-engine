@@ -13,7 +13,7 @@
   };
   Q.cfg = () => {
     const p = VN.project;
-    p.quests = Object.assign({ enabled: false, list: [], notify: {}, key: 'q' }, p.quests || {});
+    p.quests = VN.fill(p.quests, { enabled: false, list: [], notify: {}, key: 'q' });
     for (const [k] of NOTIFY_KINDS) p.quests.notify[k] = Object.assign({}, NOTIFY_BASE[k], p.quests.notify[k] || {});
     return p.quests;
   };

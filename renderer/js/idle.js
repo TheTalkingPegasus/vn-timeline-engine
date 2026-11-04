@@ -9,7 +9,10 @@
   ID.MODES = [['realtime', 'Echtzeit, nur während gespielt wird'], ['offline', 'Echtzeit, auch bei geschlossenem Spiel'], ['gametime', 'Spielzeit (pro Tageszeit, braucht „Zeit & Kalender“)']];
   ID.cfg = () => {
     const p = P();
-    p.idle = Object.assign({ enabled: false, title: 'Aufbau', key: 'k', inMenu: false, mode: 'realtime', offlineMax: 8, offlinePct: 50, click: false, catchup: 100, warnMin: 20, buildings: [], milestones: [], hidden: false, tick: 'min', startWhen: 'always', startConds: [] }, p.idle || {});
+    // Fehlende Felder ergänzen, aber immer dasselbe Objekt behalten (sonst gehen Änderungen an einer älteren Kopie verloren)
+    const def = { enabled: false, title: 'Aufbau', key: 'k', inMenu: false, mode: 'realtime', offlineMax: 8, offlinePct: 50, click: false, catchup: 100, warnMin: 20, buildings: [], milestones: [], hidden: false, tick: 'min', startWhen: 'always', startConds: [] };
+    if (!p.idle || typeof p.idle !== 'object') p.idle = {};
+    for (const k of Object.keys(def)) if (p.idle[k] === undefined) p.idle[k] = def[k];
     return p.idle;
   };
   ID.on = () => !!(P() && P().idle && P().idle.enabled);

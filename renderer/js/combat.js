@@ -14,7 +14,7 @@
 
   CB.cfg = () => {
     const p = P();
-    p.combat = Object.assign({ enabled: false, heroes: [], enemies: [], skills: [], battles: [], party: [], maxParty: 4, growth: 8, xpBase: 20, maxLevel: 50, heal: 'full', flee: 50, currency: '', music: '', winMusic: '', loseMusic: '', sounds: {}, story: true, speed: 1 }, p.combat || {});
+    p.combat = VN.fill(p.combat, { enabled: false, heroes: [], enemies: [], skills: [], battles: [], party: [], maxParty: 4, growth: 8, xpBase: 20, maxLevel: 50, heal: 'full', flee: 50, currency: '', music: '', winMusic: '', loseMusic: '', sounds: {}, story: true, speed: 1 });
     return p.combat;
   };
   CB.on = () => !!(P() && P().combat && P().combat.enabled);

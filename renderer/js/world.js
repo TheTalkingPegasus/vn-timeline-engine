@@ -5,7 +5,7 @@
 
   W.cfg = () => {
     const p = VN.project;
-    p.world = Object.assign({ enabled: false, home: '', travel: 1, freeAtStart: true, maps: [], events: [], hudMap: true, hudHome: true }, p.world || {});
+    p.world = VN.fill(p.world, { enabled: false, home: '', travel: 1, freeAtStart: true, maps: [], events: [], hudMap: true, hudHome: true });
     return p.world;
   };
   W.on = () => !!(VN.project && VN.project.world && VN.project.world.enabled);

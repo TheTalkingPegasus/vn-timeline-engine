@@ -227,6 +227,7 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
         buildings: [{ id: 'A', name: 'Hütte', max: 5, start: 1, costs: [{ cur: 'g', amount: 10 }], grow: 2, prods: [{ cur: 'g', amount: 1 }], conds: [] }], milestones: [] };
       VN.migrate(pp);
       const I = VN.Idle, r = VN.newRunState();
+      { const c0 = I.cfg(); I.issues(); c0.tick = 'sec'; ok(I.cfg() === c0 && pp.idle.tick === 'sec', '0.7.5 Aufbau: Einstellungen gehen verloren (Kopie statt Original)'); }
       I.produce(r, 1);
       ok((r.money.g || 0) === 0, '0.7.4 Aufbau: produziert, obwohl er noch nicht gestartet ist');
       r.vars.v1 = 1;
