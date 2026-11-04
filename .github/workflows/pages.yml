@@ -1,0 +1,36 @@
+# Web-Version des Editors auf GitHub Pages (kostenlos, ohne Installation zum Ausprobieren)
+# Einmalig nötig: Settings → Pages → Source: „GitHub Actions“
+name: Web-Version (GitHub Pages)
+on:
+  push:
+    branches: [main]
+    paths: ['renderer/**', 'templates/**', 'demo.js', 'tutorial.js', 'project-lang.js', 'main.js', 'tools/build-web.js', 'LICENSE', '.github/workflows/pages.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: JSZip installieren
+        run: npm install --no-save --ignore-scripts --omit=dev jszip@3.10.1
+      - name: Web-Version bauen
+        run: node tools/build-web.js
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web-build
+      - id: deployment
+        uses: actions/deploy-pages@v4

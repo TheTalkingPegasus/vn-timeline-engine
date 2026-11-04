@@ -2,6 +2,16 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.6 – Web version: try the engine in the browser
+- The editor now also runs in the browser, without installing: https://thetalkingpegasus.github.io/vn-timeline-engine/
+  Projects are stored in the browser (IndexedDB) – or, in Chrome and Edge, directly in a project folder on the PC,
+  exactly like the desktop version. Tutorial, learning project and example project work as usual.
+- “Project ▾ → Download as ZIP” saves the whole project (backup, or to continue in the desktop version);
+  “Open project” opens browser projects, a folder (Chrome/Edge) or a ZIP file.
+- Import by button or drag & drop, testing, plugins, bundled minigames and the web export (as a ZIP, ready for itch.io)
+  work in the browser. The Windows export needs the desktop version.
+- Built automatically from every change and published on GitHub Pages (tools/build-web.js, workflow “Web-Version”).
+
 ## 0.9.5 – Particles in hubs, how often hub events run, hard cut for characters
 - Hub events (short lines or timeline dialogues) now have “When” (on entering the hub / as soon as “Only if” is met)
   and “How often”: only once, every time, at most … times, or once per day (with time system). An event never runs

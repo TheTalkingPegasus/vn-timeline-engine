@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.5
+VN Timeline Engine · Prototyp 0.9.6
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,15 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.6 · Web-Version: die Engine im Browser ausprobieren
+- Der Editor läuft jetzt auch im Browser, ohne Installation: https://thetalkingpegasus.github.io/vn-timeline-engine/
+  Projekte liegen im Browser – oder in Chrome und Edge direkt in einem Projektordner auf dem PC, genau wie in der
+  Desktop-Version. Tutorial, Lernprojekt und Beispielprojekt funktionieren wie gewohnt.
+- „Projekt ▾ → Als ZIP herunterladen“ sichert das ganze Projekt (Sicherung oder zum Weitermachen in der
+  Desktop-Version); „Projekt öffnen“ öffnet Browser-Projekte, einen Ordner (Chrome/Edge) oder eine ZIP-Datei.
+- Importieren per Knopf oder Ziehen & Ablegen, Testen, Plugins, mitgelieferte Minispiele und der Web-Export (als ZIP,
+  fertig für itch.io) funktionieren im Browser. Für den Windows-Export braucht es die Desktop-Version.
 
 NEU IN 0.9.5 · Partikel im Hub, wie oft Hub-Ereignisse laufen, harter Schnitt bei Figuren
 - Hub-Ereignisse (kurze Zeilen oder Timeline-Dialoge) haben jetzt „Wann“ (beim Betreten des Hubs / sobald „Nur wenn“

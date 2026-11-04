@@ -2072,3 +2072,14 @@ body.cbsim-tritan #center .stage, body.cbsim-tritan #player { filter: url(#vn-cb
 .dv-lock-input:focus { border-color: var(--dv-acc); }
 .dv-lock-ok { background: var(--dv-acc); color: #fff; border: 0; border-radius: 1.2cqh; padding: 1cqh 3cqh; font: inherit; font-size: 1.9cqh; cursor: pointer; }
 .dv-lock-off { position: absolute; right: 1.6cqh; bottom: 1.6cqh; }
+/* Web-Version (0.9.6) */
+.web-note { background: rgba(232,164,58,0.12); border: 1px solid rgba(232,164,58,0.4); border-radius: 10px; padding: 10px 14px; font-size: 13px; line-height: 1.5; text-align: left; margin: 4px 0 14px; }
+.web-note a { color: var(--accent); }
+.web-recent { display: flex; flex-direction: column; gap: 6px; margin: 14px 0 4px; text-align: left; }
+.web-pbtn { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; flex: 1; min-width: 0; }
+.web-pname { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.web-open { width: 520px; max-width: 92vw; display: flex; flex-direction: column; gap: 12px; }
+.web-open-title { font-size: 16px; }
+.web-plist { display: flex; flex-direction: column; gap: 6px; max-height: 50vh; overflow: auto; }
+.web-prow { display: flex; gap: 6px; align-items: stretch; }
+.web-open-btns { flex-wrap: wrap; }

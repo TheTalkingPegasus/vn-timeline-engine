@@ -383,8 +383,9 @@
       { label: 'Text importieren …', hint: 'Dialoge, Ren\'Py', action: () => VN.TextImport.open(VN.curScene && VN.curScene()) },
       { label: 'Ton-Einstellungen …', hint: 'Kopfhörer, Boxen', action: () => App.audioSettings() },
       { label: '♿ Komfort & Barrierefreiheit …', hint: 'ruhig, größer, farbenblind', action: () => VN.A11y.open() },
-      { label: 'Nach Updates suchen …', hint: 'v' + ((VN.Schema && VN.Schema.ENGINE) || ''), action: () => Updates.open() },
-      { label: 'Projektordner öffnen', action: () => VN.api.openPath('') },
+      // Web-Version (0.9.6): kein Update-Fenster, statt Ordner öffnen das Projekt als ZIP herunterladen
+      window.VN_WEB ? null : { label: 'Nach Updates suchen …', hint: 'v' + ((VN.Schema && VN.Schema.ENGINE) || ''), action: () => Updates.open() },
+      window.VN_WEB ? { label: '⬇ Als ZIP herunterladen', hint: 'Sicherung, Desktop-Version', action: () => VN.api.downloadProject() } : { label: 'Projektordner öffnen', action: () => VN.api.openPath('') },
       { label: '🤖 Anleitung für KI …', hint: 'ChatGPT, Gemini, Grok …', action: () => VN.AIGuide.open() },
       'sep',
       { head: 'Sprache · Language' },

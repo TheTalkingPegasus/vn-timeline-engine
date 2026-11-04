@@ -1,14 +1,15 @@
 {
   "name": "vn-timeline-engine",
-  "version": "0.9.5",
+  "version": "0.9.6",
   "description": "Free visual novel engine in the style of a video editor (timeline), with plugins. English and German interface.",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build:win": "electron-packager . \"VN Timeline Engine\" --platform=win32 --arch=x64 --out=dist --overwrite --extra-resource=tools/rcedit-x64.exe --extra-resource=tools/rcedit-LICENSE.txt --ignore=^/dist --ignore=^/out --ignore=^/tools --ignore=^/docs --ignore=^/tests",
+    "build:win": "electron-packager . \"VN Timeline Engine\" --platform=win32 --arch=x64 --out=dist --overwrite --extra-resource=tools/rcedit-x64.exe --extra-resource=tools/rcedit-LICENSE.txt --ignore=^/dist --ignore=^/out --ignore=^/tools --ignore=^/docs --ignore=^/tests --ignore=^/web-build",
     "test": "electron . --no-sandbox --selftest",
     "dist:win": "node tools/sync-license.js && electron-builder --win nsis --x64",
-    "version:set": "node tools/set-version.js"
+    "version:set": "node tools/set-version.js",
+    "build:web": "node tools/build-web.js"
   },
   "keywords": [
     "visual-novel",
@@ -24,7 +25,8 @@
   "devDependencies": {
     "@electron/packager": "^20.3.0",
     "electron": "^45.1.0",
-    "electron-builder": "^26.0.12"
+    "electron-builder": "^26.0.12",
+    "jszip": "^3.10.1"
   },
   "productName": "VN Timeline Engine",
   "homepage": "https://github.com/TheTalkingPegasus/vn-timeline-engine",
@@ -60,7 +62,8 @@
       "!**/*.exe",
       "!**/*.zip",
       "!**/*.blockmap",
-      "!.github/**"
+      "!.github/**",
+      "!web-build/**"
     ],
     "extraResources": [
       {
