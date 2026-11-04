@@ -2,6 +2,12 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.7.7 – Bugfix: effect layers in order
+- Eyes open / close / blink now always lie in front of every other effect layer (particles, glow, light), so
+  e.g. embers only become visible when the eyes open. They stay below dialogue and phone.
+- Effect layers follow the timeline order: an effect track further down is drawn further in front (like
+  characters).
+
 ## 0.7.6 – Jointed puppets, bug fixes
 - New: **jointed puppets** (Characters → Jointed puppets). Build a character from separate body parts like layers
   in After Effects: drag images onto the board, drag each part's red joint pin onto the joint and release it over

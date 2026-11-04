@@ -1901,3 +1901,6 @@ body.cbsim-tritan #center .stage, body.cbsim-tritan #player { filter: url(#vn-cb
 .pup-indent { flex: none; border-left: 1px dotted var(--line2); align-self: stretch; }
 .pup-anim-help { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
 .pup-canvas { position: absolute; left: 50%; display: block; width: auto; pointer-events: none; }
+/* 0.7.7: Augen-Effekte liegen über allen Effekt-Ebenen */
+.pl-eyesbox { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+.pl-eyesbox .fx-layer { position: absolute; inset: 0; }

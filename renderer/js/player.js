@@ -2,6 +2,7 @@
 (function () {
   const { el } = VN;
 
+  let eyeBox;
   let root, stage, bgLayers, black, vig, charsBox, fxBox, hubBox, dlgBox, choiceBox, msgBox, info, hud, overlayBox, gainBox, debugBox, menuBox, ctrl;
   let world, bgBox, dayOv, parBack, parFront, partBox, phoneBox;
   let run = null;        // aktueller Durchlauf
@@ -197,6 +198,10 @@
     } else for (const c of Object.values(run.chars)) c.el.querySelectorAll('.char-light').forEach((n) => n.remove());
   };
 
+  // Reihenfolge der Effekt-Ebenen (0.7.7): wie in der Timeline – weiter unten = weiter vorne.
+  // Augen auf/zu liegen immer ganz vorne über allen Effekten (aber unter Dialog und Handy).
+  const fxOrder = (key) => { const s = VN.scene(run.scene); const keys = s ? VN.tracksOf(s).filter((t) => t.base === 'fx').map((t) => t.key) : ['fx']; return 10 + Math.max(0, keys.indexOf(key)); };
+  const fxHost = (clip) => (clip.eyes ? eyeBox : clip.particles || clip.filter ? partBox : fxBox);
   // Zusätzliche Effekt-Ebenen (Partikel, Licht-Ebenen)
   const showFxExtra = (list) => {
     run.fxx = run.fxx || {};
@@ -210,8 +215,10 @@
     for (const [key, clip] of Object.entries(want)) {
       if (run.fxx[key]) continue;
       const node = Stage.fxEl(clip, 'fx-layer');
+      node.style.zIndex = String(fxOrder(key));
+      if (clip.eyes) { eyeBox.appendChild(node); run.fxx[key] = { id: clip.id, el: node }; continue; }
       node.style.opacity = '0';
-      (clip.particles ? partBox : fxBox).appendChild(node);
+      fxHost(clip).appendChild(node);
       void node.offsetWidth;
       node.style.transition = 'opacity 0.6s';
       node.style.opacity = clip.particles ? '1' : String((clip.opacity != null ? clip.opacity : 100) / 100);
@@ -228,10 +235,11 @@
     run.fx = null;
     if (!clip) return;
     const node = Stage.fxEl(clip, 'fx-layer');
-    if (clip.eyes) { partBox.appendChild(node); run.fx = { id, el: node }; return; }
+    node.style.zIndex = String(fxOrder('fx'));
+    if (clip.eyes) { eyeBox.appendChild(node); run.fx = { id, el: node }; return; }
     const target = String((clip.opacity != null ? clip.opacity : 100) / 100);
     node.style.opacity = '0';
-    (clip.particles || clip.filter ? partBox : fxBox).appendChild(node);
+    fxHost(clip).appendChild(node);
     void node.offsetWidth;
     node.style.transition = 'opacity 0.6s';
     node.style.opacity = clip.particles || clip.filter ? '1' : target;
@@ -920,7 +928,7 @@
     overlayBox.hidden = true;
     for (const n of stage.querySelectorAll('.pl-end, .plugin-overlay, .pl-spot, .pl-pointer')) n.remove();
     charsBox.innerHTML = ''; fxBox.innerHTML = ''; hubBox.innerHTML = ''; dlgBox.hidden = true; choiceBox.hidden = true; msgBox.hidden = true; gainBox.hidden = true;
-    partBox.innerHTML = ''; phoneBox.innerHTML = ''; parBack.innerHTML = ''; parFront.innerHTML = ''; world.style.filter = '';
+    partBox.innerHTML = ''; eyeBox.innerHTML = ''; phoneBox.innerHTML = ''; parBack.innerHTML = ''; parFront.innerHTML = ''; world.style.filter = '';
     stage.querySelectorAll('.vid-layer, .gl-pop').forEach((n) => n.remove());
     Fx.applyCam(world, Fx.CAM0, 0);
     bgLayers.forEach((b) => { b.style.transition = 'none'; b.style.opacity = '0'; });
@@ -1225,6 +1233,7 @@
       parBack = el('div', { class: 'par-box' });
       parFront = el('div', { class: 'par-box front' });
       partBox = el('div', { class: 'pl-parts' });
+      eyeBox = el('div', { class: 'pl-eyesbox' });
       phoneBox = el('div', { class: 'pl-phone' });
       charsBox.dataset.depth = 1; fxBox.dataset.depth = 1; bgBox.dataset.depth = 1;
       world = el('div', { class: 'world' }, bgBox, parBack, charsBox, parFront, fxBox);
@@ -1244,7 +1253,7 @@
         p.inventory.enabled && p.items.length ? el('button', { 'data-btn': 'inv', onclick: (e) => { e.stopPropagation(); toggleInventory(); } }, VN.tr('ui:inventory', p.inventory.title || 'Inventar') + ' (I)') : null,
         el('button', { 'data-btn': 'menu', onclick: (e) => { e.stopPropagation(); pauseMenu(); } }, 'Menü (Esc)'),
         VN.gameMode ? null : el('button', { onclick: (e) => { e.stopPropagation(); Player.close(); } }, 'Editor'));
-      stage.append(world, vig, partBox, hubBox, black, phoneBox, dlgBox, choiceBox, msgBox, gainBox, menuBox, overlayBox, info, hud, debugBox, ctrl);
+      stage.append(world, vig, partBox, hubBox, black, eyeBox, phoneBox, dlgBox, choiceBox, msgBox, gainBox, menuBox, overlayBox, info, hud, debugBox, ctrl);
       root.appendChild(stage);
       root.hidden = false;
       Player.fitStage();
