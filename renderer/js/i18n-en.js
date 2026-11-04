@@ -3585,7 +3585,23 @@ window.VN_I18N_EN = {
 "nach vorne": "to front",
 "nach hinten": "to back",
 "Gespiegelt kopieren": "Copy mirrored",
-"⇋ Gespiegelt kopieren": "⇋ Copy mirrored"
+"⇋ Gespiegelt kopieren": "⇋ Copy mirrored",
+"Kanten und harte Übergänge an einem Teil wegradieren – Größe und Weichheit einstellbar": "Erase edges and hard transitions on a part – size and softness adjustable",
+"✓ Radierer": "✓ Eraser",
+"🧽 Radierer": "🧽 Eraser",
+"Radierer": "Eraser",
+"Radierer: Teil wählen und über die Kante malen · Größe und Kantenweichheit rechts · „Wiederherstellen“ malt das Original zurück · Mausrad + Strg = Pinselgröße · Speichern legt eine neue Bilddatei an, das Original bleibt erhalten.": "Eraser: pick a part and paint over the edge · size and edge softness on the right · “Restore” paints the original back · Ctrl + mouse wheel = brush size · Save creates a new image file, the original is kept.",
+"Ungespeicherte Radierer-Änderungen verwerfen?": "Discard unsaved eraser changes?",
+"Speichern ging nicht": "Saving failed",
+"(retuschiert)": "(retouched)",
+"Retusche gespeichert – das Original bleibt erhalten": "Retouch saved – the original is kept",
+"Teil auf der Fläche anklicken, dann über die Kante malen.": "Click a part on the board, then paint over the edge.",
+"Radieren": "Erase",
+"Wiederherstellen": "Restore",
+"Kantenweichheit": "Edge softness",
+"Original": "Original",
+"Zum unbearbeiteten Bild zurück": "Back to the unedited image",
+"Weiche Kante = sanfter Übergang (gut für Gelenke, an denen zwei Teile überlappen). Wiederherstellen malt das Original zurück. Gespeichert wird als neue Bilddatei – das Original bleibt erhalten.": "Soft edge = gentle transition (good for joints where two parts overlap). Restore paints the original back. Saved as a new image file – the original is kept."
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",

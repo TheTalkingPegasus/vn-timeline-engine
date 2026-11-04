@@ -95,13 +95,16 @@
       el('div', { class: 'spacer' }),
       el('button', { class: 'btn' + (testing ? ' primary' : ''), title: VN.t('Teile um ihre Pins drehen (Umschalt = IK), ohne zu speichern'), onclick: () => { ui().pupTest = testing ? null : {}; VN.render(); } }, testing ? '✓ Ausprobieren' : '🤸 Ausprobieren'),
       testing ? el('button', { class: 'btn', onclick: () => { ui().pupTest = {}; VN.render(); } }, VN.t('Zurücksetzen')) : null,
+      el('button', { class: 'btn' + (ui().pupErase ? ' primary' : ''), title: VN.t('Kanten und harte Übergänge an einem Teil wegradieren – Größe und Weichheit einstellbar'), onclick: () => PupEd.toggleErase(pup) }, ui().pupErase ? '✓ Radierer' : '🧽 Radierer'),
       el('label', { class: 'check btn' }, el('input', { type: 'checkbox', checked: !!ui().pupIdle, onchange: (e) => { ui().pupIdle = e.target.checked; } }), 'Idle abspielen'),
       el('label', { class: 'check btn' }, el('input', { type: 'checkbox', checked: ui().pupPins !== false, onchange: (e) => { ui().pupPins = e.target.checked; } }), 'Pins')));
     const wrap = el('div', { class: 'pup-stage-wrap' });
     const canvas = el('canvas', { class: 'pup-ed-canvas', tabindex: '0' });
     wrap.appendChild(canvas);
     main.appendChild(wrap);
-    main.appendChild(el('div', { class: 'muted small pup-help' }, testing
+    main.appendChild(el('div', { class: 'muted small pup-help' }, ui().pupErase
+      ? 'Radierer: Teil wählen und über die Kante malen · Größe und Kantenweichheit rechts · „Wiederherstellen“ malt das Original zurück · Mausrad + Strg = Pinselgröße · Speichern legt eine neue Bilddatei an, das Original bleibt erhalten.'
+      : testing
       ? 'Ausprobieren: Teil ziehen = um den Pin drehen · Umschalt + ziehen = IK (die Kette folgt der Maus) · Wurzel-Teil ziehen = ganze Figur verschieben. Nichts davon wird gespeichert.'
       : 'Bilder aus der Dateiliste hierher ziehen = neues Teil · Teil ziehen = verschieben (Kinder wandern mit, Alt = nur dieses Teil) · roten Pin ziehen = Gelenk setzen; auf einem anderen Teil loslassen = daran anhängen · Entf = Teil löschen'));
     PupEd.stage(pup, canvas, wrap);
@@ -161,12 +164,14 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       const dt = Math.min(1 / 20, (now - last) / 1000); last = now;
-      const t = ui().pupIdle ? (now - t0) / 1000 : null;
+      const erasing = !!ui().pupErase;
+      const t = ui().pupIdle && !erasing ? (now - t0) / 1000 : null;
       const base = baseM();
       // Boden-Linie
       const bb = pup.parts.length ? Puppet.bounds(pup) : null;
       if (bb) { const [, gy] = M().ap(base, 0, bb.y + bb.h); ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(r.width, gy); ctx.stroke(); }
-      const ms = Puppet.draw(ctx, pup, PupEd._res, base, t, t != null ? dt : 0, pose(), st, { placeholder: true });
+      const ed = PupEd._edit;
+      const ms = Puppet.draw(ctx, pup, PupEd._res, base, t, t != null ? dt : 0, erasing ? null : pose(), st, { placeholder: true, override: ed && ed.cv ? { [ed.pid]: ed.cv } : null });
       // Auswahl, Pins, Verbindungen
       const sel = selPart(pup);
       if (sel && ms[sel.id]) {
@@ -192,6 +197,14 @@
           if (pinned) { const [tx, ty] = M().ap(ms[p.id], ...Puppet.tip(p)); ctx.fillStyle = '#4fb3c8'; ctx.fillRect(tx - 5, ty - 5, 10, 10); }
         }
       }
+      // Pinsel-Vorschau des Radierers
+      if (erasing && PupEd._mouse) {
+        const E = ui().pupErase, r0 = E.size / 2;
+        ctx.strokeStyle = E.mode === 'restore' ? '#6cc48a' : '#fff'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(PupEd._mouse[0], PupEd._mouse[1], r0, 0, Math.PI * 2); ctx.stroke();
+        const inner = r0 * (1 - E.soft / 100);
+        if (inner > 2) { ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(PupEd._mouse[0], PupEd._mouse[1], inner, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); }
+      }
       if (drag && drag.drop) { const [x, y] = M().ap(base, drag.drop[0], drag.drop[1]); ctx.strokeStyle = '#6cc48a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 12, 0, Math.PI * 2); ctx.stroke(); }
       if (!pup.parts.length) { ctx.fillStyle = '#7d808c'; ctx.font = '14px Segoe UI, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(VN.t('Bilder aus der Dateiliste hierher ziehen – jedes Bild wird ein Körperteil.'), r.width / 2, r.height / 2); }
       PupEd._raf = requestAnimationFrame(frame);
@@ -202,6 +215,7 @@
       if (e.button !== 0) return;
       canvas.focus({ preventScroll: true });
       const [x, y] = toPup(e.clientX, e.clientY);
+      if (ui().pupErase) { e.preventDefault(); PupEd.eraseDown(e, pup, canvas, toPup, view, mats, hitPart); return; }
       const testing = !!ui().pupTest;
       // Pin ziehen (nur beim Bauen)
       const pin = !testing && pinAt(x, y);
@@ -267,8 +281,11 @@
         VN.mutate(() => { group.forEach((p, i) => { p.x = end[i][0]; p.y = end[i][1]; }); });
       });
     });
+    canvas.addEventListener('mousemove', (e) => { const r = canvas.getBoundingClientRect(); PupEd._mouse = [e.clientX - r.left, e.clientY - r.top]; });
+    canvas.addEventListener('mouseleave', () => { PupEd._mouse = null; });
     canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
+      if (ui().pupErase && (e.ctrlKey || e.metaKey)) { const E = ui().pupErase; E.size = Math.max(2, Math.min(400, Math.round(E.size * (e.deltaY < 0 ? 1.15 : 1 / 1.15)))); const n = document.getElementById('pup-er-size'); if (n) n.value = E.size; return; }
       const v = view(), r = canvas.getBoundingClientRect();
       const px = e.clientX - r.left, py = e.clientY - r.top, nk = Math.max(0.05, Math.min(6, v.k * (e.deltaY < 0 ? 1.12 : 1 / 1.12)));
       v.x = px - (px - v.x) * nk / v.k; v.y = py - (py - v.y) * nk / v.k; v.k = nk;
@@ -330,6 +347,7 @@
       (() => { const s = VN.assetSelect('image', '', (v) => { if (v) PupEd.addPart(pup, v); }); s.title = VN.t('Bild als neues Teil hinzufügen'); return s; })()));
     box.appendChild(layers);
 
+    if (ui().pupErase) box.appendChild(PupEd.eraseCard(pup));
     const p = selPart(pup);
     if (p) {
       const rigged = window.Rig && Rig.has(p.asset);
@@ -367,6 +385,132 @@
       el('button', { class: 'btn tiny', onclick: () => PupEd.newAnim(pup, 'gesture') }, '✋ Geste für diese Puppe')));
     box.appendChild(el('button', { class: 'btn danger', onclick: () => VN.mutate(() => { VN.project.puppets = list().filter((x) => x !== pup); ui().pupSel = null; }) }, 'Gliederpuppe löschen'));
     return box;
+  };
+
+  // ---------- Radierer (0.7.8) ----------
+  // Malt auf einer Kopie des Teil-Bildes. Speichern legt eine neue PNG-Datei an (das Original bleibt erhalten und
+  // lässt sich jederzeit zurückholen). Bones und Blinzeln werden auf das neue Bild übernommen.
+  PupEd.toggleErase = (pup) => {
+    if (ui().pupErase) {
+      if (PupEd._edit && PupEd._edit.dirty && !window.confirm(VN.t('Ungespeicherte Radierer-Änderungen verwerfen?'))) return;
+      ui().pupErase = null; PupEd._edit = null;
+    } else { ui().pupErase = { size: 40, soft: 60, mode: 'erase' }; ui().pupTest = null; }
+    VN.render();
+  };
+  const loadImg = (url) => new Promise((res) => { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => res(im); im.onerror = () => res(null); im.src = url; });
+  PupEd.startEdit = async (pup, p) => {
+    if (PupEd._edit && PupEd._edit.pid === p.id) return PupEd._edit;
+    if (PupEd._edit && PupEd._edit.dirty) await PupEd.saveEdit(pup);
+    const ed = PupEd._edit = { pid: p.id, cv: null, orig: null, dirty: false };
+    const cur = await loadImg(VN.assetUrl(p.asset));
+    const orig = p.origAsset ? await loadImg(VN.assetUrl(p.origAsset)) : cur;
+    if (!cur || PupEd._edit !== ed) return null;
+    const nw = cur.naturalWidth || p.w, nh = cur.naturalHeight || p.h;
+    const k = Math.min(2048 / Math.max(nw, nh), Math.max(1, p.w / nw));
+    const cv = document.createElement('canvas'); cv.width = Math.max(1, Math.round(nw * k)); cv.height = Math.max(1, Math.round(nh * k));
+    cv.getContext('2d').drawImage(cur, 0, 0, cv.width, cv.height);
+    ed.cv = cv; ed.orig = orig;
+    return ed;
+  };
+  const stamp = (ed, x, y, r, soft, mode) => {
+    const c = ed.cv.getContext('2d');
+    const inner = Math.max(0, r * (1 - soft / 100));
+    const g = c.createRadialGradient(x, y, inner, x, y, Math.max(inner + 0.01, r));
+    g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    if (mode === 'restore') {
+      if (!ed.orig) return;
+      // Original durch die Pinselspitze zurückmalen
+      const s = Math.ceil(r * 2) + 2;
+      const t = ed.tmp || (ed.tmp = document.createElement('canvas'));
+      if (t.width < s || t.height < s) { t.width = s; t.height = s; }
+      const tc = t.getContext('2d');
+      tc.globalCompositeOperation = 'source-over'; tc.clearRect(0, 0, t.width, t.height);
+      const gx = tc.createRadialGradient(s / 2, s / 2, inner, s / 2, s / 2, Math.max(inner + 0.01, r));
+      gx.addColorStop(0, 'rgba(0,0,0,1)'); gx.addColorStop(1, 'rgba(0,0,0,0)');
+      tc.fillStyle = gx; tc.fillRect(0, 0, s, s);
+      tc.globalCompositeOperation = 'source-in';
+      tc.drawImage(ed.orig, -(x - s / 2), -(y - s / 2), ed.cv.width, ed.cv.height);
+      c.globalCompositeOperation = 'source-over';
+      c.drawImage(t, 0, 0, s, s, x - s / 2, y - s / 2, s, s);
+    } else {
+      c.globalCompositeOperation = 'destination-out';
+      c.fillStyle = g;
+      c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill();
+      c.globalCompositeOperation = 'source-over';
+    }
+  };
+  PupEd.eraseDown = async (e, pup, canvas, toPup, view, mats, hitPart) => {
+    const [x0, y0] = toPup(e.clientX, e.clientY);
+    let p = selPart(pup);
+    if (!p) { p = hitPart(x0, y0); if (!p) return; ui().pupPart = p.id; VN.render(); }
+    const ed = await PupEd.startEdit(pup, p);
+    if (!ed || !ed.cv) return;
+    const E = ui().pupErase;
+    // Bildschirm → Pixel des Bearbeitungs-Bildes
+    const toImg = (cx, cy) => {
+      const [px, py] = toPup(cx, cy);
+      let [u, v] = Puppet.m.ap(Puppet.m.inv(mats()[p.id]), px, py);
+      if (p.flipX) u = p.w - u;
+      return [u * ed.cv.width / p.w, v * ed.cv.height / p.h];
+    };
+    // Pinselgröße ist in Bildschirm-Pixeln eingestellt
+    const radius = () => E.size / 2 / view().k * ed.cv.width / p.w;
+    let last = toImg(e.clientX, e.clientY);
+    stamp(ed, last[0], last[1], radius(), E.soft, E.mode);
+    ed.dirty = true;
+    const move = (ev) => {
+      const cur = toImg(ev.clientX, ev.clientY);
+      const r = radius(), d = Math.hypot(cur[0] - last[0], cur[1] - last[1]), step = Math.max(1, r / 4);
+      for (let s = step; s <= d; s += step) stamp(ed, last[0] + (cur[0] - last[0]) * s / d, last[1] + (cur[1] - last[1]) * s / d, r, E.soft, E.mode);
+      if (d >= step) last = cur;
+    };
+    const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); VN.render(); };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', up);
+  };
+  PupEd.saveEdit = async (pup) => {
+    const ed = PupEd._edit;
+    if (!ed || !ed.dirty || !ed.cv) return;
+    const p = Puppet.part(pup, ed.pid);
+    if (!p) return;
+    const blob = await new Promise((res) => ed.cv.toBlob(res, 'image/png'));
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    const src = VN.asset(p.origAsset || p.asset) || { name: p.name };
+    const safe = String(src.name || 'teil').replace(/[^\wäöüÄÖÜß -]/g, '').trim().replace(/\s+/g, '_') || 'teil';
+    const rel = await VN.api.writeAsset(VN.dir, 'assets/' + safe + '_retusche.png', bytes);
+    if (!rel || typeof rel !== 'string') { VN.toast(VN.t('Speichern ging nicht')); return; }
+    const old = p.asset;
+    VN.mutate(() => {
+      const a = { id: VN.uid('a'), name: (src.name || p.name) + ' ' + VN.t('(retuschiert)'), kind: 'image', file: rel };
+      VN.project.assets.push(a);
+      // Bones und Blinzeln vom bisherigen Bild übernehmen
+      if (VN.project.rigs[old]) VN.project.rigs[a.id] = JSON.parse(JSON.stringify(VN.project.rigs[old]));
+      if (VN.project.blinks && VN.project.blinks[old]) VN.project.blinks[a.id] = JSON.parse(JSON.stringify(VN.project.blinks[old]));
+      if (!p.origAsset) p.origAsset = old;
+      p.asset = a.id;
+    });
+    PupEd._edit = null;
+    VN.toast(VN.t('Retusche gespeichert – das Original bleibt erhalten'));
+  };
+  PupEd.eraseCard = (pup) => {
+    const E = ui().pupErase;
+    const p = selPart(pup);
+    const ed = PupEd._edit && p && PupEd._edit.pid === p.id ? PupEd._edit : null;
+    const slider = (id, label, key, min, max, unit) => {
+      const lab = el('span', { class: 'muted small' }, E[key] + unit);
+      return el('div', { class: 'field' }, el('div', { class: 'lbl' }, label, ' ', lab),
+        el('div', { class: 'rng-row' }, el('input', { type: 'range', id, min, max, value: E[key], oninput: (e) => { E[key] = Number(e.target.value); lab.textContent = E[key] + unit; } })));
+    };
+    return el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, '🧽 Radierer' + (p ? ' · ' + p.name : '')),
+      p ? null : el('div', { class: 'hint-box' }, VN.t('Teil auf der Fläche anklicken, dann über die Kante malen.')),
+      el('div', { class: 'seg' }, ...[['erase', 'Radieren'], ['restore', 'Wiederherstellen']].map(([k, l]) => el('button', { class: E.mode === k ? 'active' : '', onclick: () => { E.mode = k; VN.render(); } }, VN.t(l)))),
+      slider('pup-er-size', VN.t('Größe'), 'size', 2, 300, ' px'),
+      slider('pup-er-soft', VN.t('Kantenweichheit'), 'soft', 0, 100, ' %'),
+      el('div', { class: 'row gap8', style: { flexWrap: 'wrap' } },
+        el('button', { class: 'btn tiny primary', disabled: !(ed && ed.dirty), onclick: () => PupEd.saveEdit(pup) }, '💾 ' + VN.t('Speichern')),
+        el('button', { class: 'btn tiny', disabled: !(ed && ed.dirty), onclick: () => { PupEd._edit = null; VN.render(); } }, VN.t('Verwerfen')),
+        p && p.origAsset ? el('button', { class: 'btn tiny', title: VN.t('Zum unbearbeiteten Bild zurück'), onclick: () => { PupEd._edit = null; VN.mutate(() => { p.asset = p.origAsset; delete p.origAsset; }); } }, '↺ ' + VN.t('Original')) : null),
+      el('div', { class: 'muted small' }, VN.t('Weiche Kante = sanfter Übergang (gut für Gelenke, an denen zwei Teile überlappen). Wiederherstellen malt das Original zurück. Gespeichert wird als neue Bilddatei – das Original bleibt erhalten.')));
   };
 
   // Teil samt Kindern gespiegelt kopieren (links ↔ rechts)
