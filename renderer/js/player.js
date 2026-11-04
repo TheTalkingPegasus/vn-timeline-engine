@@ -874,6 +874,8 @@
       hubBox.appendChild(node);
     }
     if (under) return;
+    // Neuer Besuch im Hub (nicht nur zurück aus einem Hub-Dialog): jedes Ereignis darf wieder höchstens einmal
+    if (entering && !returning) run.evVisit = new Set();
     if (entering) runHubEvents(s, !!returning);
     else if (!run.event && !run.overlay && !run.message && !run.blocked) runHubEvents(s, true, true);
   }
@@ -882,19 +884,29 @@
   // returning: zurück aus einem Hub-Dialog (dann laufen „bei jedem Betreten“-Ereignisse nicht erneut)
   // onlyCond: nur Ereignisse „sobald … stimmt“ (nach einem Klick im Hub)
   function runHubEvents(s, returning, onlyCond) {
+    const rs = run.rs;
+    run.evVisit = run.evVisit || new Set();
     const queue = (s.events || []).filter((ev) => {
-      const trig = ev.trigger || 'first';
-      if (onlyCond && trig !== 'cond') return false;
-      if (returning && trig === 'always') return false;
-      if (trig !== 'always' && run.rs.seen['ev:' + ev.id]) return false;
-      if (trig === 'cond' && !(ev.conds || []).length) return false;
-      if (!VN.checkConds(ev.conds, run.rs)) return false;
+      const when = VN.evWhen(ev), rep = VN.evRepeat(ev);
+      if (onlyCond && when !== 'cond') return false;
+      if (when === 'cond' && !(ev.conds || []).length) return false;
+      // Wie oft (0.9.5): nur einmal, jedes Mal, höchstens n-mal, einmal pro Tag – und nie zweimal im selben Besuch
+      if (run.evVisit.has(ev.id)) return false;
+      const n = (rs.evCount && rs.evCount[ev.id]) || (rs.seen['ev:' + ev.id] ? 1 : 0);
+      if (rep === 'once' && n) return false;
+      if (rep === 'times' && n >= Math.max(1, Number(ev.times) || 1)) return false;
+      if (rep === 'daily' && rs.time && rs.evDay && rs.evDay[ev.id] === rs.time.day) return false;
+      if (!VN.checkConds(ev.conds, rs)) return false;
       if (ev.mode === 'scene') return !!(ev.scene && VN.scene(ev.scene) && ev.scene !== s.id);
       return ev.lines && ev.lines.length;
     });
     if (!queue.length) return;
     const ev = queue[0];
-    run.rs.seen['ev:' + ev.id] = true;
+    const n0 = (rs.evCount && rs.evCount[ev.id]) || (rs.seen['ev:' + ev.id] ? 1 : 0);
+    rs.seen['ev:' + ev.id] = true;
+    rs.evCount = rs.evCount || {}; rs.evCount[ev.id] = n0 + 1;
+    if (rs.time) { rs.evDay = rs.evDay || {}; rs.evDay[ev.id] = rs.time.day; }
+    run.evVisit.add(ev.id);
     // Timeline-Dialog: Story-Szene über dem Hub, danach zurück
     if (ev.mode === 'scene') { const myRun = run; later(() => { if (run === myRun && run.scene === s.id && !run.event) enterScene(ev.scene, 0); }, 350); return; }
     run.event = { ev, i: 0, scene: s };

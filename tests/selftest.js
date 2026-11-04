@@ -317,6 +317,8 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
         ok(st3.tracks.dialog.length === 2 && st3.tracks.dialog[0].id !== 'gj' && st3.tracks.dialog[1].start === 1, '0.8.0 Kopieren/Einfügen falsch');
         pp.time.enabled = false;
       }
+      // 0.9.5: Hub-Ereignisse – alte „trigger“-Werte bleiben gleich
+      ok(VN.evWhen({ trigger: 'cond' }) === 'cond' && VN.evRepeat({ trigger: 'always' }) === 'always' && VN.evRepeat({ trigger: 'first' }) === 'once' && VN.evRepeat({}) === 'once' && VN.evWhen({ when: 'enter', trigger: 'cond' }) === 'enter', '0.9.5 Hub-Ereignisse: Umrechnung falsch');
       // 0.9.0: Geräte (Handy/Computer) und Nachrichten über Szenen hinweg
       {
         const D = VN.Devices;
