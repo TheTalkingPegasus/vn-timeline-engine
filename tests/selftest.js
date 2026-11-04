@@ -354,6 +354,35 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
         const c2 = D.open(hb, { dev: pc, rs: rr, preview: true, app: 'messages' });
         ok(hb.querySelector('.dv-desk .dv-win .dv-crow') && hb.querySelectorAll('.dv-desk .dv-msg').length === 3, '0.9.0 Computer: Nachrichten-Fenster falsch');
         c2.close(); hb.remove();
+        // 0.9.3: Unterhaltung nur für den Computer
+        pp.chats.threads.push({ id: 't_pc', name: 'PC', contact: 'c_a', devs: [pc.id], msgs: [{ id: 'm_pc', from: 'them', text: 'nur am PC' }], replies: [{ id: 'r_pc', text: 'ok' }] });
+        VN.migrate(pp);
+        D.deliver(rr, 't_pc');
+        ok(D.unread(rr, 'c_a', pc) === 1 && D.unread(rr, 'c_a', ph) === 0 && !D.waiting(rr, 'c_a', ph) && D.waiting(rr, 'c_a', pc) === 't_pc', '0.9.3 Nachrichten: nur-PC-Unterhaltung erscheint auf dem Handy');
+        D.markRead(rr, 'c_a', ph);
+        ok(D.unread(rr, 'c_a', pc) === 1, '0.9.3 Nachrichten: Lesen am Handy markiert PC-Nachricht als gelesen');
+        ok(!VN.checkConds([{ type: 'chat', thread: 't_pc', state: 'read' }], rr), '0.9.3 Bedingung gelesen falsch');
+        D.markRead(rr, 'c_a', pc);
+        ok(D.unreadAll(rr, pc) === 0 && VN.checkConds([{ type: 'chat', thread: 't_pc', state: 'read' }], rr), '0.9.3 Nachrichten: am PC gelesen falsch');
+        const hb2 = document.createElement('div'); hb2.style.cssText = 'position:fixed;left:0;top:0;width:640px;height:360px'; document.body.appendChild(hb2);
+        const c3 = D.open(hb2, { dev: ph, rs: rr, preview: true, app: 'messages', contact: 'c_a' });
+        ok(![...hb2.querySelectorAll('.dv-msg')].some((x) => /nur am PC/.test(x.textContent)) && !hb2.querySelector('.dv-reply'), '0.9.3 Handy zeigt PC-Nachricht');
+        c3.close(); hb2.remove();
+        // 0.9.3: stille Unterhaltung, Gerätesperre
+        pp.chats.threads.push({ id: 't_q', name: 'Q', contact: 'c_a', silent: true, msgs: [{ id: 'm_q', from: 'them', text: 'versteckt' }] });
+        VN.migrate(pp);
+        const nq = D.unreadAll(rr, pc); D.deliver(rr, 't_q');
+        ok(D.unreadAll(rr, pc) === nq && D.log(rr, 'c_a').some((e) => e.th === 't_q'), '0.9.3 stille Nachricht zählt als ungelesen oder fehlt');
+        pc.lock = { on: true, code: '4711', mode: 'once', hint: '', title: '' };
+        ok(D.locked(pc, rr) && !VN.checkConds([{ type: 'devOpen', device: pc.id }], rr), '0.9.3 Sperre: Gerät nicht gesperrt');
+        VN.applyActions([{ type: 'devUnlock', device: pc.id }], rr, 'x');
+        ok(!D.locked(pc, rr) && VN.checkConds([{ type: 'devOpen', device: pc.id }], rr), '0.9.3 Sperre: Entsperren wirkt nicht');
+        pc.lock.mode = 'always';
+        ok(D.locked(pc, rr), '0.9.3 Sperre: „jedes Mal“ bleibt nicht gesperrt');
+        const hb3 = document.createElement('div'); hb3.style.cssText = 'position:fixed;left:0;top:0;width:640px;height:360px'; document.body.appendChild(hb3);
+        const c4 = D.open(hb3, { dev: pc, rs: rr, preview: true });
+        ok(hb3.querySelectorAll('.dv-pin-key').length === 11 && !hb3.querySelector('.dv-icons .dv-app'), '0.9.3 Sperrbildschirm fehlt');
+        c4.close(); hb3.remove(); pc.lock.on = false;
         pp.chats.threads.push({ id: 't_c', name: 'C', contact: 'nix', msgs: [], replies: [] });
         ok(D.issues().some((x) => /keinen Kontakt/.test(x.text)), '0.9.0 Prüfung: Unterhaltung ohne Kontakt nicht gemeldet');
         pp.devices.enabled = false;

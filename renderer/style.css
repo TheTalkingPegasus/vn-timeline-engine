@@ -2054,3 +2054,21 @@ body.cbsim-tritan #center .stage, body.cbsim-tritan #player { filter: url(#vn-cb
 .mg-qt-flash.show { animation: mgQtPop 0.7s ease-out; }
 @keyframes mgQtPop { 0% { opacity: 0; transform: translate(-50%, -30%) scale(0.7); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 100% { opacity: 0; transform: translate(-50%, -90%) scale(1); } }
 .mg-qt-hint { position: absolute; bottom: 1.2cqh; left: 0; right: 0; text-align: center; font-size: 1.8cqh; opacity: 0.6; pointer-events: none; }
+/* Geräte: Sperrbildschirm (0.9.3) */
+.dv-lock { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2cqh; }
+.dv-lock-box { display: flex; flex-direction: column; align-items: center; gap: 1.2cqh; background: rgba(0,0,0,0.45); backdrop-filter: blur(1cqh); border-radius: 2.4cqh; padding: 3cqh 3cqh 2.4cqh; min-width: 70%; text-align: center; }
+.dv-lock.desk .dv-lock-box { min-width: 0; width: 40cqh; background: rgba(12,16,26,0.78); }
+.dv-lock-ico { font-size: 5cqh; }
+.dv-lock-box strong { font-size: 2.4cqh; }
+.dv-lock-hint { font-size: 1.7cqh; opacity: 0.75; }
+.dv-lock-msg { font-size: 1.7cqh; color: #ff7b7b; min-height: 2.2cqh; }
+.dv-pin-dots { display: flex; gap: 1.2cqh; margin: 0.6cqh 0; }
+.dv-pin-dots span { width: 1.6cqh; height: 1.6cqh; border-radius: 50%; border: 0.25cqh solid currentColor; }
+.dv-pin-dots span.on { background: currentColor; }
+.dv-pin-pad { display: grid; grid-template-columns: repeat(3, 7.6cqh); gap: 1.2cqh; }
+.dv-pin-key { width: 7.6cqh; height: 7.6cqh; border-radius: 50%; border: 0; background: rgba(255,255,255,0.14); color: inherit; font: inherit; font-size: 3cqh; cursor: pointer; }
+.dv-pin-key:hover { background: rgba(255,255,255,0.26); }
+.dv-lock-input { width: 100%; padding: 1.2cqh 1.6cqh; border-radius: 1.2cqh; border: 0.2cqh solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: inherit; font: inherit; font-size: 2cqh; text-align: center; outline: none; }
+.dv-lock-input:focus { border-color: var(--dv-acc); }
+.dv-lock-ok { background: var(--dv-acc); color: #fff; border: 0; border-radius: 1.2cqh; padding: 1cqh 3cqh; font: inherit; font-size: 1.9cqh; cursor: pointer; }
+.dv-lock-off { position: absolute; right: 1.6cqh; bottom: 1.6cqh; }

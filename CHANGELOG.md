@@ -2,6 +2,17 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.3 – Messages per device, hidden messages, locked devices
+- Silent conversations: no notification and no unread count – the player only finds them by looking
+  (e.g. hidden mails on a PC). Checkbox “silent (hidden)” on the conversation.
+- Devices can be locked with a code: digits give a number pad, anything else a password field (not case sensitive;
+  a {placeholder} of a variable works too). “Enter correctly once, then always open” or “Enter every time”,
+  with heading and hint. New condition “🔓 Device unlocked” and action “🔓 Unlock device”.
+- A conversation can now be limited to certain devices: only the phone, only the computer, or all (default).
+  Checkboxes “Appears on” in Game systems → Messages (shown when there is more than one device).
+- Unread counts, notifications, replies and “read” work per device: reading on the phone does not mark
+  computer-only messages as read. The timeline phone does not show computer-only chats.
+
 ## 0.9.2 – Quicktime minigame, spelling suggestions, reorder answers, fixes
 - New minigame “Quicktime circle” (Minigames plugin 1.4): a hand spins, press Space/Enter/click while it is inside
   the marked area; the area jumps elsewhere after every hit. Difficulty (easy to extreme) sets speed and size of the
