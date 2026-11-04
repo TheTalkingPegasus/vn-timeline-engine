@@ -62,7 +62,7 @@
   };
 
   const systems = (p, generic) => {
-    const sys = [['relations', 'Relationships (♥ points, stages, milestones with messages/pictures, gifts)'], ['time', 'Time & calendar'], ['economy', 'Money & shops'], ['quests', 'Quest log'], ['skills', 'Skill trees'], ['combat', 'Turn-based combat'], ['idle', 'Building / idle (buildings produce currencies)'], ['world', 'World map & locations'], ['equip', 'Equipment']];
+    const sys = [['relations', 'Relationships (♥ points, stages, milestones with messages/pictures, gifts)'], ['time', 'Time & calendar'], ['economy', 'Money & shops'], ['quests', 'Quest log'], ['skills', 'Skill trees'], ['combat', 'Turn-based combat'], ['idle', 'Building / idle (buildings produce currencies)'], ['world', 'World map & locations'], ['equip', 'Equipment'], ['devices', 'Devices: in-game phone / computer with apps; chats live in `chats`']];
     return sys.map(([k, l]) => `- \`${k}\` – ${l}` + (generic ? '' : `: ${p[k] && p[k].enabled ? '**on**' : 'off'}`)).join('\n');
   };
 
@@ -125,6 +125,12 @@
     L.push('## Actions (`actions` arrays – run in order)', '', actionList(), '');
     L.push('## Game systems', '', systems(p, opts.generic), '',
       'Each system has `enabled: true|false` plus its own data. The safest way to set up a system is inside the engine (tab **Game systems / Spielsysteme**, every system has a one-click example). Idle/building (`idle`): `tick: "sec"|"min"|"hour"` (amounts per tick), `startWhen: "always"|"firstOpen"|"cond"|"action"` (+ `startConds`), `mode: "realtime"|"offline"|"gametime"`.', '');
+    L.push('## Devices and chats (phone / computer)', '',
+      '`devices: { enabled, list: [{ id, name, kind: "phone"|"desktop", key, hud, inMenu, conds, wallpaper, frame, clock: "auto"|"game"|"real"|"none", look: { accent, screen, text, panel, panelText, bubble, bubbleMe, iconShape, size, side, dim, inset, font }, apps: [...] }] }`.',
+      '- App: `{ id, type, name, icon, image, color, conds }`. `type`: `messages`, `inv`, `rel`, `gallery`, `quests`, `map`, `ach`, `skills`, `stats`, `log`, `idle` (built-in screens) or `app` (own app: `title`, `text`, `pic` = a page; `actions` run when opened – a `goto` action closes the device and jumps).',
+      '- Open it with the action `device` (e.g. on a hub object = hitbox), the HUD button, the key or the pause menu.',
+      '`chats: { notify, sound, contacts: [{ id, name, char: "<relationship char id>", avatar, color, status }], threads: [{ id, name, contact, auto, conds, msgs: [{ id, from: "them"|"me", text, image, conds }], replies: [{ id, text, conds, actions, next: "<thread id>" }] }] }`.',
+      '- A thread is delivered automatically (`auto: true`, as soon as `conds` are true) or with the action `chatSend`. Lines with `conds` are only delivered when true (route variants). The player picks one of the `replies`; its `actions` run and `next` delivers the follow-up thread. History is kept in the save game across scenes. Check with the condition `chat` (`state`: got, not, read, open, replied + `reply`). Dialogue lines with `chat: true` whose speaker is a contact are added to that chat history too.', '');
     L.push('## Operating the program (for AIs that can see and click the screen)', '',
       'Top bar: project name · **Project ▾ / Projekt ▾** (save, open, import text, accessibility, language, this guide) · undo/redo · **Export / Exportieren** · ✓ problem list · ? help · tabs · **▶ Test scene / Szene testen** · **▶ Test game / Spiel testen**.', '',
       'Tabs: **Scene / Szene** (timeline or hub editor) · **Paths / Pfade** (graph of all scenes) · **Game systems / Spielsysteme** · **Transcript / Transkript** (all texts, translations) · **Storyboard** (planning board) · **Characters / Figuren** (bones, layered figures) · **Main menu / Hauptmenü** · **Design** · **Animation**.', '',

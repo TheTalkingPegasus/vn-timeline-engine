@@ -315,6 +315,47 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
         ok(st3.tracks.dialog.length === 2 && st3.tracks.dialog[0].id !== 'gj' && st3.tracks.dialog[1].start === 1, '0.8.0 Kopieren/Einfügen falsch');
         pp.time.enabled = false;
       }
+      // 0.9.0: Geräte (Handy/Computer) und Nachrichten über Szenen hinweg
+      {
+        const D = VN.Devices;
+        VN.migrate(pp);
+        ok(pp.devices && pp.devices.enabled === false && Array.isArray(pp.chats.threads), '0.9.0 Geräte: Grunddaten fehlen');
+        pp.devices.enabled = true;
+        const ph = D.newDevice('phone'), pc = D.newDevice('desktop');
+        pp.devices.list = [ph, pc];
+        ok(ph.apps.some((a) => a.type === 'messages') && ph.look.size === 88 && pc.look.iconShape === 'square', '0.9.0 Geräte: neues Gerät unvollständig');
+        pp.vars.push({ id: 'v_rt', name: 'Route', type: 'flag', start: false });
+        pp.chats.contacts = [{ id: 'c_a', name: 'Ray' }];
+        pp.chats.threads = [
+          { id: 't_a', name: 'A', contact: 'c_a', auto: true, conds: [], msgs: [{ id: 'm_a', from: 'them', text: 'Hi' }, { id: 'm_r', from: 'them', text: 'nur Route', conds: [{ type: 'var', var: 'v_rt', value: true }] }], replies: [{ id: 'r_a', text: 'Ja', actions: [{ type: 'setVar', var: 'v_rt', value: true }], next: 't_b' }] },
+          { id: 't_b', name: 'B', contact: 'c_a', msgs: [{ id: 'm_b', from: 'them', text: 'Route jetzt da' , conds: [{ type: 'var', var: 'v_rt', value: true }] }] }];
+        VN.migrate(pp);
+        const rr = VN.newRunState();
+        ok(D.autoCheck(rr).length === 1 && D.log(rr, 'c_a').length === 1 && D.unread(rr, 'c_a') === 1, '0.9.0 Nachrichten: automatische Zustellung / Routen-Zeile falsch');
+        ok(D.autoCheck(rr).length === 0, '0.9.0 Nachrichten: doppelt zugestellt');
+        ok(D.replies(rr, 'c_a').length === 1 && VN.checkConds([{ type: 'chat', thread: 't_a', state: 'open' }], rr), '0.9.0 Nachrichten: Antwort wird nicht angeboten');
+        const pk = D.pickReply(rr, 'c_a', 'r_a');
+        VN.applyActions(pk.reply.actions, rr, 'x');
+        const nx = D.deliver(rr, pk.reply.next);
+        ok(nx && nx.added.length === 1 && D.log(rr, 'c_a').length === 3 && !D.waiting(rr, 'c_a'), '0.9.0 Nachrichten: Antwort/Folge-Unterhaltung falsch');
+        ok(VN.checkConds([{ type: 'chat', thread: 't_a', state: 'replied', reply: 'r_a' }], rr) && VN.checkConds([{ type: 'chat', thread: 't_b', state: 'got' }], rr) && !VN.checkConds([{ type: 'chat', thread: 't_b', state: 'read' }], rr), '0.9.0 Bedingung „💬 Nachricht“ falsch');
+        D.markRead(rr, 'c_a');
+        ok(VN.checkConds([{ type: 'chat', thread: 't_b', state: 'read' }], rr) && D.unreadAll(rr) === 0, '0.9.0 Nachrichten: gelesen falsch');
+        const rr2 = JSON.parse(JSON.stringify(rr));
+        ok(D.log(rr2, 'c_a').length === 3, '0.9.0 Nachrichten: Verlauf übersteht Speichern nicht');
+        ok(VN.collectTexts().some((x) => x.id === 'm_b:text') && VN.collectTexts().some((x) => x.id === 'r_a:text'), '0.9.0 Nachrichten fehlen im Transkript');
+        ok(VN.ext.actions.device && VN.ext.actions.chatSend && VN.ext.conds.chat, '0.9.0 Aktionen/Bedingung fehlen');
+        const hb = document.createElement('div'); hb.style.cssText = 'position:fixed;left:0;top:0;width:640px;height:360px'; document.body.appendChild(hb);
+        const c1 = D.open(hb, { dev: ph, rs: rr, preview: true });
+        ok(hb.querySelector('.dv-phone .dv-grid .dv-app[data-app=messages]'), '0.9.0 Handy: Startbildschirm fehlt');
+        c1.close();
+        const c2 = D.open(hb, { dev: pc, rs: rr, preview: true, app: 'messages' });
+        ok(hb.querySelector('.dv-desk .dv-win .dv-crow') && hb.querySelectorAll('.dv-desk .dv-msg').length === 3, '0.9.0 Computer: Nachrichten-Fenster falsch');
+        c2.close(); hb.remove();
+        pp.chats.threads.push({ id: 't_c', name: 'C', contact: 'nix', msgs: [], replies: [] });
+        ok(D.issues().some((x) => /keinen Kontakt/.test(x.text)), '0.9.0 Prüfung: Unterhaltung ohne Kontakt nicht gemeldet');
+        pp.devices.enabled = false;
+      }
     } catch (e) { out.push('0.7.4-Prüfung stürzt ab: ' + String(e && e.stack || e).split('\\n').slice(0, 3).join(' | ')); }
     VN.project = prev;
     return JSON.stringify(out);

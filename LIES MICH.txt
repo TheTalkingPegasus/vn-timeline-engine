@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.8.0
+VN Timeline Engine · Prototyp 0.9.0
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,36 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.0 · Geräte: Handy und Computer, Nachrichten über Szenen hinweg
+Geräte (Spielsysteme → Geräte)
+- Neues Spielsystem: ein **Handy** im Spiel (hochkant, Statusleiste, App-Raster) oder ein **Computer** (Desktop mit
+  Symbolen, verschiebbaren Fenstern und Taskleiste). Mehrere Geräte pro Projekt, jedes mit eigenen Apps und eigenem Look.
+- Apps: Nachrichten, Inventar, Beziehungen, Galerie, Quests, Karte, Erfolge, Skilltree, Werte, Verlauf, Aufbau –
+  eingebaute Apps öffnen ihren Bildschirm und kehren danach zum Gerät zurück. Eigene Apps zeigen eine Seite (Titel,
+  Text, Bild – z. B. Notizen, eine E-Mail, eine Webseite) und/oder führen Aktionen aus; „➜ Zu Szene oder Hub
+  wechseln“ schließt das Gerät und springt.
+- Design komplett einstellbar: Hintergrundbild, eigenes Handy-/Monitor-Rahmenbild, Farben (Akzent, Bildschirm,
+  Schrift, App-Fläche, Sprechblasen), Form der Symbole, Schrift, Größe und Position, Abdunkeln. App-Symbole als Emoji
+  oder eigenes Bild, eigene Namen und Farben, Reihenfolge und Bedingungen pro App („erst zeigen, wenn …“).
+  Live-Vorschau zum Anklicken im Editor.
+- Öffnen per HUD-Knopf, eigener Taste, Pausenmenü oder mit der neuen Aktion „📱 Gerät öffnen“ – z. B. auf einer
+  Hitbox im Hub (der Laptop auf dem Schreibtisch), auf Wunsch direkt in einer App oder einem Chat. Ein Gerät kann
+  per Bedingung erst später verfügbar sein.
+Nachrichten (Spielsysteme → Nachrichten)
+- Kontakte (freier Name oder mit einer Beziehungs-Figur verknüpft, Bild, Farbe, Status).
+- Unterhaltungen kommen automatisch an, sobald ihre Bedingungen stimmen, oder per Aktion „💬 Nachricht schicken“.
+  Zeilen mit Bedingungen kommen nur, wenn sie erfüllt sind – so hat jede Route ihre eigene Version eines Chats.
+- Vorbereitete Antworten, aus denen der Spieler wählt; Antworten können Bedingungen haben, Aktionen ausführen und
+  zur nächsten Unterhaltung führen (erscheint Zeile für Zeile mit „schreibt …“).
+- Der Verlauf gehört zum Spielstand und bleibt über alle Szenen erhalten. Ungelesen-Zahl am HUD-Knopf und an der
+  App, Meldung bei neuer Nachricht (Klick öffnet den Chat), auf Wunsch mit eigenem Ton.
+- Chat-Zeilen in der Timeline (Dialog „Als Handy-Nachricht zeigen“) landen im Verlauf des Kontakts, ältere
+  Nachrichten erscheinen im Timeline-Handy darüber. Nachrichten und Bild-Geschenke aus Beziehungen landen ebenfalls
+  im Chat.
+- Neue Bedingung „💬 Nachricht“ (erhalten, nicht erhalten, gelesen, wartet auf Antwort, beantwortet – auch mit
+  einer bestimmten Antwort). Die Prüfung meldet Unterhaltungen ohne Kontakt, kaputte Antwort-Ziele und Chats, die
+  nie verschickt werden. Alle Chat-Texte stehen im Transkript zum Übersetzen.
 
 NEU IN 0.8.0 · Auswahl, Ordner, Kopieren & Einfügen, Tages- und Jahreszeiten
 Auswahl und Hubs

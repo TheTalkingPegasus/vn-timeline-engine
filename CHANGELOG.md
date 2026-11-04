@@ -2,6 +2,32 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.0 – Devices: phone and computer, messages across scenes
+Devices (Game systems → Devices)
+- New game system: an in-game **phone** (portrait, status bar, app grid) or **computer** (desktop with icons,
+  draggable windows and a taskbar). Several devices per project, each with its own apps and look.
+- Apps: Messages, Inventory, Relationships, Gallery, Quests, Map, Achievements, Skill tree, Stats, History, Building –
+  built-in apps open their screen and return to the device afterwards. Own apps show a page (title, text, picture –
+  e.g. notes, an e-mail, a website) and/or run actions; “➜ Go to scene or hub” closes the device and jumps.
+- Fully editable design: wallpaper, optional phone/monitor frame image, colours (accent, screen, text, app area,
+  chat bubbles), icon shape, font, size and position, background dimming. App icons as emoji or your own image,
+  own names and colours, order, and conditions per app (“only show when …”). Live, clickable preview in the editor.
+- Open a device with the HUD button, its own key, the pause menu or the new action “📱 Open device” – e.g. on a hub
+  hitbox (the laptop on the desk), optionally straight into an app or a chat. A device can be locked by conditions.
+Messages (Game systems → Messages)
+- Contacts (free name or linked to a relationship character, avatar, colour, status).
+- Conversations arrive automatically as soon as their conditions are met or with the action “💬 Send message”.
+  Lines with conditions only arrive when they are met – every route gets its own version of a chat.
+- Prepared replies the player picks from; replies can have conditions, run actions and lead to the next
+  conversation (shown line by line with “typing …”).
+- The history is part of the save game and stays across all scenes. Unread badges on the HUD button and the app,
+  a notification for new messages (click opens the chat), optional own sound.
+- Timeline chat lines (dialogue “Show as phone message”) are added to the contact's history, and older messages
+  appear above them in the timeline phone. Relationship milestone messages and picture gifts land in the chat too.
+- New condition “💬 Message” (received, not received, read, waiting for reply, answered – optionally with a
+  specific reply). Problem list warns about conversations without contact, broken reply targets and chats that are
+  never sent. All chat texts appear in the transcript for translation.
+
 ## 0.8.0 – Choices, folders, copy & paste, times of day and seasons
 Choices and hubs
 - Already picked answers can turn grey (“already asked”, still pickable) or disappear – per choice or per
