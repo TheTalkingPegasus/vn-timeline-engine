@@ -273,7 +273,7 @@
         if (st.choice.timer) box.appendChild(el('div', { class: 'choice-timer' }, el('span', { style: { width: '62%' } })));
         stage.appendChild(box);
       }
-      if (!st.bg && !st.chars.length && !st.dialog && !st.video) {
+      if (!st.bg && !st.chars.length && !st.dialog && !st.video && !st.choice) {
         stage.appendChild(el('div', { class: 'placeholder', style: { inset: '10%', fontSize: '3cqh', textAlign: 'center', lineHeight: '1.6' } },
           'Leerer Schritt – Bild oder Audio aus der Dateiliste auf eine Spur ziehen, oder doppelt auf eine Spur klicken.'));
       }

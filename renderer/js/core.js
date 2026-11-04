@@ -305,6 +305,7 @@
   VN.drag = (ev, onMove, onEnd) => {
     const sx = ev.clientX, sy = ev.clientY;
     let moved = false;
+    VN.dragging = true;
     const mm = (e) => {
       const dx = e.clientX - sx, dy = e.clientY - sy;
       if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
@@ -313,6 +314,7 @@
     const mu = (e) => {
       window.removeEventListener('mousemove', mm);
       window.removeEventListener('mouseup', mu);
+      VN.dragging = false;
       onEnd(e.clientX - sx, e.clientY - sy, moved, e);
     };
     window.addEventListener('mousemove', mm);
@@ -408,6 +410,8 @@
   VN.fill = (obj, def) => { const o = obj && typeof obj === 'object' ? obj : {}; for (const k of Object.keys(def)) if (o[k] === undefined) o[k] = def[k]; return o; };
 
   // Auswahl waagerecht verschieben (0.8.0): Mitte der Auswahl in % der Bildbreite
+  // Dateigröße lesbar (auch im fertigen Spiel: Leistungs-Anzeige, Entwickler-Konsole)
+  VN.fmtMB = (b) => (b >= 1024 * 1024 * 1024 ? (b / 1024 / 1024 / 1024).toFixed(1).replace('.', ',') + ' GB' : b >= 10 * 1024 * 1024 ? Math.round(b / 1024 / 1024) + ' MB' : b >= 1024 * 1024 ? (b / 1024 / 1024).toFixed(1).replace('.', ',') + ' MB' : b > 0 ? Math.max(1, Math.round(b / 1024)) + ' KB' : '0 KB');
   // Position der Auswahl pro Clip (0.8.0 waagerecht, 0.9.1 auch senkrecht und Breite). Ohne Angabe gilt das Design.
   VN.placeChoices = (box, clip) => {
     if (!clip) return;

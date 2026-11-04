@@ -2,6 +2,14 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.2 – Reorder choice answers, safety check fixes
+- Answers of a choice can be moved up or down one position (↑ / ↓ on each answer).
+- Fixed: the developer console and the performance display in the finished game (Windows and web) crashed on
+  memory sizes – a helper only existed in the editor.
+- Fixed: Esc did nothing in the relationship overview, gift screens and shops – it now works like “Back” / “Leave shop”.
+- Fixed: the transform frame of a character could jump back while you were already dragging it.
+- Fixed: an empty step with only a choice still showed the “empty step” hint behind the choice in the editor.
+
 ## 0.9.1 – Choices can be moved anywhere
 - Choice windows can now also be moved up and down and changed in width – per choice, with presets (top, centre,
   bottom) or “as in design”. Before, they always covered the middle of the picture.

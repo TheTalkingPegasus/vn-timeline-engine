@@ -108,7 +108,7 @@
     updates: {},
     async checkBundled() {
       const p = VN.project;
-      if (!VN.api.plugins.bundledText) return;
+      if (!VN.api || !VN.api.plugins || !VN.api.plugins.bundledText) return;
       VNPlugin.updates = {};
       let changed = [];
       for (const f of VNPlugin.BUNDLED_FILES) {

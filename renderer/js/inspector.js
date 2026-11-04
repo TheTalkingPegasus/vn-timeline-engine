@@ -211,7 +211,12 @@
         box.appendChild(el('div', { class: 'hint-box' }, 'Erscheint, nachdem der Dialog dieses Schritts gelesen wurde. Ohne Ziel geht es in dieser Szene weiter.'));
         box.appendChild(Inspector.designLink('Button-Bilder, Farben, Anordnung'));
         c.options.forEach((o, i) => {
+          // Reihenfolge der Antworten ändern (0.9.2)
+          const moveOpt = (d) => VN.mutate(() => { const j = i + d; if (j < 0 || j >= c.options.length) return; c.options.splice(i, 1); c.options.splice(j, 0, o); });
           box.appendChild(el('div', { class: 'opt-card' },
+            el('div', { class: 'row gap4', style: { justifyContent: 'flex-end', marginBottom: '-4px' } },
+              el('button', { class: 'btn tiny', title: VN.t('Eine Position nach oben'), disabled: i === 0, onclick: () => moveOpt(-1) }, '↑'),
+              el('button', { class: 'btn tiny', title: VN.t('Eine Position nach unten'), disabled: i === c.options.length - 1, onclick: () => moveOpt(1) }, '↓')),
             field('Antwort ' + (i + 1), text(o.text, (v) => VN.mutate(() => { o.text = v; }))),
             field('Führt zu', VN.sceneSelect(o.target, (v) => VN.mutate(() => { o.target = v; }), { exclude: s.id, emptyLabel: '— weiter in dieser Szene —' })),
             VN.condEditor(o.conds || (o.conds = []), 'Antwort nur verfügbar, wenn'),

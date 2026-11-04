@@ -1314,7 +1314,8 @@
     if (e.key === 'Escape') {
       e.preventDefault();
       if (!run) { if (!overlayBox.hidden) closeOverlay(); else if (!VN.gameMode) Player.close(); return; }
-      if (run.overlay === 'life') return;
+      // Beziehungen, Geschenke, Läden (0.9.2): Esc wirkt wie „Zurück“ / „Laden verlassen“
+      if (run.overlay === 'life') { const b = stage.querySelector('.shop-close') || [...overlayBox.querySelectorAll('.sys-btn')].pop(); if (b) b.click(); return; }
       if (run.overlay && run.overlay !== 'pause') { if (run.overlay === 'inv') closeOverlay(); else { run.overlay = null; pauseMenu(); } }
       else pauseMenu();
     } else if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); Player.advance(); }
