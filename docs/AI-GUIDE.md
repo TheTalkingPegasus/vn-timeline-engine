@@ -1,6 +1,6 @@
 # VN Timeline Engine – guide for AI assistants
 
-Engine 0.7.6 · project format 1 · generated 2026-11-04
+Engine 0.9.5 · project format 1 · generated 2026-11-04
 
 This file explains a VN Timeline Engine project so that any AI can read and change it **without the engine source code**. 
 The engine is a free visual novel editor that works like a video editor: every scene is a timeline, every column ("step") is one click of the player.
@@ -28,19 +28,19 @@ The engine is a free visual novel editor that works like a video editor: every s
 - `next` = scene after the last step. `"@return"` = back to the hub (or world location) the scene was started from. `null` = end of the game.
 - `overHub: true` = the scene plays on top of the hub it was started from (hub background and objects stay visible behind the characters).
 - Dialogue: one clip per step in `dialog` (`len: 1`). `speaker` empty = narrator. `chat: true` shows the line as a phone chat. `actions` run when the line appears. `waitFor: { conds, hint }` stops until the condition is met.
-- Choice: in `choice` at the step where it appears; each option has `text`, `target` (scene id or null = continue), `conds` (shown only if true), `actions`.
+- Choice: in `choice` at the step where it appears; each option has `text`, `target` (scene id or null = continue), `conds` (shown only if true), `actions`, optional `afterPick: "grey"|"hide"|"none"` (what happens once picked). The choice clip may have `chX` (horizontal centre in %, default 50), `chY` (vertical centre in %, default from the design) and `chW` (width in %), `afterPick` (default for all options) and `allDone` (scene when every option is hidden).
 - Characters: `x` 0–100 (% from left, centre of the figure), `y` height offset in %, `scale` %, `rot` degrees, `flip`. `keys: [{ beat, x, y, scale, rot, opacity }]` animate over steps.
 
 ### Clip fields per track (defaults of the editor)
 
-- `bg` – Background / Hintergrund (bg): `{"id":"<unique id>","start":0,"len":3,"asset":null,"trans":"fade","dur":1}`
-- `char1` – Character 1 / Figur 1 (char): `{"id":"<unique id>","start":0,"len":3,"asset":null,"x":30,"scale":100,"trans":"fade","dur":0.6,"idle":"breathe","flip":false}`
-- `char2` – Character 2 / Figur 2 (char): `{"id":"<unique id>","start":0,"len":3,"asset":null,"x":70,"scale":100,"trans":"fade","dur":0.6,"idle":"breathe","flip":false}`
+- `bg` – Background / Hintergrund (bg): `{"id":"<unique id>","start":0,"len":3,"asset":null,"trans":"cut","dur":1}`
+- `char1` – Character 1 / Figur 1 (char): `{"id":"<unique id>","start":0,"len":3,"asset":null,"x":30,"scale":100,"trans":"cut","dur":0.6,"idle":"breathe","flip":false}`
+- `char2` – Character 2 / Figur 2 (char): `{"id":"<unique id>","start":0,"len":3,"asset":null,"x":70,"scale":100,"trans":"cut","dur":0.6,"idle":"breathe","flip":false}`
 - `fx` – Effect layer / Effekt-Ebene (fx): `{"id":"<unique id>","start":0,"len":3,"asset":null,"color":"#3c4a8c","blend":"multiply","opacity":85,"styles":{}}`
 - `cam` – Camera / Kamera (cam): `{"id":"<unique id>","start":0,"len":3,"zoom":130,"panX":0,"panY":-8,"rot":0,"shake":0,"dur":1.2,"ease":"ease-in-out","keys":[]}`
 - `video` – Video (video): `{"id":"<unique id>","start":0,"len":1,"asset":null,"layer":"front","loop":false,"muted":false,"vol":90,"fit":"cover","waitEnd":true,"skippable":true}`
 - `dialog` – Dialogue / Dialog (dialog): `{"id":"<unique id>","start":0,"len":1,"speaker":"","color":"#ffffff","text":"New text …","speed":40,"actions":[]}`
-- `choice` – Choice / Auswahl (choice): `{"id":"<unique id>","start":0,"len":1,"options":[{"id":"opt_1ojoy","text":"Answer A","target":null,"conds":[],"actions":[]},{"id":"opt_1pghs","text":"Answer B","target":null,"conds":[],"actions":[]}]}`
+- `choice` – Choice / Auswahl (choice): `{"id":"<unique id>","start":0,"len":1,"options":[{"id":"opt_1omup","text":"Answer A","target":null,"conds":[],"actions":[]},{"id":"opt_1p2d8","text":"Answer B","target":null,"conds":[],"actions":[]}]}`
 - `music` – Music / Musik (music): `{"id":"<unique id>","start":0,"len":3,"asset":null,"vol":70,"loop":true,"carry":false,"fade":1}`
 - `voice` – Voices (voice): `{"id":"<unique id>","start":0,"len":1,"asset":null,"vol":90,"delay":0}`
 - `sfx` – Sound effects / Soundeffekte (sfx): `{"id":"<unique id>","start":0,"len":1,"asset":null,"vol":90,"delay":0}`
@@ -51,8 +51,9 @@ The engine is a free visual novel editor that works like a video editor: every s
 {"id":"h_ai1","type":"hub","name":"Guild hall","bg":"<asset id>","music":null,"objects":[{"id":"o_ai1","name":"Door","asset":"<asset id|null>","x":70,"y":30,"w":12,"h":40,"rot":0,"shape":"rect","hover":"glow","target":"<scene id|null>","message":"","conds":[],"actions":[],"styles":{}}],"events":[]}
 ```
 
-- Object position/size in % of the screen. `target` = scene opened on click. A story scene with `next: "@return"` returns to the hub afterwards.
-- Events run when the hub is entered: `{ id, trigger: "first"|"always"|"cond", conds, mode: "lines"|"scene", lines: [{ id, speaker, text, style: ""|"phone"|"note" }], scene: "<story scene id>" }`. `mode: "scene"` plays a whole timeline over the hub (characters, phone chat, choices) and comes back. `trigger: "cond"` fires once as soon as `conds` are true, also while the player is in the hub.
+- Object position/size in % of the screen. `target` = scene opened on click. `invisible: true` = clickable area only. A story scene with `next: "@return"` returns to the hub afterwards. `bgSlots: { "<time slot index>": "<asset id>" }` = background per time of day. `fx: [{ id, particles: "rain"|"snow"|"dust"|"sparks"|"petals"|"fireflies", density, speed, size, wind, color, conds }]` = particles over the hub.
+- Assets may have `folder` ("Characters/Ray") – only for the editor file list. Minigame plugin actions can have `onWin` / `onLose` (scene id, hub id or "@gameover"); `gameOver: { title, text, bg, retry }` on the project sets the game-over screen. `time.seasonsOn`, `time.seasons`, `time.seasonDays`, `time.ambient: [{ id, asset, slot, season, where: "all"|"hubs"|"<scene id>", vol }]`.
+- Events run when the hub is entered: `{ id, trigger: "first"|"always"|"cond", conds, mode: "lines"|"scene", lines: [{ id, speaker, text, style: ""|"phone"|"note" }], scene: "<story scene id>" }`. `mode: "scene"` plays a whole timeline over the hub (characters, phone chat, choices) and comes back. `when: "enter"|"cond"` (cond = as soon as `conds` are true, also while the player is in the hub) and `repeat: "once"|"always"|"times"|"daily"` (+ `times`) set how often it runs – never twice in one visit. Older projects use `trigger: "first"|"always"|"cond"`, which still works.
 
 ## Jointed puppets (characters made of body parts)
 
@@ -84,6 +85,8 @@ The engine is a free visual novel editor that works like a video editor: every s
 - `idleLevel`: `{"type":"idleLevel","building":"","level":1}  – 🏰 Building level / 🏰 Gebäude-Stufe  (only when that game system is switched on)`
 - `idleGoal`: `{"type":"idleGoal","ms":""}  – 🏰 Building goal reached / 🏰 Aufbau-Ziel erreicht  (only when that game system is switched on)`
 - `idleRunning`: `{"type":"idleRunning"}  – 🏰 Building is running / 🏰 Aufbau läuft  (only when that game system is switched on)`
+- `chat`: `{"type":"chat","thread":"","state":"got","reply":""}  – 💬 Message / 💬 Nachricht  (only when that game system is switched on)`
+- `devOpen`: `{"type":"devOpen","device":"","value":true}  – 🔓 Device unlocked / 🔓 Gerät entsperrt  (only when that game system is switched on)`
 
 Operators: `>=`, `>`, `<=`, `<`, `==`, `!=`.
 
@@ -100,6 +103,7 @@ Operators: `>=`, `>`, `<=`, `<`, `==`, `!=`.
 - `charPic`: `{ "type": "charPic", "id": "<unique id>", "char": "<relation char id>", "image": "<asset id>", "text": "Message", "style": "phone|bubble|window" }  – character sends a picture; it is added to the gallery`
 - `time`: `{ "type": "time", "mode": "advance", "amount": 1 }  (needs Time & Calendar on)`
 - `shop`: `{ "type": "shop", "shop": "<shop id>" }`
+- `goto`: `{"type":"goto","scene":""}  – ➜ Go to scene or hub / ➜ Zu Szene oder Hub wechseln`
 - `know`: `{"type":"know","key":"","value":true}  – 🧠 Remember knowledge (across playthroughs) / 🧠 Wissen merken (über Durchläufe)`
 - `ach`: `{"type":"ach","ach":""}  – 🏆 Unlock achievement / 🏆 Erfolg freischalten  (only when that game system is switched on)`
 - `screen`: `{"type":"screen","screen":"stats"}  – 📋 Open screen / 📋 Bildschirm öffnen`
@@ -129,6 +133,9 @@ Operators: `>=`, `>`, `<=`, `<`, `==`, `!=`.
 - `idleBuild`: `{"type":"idleBuild","building":""}  – 🏰 Upgrade building (free) / 🏰 Gebäude ausbauen (geschenkt)  (only when that game system is switched on)`
 - `idleUnlock`: `{"type":"idleUnlock","building":"","build":true}  – 🏰 Unlock building / 🏰 Gebäude freischalten  (only when that game system is switched on)`
 - `idleProduce`: `{"type":"idleProduce","units":60}  – 🏰 Skip time (production) / 🏰 Zeit überspringen (Produktion)  (only when that game system is switched on)`
+- `device`: `{"type":"device","device":"","app":""}  – 📱 Open device / 📱 Gerät öffnen  (only when that game system is switched on)`
+- `devUnlock`: `{"type":"devUnlock","device":""}  – 🔓 Unlock device / 🔓 Gerät entsperren  (only when that game system is switched on)`
+- `chatSend`: `{"type":"chatSend","thread":"","quiet":false}  – 💬 Send message / 💬 Nachricht schicken  (only when that game system is switched on)`
 
 ## Game systems
 
@@ -141,8 +148,17 @@ Operators: `>=`, `>`, `<=`, `<`, `==`, `!=`.
 - `idle` – Building / idle (buildings produce currencies)
 - `world` – World map & locations
 - `equip` – Equipment
+- `devices` – Devices: in-game phone / computer with apps; chats live in `chats`
 
 Each system has `enabled: true|false` plus its own data. The safest way to set up a system is inside the engine (tab **Game systems / Spielsysteme**, every system has a one-click example). Idle/building (`idle`): `tick: "sec"|"min"|"hour"` (amounts per tick), `startWhen: "always"|"firstOpen"|"cond"|"action"` (+ `startConds`), `mode: "realtime"|"offline"|"gametime"`.
+
+## Devices and chats (phone / computer)
+
+`devices: { enabled, list: [{ id, name, kind: "phone"|"desktop", key, hud, inMenu, conds, lock: { on, code, mode: "once"|"always", title, hint }, wallpaper, frame, clock: "auto"|"game"|"real"|"none", look: { accent, screen, text, panel, panelText, bubble, bubbleMe, iconShape, size, side, dim, inset, font }, apps: [...] }] }`.
+- App: `{ id, type, name, icon, image, color, conds }`. `type`: `messages`, `inv`, `rel`, `gallery`, `quests`, `map`, `ach`, `skills`, `stats`, `log`, `idle` (built-in screens) or `app` (own app: `title`, `text`, `pic` = a page; `actions` run when opened – a `goto` action closes the device and jumps).
+- Open it with the action `device` (e.g. on a hub object = hitbox), the HUD button, the key or the pause menu.
+`chats: { notify, sound, contacts: [{ id, name, char: "<relationship char id>", avatar, color, status }], threads: [{ id, name, contact, auto, silent (no notification/unread count), conds, devs: ["<device id>"] (empty = all devices), msgs: [{ id, from: "them"|"me", text, image, conds, actions (run once when the message is read) }], replies: [{ id, text, conds, actions, next: "<thread id>" }] }] }`.
+- A thread is delivered automatically (`auto: true`, as soon as `conds` are true) or with the action `chatSend`. Lines with `conds` are only delivered when true (route variants). The player picks one of the `replies`; its `actions` run and `next` delivers the follow-up thread. History is kept in the save game across scenes. Check with the condition `chat` (`state`: got, not, read, open, replied + `reply`). Dialogue lines with `chat: true` whose speaker is a contact are added to that chat history too.
 
 ## Operating the program (for AIs that can see and click the screen)
 
