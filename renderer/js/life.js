@@ -7,8 +7,8 @@
   const Life = (VN.Life = {
     // ---------- Grundeinstellungen ----------
     ensure(p) {
-      p.time = Object.assign({ enabled: false, slots: ['Morgen', 'Mittag', 'Abend', 'Nacht'].map(VN.t), days: ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'].map(VN.t), startDay: 0, startSlot: 0, hud: true, autoDaytime: true, dayMap: {} }, p.time || {});
-      p.economy = Object.assign({ enabled: false }, p.economy || {});
+      p.time = VN.fill(p.time, { enabled: false, slots: ['Morgen', 'Mittag', 'Abend', 'Nacht'].map(VN.t), days: ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'].map(VN.t), startDay: 0, startSlot: 0, hud: true, autoDaytime: true, dayMap: {} });
+      p.economy = VN.fill(p.economy, { enabled: false });
       p.shops = p.shops || [];
       p.pluginData = p.pluginData || {};
       return p;
@@ -354,12 +354,12 @@
   const baseEnsure = Life.ensure;
   Life.ensure = (p) => {
     baseEnsure(p);
-    p.relations = Object.assign({
+    p.relations = VN.fill(p.relations, {
       enabled: false, gifts: false, chars: [],
       ladder: [{ name: VN.t('Fremd'), min: 0 }, { name: VN.t('Bekannt'), min: 20 }, { name: VN.t('Freund'), min: 40 }, { name: VN.t('Vertraut'), min: 70 }, { name: VN.t('Verliebt'), min: 100 }],
       showNumbers: true, rewards: 'show', hideUnmet: true, notify: true,
       giftPts: { love: 10, like: 5, neutral: 1, dislike: -5, hate: -12 }, giftLimit: 'scene', diminish: true
-    }, p.relations || {});
+    });
     for (const c of p.relations.chars) { c.likes = c.likes || {}; c.itemPrefs = c.itemPrefs || {}; c.reactions = c.reactions || {}; c.rewards = c.rewards || {}; }
     return p;
   };

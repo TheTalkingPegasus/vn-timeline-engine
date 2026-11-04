@@ -2,6 +2,11 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.7.5 – Fix: settings jumped back
+- Fix: “Building starts”, “Amounts apply” (per second/minute/hour) and other settings jumped back after
+  choosing (the choice landed in an outdated copy of the settings). The same cause is fixed for skill trees,
+  combat, quests, world, equipment, relationships, time, shops, inventory and design.
+
 ## 0.7.4 – Hub dialogues, storyboard, free transform, comfort & colour-blind modes, AI guide
 - Hub dialogues like in the timeline: a hub event can now play a whole timeline scene over the hub –
   characters, phone chat, choices, actions – and returns to the hub afterwards (“+ Timeline dialogue”).

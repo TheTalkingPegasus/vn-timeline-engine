@@ -78,7 +78,7 @@
   const baseMig = VN.migrate;
   VN.migrate = (p) => {
     p = baseMig(p);
-    p.equip = Object.assign({ enabled: false, slots: [] }, p.equip || {});
+    p.equip = VN.fill(p.equip, { enabled: false, slots: [] });
     if (!Array.isArray(p.equip.slots)) p.equip.slots = [];
     return p;
   };

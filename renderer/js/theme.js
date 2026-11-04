@@ -87,7 +87,7 @@
     FONTS, PRESETS, BUBBLE_BASE, BUILTIN_FRAMES, CHOICE_BASE, SYS_BASE, GAIN_BASE,
 
     ensure(p) {
-      p.theme = Object.assign({ bubble: { preset: 'dunkel' }, speakers: {}, choice: {}, sys: {}, gain: {}, sounds: {}, cursor: {}, fonts: {}, logo: {}, presets: [] }, p.theme || {});
+      p.theme = VN.fill(p.theme, { bubble: { preset: 'dunkel' }, speakers: {}, choice: {}, sys: {}, gain: {}, sounds: {}, cursor: {}, fonts: {}, logo: {}, presets: [] });
       for (const k of ['speakers', 'choice', 'sys', 'gain', 'sounds', 'cursor', 'fonts', 'logo']) p.theme[k] = p.theme[k] || {};
       p.theme.bubble = p.theme.bubble || { preset: 'dunkel' };
       p.theme.presets = p.theme.presets || [];

@@ -7,7 +7,7 @@
 
   SK.cfg = () => {
     const p = VN.project;
-    p.skills = Object.assign({ enabled: false, trees: [], points: [], key: 't' }, p.skills || {});
+    p.skills = VN.fill(p.skills, { enabled: false, trees: [], points: [], key: 't' });
     return p.skills;
   };
   SK.on = () => !!(VN.project && VN.project.skills && VN.project.skills.enabled);

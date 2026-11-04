@@ -22,7 +22,7 @@
     p.items = p.items || [];
     p.currencies = p.currencies || [];
     p.lootTables = p.lootTables || [];
-    p.inventory = Object.assign({ title: VN.t('Inventar'), cols: 6, rows: 4, bg: null, slot: null, showMoney: true, hudMoney: true, enabled: true }, p.inventory || {});
+    p.inventory = VN.fill(p.inventory, { title: VN.t('Inventar'), cols: 6, rows: 4, bg: null, slot: null, showMoney: true, hudMoney: true, enabled: true });
     p.languages = p.languages && p.languages.length ? p.languages : ['de'];
     p.translations = p.translations || {};
     p.rigs = p.rigs || {};
@@ -37,7 +37,7 @@
     p.mouths = p.mouths || {};
     p.glossary = p.glossary || [];
     p.chat = p.chat || { me: '' };
-    p.audioMix = Object.assign({ on: true, duck: 45 }, p.audioMix || {});
+    p.audioMix = VN.fill(p.audioMix, { on: true, duck: 45 });
     for (const s of p.scenes) {
       if (s.type === 'story') {
         VN.ensureTracks(s);

@@ -393,6 +393,10 @@
     });
   };
 
+  // Fehlende Felder ergänzen, ohne das Objekt zu ersetzen (0.7.5). Wer sich das Objekt beim Zeichnen merkt,
+  // ändert sonst später eine veraltete Kopie – die Auswahl springt dann zurück.
+  VN.fill = (obj, def) => { const o = obj && typeof obj === 'object' ? obj : {}; for (const k of Object.keys(def)) if (o[k] === undefined) o[k] = def[k]; return o; };
+
   // Hub-Dialog (0.7.4): eine Timeline-Szene, die über dem Hub abläuft und danach zurückkehrt
   VN.newHubDialog = (hub, name) => {
     const cur = VN.ui.sceneId;

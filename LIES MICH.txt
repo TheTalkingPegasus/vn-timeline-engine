@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.7.4
+VN Timeline Engine · Prototyp 0.7.5
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,11 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.7.5 · Fix: Aufbau-Einstellungen
+- Fix: „Aufbau startet“, „Mengen gelten“ (pro Sekunde/Minute/Stunde) und andere Einstellungen sprangen
+  nach dem Auswählen zurück. Dieselbe Ursache ist auch bei Skilltrees, Kampf, Quests, Welt, Ausrüstung,
+  Beziehungen, Zeit, Läden, Inventar und Design behoben.
 
 NEU IN 0.7.4 · Hub-Dialoge, Storyboard, freies Transformieren, Komfort & Farbenblind, Anleitung für KI
 - Hub-Dialoge wie in der Timeline: Ein Hub-Ereignis kann jetzt eine ganze Timeline-Szene über dem Hub

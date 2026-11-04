@@ -9,7 +9,7 @@
 
   SB.cfg = () => {
     const p = VN.project;
-    p.storyboard = Object.assign({ items: [] }, p.storyboard || {});
+    p.storyboard = VN.fill(p.storyboard, { items: [] });
     if (!Array.isArray(p.storyboard.items)) p.storyboard.items = [];
     return p.storyboard;
   };
