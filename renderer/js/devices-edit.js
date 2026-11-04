@@ -74,6 +74,16 @@
       el('div', { class: 'row gap8' }, el('div', { class: 'spacer' }),
         el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const n = JSON.parse(JSON.stringify(d)); n.id = VN.uid('dev'); n.name = d.name + ' 2'; n.key = ''; for (const a of n.apps) a.id = VN.uid('app'); C.list.push(n); VN.ui.devSel = n.id; }) }, VN.t('Duplizieren')),
         el('button', { class: 'btn tiny danger', onclick: () => { if (confirm(VN.tf('Gerät „{n}“ löschen?', { n: d.name }))) VN.mutate(() => { C.list = C.list.filter((x) => x !== d); VN.ui.devSel = null; }); } }, VN.t('Löschen')))));
+    // Code / Passwort (0.9.3)
+    const K = d.lock;
+    left.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, '🔒 ' + VN.t('Code / Passwort')),
+      el('div', { class: 'logic-row' }, chk(K.on, 'Gerät ist gesperrt', (v) => { K.on = v; })),
+      K.on ? row('Code', txt(K.code, (v) => { K.code = v.trim(); }, 'z. B. 1234 oder Drache', { width: '160px' }), el('span', { class: 'muted small' }, VN.t('Nur Ziffern = Zahlenfeld, sonst Passwort-Feld. Auch {Platzhalter} einer Variable möglich.'))) : null,
+      K.on ? row('Freischalten', sel(K.mode, [['once', 'Einmal richtig eingeben, danach immer offen'], ['always', 'Jedes Mal eingeben']], (v) => { K.mode = v; })) : null,
+      K.on ? row('Überschrift', txt(K.title, (v) => { K.title = v; }, d.kind === 'desktop' ? d.name : 'Gesperrt', { width: '200px' })) : null,
+      K.on ? row('Hinweis', txt(K.hint, (v) => { K.hint = v; }, 'z. B. Geburtstag von Cloe', { width: '260px' })) : null,
+      K.on && !String(K.code || '').trim() ? el('div', { class: 'cond-warn' }, '⚠ ' + VN.t('Ohne Code ist das Gerät nicht gesperrt.')) : null,
+      K.on ? el('div', { class: 'muted small' }, VN.t('Prüfen mit der Bedingung „🔓 Gerät entsperrt“. Findet der Spieler den Code in der Story, kann die Aktion „🔓 Gerät entsperren“ ihn auch direkt freischalten.')) : null));
     // Aussehen
     const desk = d.kind === 'desktop';
     left.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, VN.t('Aussehen')),
@@ -186,11 +196,25 @@
       txt(t.name, (v) => { t.name = v || VN.t('Unterhaltung'); }, null, { width: '170px', fontWeight: '600' }),
       sel(t.contact, [['', '— Kontakt —'], ...C.contacts.map((x) => [x.id, x.name])], (v) => { t.contact = v; }),
       chk(t.auto, 'automatisch zustellen', (v) => { t.auto = v; }),
+      el('span', { title: VN.t('Keine Meldung und keine Ungelesen-Zahl – der Spieler findet die Nachricht nur, wenn er selbst nachsieht (z. B. versteckte Mails auf einem PC).') }, chk(t.silent, 'still (versteckt)', (v) => { t.silent = v; })),
       condBtn(t.conds, 'Unterhaltung nur zustellen, wenn …', '🔒 ' + VN.t('Nur wenn')),
       el('div', { class: 'spacer' }),
       el('button', { class: 'btn tiny', title: VN.t('Vorschau'), onclick: () => playThread(t) }, '▶ ' + VN.t('Vorschau')),
       el('button', { class: 'btn tiny', title: VN.t('Duplizieren'), onclick: () => VN.mutate(() => { const n = JSON.parse(JSON.stringify(t)); n.id = VN.uid('th'); n.name = t.name + ' 2'; for (const m of n.msgs) m.id = VN.uid('cm'); for (const r of n.replies) r.id = VN.uid('cr'); C.threads.splice(C.threads.indexOf(t) + 1, 0, n); }) }, '⧉'),
       el('button', { class: 'btn tiny danger', onclick: () => { if (confirm(VN.tf('Unterhaltung „{n}“ löschen?', { n: t.name }))) VN.mutate(() => { C.threads = C.threads.filter((x) => x !== t); }); } }, '×')));
+    // Auf welchem Gerät? (0.9.3) Kein Häkchen = auf allen
+    const devs = DV().list();
+    if (devs.length > 1) {
+      t.devs = t.devs || [];
+      const all = !DV().devsOf(t).length;
+      card.appendChild(el('div', { class: 'logic-row' },
+        el('span', { class: 'muted small' }, VN.t('Erscheint auf')),
+        el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: all, onchange: (e) => VN.mutate(() => { if (e.target.checked) t.devs = []; else t.devs = [devs[0].id]; }) }), VN.t('allen Geräten')),
+        ...devs.map((d) => el('label', { class: 'check' + (all ? ' muted' : '') }, el('input', { type: 'checkbox', checked: !all && t.devs.includes(d.id), onchange: (e) => VN.mutate(() => {
+          const cur = DV().devsOf(t).length ? DV().devsOf(t) : [];
+          t.devs = e.target.checked ? [...new Set([...cur, d.id])] : cur.filter((x) => x !== d.id);
+        }) }), (d.kind === 'desktop' ? '💻 ' : '📱 ') + d.name))));
+    }
     card.appendChild(el('div', { class: 'muted small' }, VN.t('Verschickt: ') + (sent.length ? sent.join(', ') : VN.t('per Aktion „💬 Nachricht schicken“')) + ' · ID ' + t.id));
     // Nachrichten
     t.msgs.forEach((m, i) => {
@@ -225,7 +249,8 @@
 
   // Unterhaltung im Probe-Handy abspielen (Antworten gehen, Aktionen laufen erst im Spiel)
   const playThread = (t) => {
-    const d = DV().list().find((x) => x.kind === 'phone' && x.apps.some((a) => a.type === 'messages')) || DV().list().find((x) => x.apps.some((a) => a.type === 'messages')) || DV().newDevice('phone');
+    const msgDev = (x) => x.apps.some((a) => a.type === 'messages') && DV().onDev(t, x);
+    const d = DV().list().find((x) => x.kind === 'phone' && msgDev(x)) || DV().list().find(msgDev) || DV().newDevice('phone');
     const rs = VN.newRunState();
     DV().deliver(rs, t.id, true);
     const back = el('div', { class: 'modal-back', onclick: (e) => { if (e.target === back) back.remove(); } });

@@ -42,6 +42,7 @@
   DV.fixDev = (d) => {
     VN.fill(d, { id: VN.uid('dev'), name: VN.t('Handy'), kind: 'phone', conds: [], key: '', hud: true, inMenu: true, wallpaper: '', frame: '', clock: 'auto', apps: [] });
     d.look = VN.fill(d.look, d.kind === 'desktop' ? DV.DESK_LOOK : DV.LOOK);
+    d.lock = VN.fill(d.lock, { on: false, code: '', mode: 'once', hint: '', title: '' });
     if (!Array.isArray(d.apps)) d.apps = [];
     for (const a of d.apps) DV.fixApp(a);
     return d;
@@ -61,7 +62,7 @@
     if (!Array.isArray(p.chats.contacts)) p.chats.contacts = [];
     if (!Array.isArray(p.chats.threads)) p.chats.threads = [];
     for (const t of p.chats.threads) {
-      VN.fill(t, { conds: [], msgs: [], replies: [] });
+      VN.fill(t, { conds: [], msgs: [], replies: [], devs: [] });
       for (const m of t.msgs) VN.fill(m, { id: VN.uid('cm'), from: 'them', text: '', image: '', conds: [] });
       for (const r of t.replies) VN.fill(r, { id: VN.uid('cr'), text: '', conds: [], actions: [], next: '' });
     }
@@ -92,12 +93,24 @@
   const stamp = (rs) => (VN.Life && VN.Life.timeOn() && rs.time ? { d: rs.time.day, s: rs.time.slot } : null);
   const push = (rs, cid, e) => { const S = DV.st(rs); (S.log[cid] = S.log[cid] || []).push(e); S.last[cid] = ++S.seq; if (S.log[cid].length > 400) { const cut = S.log[cid].length - 400; S.log[cid].splice(0, cut); S.seen[cid] = Math.max(0, (S.seen[cid] || 0) - cut); } return e; };
   DV.log = (rs, cid) => DV.st(rs).log[cid] || [];
-  DV.unread = (rs, cid) => { const S = DV.st(rs), l = S.log[cid] || []; let n = 0; for (let i = S.seen[cid] || 0; i < l.length; i++) if (!l[i].me) n++; return n; };
-  DV.unreadAll = (rs) => Object.keys(DV.st(rs).log).reduce((n, cid) => n + DV.unread(rs, cid), 0);
-  DV.markRead = (rs, cid) => { const S = DV.st(rs); S.seen[cid] = (S.log[cid] || []).length; };
-  DV.waiting = (rs, cid) => { const id = DV.st(rs).wait[cid]; return id && DV.thread(id) ? id : null; };
+  // Auf welchen Geräten erscheint eine Unterhaltung? (0.9.3) Leere Liste = auf allen.
+  DV.devsOf = (th) => (th && Array.isArray(th.devs) ? th.devs.filter((id) => DV.dev(id)) : []);
+  DV.onDev = (th, dev) => { const l = DV.devsOf(th); return !l.length || !dev || l.includes(dev.id || dev); };
+  // Zeilen ohne Unterhaltung (Timeline-Chat, Beziehungs-Nachricht) stehen überall
+  DV.visible = (e, dev) => !dev || !e.th || !DV.thread(e.th) || DV.onDev(DV.thread(e.th), dev);
+  const isRead = (S, cid, e, i) => !!e.r || i < (S.seen[cid] || 0);
+  DV.isRead = (rs, cid, i) => { const S = DV.st(rs), e = (S.log[cid] || [])[i]; return !e || isRead(S, cid, e, i); };
+  DV.unread = (rs, cid, dev) => { const S = DV.st(rs), l = S.log[cid] || []; let n = 0; l.forEach((e, i) => { if (!e.me && !e.q && !isRead(S, cid, e, i) && DV.visible(e, dev)) n++; }); return n; };
+  DV.unreadAll = (rs, dev) => Object.keys(DV.st(rs).log).reduce((n, cid) => n + DV.unread(rs, cid, dev), 0);
+  // Gelesen: auf einem Gerät nur das, was dort zu sehen ist
+  DV.markRead = (rs, cid, dev) => {
+    const S = DV.st(rs), l = S.log[cid] || [];
+    if (!dev) { S.seen[cid] = l.length; return; }
+    l.forEach((e, i) => { if (!isRead(S, cid, e, i) && DV.visible(e, dev)) e.r = 1; });
+  };
+  DV.waiting = (rs, cid, dev) => { const id = DV.st(rs).wait[cid]; const th = id && DV.thread(id); return th && DV.onDev(th, dev) ? id : null; };
   // Kontakte mit Verlauf, zuletzt aktive zuerst
-  DV.known = (rs) => { const S = DV.st(rs); return DV.contacts().filter((c) => (S.log[c.id] || []).length || S.wait[c.id]).sort((a, b) => (S.last[b.id] || 0) - (S.last[a.id] || 0)); };
+  DV.known = (rs, dev) => { const S = DV.st(rs); return DV.contacts().filter((c) => (S.log[c.id] || []).some((e) => DV.visible(e, dev)) || DV.waiting(rs, c.id, dev)).sort((a, b) => (S.last[b.id] || 0) - (S.last[a.id] || 0)); };
   DV.entryText = (e) => (e.id ? tr(e.id, e.x || '') : e.x || '');
   DV.whenText = (at) => {
     if (!at || !VN.Life || !VN.Life.timeOn()) return '';
@@ -117,7 +130,7 @@
     const at = stamp(rs), added = [];
     for (const m of th.msgs || []) {
       if (!VN.checkConds(m.conds || [], rs)) continue;
-      added.push(push(rs, c.id, { me: m.from === 'me', x: m.text || '', id: m.id + ':text', img: m.image || '', th: th.id, at }));
+      added.push(push(rs, c.id, Object.assign({ me: m.from === 'me', x: m.text || '', id: m.id + ':text', img: m.image || '', th: th.id, at }, th.silent ? { q: 1 } : {})));
     }
     S.got[th.id] = 1;
     if ((th.replies || []).some((r) => VN.checkConds(r.conds || [], rs))) S.wait[c.id] = th.id;
@@ -131,15 +144,15 @@
     for (const th of DV.threads()) if (th.auto && !S.got[th.id]) { const r = DV.deliver(rs, th.id); if (r) out.push(r); }
     return out;
   };
-  DV.replies = (rs, cid) => { const id = DV.waiting(rs, cid); const th = id && DV.thread(id); return th ? (th.replies || []).filter((r) => VN.checkConds(r.conds || [], rs)) : []; };
-  DV.pickReply = (rs, cid, rid) => {
+  DV.replies = (rs, cid, dev) => { const id = DV.waiting(rs, cid, dev); const th = id && DV.thread(id); return th ? (th.replies || []).filter((r) => VN.checkConds(r.conds || [], rs)) : []; };
+  DV.pickReply = (rs, cid, rid, dev) => {
     const S = DV.st(rs), th = DV.thread(S.wait[cid]);
     const r = th && (th.replies || []).find((x) => x.id === rid);
     if (!r) return null;
     push(rs, cid, { me: true, x: r.text || '', id: r.id + ':text', img: '', th: th.id, at: stamp(rs) });
     S.rep[th.id] = r.id;
     delete S.wait[cid];
-    DV.markRead(rs, cid);
+    DV.markRead(rs, cid, dev || null);
     if (VN.did) VN.did(rs, 'chatReply', r.id);
     return { thread: th, reply: r };
   };
@@ -154,27 +167,31 @@
     const c = DV.contactByName(other ? other.speaker : (!me ? clip.speaker : ''));
     if (!c) return;
     S.lines[clip.id] = 1;
-    push(rs, c.id, { me: !!me, x: clip.text || '', id: clip.id, img: '', sc: scene.id, at: stamp(rs) });
-    DV.markRead(rs, c.id);
+    push(rs, c.id, { me: !!me, x: clip.text || '', id: clip.id, img: '', sc: scene.id, at: stamp(rs), r: 1 });
   };
   // Älterer Verlauf für die Handy-Ansicht in der Timeline (ohne die Zeilen dieser Szene)
   DV.historyFor = (rs, speaker, sceneId) => {
     if (!DV.on()) return [];
     const c = DV.contactByName(speaker);
     if (!c) return [];
-    return DV.log(rs, c.id).filter((e) => e.sc !== sceneId).slice(-12);
+    // Das Timeline-Handy zeigt nichts, was nur für Computer bestimmt ist
+    const onPhone = (e) => { const th = e.th && DV.thread(e.th); const l = DV.devsOf(th); return !l.length || l.some((id) => DV.dev(id).kind !== 'desktop'); };
+    return DV.log(rs, c.id).filter((e) => e.sc !== sceneId && onPhone(e)).slice(-12);
   };
   // Nachricht einer Figur (Beziehungs-Meilenstein, Bild-Geschenk) landet auch im Chat
   DV.logRel = (rs, ch, m) => {
     if (!DV.on() || !ch || !m) return;
     const c = DV.contacts().find((x) => x.char && (x.char === ch.id || x.char === ch.name));
     if (!c) return;
-    push(rs, c.id, { me: false, x: m.text || '', id: m.id ? m.id + ':text' : '', img: m.image || '', at: stamp(rs) });
-    DV.markRead(rs, c.id);
+    push(rs, c.id, { me: false, x: m.text || '', id: m.id ? m.id + ':text' : '', img: m.image || '', at: stamp(rs), r: 1 });
   };
 
   // Welche Geräte und Apps gibt es gerade?
   DV.usable = (d, rs) => !!d && VN.checkConds(d.conds || [], rs);
+  // Passwort / Code (0.9.3): 'once' = nach einmal richtig eingeben frei, 'always' = jedes Mal
+  DV.locked = (d, rs) => !!(d && d.lock && d.lock.on && String(d.lock.code || '').trim()) && !(d.lock.mode !== 'always' && rs && (DV.st(rs).open || {})[d.id]);
+  DV.unlock = (d, rs) => { const S = DV.st(rs); S.open = S.open || {}; S.open[d.id] = 1; if (VN.did) VN.did(rs, 'devUnlock', d.id); };
+  DV.codeOf = (d, rs) => String((VN.Extras && VN.Extras.fill && rs ? VN.Extras.fill(d.lock.code || '', rs) : d.lock.code) || '').trim();
   DV.apps = (d, rs) => (d.apps || []).filter((a) => (DV.BUILTIN[a.type] || DV.BUILTIN.app).on() && (!rs || VN.checkConds(a.conds || [], rs)));
 
   // ---------- Bedingungen und Aktionen ----------
@@ -194,7 +211,7 @@
         const l = DV.log(rs, th.contact);
         let last = -1;
         l.forEach((e, i) => { if (e.th === c.thread) last = i; });
-        return last < (S.seen[th.contact] || 0);
+        return last < 0 || DV.isRead(rs, th.contact, last);
       }
       return got;
     },
@@ -223,6 +240,20 @@
       if (ap && ap.type === 'messages') row.appendChild(sel(a.contact || '', [['', '— Liste —'], ...DV.contacts().map((c) => [c.id, c.name])], (v) => VN.mutate(() => { a.contact = v; })));
     }
   });
+  VN.registerCond('devOpen', {
+    label: '🔓 Gerät entsperrt', on: DV.on, make: () => ({ device: (DV.list().find((d) => d.lock && d.lock.on) || DV.list()[0] || {}).id || '', value: true }),
+    check: (c, rs) => { const v = !!(DV.st(rs).open || {})[c.device]; return c.value === false ? !v : v; },
+    text: (c) => { const d = DV.dev(c.device); return '🔓 ' + (d ? d.name : '?') + (c.value === false ? ' noch gesperrt' : ' entsperrt'); },
+    problem: (c) => (DV.dev(c.device) ? null : 'Gerät fehlt'),
+    row: (row, c, sel) => { row.appendChild(sel(c.device || '', devOpts(), (v) => VN.mutate(() => { c.device = v; }))); row.appendChild(sel(c.value === false ? 'no' : 'yes', [['yes', 'entsperrt'], ['no', 'noch gesperrt']], (v) => VN.mutate(() => { c.value = v !== 'no'; }))); }
+  });
+  VN.registerAction('devUnlock', {
+    label: '🔓 Gerät entsperren', on: DV.on, make: () => ({ device: (DV.list().find((d) => d.lock && d.lock.on) || DV.list()[0] || {}).id || '' }),
+    apply: (a, rs) => { const d = DV.dev(a.device); if (d) DV.unlock(d, rs); },
+    text: (a) => { const d = DV.dev(a.device); return '🔓 ' + (d ? d.name : '?'); },
+    problem: (a) => (DV.dev(a.device) ? null : 'Gerät fehlt'),
+    row: (row, a, sel) => row.appendChild(sel(a.device || '', devOpts(), (v) => VN.mutate(() => { a.device = v; })))
+  });
   VN.registerAction('chatSend', {
     label: '💬 Nachricht schicken', on: DV.on, make: () => ({ thread: (DV.threads()[0] || {}).id || '', quiet: false }),
     apply: (a, rs) => {
@@ -249,6 +280,7 @@
     }
     for (const t of DV.threads()) {
       if (!DV.contact(t.contact)) out.push({ text: VN.tf('Unterhaltung „{t}“ hat keinen Kontakt.', { t: t.name }) });
+      if (DV.devsOf(t).length && !DV.devsOf(t).some((id) => DV.dev(id).apps.some((a) => a.type === 'messages'))) out.push({ text: VN.tf('Unterhaltung „{t}“ ist nur für Geräte ohne App „Nachrichten“ bestimmt – sie wäre nirgends zu lesen.', { t: t.name }) });
       for (const r of t.replies || []) if (r.next && !DV.thread(r.next)) out.push({ text: VN.tf('Antwort „{r}“ führt zu einer Unterhaltung, die es nicht mehr gibt.', { r: r.text }) });
       if (!t.auto && !used(t.id)) out.push({ level: 'info', text: VN.tf('Unterhaltung „{t}“ wird nie verschickt (nicht automatisch, keine Aktion, keine Antwort führt hin).', { t: t.name }) });
     }
@@ -268,6 +300,10 @@
   VN.collectTexts = () => {
     const out = baseTexts();
     if (!DV.on()) return out;
+    for (const d of DV.list()) {
+      if (d.lock && d.lock.on && d.lock.title) out.push({ id: d.id + ':locktitle', area: 'Geräte', where: d.name, who: 'Sperre', text: d.lock.title, set: (v) => { d.lock.title = v; } });
+      if (d.lock && d.lock.on && d.lock.hint) out.push({ id: d.id + ':lockhint', area: 'Geräte', where: d.name, who: 'Sperre', text: d.lock.hint, set: (v) => { d.lock.hint = v; } });
+    }
     for (const d of DV.list()) for (const a of d.apps) {
       if (a.name) out.push({ id: a.id + ':name', area: 'Geräte', where: d.name, who: 'App', text: a.name, set: (v) => { a.name = v; } });
       if (a.title) out.push({ id: a.id + ':title', area: 'Geräte', where: d.name, who: 'Seite', text: a.title, set: (v) => { a.title = v; } });
@@ -308,7 +344,7 @@
     const snd = (k) => { if (H.uiSound) H.uiSound(k); };
     const XF = (t) => (VN.Extras && VN.Extras.fill ? VN.Extras.fill(t, rs) : t);
     const S = DV.st(rs);
-    let closed = false, typing = null;
+    let closed = false, typing = null, lockKey = null;
     const root = el('div', { class: 'dv-back ' + (desk ? 'dv-is-desk' : 'dv-is-phone side-' + (L.side || 'center')), 'data-notr': '' });
     root.style.setProperty('--dv-acc', L.accent);
     root.style.setProperty('--dv-screen', L.screen);
@@ -340,7 +376,7 @@
       return String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0');
     };
     const badge = (n) => (n ? el('span', { class: 'dv-badge' }, n > 99 ? '99+' : String(n)) : null);
-    const appBadge = (a) => (a.type === 'messages' ? DV.unreadAll(rs) : a.type === 'gallery' && VN.Extras && VN.Extras.newCount ? VN.Extras.newCount() : 0);
+    const appBadge = (a) => (a.type === 'messages' ? DV.unreadAll(rs, d) : a.type === 'gallery' && VN.Extras && VN.Extras.newCount ? VN.Extras.newCount() : 0);
     const icon = (a) => {
       const img = a.image && VN.assetUrl(a.image);
       return el('span', { class: 'dv-ico' + (img ? ' img' : ''), style: { background: img ? `center/cover url("${img}")` : DV.appColor(a) } }, img ? '' : DV.appIcon(a));
@@ -370,33 +406,35 @@
       const list = el('div', { class: 'dv-msgs' });
       const foot = el('div', { class: 'dv-replies' });
       wrap.append(head, list, foot);
-      const firstNew = S.seen[cid] || 0;
+      const firstNew = DV.log(rs, cid).findIndex((e, i) => !e.me && !DV.isRead(rs, cid, i) && DV.visible(e, d));
       const draw = (hideFrom) => {
         list.innerHTML = '';
         const l = DV.log(rs, cid);
-        let lastWhen = '';
+        let lastWhen = '', any = 0;
         l.forEach((e, i) => {
           if (hideFrom != null && i >= hideFrom) return;
+          if (!DV.visible(e, d)) return;
+          any++;
           const w = DV.whenText(e.at);
           if (w && w !== lastWhen) list.appendChild(el('div', { class: 'dv-when' }, w));
           lastWhen = w || lastWhen;
-          if (i === firstNew && i > 0 && firstNew < l.length && !e.me) list.appendChild(el('div', { class: 'dv-new' }, tp('Neu')));
+          if (i === firstNew && any > 1) list.appendChild(el('div', { class: 'dv-new' }, tp('Neu')));
           list.appendChild(bubble(e));
         });
-        if (!l.length) list.appendChild(el('div', { class: 'dv-empty' }, tp('Noch keine Nachrichten.')));
+        if (!any) list.appendChild(el('div', { class: 'dv-empty' }, tp('Noch keine Nachrichten.')));
         drawReplies(hideFrom != null);
         requestAnimationFrame(() => { list.scrollTop = list.scrollHeight; });
       };
       const drawReplies = (busy) => {
         foot.innerHTML = '';
         if (busy) return;
-        const reps = DV.replies(rs, cid);
+        const reps = DV.replies(rs, cid, d);
         foot.hidden = !reps.length;
         for (const r of reps) foot.appendChild(el('button', { class: 'dv-reply', onclick: (e) => { e.stopPropagation(); answer(r); } }, XF(tr(r.id + ':text', r.text || '…'))));
       };
       const answer = (r) => {
         if (typing) return;
-        const res = DV.pickReply(rs, cid, r.id);
+        const res = DV.pickReply(rs, cid, r.id, d);
         if (!res) return;
         snd('click');
         draw();
@@ -404,12 +442,12 @@
         // Antwort darauf: gleich zustellen (der Spielstand stimmt sofort), aber Zeile für Zeile mit „schreibt …“ zeigen
         const nx = r.next ? DV.deliver(rs, r.next) : null;
         if (!nx || !nx.added.length) { if (nx) draw(); refreshBadges(); return; }
-        if (nx.contact.id !== cid) { refreshBadges(); if (o.preview || !H.note) return; H.note(nx); return; }
+        if (nx.contact.id !== cid || !DV.onDev(nx.thread, d)) { refreshBadges(); if (o.preview || !H.note) return; H.note(nx); return; }
         const total = DV.log(rs, cid).length;
         let shown = total - nx.added.length;
         const step = () => {
           if (closed || !wrap.isConnected) { typing = null; return; }
-          if (shown >= total) { typing = null; DV.markRead(rs, cid); draw(); refreshBadges(); return; }
+          if (shown >= total) { typing = null; DV.markRead(rs, cid, d); draw(); refreshBadges(); return; }
           const e = DV.log(rs, cid)[shown];
           draw(shown);
           const dots = el('div', { class: 'dv-msg typing' + (e.me ? ' me' : '') }, el('i'), el('i'), el('i'));
@@ -419,22 +457,22 @@
         };
         typing = setTimeout(step, 350);
       };
-      DV.markRead(rs, cid);
+      DV.markRead(rs, cid, d);
       draw();
       return wrap;
     };
     // Liste aller Unterhaltungen
     const chatList = (onPick, cur) => {
       const box = el('div', { class: 'dv-clist' });
-      const known = DV.known(rs);
+      const known = DV.known(rs, d);
       if (!known.length) box.appendChild(el('div', { class: 'dv-empty' }, tp('Noch keine Nachrichten.')));
       for (const c of known) {
-        const l = DV.log(rs, c.id), last = l[l.length - 1];
-        const n = DV.unread(rs, c.id);
+        const l = DV.log(rs, c.id).filter((e) => DV.visible(e, d)), last = l[l.length - 1];
+        const n = DV.unread(rs, c.id, d);
         const prev = last ? (last.me ? tp('Du') + ': ' : '') + (last.img && !last.x ? '🖼 ' + tp('Bild') : (window.Fx ? Fx.plain(DV.entryText(last)) : DV.entryText(last))) : '…';
         box.appendChild(el('button', { class: 'dv-crow' + (n ? ' unread' : '') + (cur === c.id ? ' on' : ''), onclick: (e) => { e.stopPropagation(); snd('click'); onPick(c.id); } },
           DV.avatar(c), el('span', { class: 'dv-crow-t' }, el('strong', null, DV.cName(c)), el('span', null, prev.slice(0, 60))),
-          badge(n) || (DV.waiting(rs, c.id) ? el('span', { class: 'dv-wait', title: tp('Wartet auf Antwort') }, '↩') : null)));
+          badge(n) || (DV.waiting(rs, c.id, d) ? el('span', { class: 'dv-wait', title: tp('Wartet auf Antwort') }, '↩') : null)));
       }
       return box;
     };
@@ -531,9 +569,11 @@
       w.fill = () => {
         content.innerHTML = '';
         if (msg) {
-          const known = DV.known(rs);
+          const known = DV.known(rs, d);
           if (!w.chat && known.length) w.chat = known[0].id;
-          content.append(el('div', { class: 'dv-split' }, chatList((cid) => { w.chat = cid; w.fill(); }, w.chat), w.chat ? chatView(w.chat, null) : el('div', { class: 'dv-chat dv-empty' }, tp('Noch keine Nachrichten.'))));
+          const cv = w.chat ? chatView(w.chat, null) : el('div', { class: 'dv-chat dv-empty' }, tp('Noch keine Nachrichten.'));
+          content.append(el('div', { class: 'dv-split' }, chatList((cid) => { w.chat = cid; w.fill(); }, w.chat), cv));
+          setTimeout(refreshBadges, 0);
         } else content.appendChild(pageView(a));
       };
       w.fill();
@@ -582,6 +622,7 @@
       setTimeout(() => { root.remove(); if (H.onClose) H.onClose(); }, 220);
     };
     const onKey = (e) => {
+      if (lockKey && lockKey(e)) return true;
       if (e.key === 'Escape' || (d.key && e.key.toLowerCase() === d.key.toLowerCase() && !/INPUT|TEXTAREA/.test((e.target || {}).tagName || ''))) {
         if (root.querySelector('.dv-big')) { root.querySelector('.dv-big').remove(); return true; }
         if (e.key === 'Escape') {
@@ -595,11 +636,53 @@
       return false;
     };
 
+    // Sperrbildschirm (0.9.3): Code eingeben, dann geht es normal weiter
+    const lockScreen = (done) => {
+      screen.innerHTML = '';
+      const code = DV.codeOf(d, rs);
+      const pin = /^\d{1,8}$/.test(code);
+      let typed = '';
+      const msg = el('div', { class: 'dv-lock-msg' });
+      const wrong = () => { msg.textContent = tp('Falscher Code'); box.animate([{ transform: 'translateX(-1.4cqh)' }, { transform: 'translateX(1.4cqh)' }, { transform: 'translateX(-0.8cqh)' }, { transform: 'none' }], { duration: 300 }); snd('close'); };
+      const tryIt = (v) => {
+        if (String(v).trim().toLowerCase() === code.toLowerCase()) { if (d.lock.mode !== 'always' && !o.preview) DV.unlock(d, rs); snd('item'); done(); return true; }
+        wrong(); return false;
+      };
+      const title = d.lock.title ? tr(d.id + ':locktitle', d.lock.title) : (desk ? tr(d.id + ':name', d.name) : tp('Gesperrt'));
+      const hint = d.lock.hint ? el('div', { class: 'dv-lock-hint' }, XF(tr(d.id + ':lockhint', d.lock.hint))) : null;
+      let box;
+      if (pin) {
+        const dots = el('div', { class: 'dv-pin-dots' });
+        const drawDots = () => { dots.innerHTML = ''; for (let i = 0; i < code.length; i++) dots.appendChild(el('span', { class: i < typed.length ? 'on' : '' })); };
+        const pad = el('div', { class: 'dv-pin-pad' });
+        const key = (k) => {
+          msg.textContent = '';
+          if (k === '⌫') typed = typed.slice(0, -1); else if (typed.length < code.length) typed += k;
+          drawDots();
+          if (typed.length === code.length) setTimeout(() => { if (!tryIt(typed)) { typed = ''; drawDots(); } }, 150);
+        };
+        for (const k of ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫']) pad.appendChild(k ? el('button', { class: 'dv-pin-key', onclick: (e) => { e.stopPropagation(); snd('click'); key(k); } }, k) : el('span'));
+        drawDots();
+        box = el('div', { class: 'dv-lock-box' }, el('div', { class: 'dv-lock-ico' }, '🔒'), el('strong', null, title), hint, dots, msg, pad);
+        lockKey = (e) => { if (/^\d$/.test(e.key)) { key(e.key); return true; } if (e.key === 'Backspace') { key('⌫'); return true; } return false; };
+      } else {
+        const inp = el('input', { type: 'password', class: 'dv-lock-input', placeholder: tp('Passwort'), onkeydown: (e) => { e.stopPropagation(); if (e.key === 'Enter') { if (!tryIt(inp.value)) inp.select(); } else if (e.key === 'Escape') close(); else msg.textContent = ''; } });
+        box = el('div', { class: 'dv-lock-box' }, el('div', { class: 'dv-lock-ico' }, desk ? '👤' : '🔒'), el('strong', null, title), hint, inp, msg,
+          el('button', { class: 'dv-lock-ok', onclick: (e) => { e.stopPropagation(); if (!tryIt(inp.value)) inp.select(); } }, desk ? tp('Anmelden') : tp('Entsperren')));
+        if (!o.preview) setTimeout(() => inp.focus(), 60);
+      }
+      screen.append(desk ? el('div', null) : statusBar(), el('div', { class: 'dv-lock' + (desk ? ' desk' : '') }, box),
+        desk ? el('button', { class: 'dv-task-off dv-lock-off', title: tp('Schließen'), onclick: (e) => { e.stopPropagation(); close(); } }, '⏻') : el('div', { class: 'dv-homebar', onclick: (e) => { e.stopPropagation(); close(); } }));
+    };
     // Start
-    if (desk) deskDraw(); else phoneDraw();
+    const start = () => {
+      lockKey = null;
+      if (desk) deskDraw(); else phoneDraw();
+      if (o.app) { const a = d.apps.find((x) => x.id === o.app || x.type === o.app); if (a) openApp(a, o.contact); }
+    };
     snd('open');
     root.classList.add('dv-in');
-    if (o.app) { const a = d.apps.find((x) => x.id === o.app || x.type === o.app); if (a) openApp(a, o.contact); }
+    if (DV.locked(d, rs)) lockScreen(start); else start();
     return { el: root, close, onKey, redraw, refresh: refreshBadges, get closed() { return closed; }, get away() { return root.classList.contains('dv-away'); } };
   };
 

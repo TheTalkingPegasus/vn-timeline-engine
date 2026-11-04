@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.2
+VN Timeline Engine · Prototyp 0.9.3
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,17 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.3 · Nachrichten je Gerät, versteckte Nachrichten, gesperrte Geräte
+- Stille Unterhaltungen: keine Meldung und keine Ungelesen-Zahl – der Spieler findet sie nur, wenn er selbst
+  nachsieht (z. B. versteckte Mails auf einem PC). Häkchen „still (versteckt)“ an der Unterhaltung.
+- Geräte lassen sich mit einem Code sperren: nur Ziffern = Zahlenfeld, sonst Passwort-Feld (Groß-/Kleinschreibung
+  egal, auch ein {Platzhalter} einer Variable geht). „Einmal richtig eingeben, danach immer offen“ oder „Jedes Mal
+  eingeben“, mit Überschrift und Hinweis. Neue Bedingung „🔓 Gerät entsperrt“ und Aktion „🔓 Gerät entsperren“.
+- Eine Unterhaltung lässt sich auf bestimmte Geräte beschränken: nur Handy, nur Computer oder alle (Standard).
+  Häkchen „Erscheint auf“ unter Spielsysteme → Nachrichten (sichtbar, sobald es mehr als ein Gerät gibt).
+- Ungelesen-Zahl, Meldung, Antworten und „gelesen“ gelten je Gerät: Wer am Handy liest, hat die Nachrichten nur für
+  den Computer noch nicht gelesen. Das Timeline-Handy zeigt keine Chats, die nur für den Computer bestimmt sind.
 
 NEU IN 0.9.2 · Quicktime-Minispiel, Rechtschreib-Vorschläge, Antworten umsortieren, Fehlerbehebungen
 - Neues Minispiel „Quicktime-Kreis“ (Plugin Minispiele 1.4): Ein Zeiger dreht sich, im richtigen Moment Leertaste,

@@ -1237,8 +1237,9 @@
   // Neue Nachricht: Meldung oben, Klick öffnet das Gerät beim Chat
   const chatNotify = (r) => {
     if (!run || !r || !r.contact || (r.added || []).every((e) => e.me)) { renderHud(); return; }
-    if (VN.project.chats && VN.project.chats.notify === false) { renderHud(); return; }
-    const d = DV().list().find((x) => x.apps.some((a) => a.type === 'messages') && DV().usable(x, run.rs));
+    if ((VN.project.chats && VN.project.chats.notify === false) || (r.thread && r.thread.silent)) { renderHud(); return; }
+    // das Gerät, auf dem diese Unterhaltung erscheint (0.9.3: Nachrichten nur für Handy oder nur für Computer)
+    const d = DV().list().find((x) => x.apps.some((a) => a.type === 'messages') && DV().usable(x, run.rs) && DV().onDev(r.thread, x));
     if (devCtl) devCtl.refresh();
     DV().note(stage, r, d ? () => { if (run && !run.overlay && !run.blocked) { const ap = d.apps.find((a) => a.type === 'messages'); deviceFromUiAt(d.id, ap.id, r.contact.id); } } : null);
     renderHud();
@@ -1258,7 +1259,7 @@
     if (!run || !DV() || !DV().on()) return;
     for (const d of DV().list()) {
       if (!d.hud || !DV().usable(d, run.rs)) continue;
-      const n = d.apps.some((a) => a.type === 'messages') ? DV().unreadAll(run.rs) : 0;
+      const n = d.apps.some((a) => a.type === 'messages') ? DV().unreadAll(run.rs, d) : 0;
       devCtrl.appendChild(el('button', { 'data-btn': 'device', onclick: (e) => { e.stopPropagation(); deviceFromUi(d.id); } }, (d.kind === 'desktop' ? '💻 ' : '📱 ') + VN.tr(d.id + ':name', d.name) + (d.key ? ' (' + d.key.toUpperCase() + ')' : ''), n ? el('span', { class: 'sys-new' }, String(n)) : null));
     }
   };
