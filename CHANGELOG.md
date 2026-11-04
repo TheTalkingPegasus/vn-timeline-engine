@@ -2,6 +2,18 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.7 – Packed game files
+- New export option “Game files”: **Don’t pack** (as before – images, sounds and dialogue lie as normal files in the
+  game folder, good for modding), **Packed** (everything encrypted in one file, data.vnpak – makes copying harder and
+  prevents spoilers, but is not complete protection) or **Packed + mods** (packed, but a file in the “mods” folder next
+  to the game replaces the file with the same name; a list of all files is put there for modders).
+- Works for Windows and web games (in the browser and the desktop version). Packed web games need a web server
+  (e.g. itch.io) and show a progress display while loading. Big videos and music are streamed from the package.
+- Developer console: commands also work in English (help, jump, set, quality, particles, fps, reload, images, clear);
+  in an English, Spanish or Japanese interface “help” lists these names.
+- Translation fixes: Japanese day counter (“1日目”), consistent left/right for bones in Spanish, one term for “level”
+  in Japanese.
+
 ## 0.9.6 – Web version: try the engine in the browser · Spanish and Japanese
 - The interface is now also available in **Spanish** and **Japanese** (Español / 日本語 on the start screen or under
   Project ▾ → Language): menus, windows, hints, tour, tutorial, learning project and example project. Exported games

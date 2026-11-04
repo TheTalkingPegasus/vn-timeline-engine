@@ -253,6 +253,10 @@
     bilder: ['', 'Geladene Bilder mit Größe auflisten'],
     leeren: ['', 'Protokoll leeren']
   };
+  // Englische Befehlsnamen (0.9.7): gelten immer; in nicht-deutscher Oberfläche zeigt „help“ diese Namen
+  const ALIAS = { help: 'hilfe', jump: 'springe', set: 'setze', quality: 'qualitaet', particles: 'partikel', fps: 'bildrate', reload: 'neu', images: 'bilder', clear: 'leeren' };
+  const EN_ARGS = { hilfe: '', springe: '<scene> [step]', setze: '<variable> <value>', qualitaet: 'auto|low|mid|high|ultra', partikel: 'on|off', bildrate: '30|60|0', neu: '', bilder: '', leeren: '' };
+  const EN_NAME = Object.fromEntries(Object.entries(ALIAS).map(([e, d]) => [d, e]));
   const LV_NAMES = { auto: 'auto', niedrig: 'low', mittel: 'mid', hoch: 'high', ultra: 'ultra', low: 'low', mid: 'mid', high: 'high' };
 
   function makeConsole(host) {
@@ -292,9 +296,11 @@
       run(line) {
         say('> ' + line, 'cmd');
         const [cmd, ...args] = line.trim().split(/\s+/);
-        const c = (cmd || '').toLowerCase().replace('ä', 'ae');
+        const c0 = (cmd || '').toLowerCase().replace(/ä/g, 'ae');
+        const c = ALIAS[c0] || c0;
+        const de = !VN.I18n || VN.I18n.lang === 'de';
         try {
-          if (c === 'hilfe' || c === 'help') { for (const [k, v] of Object.entries(COMMANDS)) say(k + ' ' + v[0] + '  –  ' + v[1]); }
+          if (c === 'hilfe') { for (const [k, v] of Object.entries(COMMANDS)) say((de ? k + ' ' + v[0] : EN_NAME[k] + ' ' + EN_ARGS[k]) + '  –  ' + VN.t(v[1])); }
           else if (c === 'springe') {
             const q = args[0] || '';
             const s = VN.project.scenes.find((x) => x.id === q || x.name.toLowerCase() === q.toLowerCase()) || VN.project.scenes.find((x) => x.name.toLowerCase().includes(q.toLowerCase()));
@@ -306,12 +312,13 @@
             say(r || 'Unbekannt: ' + args[0], r ? '' : 'fehler');
           } else if (c === 'qualitaet') {
             const lv = LV_NAMES[(args[0] || '').toLowerCase()];
-            if (!lv) return say('Stufen: auto, niedrig, mittel, hoch, ultra', 'fehler');
+            if (!lv) return say(de ? 'Stufen: auto, niedrig, mittel, hoch, ultra' : 'auto, low, mid, high, ultra', 'fehler');
             VN.settings.quality = lv; if (lv !== 'auto') Perf.level = lv; Perf.applyLive();
             say('Qualität: ' + (lv === 'auto' ? 'Auto' : LEVELS[lv].label));
           } else if (c === 'partikel') {
-            VN.settings.quality = 'custom'; const k = Perf.cfg(); Object.assign(VN.settings, { qParts: args[0] === 'aus' ? 0 : 1, qBlur: k.blur, qBonesFps: k.bonesFps });
-            Perf.applyLive(); say('Partikel ' + (args[0] === 'aus' ? 'aus' : 'an'));
+            const off = /^(aus|off|0)$/i.test(args[0] || '');
+            VN.settings.quality = 'custom'; const k = Perf.cfg(); Object.assign(VN.settings, { qParts: off ? 0 : 1, qBlur: k.blur, qBonesFps: k.bonesFps });
+            Perf.applyLive(); say(VN.t('Partikel') + ' ' + (off ? '✕' : '✓'));
           } else if (c === 'bildrate') {
             VN.settings.fpsCap = Number(args[0]) || 0; say('Bildrate: ' + (VN.settings.fpsCap ? VN.settings.fpsCap + ' fps' : 'unbegrenzt'));
           } else if (c === 'neu') { Player.reloadBeat(); say('Neu geladen'); }

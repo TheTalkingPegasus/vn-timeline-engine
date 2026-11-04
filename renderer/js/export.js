@@ -293,6 +293,15 @@
                   el('label', { class: 'field' }, el('span', { class: 'lbl' }, 'Programm-Symbol (Icon)'), sel(o.icon, [['', '— Standard —'], ...VN.assetsOf('image').map((a) => [a.id, a.name])], (v) => { o.icon = v; }))),
                 o.icon ? el('div', { class: 'row gap8' }, el('span', { class: 'mini-thumb', style: { backgroundImage: `url("${VN.assetUrl(o.icon)}")` } }), el('span', { class: 'muted small' }, 'Quadratisch, am besten 256 × 256 px')) : null),
               (o.scope || 'slim') === 'full' ? el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: o.skipUnused, onchange: (ev) => { o.skipUnused = ev.target.checked; draw(); } }), 'Unbenutzte Dateien weglassen' + (e.unusedN ? ' (' + e.unusedN + ', ' + fmtMB(e.unused) + ')' : '')) : (e.unusedN ? el('div', { class: 'muted small' }, VN.tf('{n} unbenutzte Dateien werden weggelassen ({size}).', { n: e.unusedN, size: fmtMB(e.unused) })) : null),
+              // Spieldateien offen lassen oder packen (0.9.7)
+              row('Spieldateien', el('div', { class: 'ex-opts' },
+                opt('open', o.pack || 'open', 'Nicht packen', 'Ordner, zum Modden', (v) => { o.pack = v; }),
+                opt('pack', o.pack || 'open', 'Gepackt', 'verschlüsselt in einer Datei', (v) => { o.pack = v; }),
+                opt('packmods', o.pack || 'open', 'Gepackt + Mods', 'Ersatz über Ordner „mods“', (v) => { o.pack = v; })),
+                el('div', { class: 'muted small' }, (o.pack || 'open') === 'open' ? 'Bilder, Töne und Dialoge liegen als normale Dateien im Spielordner. Spieler können sie ansehen und austauschen (Skins, Übersetzungen).'
+                  : (o.pack === 'pack' ? 'Alles steckt verschlüsselt in einer Datei „data.vnpak“. Das erschwert das Kopieren und verhindert Spoiler – ein vollständiger Schutz ist es nicht.'
+                    : 'Wie „Gepackt“, aber eine Datei im Ordner „mods“ neben dem Spiel ersetzt die gleichnamige Datei aus dem Paket. Eine Liste aller Dateien liegt dort bei.')
+                  + (o.pack && o.pack !== 'open' && o.target !== 'win' ? ' ' + 'Das Web-Spiel läuft dann nur auf einem Webserver (z. B. itch.io), nicht per Doppelklick auf index.html. Einen Mod-Ordner gibt es im Browser nicht.' : ''))),
               row('Mods', el('div', { class: 'ex-opts' },
                 opt(false, !!o.mods, 'Nicht erlauben', 'nur deine Plugins', (v) => { o.mods = v; }),
                 opt(true, !!o.mods, 'Mods erlauben', 'Spieler dürfen Plugins ergänzen', (v) => { o.mods = v; })),

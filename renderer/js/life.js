@@ -27,7 +27,10 @@
       const T = VN.project.time;
       if (!rs || !rs.time) return '';
       const se = Life.season(rs);
-      return VN.tr('time:day', 'Tag') + ' ' + rs.time.day + ' · ' + VN.tr('time:wd' + Life.weekday(rs), T.days[Life.weekday(rs)] || '') + ' · ' + VN.tr('time:slot' + rs.time.slot, T.slots[rs.time.slot] || '') + (se >= 0 ? ' · ' + VN.tr('time:season' + se, T.seasons[se] || '') : '');
+      // Japanisch: „1日目“ statt „日 1“ (nur wenn der Name des Tages nicht selbst übersetzt wurde)
+      const dl = VN.tr('time:day', 'Tag');
+      const dayTxt = dl === 'Tag' && VN.I18n && VN.I18n.playerLang() === 'ja' ? rs.time.day + '日目' : dl + ' ' + rs.time.day;
+      return dayTxt + ' · ' + VN.tr('time:wd' + Life.weekday(rs), T.days[Life.weekday(rs)] || '') + ' · ' + VN.tr('time:slot' + rs.time.slot, T.slots[rs.time.slot] || '') + (se >= 0 ? ' · ' + VN.tr('time:season' + se, T.seasons[se] || '') : '');
     },
     // Jahreszeit (0.8.0): wechselt alle „seasonDays“ Tage, beginnend bei startSeason
     season(rs) {
