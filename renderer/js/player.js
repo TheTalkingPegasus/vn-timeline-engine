@@ -372,6 +372,17 @@
       const list = box.querySelector('.ph-msgs');
       const me = String((VN.project.chat && VN.project.chat.me) || '').trim().toLowerCase();
       const mine = me && (clip.speaker || '').trim().toLowerCase() === me;
+      // Geräte (0.9.0): älterer Verlauf mit diesem Kontakt steht darüber, die Zeile landet im Chat
+      if (DV() && DV().on()) {
+        const other = lines.find((l) => (l.speaker || '').trim().toLowerCase() !== me);
+        const old = DV().historyFor(run.rs, other ? other.speaker : clip.speaker, s.id);
+        if (old.length) {
+          const first = list.firstChild;
+          for (const e of old) { const b = el('div', { class: 'ph-msg old' + (e.me ? ' me' : '') }); Fx.renderText(b, XF(DV().entryText(e)) || (e.img ? '🖼' : '')); list.insertBefore(b, first); }
+          list.insertBefore(el('div', { class: 'ph-sep' }), first);
+        }
+        DV().logLine(run.rs, clip, s, clip.text || '', !!mine);
+      }
       const dots = el('div', { class: 'ph-msg typing' + (mine ? ' me' : '') }, el('i'), el('i'), el('i'));
       list.appendChild(dots);
       list.scrollTop = list.scrollHeight;
@@ -484,6 +495,7 @@
     if (VN.Quests && VN.Quests.on()) VN.Quests.emit(VN.Quests.update(run.rs), gains);
     skillPts(gains);
     if (VN.Extras) VN.Extras.checkAch(run.rs);
+    chatAuto();
     if (gains.time) {
       // Zeit vergangen: Hub-Hintergrund der neuen Tageszeit, Tageszeit-Färbung, Ambient-Sounds (0.8.0)
       const sc = VN.scene(run.scene);
@@ -494,6 +506,7 @@
     renderHud();
     renderDebug();
     if (gains.pending && gains.pending.length) {
+      const sc0 = run.scene;
       run.blocked = true;
       if (window.Theme) stage.style.cursor = Theme.cursor('wait', 'progress');
       // Manche Aktionen liefern eine Funktion (Fenster öffnen): erst jetzt aufrufen und auf das Schließen warten
@@ -503,6 +516,8 @@
       run.blocked = false;
       renderHud();
       renderDebug();
+      // Während des Fensters schon in eine andere Szene gewechselt (z. B. per Karte im Handy): hier nichts mehr tun
+      if (run.scene !== sc0 && !run.jump) return null;
     }
     // Kampf (oder Plugin) will in eine andere Szene springen
     if (run.jump) {
@@ -611,6 +626,7 @@
     if (!hud || !run) { if (hud) hud.innerHTML = ''; return; }
     hud.innerHTML = '';
     WD.drawCtrl();
+    drawDevCtrl();
     const p = VN.project;
     hud.classList.toggle('right', !!(window.Theme && Theme.gain().hud === 'right'));
     if (VN.Life && VN.Life.timeOn() && p.time.hud !== false) {
@@ -669,6 +685,7 @@
     choiceBox.hidden = true;
     msgBox.hidden = true;
     clearSpot();
+    if (DV() && DV().on() && !run.replay) { const myRun = run; later(() => { if (run === myRun && !run.ended) chatAuto(); }, 700); }
     if (window.VNPlugin) VNPlugin.hook('onSceneEnter', s, ctx());
     if (window.Perf) Perf.preloadAround(id);
     if (!opts.restored) autosave();
@@ -965,7 +982,8 @@
     menuBox.hidden = true;
     overlayBox.innerHTML = '';
     overlayBox.hidden = true;
-    for (const n of stage.querySelectorAll('.pl-end, .plugin-overlay, .pl-spot, .pl-pointer')) n.remove();
+    for (const n of stage.querySelectorAll('.pl-end, .plugin-overlay, .pl-spot, .pl-pointer, .dv-back, .dv-note-wrap')) n.remove();
+    devCtl = null;
     charsBox.innerHTML = ''; fxBox.innerHTML = ''; hubBox.innerHTML = ''; dlgBox.hidden = true; choiceBox.hidden = true; msgBox.hidden = true; gainBox.hidden = true;
     partBox.innerHTML = ''; eyeBox.innerHTML = ''; phoneBox.innerHTML = ''; parBack.innerHTML = ''; parFront.innerHTML = ''; world.style.filter = '';
     stage.querySelectorAll('.vid-layer, .gl-pop').forEach((n) => n.remove());
@@ -1026,7 +1044,8 @@
     clearTimers();
     stopVoice();
     run = null;
-    for (const n of stage.querySelectorAll('.pl-end, .plugin-overlay, .pl-spot, .pl-pointer')) n.remove();
+    for (const n of stage.querySelectorAll('.pl-end, .plugin-overlay, .pl-spot, .pl-pointer, .dv-back, .dv-note-wrap')) n.remove();
+    devCtl = null;
     charsBox.innerHTML = ''; fxBox.innerHTML = ''; hubBox.innerHTML = ''; dlgBox.hidden = true; choiceBox.hidden = true; msgBox.hidden = true; gainBox.hidden = true;
     closeOverlay();
     ctrl.hidden = true;
@@ -1072,6 +1091,7 @@
       VN.Combat && VN.Combat.on() && VN.Combat.cfg().partyInMenu !== false && VN.Combat.state(run.rs).party.length ? sysBtn('Gruppe (G)', () => CBP.partyScreen(true)) : null,
       VN.Idle && VN.Idle.on() && VN.Idle.cfg().buildings.length && VN.Idle.cfg().inMenu ? sysBtn(VN.tr('idle:title', VN.Idle.cfg().title || 'Aufbau') + ' (' + (VN.Idle.cfg().key || 'k').toUpperCase() + ')', () => { closeOverlay(); IDP.open(true); }) : null,
       VN.Extras && VN.Extras.achOn() ? sysBtn('Erfolge', () => E.achScreen(true)) : null,
+      ...(DV() && DV().on() ? DV().list().filter((d) => d.inMenu && DV().usable(d, run.rs)).map((d) => sysBtn(VN.tr(d.id + ':name', d.name) + (d.key ? ' (' + d.key.toUpperCase() + ')' : ''), () => { closeOverlay(); deviceFromUi(d.id); })) : []),
       ...(window.VNPlugin ? VNPlugin.menuEntries(run.rs).map((m) => sysBtn(m.label + (m.key ? ' (' + m.key.toUpperCase() + ')' : ''), () => runPluginMenu(m, true))) : []),
       (VN.project.glossary || []).length ? sysBtn('Glossar', () => glossaryScreen()) : null,
       VN.World && VN.World.on() && VN.World.cfg().inMenu && VN.World.maps().length ? sysBtn('Karte (M)', () => { closeOverlay(); WD.openMap(); }) : null,
@@ -1134,6 +1154,115 @@
     afterChange: (gains) => { skillPts(gains); if (VN.Quests && VN.Quests.on()) VN.Quests.emit(VN.Quests.update(run.rs), gains); if (VN.Extras) VN.Extras.checkAch(run.rs); renderHud(); renderDebug(); if (gains && gains.length) showGains(gains); if (gains && gains.pending) for (const f of gains.pending) if (typeof f === 'function') try { f(); } catch (e) { console.error(e); } } });
   const WD = VN.PlayerWorld({ run: () => run, stage: () => stage, uiSound: (k) => uiSound(k), enterScene: (id, b) => enterScene(id, b) });
 
+  // ---------- Geräte: Handy / Computer (0.9.0) ----------
+  const DV = () => VN.Devices;
+  let devCtl = null;
+  const devCtrl = el('span', { class: 'pl-ctrl-dev' });
+  // Aktionen aus dem Gerät (Antworten, eigene Apps): sofort ausführen und Meldung zeigen
+  const devApply = (list, key) => {
+    const gains = VN.applyActions(list, run.rs, key);
+    if (VN.Quests && VN.Quests.on()) VN.Quests.emit(VN.Quests.update(run.rs), gains);
+    skillPts(gains);
+    if (VN.Extras) VN.Extras.checkAch(run.rs);
+    renderHud(); renderDebug();
+    showGains(gains);
+    chatAuto();
+    return gains;
+  };
+  // Eingebaute Bildschirme aus dem Gerät heraus; „close“, wenn danach eine andere Szene läuft (z. B. per Karte gereist)
+  const devBuiltin = (type) => new Promise((resolve) => {
+    const myRun = run, sc = run.scene;
+    run.overlay = null;
+    let pr = null;
+    if (type === 'inv') { toggleInventory(); }
+    else if (type === 'rel' && VN.Life) pr = VN.Life.relScreen(run.rs);
+    else if (type === 'gallery') pr = E.galleryScreen(false);
+    else if (type === 'stats') pr = E.statsScreen(false);
+    else if (type === 'ach') pr = E.achScreen(false);
+    else if (type === 'log') pr = E.logScreen(false);
+    else if (type === 'quests') pr = NT.questScreen(false);
+    else if (type === 'map') pr = WD.openMap();
+    else if (type === 'skills') pr = SKP.screen(null, false);
+    else if (type === 'idle') pr = IDP.open(false);
+    let done = false;
+    const fin = () => {
+      if (done) return;
+      done = true;
+      clearInterval(poll);
+      if (myRun !== run) return resolve('close');
+      if (run.overlay === 'pause') closeOverlay();
+      const away = run.scene !== sc || run.jump;
+      if (!away) run.overlay = 'device';
+      resolve(away ? 'close' : 'back');
+    };
+    if (pr && pr.then) pr.then(() => setTimeout(fin, 30));
+    // Manche Bildschirme schließen ohne Rückmeldung (Esc, Inventar): nachsehen, ob noch etwas offen ist
+    const poll = setInterval(() => { if (myRun !== run || !run.overlay || run.overlay === 'pause') fin(); }, 150);
+  });
+  // Gerät öffnen. Ergebnis: Liste noch offener Abläufe (Minispiele, Fenster), die danach laufen sollen
+  const openDevice = (id, o = {}) => new Promise((resolve) => {
+    const d = DV() && (DV().dev(id) || (!id && DV().list()[0]));
+    if (!run || !d || devCtl) return resolve([]);
+    const myRun = run, pend = [];
+    run.overlay = 'device';
+    VN.did(run.rs, 'screen', 'device:' + d.id);
+    const fresh = DV().autoCheck(run.rs);
+    const ctl = DV().open(stage, { dev: d, rs: run.rs, app: o.app, contact: o.contact, before: gainBox, H: {
+      uiSound: (k) => uiSound(k),
+      apply: (list, key) => { const g = devApply(list, key); if (g.pending && g.pending.length) pend.push(...g.pending); return { close: !!(pend.length || (run && run.jump)) }; },
+      builtin: (type) => devBuiltin(type),
+      note: (r) => chatNotify(r),
+      onClose: () => { if (devCtl === ctl) devCtl = null; if (myRun === run && run.overlay === 'device') run.overlay = null; if (run) renderHud(); resolve(pend); }
+    } });
+    devCtl = ctl;
+    if (fresh.length) ctl.redraw();
+  });
+  // Vom Knopf oder der Taste: danach offene Abläufe und Szenenwechsel selbst erledigen
+  const deviceFromUi = async (id) => {
+    if (!run || run.overlay || run.blocked || run.ended) return;
+    const myRun = run;
+    const pend = await openDevice(id);
+    if (myRun !== run) return;
+    if (pend && pend.length) {
+      run.blocked = true;
+      try { await Promise.all(pend.map((f) => (typeof f === 'function' ? f() : f))); } catch (e) { console.error(e); }
+      if (myRun !== run) return;
+      run.blocked = false;
+    }
+    if (run.jump) { const j = run.jump; run.jump = null; if (j === '@end') showEnd(); else if (j === '@gameover') showEnd({ over: true }); else enterScene(j, 0); return; }
+    const s = VN.scene(run.scene);
+    if (s && s.type === 'hub' && !run.overlay) showHub(s, false);
+    renderHud();
+  };
+  // Neue Nachricht: Meldung oben, Klick öffnet das Gerät beim Chat
+  const chatNotify = (r) => {
+    if (!run || !r || !r.contact || (r.added || []).every((e) => e.me)) { renderHud(); return; }
+    if (VN.project.chats && VN.project.chats.notify === false) { renderHud(); return; }
+    const d = DV().list().find((x) => x.apps.some((a) => a.type === 'messages') && DV().usable(x, run.rs));
+    if (devCtl) devCtl.refresh();
+    DV().note(stage, r, d ? () => { if (run && !run.overlay && !run.blocked) { const ap = d.apps.find((a) => a.type === 'messages'); deviceFromUiAt(d.id, ap.id, r.contact.id); } } : null);
+    renderHud();
+  };
+  const deviceFromUiAt = async (id, app, contact) => {
+    if (!run || run.overlay || run.blocked) return;
+    const myRun = run;
+    const pend = await openDevice(id, { app, contact });
+    if (myRun !== run) return;
+    if (pend && pend.length) { run.blocked = true; try { await Promise.all(pend.map((f) => (typeof f === 'function' ? f() : f))); } catch (e) { console.error(e); } if (myRun !== run) return; run.blocked = false; }
+    if (run.jump) { const j = run.jump; run.jump = null; if (j === '@end') showEnd(); else if (j === '@gameover') showEnd({ over: true }); else enterScene(j, 0); }
+    renderHud();
+  };
+  const chatAuto = () => { if (run && DV() && DV().on()) for (const r of DV().autoCheck(run.rs)) chatNotify(r); };
+  const drawDevCtrl = () => {
+    devCtrl.innerHTML = '';
+    if (!run || !DV() || !DV().on()) return;
+    for (const d of DV().list()) {
+      if (!d.hud || !DV().usable(d, run.rs)) continue;
+      const n = d.apps.some((a) => a.type === 'messages') ? DV().unreadAll(run.rs) : 0;
+      devCtrl.appendChild(el('button', { 'data-btn': 'device', onclick: (e) => { e.stopPropagation(); deviceFromUi(d.id); } }, (d.kind === 'desktop' ? '💻 ' : '📱 ') + VN.tr(d.id + ':name', d.name) + (d.key ? ' (' + d.key.toUpperCase() + ')' : ''), n ? el('span', { class: 'sys-new' }, String(n)) : null));
+    }
+  };
+
   const toggleInventory = () => {
     if (!run || !VN.project.inventory.enabled) return;
     if (run.overlay === 'inv') return closeOverlay();
@@ -1160,6 +1289,11 @@
   };
 
   const onKey = (e) => {
+    if (run && run.overlay === 'device' && devCtl) { if (!e.ctrlKey && !e.metaKey && !/INPUT|TEXTAREA|SELECT/.test((e.target || {}).tagName || '')) { if (devCtl.onKey(e) || e.key === ' ' || e.key === 'Enter' || e.key === 'Escape') e.preventDefault(); } return; }
+    if (run && !run.overlay && !run.blocked && e.key.length === 1 && !e.ctrlKey && !e.metaKey && DV() && DV().on()) {
+      const d = DV().list().find((x) => x.key && x.key.toLowerCase() === e.key.toLowerCase() && DV().usable(x, run.rs));
+      if (d) { e.preventDefault(); deviceFromUi(d.id); return; }
+    }
     if (run && run.overlay === 'relmsg') { e.preventDefault(); if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter') { const b = stage.querySelector('.rm-back'); if (b && b._close) b._close(); } return; }
     if (run && run.overlay === 'combat') { if (!e.ctrlKey && !e.metaKey) { e.preventDefault(); CBP.onKey(e); } return; }
     if (e.key === 'Escape' && run && run.holding) { e.preventDefault(); E.dropHold(); return; }
@@ -1289,6 +1423,7 @@
       ctrl = el('div', { class: 'pl-ctrl' },
         WD.ctrlBox,
         E.ctrlBox,
+        devCtrl,
         p.inventory.enabled && p.items.length ? el('button', { 'data-btn': 'inv', onclick: (e) => { e.stopPropagation(); toggleInventory(); } }, VN.tr('ui:inventory', p.inventory.title || 'Inventar') + ' (I)') : null,
         el('button', { 'data-btn': 'menu', onclick: (e) => { e.stopPropagation(); pauseMenu(); } }, 'Menü (Esc)'),
         VN.gameMode ? null : el('button', { onclick: (e) => { e.stopPropagation(); Player.close(); } }, 'Editor'));
@@ -1322,10 +1457,15 @@
       const myRun = run;
       const prev = myRun.overlay;
       myRun.overlay = 'relmsg';
+      if (DV()) DV().logRel(run.rs, c, m);
       return RelMsg.show(stage, c, m).then(() => { if (myRun === run && run.overlay === 'relmsg') run.overlay = prev || null; renderHud(); });
     },
     // Nach den laufenden Aktionen in eine andere Szene oder einen Hub wechseln (Aktion „➜ Zu Szene oder Hub“)
     setJump(id) { if (run) run.jump = id; },
+    // Geräte (0.9.0): Handy/Computer öffnen (Promise: offene Abläufe), Meldung „Neue Nachricht“
+    device: (id, o) => openDevice(id, o),
+    chatNotify: (r) => chatNotify(r),
+    _device: () => devCtl,
     // Nachricht einer Figur (Beziehungs-Meilenstein) – wartet, bis der Spieler sie schließt
     relMessage(charId, msId) {
       const c = VN.Life && VN.Life.relChar(charId);
@@ -1335,6 +1475,7 @@
       // Kann auch über einem offenen Bildschirm erscheinen (z. B. Aufbau): danach den alten Zustand wiederherstellen
       const prev = myRun.overlay;
       myRun.overlay = 'relmsg';
+      if (DV()) DV().logRel(run.rs, c, m);
       return RelMsg.show(stage, c, m).then(() => { if (myRun === run && run.overlay === 'relmsg') run.overlay = prev || null; renderHud(); });
     },
 
@@ -1487,6 +1628,7 @@
       if (VN.Audio) { VN.Audio.playing = false; VN.Audio.refresh(); }
       CBP.abort();
       if (window.RelMsg) RelMsg.abortAll();
+      if (devCtl) { const c = devCtl; devCtl = null; c.close(); }
       stopWait();
       IDP.stopClock();
       clearTimers();

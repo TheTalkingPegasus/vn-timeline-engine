@@ -4,7 +4,7 @@
 
   const TABS = [
     ['overview', 'Übersicht'], ['vars', 'Variablen'], ['items', 'Gegenstände'], ['money', 'Währungen'], ['loot', 'Loot-Tabellen'], ['inv', 'Inventar-Menü'],
-    ['time', 'Zeit'], ['shops', 'Läden'], ['rel', 'Beziehungen'], ['gifts', 'Geschenke'], ['quests', 'Quests'], ['world', 'Welt & Orte'], ['skills', 'Skilltrees'], ['combat', 'Kampf'], ['idle', 'Aufbau'], ['equip', 'Ausrüstung'], ['ach', 'Erfolge'], ['gallery', 'Galerie'], ['gloss', 'Glossar'], ['plugins', 'Plugins']
+    ['time', 'Zeit'], ['shops', 'Läden'], ['rel', 'Beziehungen'], ['gifts', 'Geschenke'], ['quests', 'Quests'], ['world', 'Welt & Orte'], ['skills', 'Skilltrees'], ['combat', 'Kampf'], ['idle', 'Aufbau'], ['equip', 'Ausrüstung'], ['devices', 'Geräte'], ['chats', 'Nachrichten'], ['ach', 'Erfolge'], ['gallery', 'Galerie'], ['gloss', 'Glossar'], ['plugins', 'Plugins']
   ];
   // Reiter nur zeigen, wenn das System eingeschaltet ist
   const tabOn = (k) => {
@@ -20,6 +20,7 @@
     if (k === 'combat') return !!(p.combat && p.combat.enabled);
     if (k === 'idle') return !!(p.idle && p.idle.enabled);
     if (k === 'equip') return !!(p.equip && p.equip.enabled);
+    if (k === 'devices' || k === 'chats') return !!(p.devices && p.devices.enabled);
     return true;
   };
 
@@ -83,7 +84,7 @@
       const L = VN.Life || {};
       const pt = plTabs.find((x) => x[0] === tab);
       if (pt) { try { pt[2].editorTab.render(body); } catch (e) { body.appendChild(el('div', { class: 'hint-box' }, 'Fehler im Plugin: ' + e.message)); console.error(e); } return; }
-      const TAB_FN = { overview: L.overview, time: L.timeTab, shops: L.shopsTab, rel: L.relTab, gifts: L.giftsTab, vars: Systems.vars, items: Systems.items, money: Systems.money, loot: Systems.loot, inv: Systems.inv, gloss: Systems.gloss, plugins: VNPlugin.editorPanel, ach: Systems.achTab, gallery: Systems.galleryTab, quests: Systems.questsTab, world: Systems.worldTab, skills: Systems.skillsTab, combat: Systems.combatTab, idle: Systems.idleTab, equip: Systems.equipTab };
+      const TAB_FN = { overview: L.overview, time: L.timeTab, shops: L.shopsTab, rel: L.relTab, gifts: L.giftsTab, vars: Systems.vars, items: Systems.items, money: Systems.money, loot: Systems.loot, inv: Systems.inv, gloss: Systems.gloss, plugins: VNPlugin.editorPanel, ach: Systems.achTab, gallery: Systems.galleryTab, quests: Systems.questsTab, world: Systems.worldTab, skills: Systems.skillsTab, combat: Systems.combatTab, idle: Systems.idleTab, equip: Systems.equipTab, devices: Systems.devicesTab, chats: Systems.chatsTab };
       // Unbekannter Reiter (z. B. aus einer älteren Version): zur Übersicht
       (TAB_FN[tab] || TAB_FN.overview)(body);
     },
