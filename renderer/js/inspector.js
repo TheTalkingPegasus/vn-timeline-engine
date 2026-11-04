@@ -279,6 +279,7 @@
         assetField('Hintergrund', 'image', s.bg, set(s, 'bg')),
         s.bg ? Inspector.designLink('Hintergrund bearbeiten') : null,
         VN.Life && VN.Life.timeOn() ? Inspector.hubSlots(s) : null,
+        Inspector.hubFx(s),
         assetField('Musik (Loop)', 'audio', s.music, set(s, 'music')),
         Inspector.startRow(s),
         Inspector.events(s),
@@ -287,6 +288,41 @@
           'Ein Ort, an dem der Spieler frei klickt. Bilder aus der Dateiliste auf die Bühne ziehen, um klickbare Objekte anzulegen. ',
           'Verschieben, an der Ecke skalieren, am Kreis oben drehen. Die Hitbox wandert immer mit.'),
         el('button', { class: 'btn danger', onclick: () => VN.deleteScene(s.id) }, 'Szene löschen'));
+    },
+
+    // Partikel im Hub (0.9.5)
+    hubFx(s) {
+      s.fx = s.fx || [];
+      const box = el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Partikel'));
+      if (!s.fx.length) box.appendChild(el('div', { class: 'muted small' }, 'Regen, Schnee, Staub, Funken, Blütenblätter oder Glühwürmchen über dem ganzen Hub.'));
+      s.fx.forEach((c, i) => {
+        const card = el('div', { class: 'opt-card', style: { margin: '6px 0' } },
+          el('div', { class: 'row gap8' },
+            select(c.particles, Fx.PARTICLES, (v) => VN.mutate(() => { Object.assign(c, Fx.PART_DEF[v], { particles: v }); })),
+            el('label', { class: 'd-color' }, el('input', { type: 'color', value: c.color || '#ffffff', onchange: (e) => VN.mutate(() => { c.color = e.target.value; }) })),
+            el('div', { class: 'spacer' }),
+            el('button', { class: 'btn tiny' + ((c.conds || []).length ? ' primary' : ''), title: VN.t('Nur wenn … (z. B. Tageszeit Nacht, Jahreszeit Winter)'), onclick: () => { c.conds = c.conds || []; Inspector.condModal(c.conds, VN.t('Partikel nur, wenn …')); } }, '🔒' + ((c.conds || []).length ? ' ' + c.conds.length : '')),
+            el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { s.fx.splice(i, 1); }) }, '×')),
+          el('div', { class: 'grid2' },
+            range('Menge', c.density != null ? c.density : 50, 5, 100, 1, (v) => v + ' %', (v) => VN.mutate(() => { c.density = v; })),
+            range('Tempo', c.speed != null ? c.speed : 40, 5, 100, 1, (v) => v + ' %', (v) => VN.mutate(() => { c.speed = v; })),
+            range('Größe', c.size != null ? c.size : 40, 10, 100, 1, (v) => v + ' %', (v) => VN.mutate(() => { c.size = v; })),
+            range('Wind', c.wind || 0, -60, 60, 1, (v) => v + ' %', (v) => VN.mutate(() => { c.wind = v; }))));
+        box.appendChild(card);
+      });
+      const add = el('select', { onchange: (e) => { const v = e.target.value; if (v) VN.mutate(() => { s.fx.push(Object.assign({ id: VN.uid('hfx'), particles: v, conds: [] }, Fx.PART_DEF[v])); }); } },
+        el('option', { value: '' }, '+ ' + VN.t('Partikel hinzufügen …')), ...Fx.PARTICLES.map(([k, l]) => el('option', { value: k }, l)));
+      box.appendChild(add);
+      if (s.fx.length) box.appendChild(el('div', { class: 'muted small' }, 'Mit 🔒 z. B. Glühwürmchen nur nachts oder Schnee nur im Winter. Wechselt, sobald im Hub Zeit vergeht.'));
+      return box;
+    },
+    condModal(list, title) {
+      const back = el('div', { class: 'modal-back', onclick: (e) => { if (e.target === back) { back.remove(); VN.render(); } } });
+      const card = el('div', { class: 'modal', style: { width: '600px', maxHeight: '84vh', overflow: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' } });
+      const draw = () => { card.innerHTML = ''; card.append(el('div', { class: 'row gap8' }, el('strong', { style: { flex: '1' } }, title), el('button', { class: 'btn primary', onclick: () => { back.remove(); VN.render(); } }, VN.t('Fertig'))), VN.condEditor(list, VN.t('Nur wenn'))); };
+      draw(); back.appendChild(card); document.body.appendChild(back);
+      const orig = VN.render;
+      VN.render = function () { orig.apply(this, arguments); if (back.isConnected) draw(); else VN.render = orig; };
     },
 
     // Hintergrund je Tageszeit (0.8.0)
@@ -318,7 +354,10 @@
         const card = el('div', { class: 'opt-card' },
           el('div', { class: 'row gap8' }, el('strong', { style: { flex: '1' } }, 'Ereignis ' + (i + 1)),
             el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { s.events.splice(i, 1); }) }, 'Entfernen')),
-          field('Auslöser', select(ev.trigger || 'first', [['first', 'Beim ersten Betreten'], ['always', 'Bei jedem Betreten'], ['cond', 'Sobald „Nur wenn“ stimmt (einmal, auch mitten im Hub)']], set(ev, 'trigger'))),
+          field('Wann', select(VN.evWhen(ev), [['enter', 'Beim Betreten des Hubs'], ['cond', 'Sobald „Nur wenn“ stimmt (auch mitten im Hub)']], (v) => VN.mutate(() => { ev.when = v; ev.repeat = VN.evRepeat(ev); ev.trigger = v === 'cond' ? 'cond' : ev.repeat === 'always' ? 'always' : 'first'; }))),
+          el('div', null,
+            field('Wie oft', select(VN.evRepeat(ev), [['once', 'Nur einmal'], ['always', 'Jedes Mal'], ['times', 'Höchstens … mal'], ...(VN.Life && VN.Life.timeOn() ? [['daily', 'Einmal pro Tag']] : [])], (v) => VN.mutate(() => { ev.repeat = v; ev.when = VN.evWhen(ev); ev.trigger = ev.when === 'cond' ? 'cond' : v === 'always' ? 'always' : 'first'; if (v === 'times' && !ev.times) ev.times = 2; }))),
+            VN.evRepeat(ev) === 'times' ? field('Anzahl', num(ev.times || 2, (v) => VN.mutate(() => { ev.times = Math.max(1, Math.round(v)); }), { min: 1 })) : null),
           field('Art', select(ev.mode || 'lines', [['lines', 'Kurze Zeilen (hier eintippen)'], ['scene', 'Timeline-Dialog (Figuren, Handy, Auswahl …)']], set(ev, 'mode'))),
           ev.mode === 'scene' ? Inspector.hubDialogRow(s, ev) : null,
           ev.mode === 'scene' ? null : field('Spotlight auf Objekt', select(ev.spotlight || '', [['', '— keins —'], ...s.objects.map((o) => [o.id, o.name || 'Objekt'])], (v) => VN.mutate(() => { ev.spotlight = v || null; }))),

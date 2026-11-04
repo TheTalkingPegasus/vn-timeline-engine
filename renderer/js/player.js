@@ -131,10 +131,22 @@
     }
   };
 
-  const removeChar = (key) => {
+  // Figur entfernen. instant = harter Schnitt (0.9.5): kein Ausblenden. waitFor = neues Bild – das alte bleibt,
+  // bis das neue wirklich gezeichnet werden kann (sonst blitzt kurz der Hintergrund durch)
+  const removeChar = (key, instant, waitFor) => {
     const c = run.chars[key];
     if (!c) return;
     delete run.chars[key];
+    if (instant) {
+      const imgs = waitFor ? [...waitFor.querySelectorAll('img')] : [];
+      if (!imgs.length) { c.el.remove(); return; }
+      waitFor.style.visibility = 'hidden';
+      let done = false;
+      const swap = () => { if (done) return; done = true; waitFor.style.visibility = ''; c.el.remove(); };
+      Promise.all(imgs.map((i) => (i.decode ? i.decode().catch(() => {}) : Promise.resolve()))).then(swap);
+      later(swap, 250);
+      return;
+    }
     c.el.style.transition = 'opacity 0.3s';
     c.el.style.opacity = '0';
     later(() => c.el.remove(), 320);
@@ -165,9 +177,13 @@
         cur.clip = clip;
         continue;
       }
-      if (cur) removeChar(key);
+      // Harter Schnitt: neues Bild „Sofort“ ersetzt das alte ohne Überblenden; verschwindet eine Figur, deren Auftritt
+      // „Sofort“ war, ist sie auch sofort weg
+      const cut = clip ? (clip.trans === 'cut' || clip.dur === 0) : !!(cur && cur.clip && (cur.clip.trans === 'cut' || cur.clip.dur === 0));
+      if (cur && !clip) removeChar(key, cut);
       if (!clip) continue;
       const node = Stage.charEl(clip, 'pl-char' + (clip.idle && clip.idle !== 'none' ? ' idle-' + clip.idle : ''), { beat, rs: run.rs });
+      if (cur) removeChar(key, cut, cut ? node : null);
       const x = pr.x;
       const dur = clip.dur != null ? clip.dur : 0.6;
       const targetOp = String(pr.opacity / 100);
@@ -177,7 +193,7 @@
         void node.offsetWidth;
         node.style.transition = `left ${dur}s cubic-bezier(.2,.8,.2,1)`;
         node.style.left = x + '%';
-      } else if (clip.trans !== 'cut') {
+      } else if (!cut) {
         node.style.opacity = '0';
         void node.offsetWidth;
         node.style.transition = `opacity ${dur}s`;
@@ -226,6 +242,8 @@
     }
   };
 
+  // Partikel eines Hubs (0.9.5): Regen, Schnee, Glühwürmchen … – optional nur unter Bedingungen (Tageszeit, Jahreszeit …)
+  const hubFx = (s) => (s && s.type === 'hub' ? (s.fx || []).filter((c) => c.particles && VN.checkConds(c.conds || [], run.rs)).map((c) => ['hub:' + c.id, c]) : []);
   const showFx = (clip) => {
     const id = clip ? clip.id : null;
     if (run.fx && run.fx.id === id) return;
@@ -499,7 +517,7 @@
     if (gains.time) {
       // Zeit vergangen: Hub-Hintergrund der neuen Tageszeit, Tageszeit-Färbung, Ambient-Sounds (0.8.0)
       const sc = VN.scene(run.scene);
-      if (sc && sc.type === 'hub') { run.bgKey = null; showBg(VN.Life ? VN.Life.hubBg(sc, run.rs) : sc.bg, 'fade', 1.4, sc.bgLook); }
+      if (sc && sc.type === 'hub') { run.bgKey = null; showBg(VN.Life ? VN.Life.hubBg(sc, run.rs) : sc.bg, 'fade', 1.4, sc.bgLook); if (run.scene === sc.id) showFxExtra(hubFx(sc)); }
       else if (run.bg && run.bgClip !== undefined) { const b = run.bg, l = run.bgClip; run.bgKey = null; showBg(b, 'fade', 1.4, l); }
       if (sc) showAmbient([...(sc.type === 'story' ? Stage.state(sc, run.beat).musicX || [] : []), ...ambNow(sc)]);
     }
@@ -689,7 +707,7 @@
     if (window.VNPlugin) VNPlugin.hook('onSceneEnter', s, ctx());
     if (window.Perf) Perf.preloadAround(id);
     if (!opts.restored) autosave();
-    if (s.type === 'hub') { showAmbient(ambNow(s)); showFxExtra([]); return showHub(s, true, !!opts.returning); }
+    if (s.type === 'hub') { showAmbient(ambNow(s)); showFxExtra(hubFx(s)); return showHub(s, true, !!opts.returning); }
     // Über dem Hub: Hub-Objekte bleiben sichtbar, aber nicht klickbar. Gehört der Dialog zu einem anderen Hub
     // (Raumwechsel), wird dieser Hub dahinter gezeigt – nicht der alte (0.7.6).
     const owner = s.overHub ? hubOwner(s, fromHub ? prevScene : null) : null;
@@ -767,6 +785,7 @@
   // under: nur Hintergrund und Objekte zeichnen (Hub liegt hinter einem Hub-Dialog), keine Ereignisse
   function showHub(s, entering, returning, under) {
     run.hubShown = s.id;
+    if (!under && run.scene === s.id) showFxExtra(hubFx(s));
     if (under) {
       showBg(VN.Life ? VN.Life.hubBg(s, run.rs) : s.bg, 'fade', 0.6, s.bgLook);
       if (s.music) playMusic({ asset: s.music, vol: 70, loop: true, carry: true, fade: 1 });
@@ -855,6 +874,8 @@
       hubBox.appendChild(node);
     }
     if (under) return;
+    // Neuer Besuch im Hub (nicht nur zurück aus einem Hub-Dialog): jedes Ereignis darf wieder höchstens einmal
+    if (entering && !returning) run.evVisit = new Set();
     if (entering) runHubEvents(s, !!returning);
     else if (!run.event && !run.overlay && !run.message && !run.blocked) runHubEvents(s, true, true);
   }
@@ -863,19 +884,29 @@
   // returning: zurück aus einem Hub-Dialog (dann laufen „bei jedem Betreten“-Ereignisse nicht erneut)
   // onlyCond: nur Ereignisse „sobald … stimmt“ (nach einem Klick im Hub)
   function runHubEvents(s, returning, onlyCond) {
+    const rs = run.rs;
+    run.evVisit = run.evVisit || new Set();
     const queue = (s.events || []).filter((ev) => {
-      const trig = ev.trigger || 'first';
-      if (onlyCond && trig !== 'cond') return false;
-      if (returning && trig === 'always') return false;
-      if (trig !== 'always' && run.rs.seen['ev:' + ev.id]) return false;
-      if (trig === 'cond' && !(ev.conds || []).length) return false;
-      if (!VN.checkConds(ev.conds, run.rs)) return false;
+      const when = VN.evWhen(ev), rep = VN.evRepeat(ev);
+      if (onlyCond && when !== 'cond') return false;
+      if (when === 'cond' && !(ev.conds || []).length) return false;
+      // Wie oft (0.9.5): nur einmal, jedes Mal, höchstens n-mal, einmal pro Tag – und nie zweimal im selben Besuch
+      if (run.evVisit.has(ev.id)) return false;
+      const n = (rs.evCount && rs.evCount[ev.id]) || (rs.seen['ev:' + ev.id] ? 1 : 0);
+      if (rep === 'once' && n) return false;
+      if (rep === 'times' && n >= Math.max(1, Number(ev.times) || 1)) return false;
+      if (rep === 'daily' && rs.time && rs.evDay && rs.evDay[ev.id] === rs.time.day) return false;
+      if (!VN.checkConds(ev.conds, rs)) return false;
       if (ev.mode === 'scene') return !!(ev.scene && VN.scene(ev.scene) && ev.scene !== s.id);
       return ev.lines && ev.lines.length;
     });
     if (!queue.length) return;
     const ev = queue[0];
-    run.rs.seen['ev:' + ev.id] = true;
+    const n0 = (rs.evCount && rs.evCount[ev.id]) || (rs.seen['ev:' + ev.id] ? 1 : 0);
+    rs.seen['ev:' + ev.id] = true;
+    rs.evCount = rs.evCount || {}; rs.evCount[ev.id] = n0 + 1;
+    if (rs.time) { rs.evDay = rs.evDay || {}; rs.evDay[ev.id] = rs.time.day; }
+    run.evVisit.add(ev.id);
     // Timeline-Dialog: Story-Szene über dem Hub, danach zurück
     if (ev.mode === 'scene') { const myRun = run; later(() => { if (run === myRun && run.scene === s.id && !run.event) enterScene(ev.scene, 0); }, 350); return; }
     run.event = { ev, i: 0, scene: s };

@@ -2,6 +2,17 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.5 – Particles in hubs, how often hub events run, hard cut for characters
+- Hub events (short lines or timeline dialogues) now have “When” (on entering the hub / as soon as “Only if” is met)
+  and “How often”: only once, every time, at most … times, or once per day (with time system). An event never runs
+  twice in one visit, also not when coming back from a hub dialogue. Older projects keep their behaviour.
+- Hubs can have particles: rain, snow, dust, sparks, petals or fireflies, several at once, with amount, speed, size,
+  wind and colour – optionally only under conditions (e.g. fireflies at night, snow in winter); they change as soon
+  as time passes in the hub. Shown live in the hub editor. Properties of the hub → “Particles”.
+- Fixed: switching a character picture set to “Instant” still showed a short fade from the old picture to the new
+  one. The old picture now stays until the new one is ready and is then replaced in the same frame. A character
+  whose entrance is “Instant” also disappears instantly.
+
 ## 0.9.4 – Messages can unlock things
 - Every chat message can run actions when the player reads it – exactly once, like a dialogue line: unlock a
   location, give an item, start or advance a quest, change ♥ points, set a variable, or jump to a scene (the device

@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.4
+VN Timeline Engine · Prototyp 0.9.5
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,18 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.5 · Partikel im Hub, wie oft Hub-Ereignisse laufen, harter Schnitt bei Figuren
+- Hub-Ereignisse (kurze Zeilen oder Timeline-Dialoge) haben jetzt „Wann“ (beim Betreten des Hubs / sobald „Nur wenn“
+  stimmt) und „Wie oft“: nur einmal, jedes Mal, höchstens … mal oder einmal pro Tag (mit Zeitsystem). Ein Ereignis
+  läuft nie zweimal im selben Besuch, auch nicht nach der Rückkehr aus einem Hub-Dialog. Ältere Projekte verhalten
+  sich wie bisher.
+- Hubs können Partikel haben: Regen, Schnee, Staub, Funken, Blütenblätter oder Glühwürmchen, auch mehrere gleichzeitig,
+  mit Menge, Tempo, Größe, Wind und Farbe – auf Wunsch nur unter Bedingungen (z. B. Glühwürmchen nachts, Schnee im
+  Winter); sie wechseln, sobald im Hub Zeit vergeht. Live sichtbar im Hub-Editor. Eigenschaften des Hubs → „Partikel“.
+- Behoben: Beim Wechsel eines Figuren-Bildes mit Auftritt „Sofort“ war trotzdem ein kurzes Überblenden vom alten zum
+  neuen Bild zu sehen. Jetzt bleibt das alte Bild stehen, bis das neue fertig ist, und wird im selben Moment ersetzt.
+  Eine Figur mit Auftritt „Sofort“ verschwindet auch sofort.
 
 NEU IN 0.9.4 · Nachrichten schalten Dinge frei
 - Jede Chat-Nachricht kann beim Lesen Aktionen ausführen – genau einmal, wie eine Dialogzeile: Ort freischalten,

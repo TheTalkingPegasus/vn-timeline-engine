@@ -433,6 +433,9 @@
     };
     requestAnimationFrame(fit);
   };
+  // Hub-Ereignisse (0.9.5): wann (beim Betreten / sobald Bedingung) und wie oft. Ältere Projekte: aus „trigger“.
+  VN.evWhen = (ev) => ev.when || (ev.trigger === 'cond' ? 'cond' : 'enter');
+  VN.evRepeat = (ev) => ev.repeat || (ev.trigger === 'always' ? 'always' : 'once');
   // Senkrechte Mitte der Auswahl ohne eigene Angabe (aus dem Design)
   VN.choiceYDefault = (clip) => (window.Theme && Theme.choice ? Number(Theme.choice(clip).y) || 42 : 42);
   // Nach dem Wählen: '' = normal, 'grey' = ausgrauen (weiter wählbar), 'hide' = ausblenden
