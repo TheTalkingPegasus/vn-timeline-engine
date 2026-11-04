@@ -27,7 +27,39 @@ const denied = (what) => { console.warn('Verweigert: ' + what); return null; };
 
 // Spielmodus: Eine exportierte .exe hat das Spiel unter resources/game und startet direkt ins Spiel
 const GAME_DIR = process.env.VN_GAME_DIR || path.join(process.resourcesPath || __dirname, 'game');
-const gameMode = fs.existsSync(path.join(GAME_DIR, 'project.json')) && (app.isPackaged || !!process.env.VN_GAME_DIR);
+const VNPak = require('./renderer/js/vnpak.js');
+const PAK_FILE = path.join(GAME_DIR, 'data.vnpak');
+const gameMode = (fs.existsSync(path.join(GAME_DIR, 'project.json')) || fs.existsSync(PAK_FILE)) && (app.isPackaged || !!process.env.VN_GAME_DIR);
+// Gepackte Spieldateien (0.9.7): Verzeichnis und offene Datei; Mod-Ordner neben der .exe (Dateien dort ersetzen die aus dem Paket)
+let PAK = null;
+const MODS_DIR = process.env.VN_MODS_DIR || (app.isPackaged ? path.join(path.dirname(process.execPath), 'mods') : path.join(GAME_DIR, 'mods'));
+function openPak() {
+  const fd = fs.openSync(PAK_FILE, 'r');
+  const h = Buffer.alloc(VNPak.HEAD);
+  fs.readSync(fd, h, 0, h.length, 0);
+  const info = VNPak.readHead(h);
+  if (!info) { fs.closeSync(fd); throw new Error('data.vnpak ist kein Spielpaket'); }
+  const ib = Buffer.alloc(info.idxLen);
+  fs.readSync(fd, ib, 0, ib.length, VNPak.HEAD);
+  const idx = VNPak.readIndex(ib, info.key);
+  return { fd, key: info.key, project: idx.project, files: idx.files };
+}
+const pakReadSync = (pos, len) => { const b = Buffer.alloc(len); fs.readSync(PAK.fd, b, 0, len, pos); return VNPak.xor(b, pos, PAK.key); };
+// Stück aus dem Paket als Web-Strom (entschlüsselt in 256-KB-Happen)
+function pakStream(pos, len) {
+  let done = 0;
+  return new ReadableStream({
+    async pull(ctrl) {
+      if (done >= len) { ctrl.close(); return; }
+      const n = Math.min(256 * 1024, len - done);
+      const b = Buffer.alloc(n);
+      await new Promise((res, rej) => fs.read(PAK.fd, b, 0, n, pos + done, (e) => (e ? rej(e) : res())));
+      VNPak.xor(b, pos + done, PAK.key);
+      done += n;
+      ctrl.enqueue(new Uint8Array(b.buffer, b.byteOffset, n));
+    }
+  });
+}
 let gameData = null;
 const SELFTEST = process.argv.includes('--selftest') || !!process.env.VN_SELFTEST;
 
@@ -52,7 +84,11 @@ for (const fn of ['showOpenDialog', 'showSaveDialog', 'showMessageBox']) {
 }
 { const origErr = dialog.showErrorBox.bind(dialog); dialog.showErrorBox = (t, c) => origErr(T(t), T(c)); }
 if (gameMode) {
-  try { gameData = JSON.parse(fs.readFileSync(path.join(GAME_DIR, 'project.json'), 'utf8')); projectDir = GAME_DIR; approve(GAME_DIR); } catch (e) { gameData = null; }
+  try {
+    if (fs.existsSync(PAK_FILE)) { PAK = openPak(); gameData = JSON.parse(pakReadSync(PAK.project[0], PAK.project[1]).toString('utf8')); }
+    else gameData = JSON.parse(fs.readFileSync(path.join(GAME_DIR, 'project.json'), 'utf8'));
+    projectDir = GAME_DIR; approve(GAME_DIR);
+  } catch (e) { gameData = null; console.error('Spieldaten nicht lesbar', e.message); }
 }
 const safeName = (s) => String(s || 'Spiel').replace(/[<>:"/\\|?*\x00-\x1f]/g, '').replace(/\s+/g, ' ').trim().slice(0, 60) || 'Spiel';
 
@@ -86,10 +122,23 @@ function registerAssetProtocol() {
       const url = new URL(req.url);
       const rel = decodeURIComponent(url.pathname).replace(/^\/+/, '');
       if (!projectDir) return new Response('kein Projekt', { status: 404 });
-      const full = inProject(rel);
-      if (!full) return new Response('verboten', { status: 403 });
-      const ext = path.extname(full).slice(1).toLowerCase();
-      const size = (await fs.promises.stat(full)).size;
+      // Gepacktes Spiel: Datei aus dem Paket – oder, wenn Mods erlaubt sind, ein Ersatz aus dem Mod-Ordner
+      let full = null, entry = null;
+      if (PAK) {
+        entry = PAK.files[rel] || null;
+        const pk = (gameData && gameData.export && gameData.export.pack) || '';
+        if (pk === 'packmods' && entry) {
+          const m = path.resolve(MODS_DIR, rel.replace(/^assets\//, ''));
+          if (insideReal(MODS_DIR, m) && fs.existsSync(m)) { full = m; entry = null; }
+        }
+        if (!entry && !full) return new Response('nicht gefunden', { status: 404 });
+      } else {
+        full = inProject(rel);
+        if (!full) return new Response('verboten', { status: 403 });
+      }
+      const ext = path.extname(full || rel).slice(1).toLowerCase();
+      const size = entry ? entry[1] : (await fs.promises.stat(full)).size;
+      const body = (start, end) => (entry ? pakStream(entry[0] + start, end - start + 1) : fileStream(full, start, end));
       const head = { 'content-type': MIME[ext] || 'application/octet-stream', 'access-control-allow-origin': '*', 'cache-control': 'no-cache', 'accept-ranges': 'bytes' };
       // Kleine Dateien (Bilder, kurze Töne) direkt, große Dateien als Strom – nie ein 500-MB-Video ganz in den Speicher
       const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.get('range') || '');
@@ -97,10 +146,10 @@ function registerAssetProtocol() {
         let start = range[1] === '' ? Math.max(0, size - Number(range[2] || 0)) : Number(range[1]);
         let end = range[1] !== '' && range[2] !== '' ? Math.min(size - 1, Number(range[2])) : size - 1;
         if (start >= size || start > end) return new Response(null, { status: 416, headers: Object.assign(head, { 'content-range': 'bytes */' + size }) });
-        return new Response(fileStream(full, start, end), { status: 206, headers: Object.assign(head, { 'content-range': `bytes ${start}-${end}/${size}`, 'content-length': String(end - start + 1) }) });
+        return new Response(body(start, end), { status: 206, headers: Object.assign(head, { 'content-range': `bytes ${start}-${end}/${size}`, 'content-length': String(end - start + 1) }) });
       }
-      if (size <= 2 * 1024 * 1024) return new Response(await fs.promises.readFile(full), { headers: Object.assign(head, { 'content-length': String(size) }) });
-      return new Response(fileStream(full, 0, size - 1), { headers: Object.assign(head, { 'content-length': String(size) }) });
+      if (size <= 2 * 1024 * 1024) return new Response(entry ? pakReadSync(entry[0], size) : await fs.promises.readFile(full), { headers: Object.assign(head, { 'content-length': String(size) }) });
+      return new Response(body(0, size - 1), { headers: Object.assign(head, { 'content-length': String(size) }) });
     } catch (e) {
       return new Response('nicht gefunden', { status: 404 });
     }
@@ -196,8 +245,10 @@ function createWindow() {
   if (gameData && process.env.VN_GAMESHOT) {
     win.webContents.once('did-finish-load', async () => {
       const shot = async (n) => fs.writeFileSync(path.join(process.env.VN_GAMESHOT, n + '.png'), (await win.webContents.capturePage()).toPNG());
-      await new Promise((r) => setTimeout(r, 5500)); await shot('g1_menu');
-      await win.webContents.executeJavaScript(`document.querySelector('.mm-btn').click()`);
+      // Auf das Hauptmenü warten (Start-Logos können dauern)
+      for (let i = 0; i < 60; i++) { await new Promise((r) => setTimeout(r, 500)); if (await win.webContents.executeJavaScript(`!!document.querySelector('.mm-btn')`)) break; }
+      await new Promise((r) => setTimeout(r, 800)); await shot('g1_menu');
+      await win.webContents.executeJavaScript(`(document.querySelector('.mm-btn') || document.body).click()`);
       await new Promise((r) => setTimeout(r, 2500)); await shot('g2_game');
       console.log('GAME ERRORS', await win.webContents.executeJavaScript('JSON.stringify(window.__vnErrors||[])'));
       app.quit();
@@ -548,12 +599,66 @@ ipcMain.handle('plugins:addBundled', (_e, name, force) => {
 const KEEP_LOCALES = ['de.pak', 'en-US.pak', 'en-GB.pak'];
 const INSTALLER_FILES = /^(Uninstall .*\.exe|uninstallerIcon\.ico|elevate\.exe|app-update\.yml)$/i;
 // files: umgewandelte Dateien [{ file, bytes }], die statt der Originale geschrieben werden
-async function copyGameFiles(dest, data, files) {
+// Spieldateien in ein Paket schreiben (gestreamt, auch für große Videos)
+async function writePak(file, data, conv) {
+  const entries = [];
+  const seen = new Set();
+  for (const a of data.assets || []) {
+    const rel = String(a.file || '');
+    if (!rel || seen.has(rel)) continue;
+    const src = inProject(rel);
+    if (conv[rel]) { entries.push({ rel, size: conv[rel].length, buf: Buffer.from(conv[rel]) }); seen.add(rel); continue; }
+    if (!src || !fs.existsSync(src)) { console.warn('Export: Datei fehlt', rel); continue; }
+    entries.push({ rel, size: fs.statSync(src).size, src });
+    seen.add(rel);
+  }
+  const key = VNPak.newKey();
+  const pj = Buffer.from(JSON.stringify(data), 'utf8');
+  const L = VNPak.makeHead(key, entries, pj.length);
+  const fh = await fs.promises.open(file, 'w');
+  try {
+    await fh.write(Buffer.from(L.head), 0, L.head.length, 0);
+    await fh.write(VNPak.xor(pj, L.project[0], key), 0, pj.length, L.project[0]);
+    for (const e of entries) {
+      const pos = L.files[e.rel][0];
+      if (e.buf) { await fh.write(VNPak.xor(Buffer.from(e.buf), pos, key), 0, e.size, pos); continue; }
+      const rh = await fs.promises.open(e.src, 'r');
+      try {
+        const chunk = Buffer.alloc(1024 * 1024);
+        for (let done = 0; done < e.size;) {
+          const { bytesRead } = await rh.read(chunk, 0, Math.min(chunk.length, e.size - done), done);
+          if (!bytesRead) break;
+          const part = chunk.subarray(0, bytesRead);
+          VNPak.xor(part, pos + done, key);
+          await fh.write(part, 0, bytesRead, pos + done);
+          done += bytesRead;
+        }
+      } finally { await rh.close(); }
+    }
+  } finally { await fh.close(); }
+  return entries.map((e) => e.rel);
+}
+
+// Liste der ersetzbaren Dateien für Modder (Export „Gepackt, Mods erlaubt“)
+function writeModsReadme(dir, data, rels) {
+  fs.mkdirSync(dir, { recursive: true });
+  const de = String((data.languages || ['de'])[0]).startsWith('de');
+  const list = rels.filter((r) => r.startsWith('assets/')).map((r) => r.slice(7)).sort().join('\r\n');
+  const text = de
+    ? 'Mods für "' + (data.title || 'Spiel') + '"\r\n\r\nEine Datei in diesem Ordner ersetzt die gleichnamige Datei des Spiels – mit demselben Unterordner.\r\nBeispiel: ' + (rels[0] ? rels[0].replace(/^assets\//, '') : 'Bilder/Figuren/held.png') + '\r\nDas Format sollte gleich bleiben (PNG bleibt PNG). Zum Zurücksetzen die Datei einfach löschen.\r\n\r\nDateien des Spiels:\r\n' + list + '\r\n'
+    : 'Mods for "' + (data.title || 'Game') + '"\r\n\r\nA file in this folder replaces the game file with the same name – in the same subfolder.\r\nExample: ' + (rels[0] ? rels[0].replace(/^assets\//, '') : 'Images/Characters/hero.png') + '\r\nKeep the format (PNG stays PNG). Delete the file to go back to the original.\r\n\r\nGame files:\r\n' + list + '\r\n';
+  fs.writeFileSync(path.join(dir, de ? 'LIES MICH.txt' : 'README.txt'), text, 'utf8');
+}
+
+async function copyGameFiles(dest, data, files, opts) {
   fs.mkdirSync(dest, { recursive: true });
-  fs.mkdirSync(path.join(dest, 'assets'), { recursive: true });
   const conv = {};
   for (const f of files || []) conv[f.file] = f.bytes;
-  for (const a of data.assets || []) {
+  const pack = (data.export && data.export.pack) || 'open';
+  let packed = null;
+  if (pack !== 'open') packed = await writePak(path.join(dest, 'data.vnpak'), data, conv);
+  else fs.mkdirSync(path.join(dest, 'assets'), { recursive: true });
+  for (const a of (packed ? [] : data.assets || [])) {
     // Pfade aus der Projektdatei nie blind übernehmen: Quelle und Ziel müssen im jeweiligen Ordner bleiben
     const rel = String(a.file || '');
     const out = path.resolve(dest, rel), src = inProject(rel);
@@ -568,7 +673,9 @@ async function copyGameFiles(dest, data, files) {
     fs.mkdirSync(path.join(dest, 'plugins'), { recursive: true });
     for (const f of plugins) { const src = path.join(pluginsDir(), f); if (fs.existsSync(src) && insideReal(pluginsDir(), src)) await fs.promises.copyFile(src, path.join(dest, 'plugins', f)); }
   }
-  fs.writeFileSync(path.join(dest, 'project.json'), JSON.stringify(data), 'utf8');
+  if (!packed) fs.writeFileSync(path.join(dest, 'project.json'), JSON.stringify(data), 'utf8');
+  if (packed && pack === 'packmods' && opts && opts.modsDir) writeModsReadme(opts.modsDir, data, packed);
+  return { packed: !!packed };
 }
 
 // ICO-Datei mit einem eingebetteten 256-px-PNG (ab Windows Vista)
@@ -603,7 +710,7 @@ async function exportWindowsTo(parent, data, files, iconPng) {
   const exe = path.basename(process.execPath);
   const target = path.join(dest, name + path.extname(exe));
   if (exe !== path.basename(target)) await fs.promises.rename(path.join(dest, exe), target);
-  await copyGameFiles(path.join(dest, 'resources', 'game'), data, files);
+  await copyGameFiles(path.join(dest, 'resources', 'game'), data, files, { modsDir: path.join(dest, 'mods') });
   if (iconPng) fs.writeFileSync(path.join(dest, 'resources', 'game', 'icon.png'), Buffer.from(iconPng));
   // Programm-Symbol und Versionsangaben in die .exe schreiben (nur unter Windows möglich)
   const rcedit = path.join(process.resourcesPath || '', 'rcedit-x64.exe');
@@ -629,22 +736,26 @@ ipcMain.handle('export:windows', async (_e, { data, files, iconPng }) => {
 });
 
 async function exportWebTo(dest, data, files) {
-  await copyGameFiles(dest, data, files);
-  fs.unlinkSync(path.join(dest, 'project.json'));
+  // Im Browser gibt es keinen Mod-Ordner: „Gepackt, Mods erlaubt“ wird dort einfach „Gepackt“
+  if (data.export && data.export.pack === 'packmods') data = Object.assign({}, data, { export: Object.assign({}, data.export, { pack: 'pack' }) });
+  const { packed } = await copyGameFiles(dest, data, files);
+  if (!packed) fs.unlinkSync(path.join(dest, 'project.json'));
   const rd = path.join(__dirname, 'renderer');
   fs.mkdirSync(path.join(dest, 'engine'), { recursive: true });
-  const engineFiles = ['style.css', 'js/web-boot.js', 'js/i18n-en.js', 'js/i18n-es.js', 'js/i18n-ja.js', 'js/core.js', 'js/i18n.js', 'js/audioout.js', 'js/logic.js', 'js/life.js', 'js/extras.js', 'js/did.js', 'js/equip.js', 'js/world.js', 'js/quests.js', 'js/skills.js', 'js/combat.js', 'js/idle.js', 'js/devices.js', 'js/theme.js', 'js/a11y.js', 'js/uipresets.js', 'js/uidesign.js', 'js/perf.js', 'js/fx.js', 'js/stage.js', 'js/systems.js', 'js/rig.js', 'js/anim.js', 'js/puppet.js', 'js/blink.js', 'js/plugins.js', 'js/menu.js', 'js/player-audio.js', 'js/player-menus.js', 'js/player-extras.js', 'js/player-world.js', 'js/relmsg.js', 'js/player-notify.js', 'js/player-skills.js', 'js/player-combat.js', 'js/player-idle.js', 'js/player.js', 'js/schema.js'];
+  const engineFiles = ['style.css', 'js/web-boot.js', 'js/vnpak.js', 'js/i18n-en.js', 'js/i18n-es.js', 'js/i18n-ja.js', 'js/core.js', 'js/i18n.js', 'js/audioout.js', 'js/logic.js', 'js/life.js', 'js/extras.js', 'js/did.js', 'js/equip.js', 'js/world.js', 'js/quests.js', 'js/skills.js', 'js/combat.js', 'js/idle.js', 'js/devices.js', 'js/theme.js', 'js/a11y.js', 'js/uipresets.js', 'js/uidesign.js', 'js/perf.js', 'js/fx.js', 'js/stage.js', 'js/systems.js', 'js/rig.js', 'js/anim.js', 'js/puppet.js', 'js/blink.js', 'js/plugins.js', 'js/menu.js', 'js/player-audio.js', 'js/player-menus.js', 'js/player-extras.js', 'js/player-world.js', 'js/relmsg.js', 'js/player-notify.js', 'js/player-skills.js', 'js/player-combat.js', 'js/player-idle.js', 'js/player.js', 'js/schema.js'];
   for (const f of engineFiles) await fs.promises.copyFile(path.join(rd, f), path.join(dest, 'engine', path.basename(f)));
-  fs.writeFileSync(path.join(dest, 'engine', 'game-data.js'), 'window.VN_GAME = ' + JSON.stringify(data) + ';', 'utf8');
+  if (!packed) fs.writeFileSync(path.join(dest, 'engine', 'game-data.js'), 'window.VN_GAME = ' + JSON.stringify(data) + ';', 'utf8');
   try { fs.copyFileSync(path.join(__dirname, 'LICENSE'), path.join(dest, 'engine', 'LICENSE.txt')); } catch (e) { /* Lizenzdatei fehlt in der Entwicklung */ }
   const plugins = Object.entries(data.plugins || {}).filter(([, v]) => v && v.enabled).map(([k]) => k);
   const esc = (t) => String(t).replace(/[<&>]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
   const html = `<!doctype html>\n<html lang="${(data.languages && data.languages[0]) || 'de'}">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>${esc(data.title || 'Spiel')}</title>\n<link rel="stylesheet" href="engine/style.css">\n<style>html,body{background:#000;overflow:hidden}</style>\n</head>\n<body>\n<div id="player"></div><div id="toast"></div><div id="ctxmenu" hidden></div>\n` +
-    ['game-data.js', 'web-boot.js', 'i18n-en.js', 'i18n-es.js', 'i18n-ja.js', 'core.js', 'i18n.js', 'audioout.js', 'logic.js', 'life.js', 'extras.js', 'did.js', 'equip.js', 'world.js', 'quests.js', 'skills.js', 'combat.js', 'idle.js', 'devices.js', 'theme.js', 'a11y.js', 'uipresets.js', 'uidesign.js', 'perf.js', 'fx.js', 'stage.js', 'systems.js', 'rig.js', 'anim.js', 'puppet.js', 'blink.js', 'plugins.js', 'menu.js', 'player-audio.js', 'player-menus.js', 'player-extras.js', 'player-world.js', 'relmsg.js', 'player-notify.js', 'player-skills.js', 'player-combat.js', 'player-idle.js', 'schema.js'].map((f) => `<script src="engine/${f}"></script>`).join('\n') + '\n' +
-    plugins.map((f) => `<script>VNPlugin._current = ${JSON.stringify(f)};</script><script src="plugins/${encodeURIComponent(f)}"></script>`).join('\n') + '\n<script src="engine/player.js"></script>\n<script>VNWeb.start();</script>\n</body>\n</html>\n';
+    ['game-data.js', 'web-boot.js', 'vnpak.js', 'i18n-en.js', 'i18n-es.js', 'i18n-ja.js', 'core.js', 'i18n.js', 'audioout.js', 'logic.js', 'life.js', 'extras.js', 'did.js', 'equip.js', 'world.js', 'quests.js', 'skills.js', 'combat.js', 'idle.js', 'devices.js', 'theme.js', 'a11y.js', 'uipresets.js', 'uidesign.js', 'perf.js', 'fx.js', 'stage.js', 'systems.js', 'rig.js', 'anim.js', 'puppet.js', 'blink.js', 'plugins.js', 'menu.js', 'player-audio.js', 'player-menus.js', 'player-extras.js', 'player-world.js', 'relmsg.js', 'player-notify.js', 'player-skills.js', 'player-combat.js', 'player-idle.js', 'schema.js'].filter((f) => !(packed && f === 'game-data.js')).map((f) => `<script src="engine/${f}"></script>`).join('\n') + '\n' +
+    plugins.map((f) => `<script>VNPlugin._current = ${JSON.stringify(f)};</script><script src="plugins/${encodeURIComponent(f)}"></script>`).join('\n') + '\n<script src="engine/player.js"></script>\n<script>' + (packed ? 'VNWeb.startPacked("data.vnpak");' : 'VNWeb.start();') + '</script>\n</body>\n</html>\n';
   fs.writeFileSync(path.join(dest, 'index.html'), html, 'utf8');
-  if (String((data.languages || ['de'])[0]).startsWith('de')) fs.writeFileSync(path.join(dest, 'LIES MICH.txt'), 'Web-Version von "' + (data.title || 'Spiel') + '"\r\n\r\nFür itch.io: diesen Ordner als ZIP hochladen und "This file will be played in the browser" wählen.\r\nLokal testen: index.html im Browser öffnen. Manche Browser blockieren dabei Bones-Animationen; auf itch.io oder einem Webserver funktioniert alles.\r\n', 'utf8');
-  else fs.writeFileSync(path.join(dest, 'README.txt'), 'Web version of "' + (data.title || 'Game') + '"\r\n\r\nFor itch.io: upload this folder as a ZIP and choose "This file will be played in the browser".\r\nTesting locally: open index.html in a browser. Some browsers block Bones animations this way; on itch.io or a web server everything works.\r\n', 'utf8');
+  const localDe = packed ? 'Lokal testen: Gepackte Spiele brauchen einen Webserver (z. B. itch.io oder "npx serve" in diesem Ordner); per Doppelklick auf index.html startet das Spiel nicht.' : 'Lokal testen: index.html im Browser öffnen. Manche Browser blockieren dabei Bones-Animationen; auf itch.io oder einem Webserver funktioniert alles.';
+  const localEn = packed ? 'Testing locally: packed games need a web server (e.g. itch.io or "npx serve" in this folder); double-clicking index.html does not start the game.' : 'Testing locally: open index.html in a browser. Some browsers block Bones animations this way; on itch.io or a web server everything works.';
+  if (String((data.languages || ['de'])[0]).startsWith('de')) fs.writeFileSync(path.join(dest, 'LIES MICH.txt'), 'Web-Version von "' + (data.title || 'Spiel') + '"\r\n\r\nFür itch.io: diesen Ordner als ZIP hochladen und "This file will be played in the browser" wählen.\r\n' + localDe + '\r\n', 'utf8');
+  else fs.writeFileSync(path.join(dest, 'README.txt'), 'Web version of "' + (data.title || 'Game') + '"\r\n\r\nFor itch.io: upload this folder as a ZIP and choose "This file will be played in the browser".\r\n' + localEn + '\r\n', 'utf8');
 }
 
 ipcMain.handle('export:web', async (_e, { data, files }) => {
@@ -671,6 +782,19 @@ app.whenReady().then(async () => {
     projectDir = tmp;
     const res = await exportWindowsTo(path.join(process.env.VN_EXPORT_TEST, 'out'), data);
     console.log('EXPORTED', res.exe);
+    app.quit();
+    return;
+  }
+  // Test der gepackten Spieldateien (nur Entwicklung): Spielordner und Web-Spiel mit data.vnpak schreiben
+  if (process.env.VN_PACK_TEST && !gameData) {
+    const tmp = path.join(process.env.VN_PACK_TEST, 'proj');
+    fs.mkdirSync(tmp, { recursive: true });
+    const data = createDemoProject(tmp);
+    data.export = Object.assign({}, data.export || {}, { pack: process.env.VN_PACK_MODE || 'packmods' });
+    projectDir = tmp;
+    await copyGameFiles(path.join(process.env.VN_PACK_TEST, 'game'), data, [], { modsDir: path.join(process.env.VN_PACK_TEST, 'mods') });
+    await exportWebTo(path.join(process.env.VN_PACK_TEST, 'web'), data, []);
+    console.log('PACKED');
     app.quit();
     return;
   }

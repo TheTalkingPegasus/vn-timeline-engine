@@ -3899,7 +3899,18 @@ window.VN_I18N_EN = {
 "„{n}“ aus der Liste nehmen? Der Ordner auf dem PC bleibt erhalten.": "Remove “{n}” from the list? The folder on the PC stays.",
 "⬇ Als ZIP herunterladen": "⬇ Download as ZIP",
 "Sicherung, Desktop-Version": "backup, desktop version",
-"Schritt {a} bis {b}": "Steps {a} to {b}"
+"Schritt {a} bis {b}": "Steps {a} to {b}",
+"Nicht packen": "Don't pack",
+"Spieldateien": "Game files",
+"Ordner, zum Modden": "folder, for modding",
+"Gepackt": "Packed",
+"verschlüsselt in einer Datei": "encrypted in one file",
+"Gepackt + Mods": "Packed + mods",
+"Ersatz über Ordner „mods“": "replacements via “mods” folder",
+"Bilder, Töne und Dialoge liegen als normale Dateien im Spielordner. Spieler können sie ansehen und austauschen (Skins, Übersetzungen).": "Images, sounds and dialogue are normal files in the game folder. Players can look at them and swap them (skins, translations).",
+"Alles steckt verschlüsselt in einer Datei „data.vnpak“. Das erschwert das Kopieren und verhindert Spoiler – ein vollständiger Schutz ist es nicht.": "Everything is encrypted in one file, “data.vnpak”. This makes copying harder and prevents spoilers – it is not complete protection.",
+"Wie „Gepackt“, aber eine Datei im Ordner „mods“ neben dem Spiel ersetzt die gleichnamige Datei aus dem Paket. Eine Liste aller Dateien liegt dort bei.": "Like “Packed”, but a file in the “mods” folder next to the game replaces the file with the same name from the package. A list of all files is included there.",
+"Das Web-Spiel läuft dann nur auf einem Webserver (z. B. itch.io), nicht per Doppelklick auf index.html. Einen Mod-Ordner gibt es im Browser nicht.": "The web game then only runs on a web server (e.g. itch.io), not by double-clicking index.html. There is no mods folder in the browser."
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",

@@ -3960,7 +3960,18 @@ window.VN_I18N_JA = {
 "Fonts": "フォント",
 "Sound": "サウンド",
 "Level": "レベル",
-"Minimal": "最小"
+"Minimal": "最小",
+"Nicht packen": "パックしない",
+"Spieldateien": "ゲームファイル",
+"Ordner, zum Modden": "フォルダー、MOD向け",
+"Gepackt": "パック",
+"verschlüsselt in einer Datei": "1つのファイルに暗号化",
+"Gepackt + Mods": "パック + MOD",
+"Ersatz über Ordner „mods“": "「mods」フォルダーで差し替え",
+"Bilder, Töne und Dialoge liegen als normale Dateien im Spielordner. Spieler können sie ansehen und austauschen (Skins, Übersetzungen).": "画像、音声、セリフはゲームフォルダー内の通常のファイルです。プレイヤーは見たり差し替えたりできます(スキン、翻訳)。",
+"Alles steckt verschlüsselt in einer Datei „data.vnpak“. Das erschwert das Kopieren und verhindert Spoiler – ein vollständiger Schutz ist es nicht.": "すべてを1つのファイル「data.vnpak」に暗号化して格納します。コピーしにくくなりネタバレも防げますが、完全な保護ではありません。",
+"Wie „Gepackt“, aber eine Datei im Ordner „mods“ neben dem Spiel ersetzt die gleichnamige Datei aus dem Paket. Eine Liste aller Dateien liegt dort bei.": "「パック」と同じですが、ゲームの隣の「mods」フォルダーにあるファイルが、パック内の同名ファイルを置き換えます。全ファイルの一覧も入っています。",
+"Das Web-Spiel läuft dann nur auf einem Webserver (z. B. itch.io), nicht per Doppelklick auf index.html. Einen Mod-Ordner gibt es im Browser nicht.": "その場合、Webゲームはindex.htmlのダブルクリックでは動かず、Webサーバー(例: itch.io)上でのみ動作します。ブラウザにはMODフォルダーはありません。"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

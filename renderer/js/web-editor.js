@@ -225,22 +225,30 @@
     const root = safeName(data.title) + ' (Web)/';
     const conv = {};
     for (const f of files || []) conv[f.file] = f.bytes;
+    // Gepackt (0.9.7): alles verschlüsselt in data.vnpak; im Browser gibt es keinen Mod-Ordner
+    const packed = !!(data.export && data.export.pack && data.export.pack !== 'open');
+    if (packed && data.export.pack === 'packmods') data = Object.assign({}, data, { export: Object.assign({}, data.export, { pack: 'pack' }) });
+    const pakFiles = [];
+    const seen = new Set();
     for (const a of data.assets || []) {
       const rel = String(a.file || '');
-      if (!rel || rel.includes('..')) continue;
-      if (conv[rel]) { zip.file(root + rel, conv[rel]); continue; }
-      const b = await cur.fs.read(rel);
-      if (b) zip.file(root + rel, b);
+      if (!rel || rel.includes('..') || seen.has(rel)) continue;
+      seen.add(rel);
+      let b = conv[rel] ? conv[rel] : await cur.fs.read(rel);
+      if (!b) continue;
+      if (packed) pakFiles.push({ rel, bytes: b instanceof Uint8Array ? b : new Uint8Array(b instanceof Blob ? await b.arrayBuffer() : b) });
+      else zip.file(root + rel, b);
     }
+    if (packed) zip.file(root + 'data.vnpak', VNPak.buildInMemory(pakFiles, data));
     const plugins = Object.entries(data.plugins || {}).filter(([, v]) => v && v.enabled).map(([k]) => k).filter((k) => /^[^/\\]+\.js$/i.test(k));
     for (const f of plugins) { const b = await cur.fs.read('plugins/' + f); if (b) zip.file(root + 'plugins/' + f, b); }
     for (const f of info.engine) { const r = await fetch(f); if (r.ok) zip.file(root + 'engine/' + f.split('/').pop(), await r.blob()); }
-    zip.file(root + 'engine/game-data.js', 'window.VN_GAME = ' + JSON.stringify(data) + ';');
+    if (!packed) zip.file(root + 'engine/game-data.js', 'window.VN_GAME = ' + JSON.stringify(data) + ';');
     try { const r = await fetch('LICENSE.txt'); if (r.ok) zip.file(root + 'engine/LICENSE.txt', await r.blob()); } catch (e) { /* egal */ }
     const esc = (t) => String(t).replace(/[<&>]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
     const html = `<!doctype html>\n<html lang="${(data.languages && data.languages[0]) || 'de'}">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>${esc(data.title || 'Spiel')}</title>\n<link rel="stylesheet" href="engine/style.css">\n<style>html,body{background:#000;overflow:hidden}</style>\n</head>\n<body>\n<div id="player"></div><div id="toast"></div><div id="ctxmenu" hidden></div>\n` +
-      info.web.map((f) => `<script src="engine/${f}"></script>`).join('\n') + '\n' +
-      plugins.map((f) => `<script>VNPlugin._current = ${JSON.stringify(f)};</script><script src="plugins/${encodeURIComponent(f)}"></script>`).join('\n') + '\n<script src="engine/player.js"></script>\n<script>VNWeb.start();</script>\n</body>\n</html>\n';
+      info.web.filter((f) => !(packed && f === 'game-data.js')).map((f) => `<script src="engine/${f}"></script>`).join('\n') + '\n' +
+      plugins.map((f) => `<script>VNPlugin._current = ${JSON.stringify(f)};</script><script src="plugins/${encodeURIComponent(f)}"></script>`).join('\n') + '\n<script src="engine/player.js"></script>\n<script>' + (packed ? 'VNWeb.startPacked("data.vnpak");' : 'VNWeb.start();') + '</script>\n</body>\n</html>\n';
     zip.file(root + 'index.html', html);
     const de = String((data.languages || ['de'])[0]).startsWith('de');
     if (de) zip.file(root + 'LIES MICH.txt', 'Web-Version von "' + (data.title || 'Spiel') + '"\r\n\r\nFür itch.io: diese ZIP-Datei hochladen und "This file will be played in the browser" wählen.\r\n');

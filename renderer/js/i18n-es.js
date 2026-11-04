@@ -3960,7 +3960,18 @@ window.VN_I18N_ES = {
 "Fonts": "Fuentes",
 "Sound": "Sonido",
 "Level": "Nivel",
-"Minimal": "Mínimo"
+"Minimal": "Mínimo",
+"Nicht packen": "Sin empaquetar",
+"Spieldateien": "Archivos del juego",
+"Ordner, zum Modden": "carpeta, para mods",
+"Gepackt": "Empaquetados",
+"verschlüsselt in einer Datei": "cifrados en un archivo",
+"Gepackt + Mods": "Empaquetados + mods",
+"Ersatz über Ordner „mods“": "reemplazos con la carpeta “mods”",
+"Bilder, Töne und Dialoge liegen als normale Dateien im Spielordner. Spieler können sie ansehen und austauschen (Skins, Übersetzungen).": "Imágenes, sonidos y diálogos son archivos normales en la carpeta del juego. Los jugadores pueden verlos y cambiarlos (skins, traducciones).",
+"Alles steckt verschlüsselt in einer Datei „data.vnpak“. Das erschwert das Kopieren und verhindert Spoiler – ein vollständiger Schutz ist es nicht.": "Todo va cifrado en un archivo, “data.vnpak”. Dificulta copiar y evita spoilers, pero no es una protección completa.",
+"Wie „Gepackt“, aber eine Datei im Ordner „mods“ neben dem Spiel ersetzt die gleichnamige Datei aus dem Paket. Eine Liste aller Dateien liegt dort bei.": "Como “Empaquetados”, pero un archivo en la carpeta “mods” junto al juego reemplaza al archivo del mismo nombre del paquete. Allí se incluye una lista de todos los archivos.",
+"Das Web-Spiel läuft dann nur auf einem Webserver (z. B. itch.io), nicht per Doppelklick auf index.html. Einen Mod-Ordner gibt es im Browser nicht.": "El juego web solo funciona entonces en un servidor web (p. ej. itch.io), no con doble clic en index.html. En el navegador no hay carpeta de mods."
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

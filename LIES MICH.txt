@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.6
+VN Timeline Engine · Prototyp 0.9.7
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,14 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.7 · Gepackte Spieldateien
+- Neue Export-Option „Spieldateien“: Nicht packen (wie bisher – Bilder, Töne und Dialoge liegen als normale Dateien
+  im Spielordner, gut zum Modden), Gepackt (alles verschlüsselt in einer Datei data.vnpak – erschwert das Kopieren und
+  verhindert Spoiler, ist aber kein vollständiger Schutz) oder Gepackt + Mods (gepackt, aber eine Datei im Ordner
+  „mods“ neben dem Spiel ersetzt die gleichnamige Datei; dort liegt eine Liste aller Dateien für Modder).
+- Funktioniert für Windows- und Web-Spiele (auch in der Browser-Version). Gepackte Web-Spiele brauchen einen Webserver
+  (z. B. itch.io) und zeigen beim Laden einen Fortschritt. Große Videos und Musik werden aus dem Paket gestreamt.
 
 NEU IN 0.9.6 · Web-Version: die Engine im Browser ausprobieren · Spanisch und Japanisch
 - Die Oberfläche gibt es jetzt auch auf Spanisch und Japanisch (Español / 日本語 auf dem Startbildschirm oder unter

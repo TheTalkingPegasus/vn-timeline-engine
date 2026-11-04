@@ -607,6 +607,40 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Web-Export startet ohne Fehler');
   } catch (e) { general.push('Web-Export: ' + e.message); }
 
+  // 8. Gepackte Spieldateien (0.9.7): Paket enthält Projekt und alle Dateien, nichts liegt offen, Inhalt stimmt
+  try {
+    const VNPak = require('../renderer/js/vnpak.js');
+    const proj = JSON.parse(await js('JSON.stringify(VN.project)'));
+    proj.export = Object.assign({}, proj.export || {}, { pack: 'pack' });
+    const pdir = JSON.parse(await js('JSON.stringify(VN.dir)'));
+    // Eine echte Datei (auch in einem Unterordner mit Umlaut), damit das Paket sicher Inhalt hat
+    const testRel = 'assets/Bilder Ä/__pak_test.png';
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64');
+    fs.mkdirSync(path.join(pdir, 'assets', 'Bilder Ä'), { recursive: true });
+    fs.writeFileSync(path.join(pdir, testRel), png);
+    proj.assets = (proj.assets || []).concat([{ id: '__paktest', name: '__pak_test', kind: 'image', file: testRel }]);
+    const dest = path.join(tmpRoot, 'webpak');
+    await exportWebTo(dest, proj);
+    const pak = VNPak.openInMemory(new Uint8Array(fs.readFileSync(path.join(dest, 'data.vnpak'))));
+    const html = fs.readFileSync(path.join(dest, 'index.html'), 'utf8');
+    // Nur Dateien, die es im Projekt wirklich gibt (alte Testprojekte enthalten Verweise auf fehlende Dateien)
+    const rels = [...new Set((proj.assets || []).map((a) => a.file).filter(Boolean))].filter((r) => fs.existsSync(path.join(pdir, r)));
+    const missing = rels.filter((r) => !pak.files[r]);
+    const open = rels.filter((r) => fs.existsSync(path.join(dest, r)));
+    const raw = fs.readFileSync(path.join(dest, 'data.vnpak')).toString('latin1');
+    const leak = proj.title && proj.title.length > 3 && raw.includes(proj.title);
+    const errs = [];
+    if (pak.project.title !== proj.title) errs.push('Projekt im Paket falsch');
+    if (!pak.files[testRel] || Buffer.compare(Buffer.from(pak.files[testRel]), png) !== 0) errs.push('Testdatei im Paket falsch');
+    if (missing.length) errs.push(missing.length + ' Dateien fehlen im Paket');
+    if (open.length) errs.push(open.length + ' Dateien liegen offen');
+    if (leak) errs.push('Klartext im Paket');
+    if (fs.existsSync(path.join(dest, 'engine', 'game-data.js')) || !html.includes('startPacked')) errs.push('index.html/game-data.js');
+    if (errs.length) general.push('Gepackt: ' + errs.join(', '));
+    else log('✓ Gepackte Spieldateien: ' + rels.length + ' Dateien verschlüsselt in data.vnpak');
+    try { fs.rmSync(path.join(pdir, 'assets', 'Bilder Ä'), { recursive: true, force: true }); } catch (e) { /* egal */ }
+  } catch (e) { general.push('Gepackt: ' + e.message); }
+
   const failed = results.filter((r) => r.errors.length);
   for (const g of general) log('✗ ' + g);
   log(`\n${failed.length || general.length ? 'FEHLGESCHLAGEN' : 'ALLES BESTANDEN'}: ${results.length - failed.length}/${results.length} Projekte ok${general.length ? ', ' + general.length + ' allgemeine Fehler' : ''} · ${((Date.now() - t0) / 1000).toFixed(0)} s`);
