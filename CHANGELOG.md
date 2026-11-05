@@ -2,6 +2,14 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.15 – Inpaint brush for jointed puppets
+- Puppet editor: new “🖌 Inpaint brush”. Mask a gap on a part with the lasso, ruler or brush and fill it – no AI model
+  needed. Colors come from the edge of the mask, from one chosen color or as a gradient between two points (A → B), also
+  picked from another part. Softness is adjustable and still changes the result after filling; fills can be undone.
+  Saved as a new image file, the original is kept.
+- “More room at the edge” adds a transparent border to a tightly cropped part, so a gap outside the image can be filled
+  too. The part, its joint, seams and hold points stay in place. Not available for parts with bones or blinking.
+
 ## 0.9.14 – Edit the bones mesh
 - Bones & blinking: new tool “Edit mesh”. Every mesh cell is shown; click or drag over empty cells to add them
   (e.g. thin hair strands or tips that weren't detected) and over filled cells to remove them (e.g. excess border).
