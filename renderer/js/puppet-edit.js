@@ -11,6 +11,13 @@
   const selPart = (pup) => (pup && ui().pupPart ? Puppet.part(pup, ui().pupPart) : null);
 
   const PupEd = (window.PupEd = { _res: null, _resKey: '' });
+  // Festpinnen beim Ausprobieren (Doppelklick)
+  PupEd.togglePin = (part) => {
+    const ui = VN.ui;
+    ui.pupPinned = ui.pupPinned || {};
+    ui.pupPinned[part.id] = !ui.pupPinned[part.id];
+    VN.toast(ui.pupPinned[part.id] ? VN.tf('„{name}“ festgepinnt', { name: part.name }) : VN.tf('„{name}“ gelöst', { name: part.name }));
+  };
 
   // Bild-Transparenz für genaue Treffer (Klick auf durchsichtige Stellen trifft das Teil darunter)
   const alphaCache = new Map();
@@ -345,6 +352,8 @@
       if (!hit) { if (ui().pupPart) { ui().pupPart = null; VN.render(); } return; }
       e.preventDefault();
       ui().pupPart = hit.id;
+      // Ausprobieren: Doppelklick auf ein angehängtes Teil = festpinnen / lösen
+      if (testing && hit.parent && VN.isDouble(e, 'pup:' + hit.id)) { PupEd.togglePin(hit); VN.render(); return; }
       if (testing) {
         // Puppenspiel: Teil um seinen Pin drehen, Umschalt = IK, Wurzel = verschieben
         const pose = ui().pupTest;
@@ -410,16 +419,6 @@
       const px = e.clientX - r.left, py = e.clientY - r.top, nk = Math.max(0.05, Math.min(6, v.k * (e.deltaY < 0 ? 1.12 : 1 / 1.12)));
       v.x = px - (px - v.x) * nk / v.k; v.y = py - (py - v.y) * nk / v.k; v.k = nk;
     }, { passive: false });
-    canvas.addEventListener('dblclick', (e) => {
-      // Im Ausprobieren-Modus: Doppelklick pinnt ein Teil fest (IK hält sein Ende an Ort und Stelle)
-      if (!ui().pupTest) return;
-      const [x, y] = toPup(e.clientX, e.clientY);
-      const hit = hitPart(x, y);
-      if (!hit || !hit.parent) return;
-      ui().pupPinned = ui().pupPinned || {};
-      ui().pupPinned[hit.id] = !ui().pupPinned[hit.id];
-      VN.toast(ui().pupPinned[hit.id] ? VN.tf('„{name}“ festgepinnt', { name: hit.name }) : VN.tf('„{name}“ gelöst', { name: hit.name }));
-    });
     canvas.addEventListener('keydown', (e) => {
       const p = selPart(pup);
       if ((e.key === 'Delete' || e.key === 'Backspace') && p && !ui().pupTest) { e.preventDefault(); e.stopPropagation(); PupEd.removePart(pup, p); }

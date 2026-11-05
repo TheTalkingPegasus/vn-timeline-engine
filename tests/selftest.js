@@ -773,10 +773,15 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
       VN.ext.actions.unlockLoc.apply({ scene: D.id, value: 'gone' }, rs);
       if (W.status(rs, D.id) !== 'hidden' || W.unlocked(rs, D.id)) out.push('D per Aktion nicht weg');
       p.scenes = keep.scenes; p.vars = keep.vars; p.world = keep.world;
+      // Doppelklick selbst erkannt (0.9.12): zweiter Klick am selben Teil kurz danach = doppelt, anderes Teil nicht
+      VN._dbl = null;
+      const ev = { clientX: 100, clientY: 100 };
+      if (VN.isDouble(ev, 'a') || !VN.isDouble(ev, 'a')) out.push('Doppelklick nicht erkannt');
+      if (VN.isDouble(ev, 'a') || VN.isDouble(ev, 'b')) out.push('Doppelklick falsch erkannt');
       return JSON.stringify(out);
     })()`));
     if (r.length) general.push('Orte: ' + r.join(', '));
-    else log('✓ Orte: frei per Bedingung, gesperrt solange …, gesperrt und weg (auch per Aktion)');
+    else log('✓ Orte: frei per Bedingung, gesperrt solange …, gesperrt und weg (auch per Aktion); Doppelklick zum Festpinnen');
   } catch (e) { general.push('Orte: ' + e.message); }
 
   const failed = results.filter((r) => r.errors.length);

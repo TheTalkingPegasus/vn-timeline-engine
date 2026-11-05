@@ -211,19 +211,6 @@
     },
 
     bindStage(stage, svg, sc, a) {
-      stage.ondblclick = (e) => {
-        // Gliederpuppe: Doppelklick auf ein Teil = festpinnen / lösen
-        const actor = actorOf(a);
-        if (!actor || !actor.puppet) return;
-        const r = svg.getBoundingClientRect();
-        const kx = (svg.viewBox.baseVal && svg.viewBox.baseVal.width ? svg.viewBox.baseVal.width / r.width : 1);
-        const hit = AnimEd.pupHit(actor, (e.clientX - r.left) * kx, (e.clientY - r.top) * kx);
-        if (!hit || hit.kind !== 'part') return;
-        const pup = Puppet.get(actor.puppet), part = Puppet.part(pup, hit.pid);
-        if (!part || !part.parent) return;
-        VN.mutate(() => { actor.pins = actor.pins || {}; if (actor.pins[part.id]) delete actor.pins[part.id]; else actor.pins[part.id] = true; });
-        VN.toast(actor.pins[part.id] ? VN.tf('„{name}“ festgepinnt', { name: part.name }) : VN.tf('„{name}“ gelöst', { name: part.name }));
-      };
       stage.onmousedown = (e) => {
         if (e.button !== 0) return;
         const r = svg.getBoundingClientRect();
@@ -423,6 +410,16 @@
       const hit = AnimEd.pupHit(actor, px, py);
       if (!hit) return false;
       const pup = Puppet.get(actor.puppet);
+      // Doppelklick auf ein angehängtes Teil = festpinnen / lösen (selbst erkannt, weil die Bühne nach dem Klick neu gezeichnet wird)
+      if (hit.kind === 'part' && pup) {
+        const pp = Puppet.part(pup, hit.pid);
+        if (pp && pp.parent && VN.isDouble(e, 'an:' + actor.id + ':' + pp.id)) {
+          e.preventDefault();
+          VN.mutate(() => { actor.pins = actor.pins || {}; if (actor.pins[pp.id]) delete actor.pins[pp.id]; else actor.pins[pp.id] = true; });
+          VN.toast(actor.pins[pp.id] ? VN.tf('„{name}“ festgepinnt', { name: pp.name }) : VN.tf('„{name}“ gelöst', { name: pp.name }));
+          return true;
+        }
+      }
       const m = (AnimEd._maps || []).find((x) => x.it.actor === actor);
       if (!pup || !m || !m.it.pbase) return false;
       e.preventDefault();
