@@ -4000,7 +4000,18 @@ window.VN_I18N_EN = {
 "Licht nur, wenn …": "Light only if …",
 "Licht hinzufügen …": "Add light …",
 "Scheinwerfer, Lampen, Neonröhren oder Gegenlicht. Die Lampe erscheint auf der Bühne und lässt sich wie eine Hitbox verschieben.": "Spotlights, lamps, neon tubes or backlight. The lamp appears on the stage and can be moved like a hitbox.",
-"Mit 🔒 z. B. Laternen nur nachts. Hub-Objekte werden vom Licht mit beleuchtet.": "With 🔒 e.g. lanterns only at night. Hub objects are lit by the light too."
+"Mit 🔒 z. B. Laternen nur nachts. Hub-Objekte werden vom Licht mit beleuchtet.": "With 🔒 e.g. lanterns only at night. Hub objects are lit by the light too.",
+"Flüssig": "Smooth",
+"24 Bilder/s (wie im Kino)": "24 fps (like cinema)",
+"12 Bilder/s (auf Zweiern, Anime)": "12 fps (on twos, anime)",
+"8 Bilder/s (auf Dreiern, Cartoon)": "8 fps (on threes, cartoon)",
+"6 Bilder/s (sehr abgehackt)": "6 fps (very choppy)",
+"Bildrate": "Frame rate",
+"Diese Animation": "This animation",
+"Grundeinstellung fürs ganze Projekt": "Default for the whole project",
+"Weniger Bilder pro Sekunde wirken gezeichnet wie im Anime oder Cartoon: jedes Bild bleibt kurz stehen. Gilt für Animationen, Idle, Gesten, Bones und Gliederpuppen. Dialoge, Menüs und Kamerafahrten bleiben flüssig.": "Fewer frames per second look hand-drawn like anime or cartoons: each frame holds for a moment. Applies to animations, idle, gestures, bones and jointed puppets. Dialogue, menus and camera moves stay smooth.",
+"Bildrate der Figur": "Character frame rate",
+"Wie im Projekt bzw. der Idle-Animation": "As in the project or the idle animation"
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",

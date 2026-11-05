@@ -3896,6 +3896,7 @@ window.VN_I18N_JA = {
 "„{n}“ aus der Liste nehmen? Der Ordner auf dem PC bleibt erhalten.": "「{n}」をリストから削除しますか? PCのフォルダーは残ります。",
 "⬇ Als ZIP herunterladen": "⬇ ZIPでダウンロード",
 "Sicherung, Desktop-Version": "バックアップ、デスクトップ版",
+"Bildrate der Figur": "キャラクターのフレームレート",
 "Design": "デザイン",
 "Animation": "アニメーション",
 "Story": "ストーリー",
@@ -4061,7 +4062,17 @@ window.VN_I18N_JA = {
 "Licht nur, wenn …": "光の条件 …",
 "Licht hinzufügen …": "光を追加 …",
 "Scheinwerfer, Lampen, Neonröhren oder Gegenlicht. Die Lampe erscheint auf der Bühne und lässt sich wie eine Hitbox verschieben.": "スポットライト、ランプ、ネオン管、逆光。ランプはステージに表示され、ヒットボックスのように動かせます。",
-"Mit 🔒 z. B. Laternen nur nachts. Hub-Objekte werden vom Licht mit beleuchtet.": "🔒で例えば街灯を夜だけに。ハブのオブジェクトも光で照らされます。"
+"Mit 🔒 z. B. Laternen nur nachts. Hub-Objekte werden vom Licht mit beleuchtet.": "🔒で例えば街灯を夜だけに。ハブのオブジェクトも光で照らされます。",
+"Flüssig": "なめらか",
+"24 Bilder/s (wie im Kino)": "24fps(映画並み)",
+"12 Bilder/s (auf Zweiern, Anime)": "12fps(2コマ打ち、アニメ)",
+"8 Bilder/s (auf Dreiern, Cartoon)": "8fps(3コマ打ち、カートゥーン)",
+"6 Bilder/s (sehr abgehackt)": "6fps(かなりカクカク)",
+"Bildrate": "フレームレート",
+"Diese Animation": "このアニメーション",
+"Grundeinstellung fürs ganze Projekt": "プロジェクト全体の既定値",
+"Weniger Bilder pro Sekunde wirken gezeichnet wie im Anime oder Cartoon: jedes Bild bleibt kurz stehen. Gilt für Animationen, Idle, Gesten, Bones und Gliederpuppen. Dialoge, Menüs und Kamerafahrten bleiben flüssig.": "1秒あたりのコマ数を減らすと、アニメやカートゥーンのような手描き感が出ます。各コマが少しの間止まります。アニメーション、待機、ジェスチャー、ボーン、関節人形に適用されます。セリフ、メニュー、カメラ移動はなめらかなままです。",
+"Wie im Projekt bzw. der Idle-Animation": "プロジェクトまたは待機アニメと同じ"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

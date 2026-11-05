@@ -16,6 +16,10 @@ All notable changes. German details: `LIES MICH.txt`.
 - Place lights with the mouse on the stage like hitboxes; spotlight and neon tube have a second point for direction
   and reach. In hubs, lights can depend on conditions (🔒, e.g. lanterns only at night) and also light up hub objects.
 - AVIF images can now be imported in the desktop app too.
+- Frame rate for animations: smooth, 24, 12 (“on twos”, anime look), 8 (“on threes”, cartoon) or 6 frames per second.
+  Set per animation, per character or as the project default (animation editor). Applies to idle animations, gestures,
+  bones, jointed puppets and cutscenes from the animation editor, also in its preview and the video export.
+  Dialogue, menus and camera moves stay smooth.
 - New filter “CRT TV” on effect tracks: curved picture with round, dark edges, scanlines, flicker and a bright band
   that rolls from top to bottom. Curvature, scanlines, flicker, edges, band on/off and its speed are adjustable.
   Dialogue and menus stay sharp on top.

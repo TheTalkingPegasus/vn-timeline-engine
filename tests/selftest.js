@@ -721,11 +721,17 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
       Light.sync(host, [], { figs: () => [[inner, false]] });
       if (host.querySelectorAll('.light-l').length) out.push('Lichter bleiben übrig');
       if (/url\\(/.test(inner.style.filter)) out.push('Filter bleibt');
+      // Bildrate (0.9.9): bei 12 Bildern/s nur 12 neue Bilder pro Sekunde, Figur erbt vom Projekt
+      const keepFps = VN.project.animFps; VN.project.animFps = 12;
+      const o = {}; let n = 0; for (let t = 0; t < 1; t += 1 / 60) if (VN.fpsStep(o, t, VN.clipFps({}))) n++;
+      if (n !== 12) out.push('Bildrate: ' + n + ' statt 12 Bilder');
+      if (VN.clipFps({ fps: 0 }) !== 0 || VN.clipFps({ fps: 8 }) !== 8) out.push('Bildrate der Figur');
+      if (keepFps) VN.project.animFps = keepFps; else delete VN.project.animFps;
       host.remove();
       return JSON.stringify(out);
     })()`));
     if (r.length) general.push('Licht: ' + r.join(', '));
-    else log('✓ Licht: Scheinwerfer, Neon, Gegenlicht, Reihenfolge der Ebenen, Kantenlicht auf Figuren');
+    else log('✓ Licht: Scheinwerfer, Neon, Gegenlicht, Reihenfolge der Ebenen, Kantenlicht auf Figuren, Bildrate');
   } catch (e) { general.push('Licht: ' + e.message); }
 
   const failed = results.filter((r) => r.errors.length);

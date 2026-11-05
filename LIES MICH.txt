@@ -30,6 +30,10 @@ NEU IN 0.9.9 · Lichtquellen, TV-Filter (Röhrenfernseher, LCD, RGB-Split)
   Richtung und Reichweite. Im Hub können Lichter an Bedingungen hängen (🔒, z. B. Laternen nur nachts) und
   beleuchten auch die Hub-Objekte.
 - AVIF-Bilder lassen sich jetzt auch in der Desktop-App importieren.
+- Bildrate für Animationen: flüssig, 24, 12 („auf Zweiern“, Anime-Look), 8 („auf Dreiern“, Cartoon) oder 6 Bilder pro
+  Sekunde. Einstellbar pro Animation, pro Figur oder als Grundeinstellung fürs Projekt (Animations-Editor). Gilt für
+  Idle-Animationen, Gesten, Bones, Gliederpuppen und Zwischensequenzen aus dem Animations-Editor, auch in dessen
+  Vorschau und beim Video-Export. Dialoge, Menüs und Kamerafahrten bleiben flüssig.
 - Neuer Filter „Röhren-Fernseher“ auf Effekt-Spuren: gewölbtes Bild mit runden, dunklen Rändern, Bildzeilen,
   Flimmern und ein heller Streifen, der von oben nach unten gleitet. Wölbung, Bildzeilen, Flimmern, Ränder,
   Streifen an/aus und seine Geschwindigkeit sind einstellbar. Dialoge und Menüs bleiben scharf darüber.

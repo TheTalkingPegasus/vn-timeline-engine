@@ -363,9 +363,12 @@
     for (const it of [...live]) {
       if (!it.cv.isConnected) { if (it.seen) live.delete(it); continue; }
       it.seen = true;
-      const gap = window.Perf ? Perf.minInterval('bones') * 1000 : 0;
-      if (gap && now - it.last < gap) continue;
-      const dt = Math.min(1 / 20, (now - it.last) / 1000);
+      const fps = VN.clipFps ? VN.clipFps(it.clip) : 0;
+      if (fps) { if (!VN.fpsStep(it, now / 1000, fps)) continue; } else {
+        const gap = window.Perf ? Perf.minInterval('bones') * 1000 : 0;
+        if (gap && now - it.last < gap) continue;
+      }
+      const dt = Math.min(fps ? 1 / 5 : 1 / 20, (now - it.last) / 1000);
       it.last = now;
       drawEl(it, now / 1000 - it.t0, dt);
     }

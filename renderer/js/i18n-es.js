@@ -3896,6 +3896,7 @@ window.VN_I18N_ES = {
 "„{n}“ aus der Liste nehmen? Der Ordner auf dem PC bleibt erhalten.": "¿Quitar “{n}” de la lista? La carpeta del PC se queda.",
 "⬇ Als ZIP herunterladen": "⬇ Descargar como ZIP",
 "Sicherung, Desktop-Version": "copia de seguridad, versión de escritorio",
+"Bildrate der Figur": "Fotogramas del personaje",
 "Design": "Diseño",
 "Animation": "Animación",
 "Story": "Historia",
@@ -4061,7 +4062,17 @@ window.VN_I18N_ES = {
 "Licht nur, wenn …": "Luz solo si …",
 "Licht hinzufügen …": "Añadir luz …",
 "Scheinwerfer, Lampen, Neonröhren oder Gegenlicht. Die Lampe erscheint auf der Bühne und lässt sich wie eine Hitbox verschieben.": "Focos, lámparas, tubos de neón o contraluz. La lámpara aparece en el escenario y se mueve como una hitbox.",
-"Mit 🔒 z. B. Laternen nur nachts. Hub-Objekte werden vom Licht mit beleuchtet.": "Con 🔒, p. ej., farolas solo de noche. Los objetos del hub también reciben la luz."
+"Mit 🔒 z. B. Laternen nur nachts. Hub-Objekte werden vom Licht mit beleuchtet.": "Con 🔒, p. ej., farolas solo de noche. Los objetos del hub también reciben la luz.",
+"Flüssig": "Fluido",
+"24 Bilder/s (wie im Kino)": "24 fps (como en el cine)",
+"12 Bilder/s (auf Zweiern, Anime)": "12 fps (a dos, anime)",
+"8 Bilder/s (auf Dreiern, Cartoon)": "8 fps (a tres, cartoon)",
+"6 Bilder/s (sehr abgehackt)": "6 fps (muy entrecortado)",
+"Bildrate": "Velocidad de fotogramas",
+"Diese Animation": "Esta animación",
+"Grundeinstellung fürs ganze Projekt": "Predeterminado para todo el proyecto",
+"Weniger Bilder pro Sekunde wirken gezeichnet wie im Anime oder Cartoon: jedes Bild bleibt kurz stehen. Gilt für Animationen, Idle, Gesten, Bones und Gliederpuppen. Dialoge, Menüs und Kamerafahrten bleiben flüssig.": "Menos fotogramas por segundo parecen dibujados como en el anime o los dibujos animados: cada imagen se mantiene un instante. Se aplica a animaciones, idle, gestos, huesos y marionetas articuladas. Diálogos, menús y movimientos de cámara siguen fluidos.",
+"Wie im Projekt bzw. der Idle-Animation": "Como en el proyecto o la animación idle"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

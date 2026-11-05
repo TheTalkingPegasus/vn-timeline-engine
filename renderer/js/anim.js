@@ -184,13 +184,14 @@
         }
         const frame = (now) => {
           if (ctrl.stopped || !canvas.isConnected) { ctrl.stop(); return; }
+          const fps = VN.animFps(anim.fps);
           const gap = window.Perf ? Perf.minInterval('bones') * 1000 : 0;
-          if (gap && now - last < gap) { requestAnimationFrame(frame); return; }
-          const t = (now - t0) / 1000;
+          if (fps ? !VN.fpsStep(ctrl, (now - t0) / 1000, fps) : (gap && now - last < gap)) { requestAnimationFrame(frame); return; }
+          const t = fps ? Math.floor((now - t0) / 1000 * fps + 1e-6) / fps : (now - t0) / 1000;
           const dur = anim.dur || 3;
           const tt = anim.loop ? t % dur : Math.min(t, dur);
           if (canvas.width !== Math.round(canvas.getBoundingClientRect().width * Math.min(2, window.devicePixelRatio || 1))) fit();
-          Anim.draw(ctx, sc, tt, Math.min(1 / 30, (now - last) / 1000));
+          Anim.draw(ctx, sc, tt, Math.min(fps ? 1 / 5 : 1 / 30, (now - last) / 1000));
           last = now;
           ctrl.t = tt;
           if (!anim.loop && t >= dur) { ctrl.stop(true); if (opts.onEnd) opts.onEnd(); return; }
