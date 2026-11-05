@@ -2,6 +2,29 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.9 – Light sources, TV filters (CRT, LCD, RGB split)
+- New effect type “Light” on effect tracks and in hubs: spotlight, lamp / light circle, neon tube and backlight.
+  Color, brightness, size or reach, beam width, direction, soft edge, haze in the light and flicker are adjustable;
+  spotlights can sweep back and forth. The scene around is darkened, and the light brightens what it shines on.
+- Light on characters: rim light from the side the lamp is on, and a color glow that gets stronger the closer a character
+  stands to the light. Moves along when characters or the camera move.
+- Backlight sits behind the characters: they become silhouettes with a glowing edge and a halo in the light color.
+  “Silhouette” sets how recognizable the character stays.
+- Dust specks in the light: float slowly and only light up inside the beam, in the light color (amount and size adjustable).
+- Works with parallax: every light has its own depth and moves with its layer during camera moves; foreground layers
+  stay dark in front of the light.
+- Place lights with the mouse on the stage like hitboxes; spotlight and neon tube have a second point for direction
+  and reach. In hubs, lights can depend on conditions (🔒, e.g. lanterns only at night) and also light up hub objects.
+- AVIF images can now be imported in the desktop app too.
+- New filter “CRT TV” on effect tracks: curved picture with round, dark edges, scanlines, flicker and a bright band
+  that rolls from top to bottom. Curvature, scanlines, flicker, edges, band on/off and its speed are adjustable.
+  Dialogue and menus stay sharp on top.
+- New filter “LCD TV”: a fine grid of red, green and blue pixels and delicate lines, like a modern TV seen up close
+  (strength, lines, grid size).
+- New filter “RGB split”: red and blue shifted against each other, with adjustable offset, direction and optional
+  jitter (glitch). Filters on several effect tracks combine, e.g. CRT + RGB split.
+- With “Calm display” (accessibility) or reduced motion in the system, the band and flicker are switched off.
+
 ## 0.9.8 – Bones for layered characters, puppeteering with pinned limbs, firm joints, human template
 - Layered characters (body, face, outfit) can now use bones: set up the bones on the image of the lowest layer and all
   layers above – face, clothing, accessories – bend and move along, even parts that stick out beyond the body (cape,

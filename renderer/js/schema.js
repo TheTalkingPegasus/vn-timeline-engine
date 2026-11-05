@@ -3,7 +3,7 @@
 // Neue Formatänderungen bekommen einen Schritt in STEPS – nie alte Schritte ändern.
 (function () {
   const S = (VN.Schema = {});
-  S.ENGINE = '0.9.8';
+  S.ENGINE = '0.9.9';
   S.CURRENT = 1;
 
   // Schritt n wandelt ein Projekt von Format n-1 nach n um.

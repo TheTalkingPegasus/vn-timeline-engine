@@ -204,10 +204,10 @@
         box.append(
           el('div', { class: 'hint-box' }, 'Eine Ebene über den Figuren: Farbe oder Bild mit Mischmodus, Partikel (Regen, Schnee …), ein Filter wie „Rückblende“ oder Augen öffnen/schließen. Fertige Effekte findest du links unter „Effekte“.'),
           Tools.fxMode(c),
-          c.particles || c.filter || c.eyes ? null : assetField('Bild (optional)', 'image', c.asset, set(c, 'asset')),
-          c.asset || c.particles || c.filter || c.eyes ? null : field('Farbe', el('input', { type: 'color', value: c.color || '#3c4a8c', onchange: (e) => set(c, 'color')(e.target.value) })),
-          c.particles || c.filter || c.eyes ? null : VN.styleEditor(c),
-          c.particles || c.filter || c.eyes ? null : Tools.keysEditor(s, c, t),
+          c.particles || c.filter || c.eyes || c.light ? null : assetField('Bild (optional)', 'image', c.asset, set(c, 'asset')),
+          c.asset || c.particles || c.filter || c.eyes || c.light ? null : field('Farbe', el('input', { type: 'color', value: c.color || '#3c4a8c', onchange: (e) => set(c, 'color')(e.target.value) })),
+          c.particles || c.filter || c.eyes || c.light ? null : VN.styleEditor(c),
+          c.particles || c.filter || c.eyes || c.light ? null : Tools.keysEditor(s, c, t),
           timing);
       } else if (tb === 'dialog') {
         const ta = el('textarea', { onchange: (e) => set(c, 'text')(e.target.value) }, c.text || '');
@@ -298,6 +298,7 @@
         s.bg ? Inspector.designLink('Hintergrund bearbeiten') : null,
         VN.Life && VN.Life.timeOn() ? Inspector.hubSlots(s) : null,
         Inspector.hubFx(s),
+        window.Light ? Inspector.hubLights(s) : null,
         assetField('Musik (Loop)', 'audio', s.music, set(s, 'music')),
         Inspector.startRow(s),
         Inspector.events(s),
@@ -312,8 +313,9 @@
     hubFx(s) {
       s.fx = s.fx || [];
       const box = el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Partikel'));
-      if (!s.fx.length) box.appendChild(el('div', { class: 'muted small' }, 'Regen, Schnee, Staub, Funken, Blütenblätter oder Glühwürmchen über dem ganzen Hub.'));
+      if (!s.fx.some((c) => !c.light)) box.appendChild(el('div', { class: 'muted small' }, 'Regen, Schnee, Staub, Funken, Blütenblätter oder Glühwürmchen über dem ganzen Hub.'));
       s.fx.forEach((c, i) => {
+        if (c.light) return;
         const card = el('div', { class: 'opt-card', style: { margin: '6px 0' } },
           el('div', { class: 'row gap8' },
             select(c.particles, Fx.PARTICLES, (v) => VN.mutate(() => { Object.assign(c, Fx.PART_DEF[v], { particles: v }); })),
@@ -331,7 +333,33 @@
       const add = el('select', { onchange: (e) => { const v = e.target.value; if (v) VN.mutate(() => { s.fx.push(Object.assign({ id: VN.uid('hfx'), particles: v, conds: [] }, Fx.PART_DEF[v])); }); } },
         el('option', { value: '' }, '+ ' + VN.t('Partikel hinzufügen …')), ...Fx.PARTICLES.map(([k, l]) => el('option', { value: k }, l)));
       box.appendChild(add);
-      if (s.fx.length) box.appendChild(el('div', { class: 'muted small' }, 'Mit 🔒 z. B. Glühwürmchen nur nachts oder Schnee nur im Winter. Wechselt, sobald im Hub Zeit vergeht.'));
+      if (s.fx.some((c) => !c.light)) box.appendChild(el('div', { class: 'muted small' }, 'Mit 🔒 z. B. Glühwürmchen nur nachts oder Schnee nur im Winter. Wechselt, sobald im Hub Zeit vergeht.'));
+      return box;
+    },
+    // Lichter im Hub (0.9.9): auf der Bühne mit der Maus platzieren wie Hitboxen
+    hubLights(s) {
+      s.fx = s.fx || [];
+      const box = el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Lichter'));
+      const lights = s.fx.filter((c) => c.light);
+      if (!lights.length) box.appendChild(el('div', { class: 'muted small' }, 'Scheinwerfer, Lampen, Neonröhren oder Gegenlicht. Die Lampe erscheint auf der Bühne und lässt sich wie eine Hitbox verschieben.'));
+      VN.ui.lightOpen = VN.ui.lightOpen || {};
+      const ui = { rng: range, check, set: (o, k) => (v) => VN.mutate(() => { o[k] = v; }), field, sel: select };
+      for (const c of lights) {
+        const name = (Light.KINDS.find((k) => k[0] === c.light) || [0, 'Licht'])[1];
+        const open = !!VN.ui.lightOpen[c.id];
+        const card = el('div', { class: 'opt-card', style: { margin: '6px 0' } },
+          el('div', { class: 'row gap8' },
+            el('span', { class: 'light-dot', style: { background: Light.v(c, 'lColor') } }),
+            el('strong', { style: { flex: '1', cursor: 'pointer' }, onclick: () => { VN.ui.lightOpen[c.id] = !open; VN.render(); } }, (open ? '▾ ' : '▸ ') + name),
+            el('button', { class: 'btn tiny' + ((c.conds || []).length ? ' primary' : ''), title: VN.t('Nur wenn … (z. B. Tageszeit Nacht, Jahreszeit Winter)'), onclick: () => { c.conds = c.conds || []; Inspector.condModal(c.conds, VN.t('Licht nur, wenn …')); } }, '🔒' + ((c.conds || []).length ? ' ' + c.conds.length : '')),
+            el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { s.fx.splice(s.fx.indexOf(c), 1); }) }, '×')));
+        if (open) card.append(...Light.fields(c, ui));
+        box.appendChild(card);
+      }
+      const add = el('select', { onchange: (e) => { const k = e.target.value; if (k) VN.mutate(() => { const c = Object.assign({ id: VN.uid('hfx'), conds: [] }, Light.defaults(k)); s.fx.push(c); VN.ui.lightOpen[c.id] = true; }); } },
+        el('option', { value: '' }, '+ ' + VN.t('Licht hinzufügen …')), ...Light.KINDS.map(([k, l]) => el('option', { value: k }, l)));
+      box.appendChild(add);
+      if (lights.length) box.appendChild(el('div', { class: 'muted small' }, 'Mit 🔒 z. B. Laternen nur nachts. Hub-Objekte werden vom Licht mit beleuchtet.'));
       return box;
     },
     condModal(list, title) {
