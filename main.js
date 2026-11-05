@@ -92,12 +92,12 @@ if (gameMode) {
 }
 const safeName = (s) => String(s || 'Spiel').replace(/[<>:"/\\|?*\x00-\x1f]/g, '').replace(/\s+/g, ' ').trim().slice(0, 60) || 'Spiel';
 
-const IMAGE_EXT = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'];
+const IMAGE_EXT = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg', 'avif'];
 const AUDIO_EXT = ['ogg', 'wav', 'mp3', 'opus', 'flac', 'm4a'];
 const FONT_EXT = ['ttf', 'otf', 'woff', 'woff2'];
 const VIDEO_EXT = ['webm', 'mp4'];
 const MIME = {
-  png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif', svg: 'image/svg+xml',
+  png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', avif: 'image/avif', gif: 'image/gif', svg: 'image/svg+xml',
   ogg: 'audio/ogg', wav: 'audio/wav', mp3: 'audio/mpeg', opus: 'audio/ogg', flac: 'audio/flac', m4a: 'audio/mp4',
   ttf: 'font/ttf', otf: 'font/otf', woff: 'font/woff', woff2: 'font/woff2', webm: 'video/webm', mp4: 'video/mp4'
 };
@@ -751,14 +751,14 @@ async function exportWebTo(dest, data, files) {
   if (!packed) fs.unlinkSync(path.join(dest, 'project.json'));
   const rd = path.join(__dirname, 'renderer');
   fs.mkdirSync(path.join(dest, 'engine'), { recursive: true });
-  const engineFiles = ['style.css', 'js/web-boot.js', 'js/vnpak.js', 'js/i18n-en.js', 'js/i18n-es.js', 'js/i18n-ja.js', 'js/core.js', 'js/i18n.js', 'js/audioout.js', 'js/logic.js', 'js/life.js', 'js/extras.js', 'js/did.js', 'js/equip.js', 'js/world.js', 'js/quests.js', 'js/skills.js', 'js/combat.js', 'js/idle.js', 'js/devices.js', 'js/theme.js', 'js/a11y.js', 'js/uipresets.js', 'js/uidesign.js', 'js/perf.js', 'js/fx.js', 'js/stage.js', 'js/systems.js', 'js/rig.js', 'js/anim.js', 'js/puppet.js', 'js/blink.js', 'js/plugins.js', 'js/menu.js', 'js/player-audio.js', 'js/player-menus.js', 'js/player-extras.js', 'js/player-world.js', 'js/relmsg.js', 'js/player-notify.js', 'js/player-skills.js', 'js/player-combat.js', 'js/player-idle.js', 'js/player.js', 'js/schema.js'];
+  const engineFiles = ['style.css', 'js/web-boot.js', 'js/vnpak.js', 'js/i18n-en.js', 'js/i18n-es.js', 'js/i18n-ja.js', 'js/core.js', 'js/i18n.js', 'js/audioout.js', 'js/logic.js', 'js/life.js', 'js/extras.js', 'js/did.js', 'js/equip.js', 'js/world.js', 'js/quests.js', 'js/skills.js', 'js/combat.js', 'js/idle.js', 'js/devices.js', 'js/theme.js', 'js/a11y.js', 'js/uipresets.js', 'js/uidesign.js', 'js/perf.js', 'js/fx.js', 'js/lights.js', 'js/stage.js', 'js/systems.js', 'js/rig.js', 'js/anim.js', 'js/puppet.js', 'js/blink.js', 'js/plugins.js', 'js/menu.js', 'js/player-audio.js', 'js/player-menus.js', 'js/player-extras.js', 'js/player-world.js', 'js/relmsg.js', 'js/player-notify.js', 'js/player-skills.js', 'js/player-combat.js', 'js/player-idle.js', 'js/player.js', 'js/schema.js'];
   for (const f of engineFiles) await fs.promises.copyFile(path.join(rd, f), path.join(dest, 'engine', path.basename(f)));
   if (!packed) fs.writeFileSync(path.join(dest, 'engine', 'game-data.js'), 'window.VN_GAME = ' + JSON.stringify(data) + ';', 'utf8');
   try { fs.copyFileSync(path.join(__dirname, 'LICENSE'), path.join(dest, 'engine', 'LICENSE.txt')); } catch (e) { /* Lizenzdatei fehlt in der Entwicklung */ }
   const plugins = Object.entries(data.plugins || {}).filter(([, v]) => v && v.enabled).map(([k]) => k);
   const esc = (t) => String(t).replace(/[<&>]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
   const html = `<!doctype html>\n<html lang="${(data.languages && data.languages[0]) || 'de'}">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>${esc(data.title || 'Spiel')}</title>\n<link rel="stylesheet" href="engine/style.css">\n<style>html,body{background:#000;overflow:hidden}</style>\n</head>\n<body>\n<div id="player"></div><div id="toast"></div><div id="ctxmenu" hidden></div>\n` +
-    ['game-data.js', 'web-boot.js', 'vnpak.js', 'i18n-en.js', 'i18n-es.js', 'i18n-ja.js', 'core.js', 'i18n.js', 'audioout.js', 'logic.js', 'life.js', 'extras.js', 'did.js', 'equip.js', 'world.js', 'quests.js', 'skills.js', 'combat.js', 'idle.js', 'devices.js', 'theme.js', 'a11y.js', 'uipresets.js', 'uidesign.js', 'perf.js', 'fx.js', 'stage.js', 'systems.js', 'rig.js', 'anim.js', 'puppet.js', 'blink.js', 'plugins.js', 'menu.js', 'player-audio.js', 'player-menus.js', 'player-extras.js', 'player-world.js', 'relmsg.js', 'player-notify.js', 'player-skills.js', 'player-combat.js', 'player-idle.js', 'schema.js'].filter((f) => !(packed && f === 'game-data.js')).map((f) => `<script src="engine/${f}"></script>`).join('\n') + '\n' +
+    ['game-data.js', 'web-boot.js', 'vnpak.js', 'i18n-en.js', 'i18n-es.js', 'i18n-ja.js', 'core.js', 'i18n.js', 'audioout.js', 'logic.js', 'life.js', 'extras.js', 'did.js', 'equip.js', 'world.js', 'quests.js', 'skills.js', 'combat.js', 'idle.js', 'devices.js', 'theme.js', 'a11y.js', 'uipresets.js', 'uidesign.js', 'perf.js', 'fx.js', 'lights.js', 'stage.js', 'systems.js', 'rig.js', 'anim.js', 'puppet.js', 'blink.js', 'plugins.js', 'menu.js', 'player-audio.js', 'player-menus.js', 'player-extras.js', 'player-world.js', 'relmsg.js', 'player-notify.js', 'player-skills.js', 'player-combat.js', 'player-idle.js', 'schema.js'].filter((f) => !(packed && f === 'game-data.js')).map((f) => `<script src="engine/${f}"></script>`).join('\n') + '\n' +
     plugins.map((f) => `<script>VNPlugin._current = ${JSON.stringify(f)};</script><script src="plugins/${encodeURIComponent(f)}"></script>`).join('\n') + '\n<script src="engine/player.js"></script>\n<script>' + (packed ? 'VNWeb.startPacked("data.vnpak");' : 'VNWeb.start();') + '</script>\n</body>\n</html>\n';
   fs.writeFileSync(path.join(dest, 'index.html'), html, 'utf8');
   const localDe = packed ? 'Lokal testen: Gepackte Spiele brauchen einen Webserver (z. B. itch.io oder "npx serve" in diesem Ordner); per Doppelklick auf index.html startet das Spiel nicht.' : 'Lokal testen: index.html im Browser öffnen. Manche Browser blockieren dabei Bones-Animationen; auf itch.io oder einem Webserver funktioniert alles.';

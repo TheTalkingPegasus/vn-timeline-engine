@@ -690,6 +690,44 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Figuren: Puppen-Vorlage, feste Gelenke, Puppenspiel mit Pins, Ebenen-Figur mit Bones');
   } catch (e) { general.push('Figuren: ' + e.message); }
 
+  // 10. Licht (0.9.9): Lichtform, Ebenen in der Spielwelt, Kantenlicht-Filter auf einer Figur
+  try {
+    const r = JSON.parse(await js(`(async () => {
+      const out = [];
+      const s = Light.defaults('spot'); s.id = 't1'; s.lx = 50; s.ly = 0; s.lAngle = 90;
+      const G = Light.geom(s, 16 / 9);
+      if (!(G.I(16 / 9 / 2, 0.5) > 0.3)) out.push('Kegel unten zu dunkel');
+      if (!(G.I(0.05, 0.5) < 0.01)) out.push('Kegel zu breit');
+      const n = Light.defaults('neon'); n.id = 't2';
+      const Gn = Light.geom(n, 16 / 9);
+      if (!(Gn.haze(Gn.X0 + 0.02, Gn.Y0) > 0.8)) out.push('Röhre unsichtbar');
+      const host = document.createElement('div');
+      host.style.cssText = 'position:fixed;left:0;top:0;width:640px;height:360px';
+      const chars = document.createElement('div'); chars.className = 'chars-box'; host.appendChild(chars);
+      const fig = document.createElement('div'); fig.style.cssText = 'position:absolute;left:280px;top:100px;width:80px;height:220px';
+      const inner = document.createElement('canvas'); inner.width = 80; inner.height = 220; inner.style.cssText = 'width:80px;height:220px;display:block';
+      fig.appendChild(inner); chars.appendChild(fig);
+      const front = document.createElement('div'); host.appendChild(front);
+      document.body.appendChild(host);
+      const b = Light.defaults('back'); b.id = 't3'; b.lx = 50; b.ly = 55;
+      Light.sync(host, [s, b], { back: chars, front, figs: () => [[inner, false]] });
+      await new Promise((ok) => setTimeout(ok, 120));
+      if (host.querySelectorAll('.light-l').length < 4) out.push('Lichtebenen fehlen: ' + host.querySelectorAll('.light-l').length);
+      if (!host.querySelector('.light-dim')) out.push('keine Abdunklung');
+      const order = Array.from(host.children);
+      const back = host.querySelector('.light-l[data-light="t3"]'), spot = host.querySelector('.light-l[data-light="t1"]');
+      if (!(order.indexOf(back) < order.indexOf(chars) && order.indexOf(spot) > order.indexOf(chars))) out.push('Reihenfolge falsch');
+      if (!/url\\(/.test(inner.style.filter)) out.push('kein Figuren-Filter');
+      Light.sync(host, [], { figs: () => [[inner, false]] });
+      if (host.querySelectorAll('.light-l').length) out.push('Lichter bleiben übrig');
+      if (/url\\(/.test(inner.style.filter)) out.push('Filter bleibt');
+      host.remove();
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Licht: ' + r.join(', '));
+    else log('✓ Licht: Scheinwerfer, Neon, Gegenlicht, Reihenfolge der Ebenen, Kantenlicht auf Figuren');
+  } catch (e) { general.push('Licht: ' + e.message); }
+
   const failed = results.filter((r) => r.errors.length);
   for (const g of general) log('✗ ' + g);
   log(`\n${failed.length || general.length ? 'FEHLGESCHLAGEN' : 'ALLES BESTANDEN'}: ${results.length - failed.length}/${results.length} Projekte ok${general.length ? ', ' + general.length + ' allgemeine Fehler' : ''} · ${((Date.now() - t0) / 1000).toFixed(0)} s`);

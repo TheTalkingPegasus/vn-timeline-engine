@@ -14,7 +14,22 @@ Ohne Installation (ZIP):
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
 
-NEU IN 0.9.9 · TV-Filter: Röhrenfernseher, LCD und RGB-Split
+NEU IN 0.9.9 · Lichtquellen, TV-Filter (Röhrenfernseher, LCD, RGB-Split)
+- Neue Effekt-Art „Licht“ auf Effekt-Spuren und im Hub: Scheinwerfer, Lampe / Lichtkreis, Neonröhre und Gegenlicht.
+  Farbe, Helligkeit, Größe bzw. Reichweite, Breite des Kegels, Richtung, weiche Kante, Nebel im Licht und Flackern
+  sind einstellbar; Scheinwerfer können hin und her schwenken. Die Szene drumherum wird abgedunkelt, das Licht hellt
+  auf, worauf es fällt.
+- Licht auf Figuren: Kantenlicht von der Seite, auf der die Lampe steht, und ein Farbschimmer, der stärker wird, je
+  näher die Figur am Licht steht. Wandert mit, wenn sich Figuren oder die Kamera bewegen.
+- Gegenlicht liegt hinter den Figuren: Sie werden zur Silhouette mit leuchtendem Saum und einem Schein in der
+  Lichtfarbe. „Silhouette“ stellt ein, wie gut die Figur noch zu erkennen ist.
+- Staubflusen im Licht: schweben langsam und leuchten nur im Lichtkegel auf, in der Lichtfarbe (Menge und Größe).
+- Passt zum Parallax: Jedes Licht hat eine eigene Tiefe und wandert bei Kamerafahrten mit seiner Ebene; vordere
+  Ebenen bleiben dunkel vor dem Licht.
+- Lichter mit der Maus auf der Bühne platzieren wie Hitboxen; Scheinwerfer und Neonröhre haben einen zweiten Punkt für
+  Richtung und Reichweite. Im Hub können Lichter an Bedingungen hängen (🔒, z. B. Laternen nur nachts) und
+  beleuchten auch die Hub-Objekte.
+- AVIF-Bilder lassen sich jetzt auch in der Desktop-App importieren.
 - Neuer Filter „Röhren-Fernseher“ auf Effekt-Spuren: gewölbtes Bild mit runden, dunklen Rändern, Bildzeilen,
   Flimmern und ein heller Streifen, der von oben nach unten gleitet. Wölbung, Bildzeilen, Flimmern, Ränder,
   Streifen an/aus und seine Geschwindigkeit sind einstellbar. Dialoge und Menüs bleiben scharf darüber.

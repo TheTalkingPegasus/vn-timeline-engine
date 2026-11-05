@@ -9,6 +9,7 @@
     if (t.kind === 'video' && c.anim) { const an = window.Anim && Anim.get(c.anim); return '🎬 ' + (an ? an.name : 'Animation fehlt') + ' · live'; }
     if (t.kind === 'video') { const a = VN.asset(c.asset); return (a ? a.name : 'kein Video gewählt') + (c.layer === 'front' ? ' · Zwischensequenz' : ' · Hintergrund'); }
     if (t.kind === 'overlay' && c.particles) return '✦ ' + ((Fx.PARTICLES.find((x) => x[0] === c.particles) || [0, 'Partikel'])[1]);
+    if (t.kind === 'overlay' && c.light && window.Light) return '💡 ' + ((Light.KINDS.find((x) => x[0] === c.light) || [0, 'Licht'])[1]);
     if (t.kind === 'overlay' && c.filter) return '◐ ' + ((Fx.FILTERS.find((x) => x[0] === c.filter) || [0, 'Filter'])[1]);
     if (t.kind === 'overlay' && c.eyes) return '👁 ' + ((Fx.EYE_MODES.find((x) => x[0] === c.eyes) || [0, 'Augen'])[1]).split(' (')[0];
     if (t.kind === 'dialog' && c.chat) return '📱 ' + (c.speaker ? c.speaker + ': ' : '') + Fx.plain(c.text || '…');
@@ -358,6 +359,7 @@
       wrap.appendChild(stage);
       root.appendChild(wrap);
       Stage.renderStory(stage, s, VN.ui.beat);
+      if (window.Light) { const w = stage.querySelector(':scope > .world'); if (w && w._lightClips && w._lightClips.length) requestAnimationFrame(() => requestAnimationFrame(() => { if (stage.isConnected) Light.handles(stage, w); })); }
       if (VN.ui.fmtPreview) Export.formatOverlay(stage, VN.ui.fmtPreview);
       Story._ro = Stage.fit(wrap, stage);
       // Figuren auf der Bühne ziehen: waagerecht = Position, senkrecht = Höhe (bei einem Keyframe im aktuellen Schritt wird der Keyframe geändert)

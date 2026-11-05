@@ -58,6 +58,7 @@
     },
     // Alle Ebenen mit data-depth nach der Kamera ausrichten
     applyCam(world, cam, dur, ease) {
+      world._vnCam = cam;
       for (const n of world.querySelectorAll('[data-depth]')) {
         n.style.transition = dur ? `transform ${dur}s ${Fx.ease(ease)}` : 'none';
         n.style.transform = Fx.camTransform(cam, Number(n.dataset.depth), n.classList.contains('bg-box') || n.classList.contains('par-layer'));

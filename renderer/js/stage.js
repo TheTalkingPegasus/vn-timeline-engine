@@ -147,6 +147,8 @@
 
     fxEl(clip, cls) {
       const box = el('div', { class: cls || 'fx-layer' });
+      // Licht (0.9.9): die Ebenen baut Light.sync direkt in der Spielwelt, hier nur ein Platzhalter
+      if (clip.light) { box.classList.add('fx-light'); return box; }
       if (clip.particles && window.Fx) { box.classList.add('fx-parts'); box.appendChild(Fx.particleEl(clip)); return box; }
       if (clip.eyes && window.Fx) { box.classList.add('fx-eyes'); box.appendChild(Fx.eyesEl(clip, cls === 'fx-layer')); return box; }
       if (clip.filter) {
@@ -283,6 +285,10 @@
       // Augen auf/zu immer ganz vorne über allen Effekten (0.7.7)
       stage.querySelectorAll(':scope > .fx-eyes').forEach((n) => { n.style.zIndex = '4'; stage.appendChild(n); });
       if (st.cam) Fx.applyCam(world, st.cam, 0);
+      // Lichtquellen (0.9.9)
+      const lights = [st.fx, ...(st.fxX || []).map((x) => x[1])].filter((c) => c && c.light);
+      world._lightClips = lights;
+      if (lights.length && window.Light) requestAnimationFrame(() => { if (world.isConnected) Light.sync(world, lights, { back: charsBox, front: fxBox, figs: () => Array.from(charsBox.children).map((b) => [b.firstElementChild, false]), fronts: () => Array.from(world.querySelectorAll(':scope > .chars-box ~ .par-layer')) }); });
       if (st.video && st.video.layer === 'front' && vidOk(st.video)) { const v = Stage.videoEl(st.video, false); v.dataset.clip = st.video.id; stage.appendChild(v); }
       // Licht passend zur Szene
       if (st.bg && st.bg.charLight) {

@@ -253,12 +253,24 @@
     if (!world) return;
     const clips = [run.fx && run.fx.clip, ...Object.values(run.fxx || {}).map((x) => x.clip)].filter((c) => c && c.filter);
     world.style.transition = 'filter 0.8s';
+    syncLights();
     if (!clips.length) { world._vnf = []; world.style.filter = ''; return; }
     Fx.bindFilters(world, clips);
   };
+  // Lichtquellen (0.9.9): Scheinwerfer, Lampen, Neon, Gegenlicht – in Szenen und Hubs
+  const syncLights = () => {
+    if (!world || !window.Light) return;
+    const clips = [run && run.fx && run.fx.clip, ...Object.values((run && run.fxx) || {}).map((x) => x.clip)].filter((c) => c && c.light);
+    if (!clips.length && !world._light) return;
+    Light.sync(world, clips, {
+      back: charsBox, front: fxBox, fade: true,
+      figs: () => Array.from(charsBox.children).map((b) => [b.firstElementChild, false]).concat(Array.from(hubBox.querySelectorAll('.pl-hobj > img')).map((i) => [i, true])),
+      fronts: () => [parFront]
+    });
+  };
 
   // Partikel eines Hubs (0.9.5): Regen, Schnee, Glühwürmchen … – optional nur unter Bedingungen (Tageszeit, Jahreszeit …)
-  const hubFx = (s) => (s && s.type === 'hub' ? (s.fx || []).filter((c) => c.particles && VN.checkConds(c.conds || [], run.rs)).map((c) => ['hub:' + c.id, c]) : []);
+  const hubFx = (s) => (s && s.type === 'hub' ? (s.fx || []).filter((c) => (c.particles || c.light) && VN.checkConds(c.conds || [], run.rs)).map((c) => ['hub:' + c.id, c]) : []);
   const showFx = (clip) => {
     const id = clip ? clip.id : null;
     if (run.fx && run.fx.id === id) return;
@@ -1030,7 +1042,7 @@
     for (const n of stage.querySelectorAll('.pl-end, .plugin-overlay, .pl-spot, .pl-pointer, .dv-back, .dv-note-wrap')) n.remove();
     devCtl = null;
     charsBox.innerHTML = ''; fxBox.innerHTML = ''; hubBox.innerHTML = ''; dlgBox.hidden = true; choiceBox.hidden = true; msgBox.hidden = true; gainBox.hidden = true;
-    partBox.innerHTML = ''; eyeBox.innerHTML = ''; phoneBox.innerHTML = ''; parBack.innerHTML = ''; parFront.innerHTML = ''; world.style.filter = ''; world._vnf = [];
+    partBox.innerHTML = ''; eyeBox.innerHTML = ''; phoneBox.innerHTML = ''; parBack.innerHTML = ''; parFront.innerHTML = ''; world.style.filter = ''; world._vnf = []; if (window.Light && world._light) { Light.sync(world, [], { fronts: () => [parFront] }); }
     stage.querySelectorAll('.vid-layer, .gl-pop').forEach((n) => n.remove());
     Fx.applyCam(world, Fx.CAM0, 0);
     bgLayers.forEach((b) => { b.style.transition = 'none'; b.style.opacity = '0'; });

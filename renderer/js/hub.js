@@ -61,6 +61,14 @@
       // Partikel des Hubs als Vorschau (0.9.5)
       if ((s.fx || []).some((c) => c.particles)) { const clip = el('div', { style: { position: 'absolute', inset: '0', overflow: 'hidden', pointerEvents: 'none', zIndex: '3' } }); for (const c of s.fx) if (c.particles) clip.appendChild(Stage.fxEl(c)); stage.appendChild(clip); }
       for (const o of s.objects) stage.appendChild(Hub.objEl(s, o, stage));
+      // Lichter (0.9.9): beleuchten Hintergrund und Objekte, Lampe mit der Maus verschieben
+      const hl = (s.fx || []).filter((c) => c.light);
+      if (hl.length && window.Light) requestAnimationFrame(() => {
+        if (!stage.isConnected) return;
+        const first = stage.querySelector(':scope > .hub-obj');
+        Light.sync(stage, hl, { back: first, front: first, figs: () => Array.from(stage.querySelectorAll(':scope > .hub-obj > img')).map((i) => [i, true]) });
+        requestAnimationFrame(() => Light.handles(stage, stage));
+      });
 
       stage.addEventListener('mousedown', (e) => {
         if (e.target === stage || e.target.classList.contains('bg-img') || e.target.classList.contains('placeholder')) {

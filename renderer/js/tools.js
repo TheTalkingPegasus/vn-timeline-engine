@@ -97,12 +97,13 @@
 
     // ---------- Effekt-Ebene: Farbe/Bild, Partikel oder Filter ----------
     fxMode(c) {
-      const mode = c.particles ? 'particles' : c.filter ? 'filter' : c.eyes ? 'eyes' : 'layer';
+      const mode = c.light ? 'light' : c.particles ? 'particles' : c.filter ? 'filter' : c.eyes ? 'eyes' : 'layer';
       const box = el('div', { class: 'opt-card' },
-        el('div', { class: 'seg' }, ...[['layer', 'Farbe / Bild'], ['particles', 'Partikel'], ['filter', 'Filter'], ['eyes', 'Augen']].map(([m, l]) => el('button', {
+        el('div', { class: 'seg' }, ...[['layer', 'Farbe / Bild'], ['particles', 'Partikel'], ['filter', 'Filter'], ['light', 'Licht'], ['eyes', 'Augen']].map(([m, l]) => el('button', {
           class: mode === m ? 'active' : '',
-          onclick: () => VN.mutate(() => { delete c.particles; delete c.filter; delete c.eyes; if (m === 'particles') Object.assign(c, { particles: 'rain' }, Fx.PART_DEF.rain); if (m === 'filter') c.filter = 'flashback'; if (m === 'eyes') Object.assign(c, Fx.EYE_DEF, { eyes: 'open' }); })
+          onclick: () => VN.mutate(() => { delete c.particles; delete c.filter; delete c.eyes; if (window.Light) for (const k of Object.keys(Light.DEF.spot).concat(['light', 'lDepth', 'lSil', 'lSweep', 'lSweepSpeed', 'lLen', 'lDustAmt', 'lDustSize', 'lFlicker'])) delete c[k]; if (m === 'light') Object.assign(c, Light.defaults('spot')); if (m === 'particles') Object.assign(c, { particles: 'rain' }, Fx.PART_DEF.rain); if (m === 'filter') c.filter = 'flashback'; if (m === 'eyes') Object.assign(c, Fx.EYE_DEF, { eyes: 'open' }); })
         }, l))));
+      if (mode === 'light' && window.Light) box.append(...Light.fields(c, { rng, check, set, field, sel }));
       if (mode === 'particles') {
         box.append(
           field('Art', sel(c.particles, Fx.PARTICLES, (v) => VN.mutate(() => { Object.assign(c, Fx.PART_DEF[v], { particles: v }); }))),
