@@ -207,11 +207,13 @@
   const sm = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
   // Gitter über das Bild mit Gewichten je Naht (gecacht, solange sich Teil, Nähte und Ruhe-Lage nicht ändern)
   // ext: Nähte an Teile einer anderen Figur (Zwischensequenz): { id, pts, soft, rel } – rel = eigenes Bild → Bild des Ziels
-  P.seamMesh = (pup, p, rest, ext) => {
+  // holds: Haftpunkte dieses Teils, die in einer Animation an einer Stelle festgehalten werden ({ id, u, v, soft })
+  P.seamMesh = (pup, p, rest, ext, holds) => {
     const seams = rest ? P.seamsOf(pup, p) : [];
-    ext = ext || [];
-    if (!seams.length && !ext.length) return null;
-    const key = JSON.stringify([p.w, p.h, p.flipX, seams, ext, rest && rest[p.id], rest && seams.map((s) => rest[s.to]), p.tx, p.ty, p.ax, p.ay]);
+    ext = ext || []; holds = holds || [];
+    if (!seams.length && !ext.length && !holds.length) return null;
+    const hk = holds.map((h) => [h.id, h.u, h.v, h.soft]);
+    const key = JSON.stringify([p.w, p.h, p.flipX, seams, ext, hk, rest && rest[p.id], rest && seams.map((s) => rest[s.to]), p.tx, p.ty, p.ax, p.ay]);
     if (p._sm && p._sm.key === key) return p._sm;
     const L = Math.max(p.w, p.h), cell = L / 18;
     const nx = Math.max(3, Math.min(30, Math.round(p.w / cell))), ny = Math.max(3, Math.min(30, Math.round(p.h / cell)));
@@ -228,7 +230,9 @@
         return a.side * b.side < 0 ? 1 : sm(1 - a.d / R0);
       };
       const ws = seams.map((s) => ({ w: wOf(s), q: ap(inv(rest[s.to]), W0[0], W0[1]), to: s.to }))
-        .concat(ext.map((s) => ({ w: wOf(s), q: ap(s.rel, u, v), ext: s.id })));
+        .concat(ext.map((s) => ({ w: wOf(s), q: ap(s.rel, u, v), ext: s.id })))
+        // Haftpunkt: rund um den Punkt (weich auslaufend) wird das Bild zur festgehaltenen Stelle gezogen = Dehnen
+        .concat(holds.map((h) => ({ w: sm(1 - Math.hypot(u - h.u, v - h.v) / Math.max(6, (Number(h.soft) || 60) / 100 * Math.max(p.w, p.h))), hold: h.id })));
       vs.push({ iu, iv, u, v, ws });
     }
     const tris = [];
@@ -273,6 +277,7 @@
     const mats = P.solve(pup, pose, t, st, dt, deform);
     const rest = pup.parts.some((p) => p.seams && p.seams.length) ? P.solve(pup, null, null, null, 0) : null;
     const extS = opts.extSeams || [];
+    const holdL = opts.holds || [];
     const out = {};
     const keep = ctx.getTransform();
     const k = [keep.a, keep.b, keep.c, keep.d, keep.e, keep.f];
@@ -287,7 +292,8 @@
       const ov = opts.override && opts.override[p.id];
       // Angenähtes Teil: als verformtes Gitter zeichnen
       const myExt = extS.filter((s) => s.part === p.id && opts.ext && opts.ext[s.id]);
-      const mesh = (rest || myExt.length) && (ov || inst || (res && res.imgs[p.id])) ? P.seamMesh(pup, p, rest, myExt) : null;
+      const myHolds = holdL.filter((h) => h.part === p.id);
+      const mesh = (rest || myExt.length || myHolds.length) && (ov || inst || (res && res.imgs[p.id])) ? P.seamMesh(pup, p, rest, myExt, myHolds) : null;
       if (mesh) {
         const im = res && res.imgs[p.id], PAD = window.Rig ? Rig.PAD : 0.15;
         // Ausschnitt (Bild-Koordinaten) aus der Quelle zeichnen
@@ -300,7 +306,12 @@
           for (const s of q.ws) {
             if (!s.w) continue;
             let tx, ty;
-            if (s.ext) [tx, ty] = ap(opts.ext[s.ext], s.q[0], s.q[1]);
+            if (s.hold) {
+              const h = myHolds.find((x) => x.id === s.hold);
+              if (!h) continue;
+              const [hx, hy] = ap(M, h.u, h.v), [ox, oy] = ap(M, q.u, q.v);
+              tx = ox + h.x - hx; ty = oy + h.y - hy;
+            } else if (s.ext) [tx, ty] = ap(opts.ext[s.ext], s.q[0], s.q[1]);
             else {
               if (!mats[s.to]) continue;
               const df = deform ? deform(s.to, s.q[0], s.q[1]) : null;

@@ -101,6 +101,19 @@
     },
     loadImg(url) { return new Promise((res, rej) => { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => res(im); im.onerror = rej; im.src = url; }); },
     // Ein Bild der Animation zeichnen; liefert für jeden Darsteller die Umrechnung Bild → Canvas
+    // Festgehaltene Haftpunkte einer Puppe (0.9.13): actor.holds = { Haftpunkt-ID: { x, y } } in Szenen-Anteilen (0–1)
+    holdsFor(it, cmNow, camM, W, H) {
+      const a = it.actor, pup = a && a.puppet && Puppet.get(a.puppet);
+      if (!pup || !a.holds) return [];
+      const out = [], toLocal = Puppet.m.mul(Puppet.m.inv(cmNow), camM);
+      for (const p of pup.parts) for (const hp of p.holdPts || []) {
+        const h = a.holds[hp.id];
+        if (!h) continue;
+        const [x, y] = Puppet.m.ap(toLocal, h.x * W, h.y * H);
+        out.push({ id: hp.id, part: p.id, u: hp.u, v: hp.v, soft: hp.soft, x, y });
+      }
+      return out;
+    },
     draw(ctx, sc, t, dt, opts = {}) {
       const W = ctx.canvas.width, H = ctx.canvas.height;
       const anim = sc.anim;
@@ -122,6 +135,8 @@
       }
       const maps = [];
       const smearOn = !!(window.Smear && dt > 0 && opts.alpha == null);
+      // Kamera-Matrix (Szene → Leinwand), für festgehaltene Haftpunkte (0.9.13)
+      const camM = (() => { const m = ctx.getTransform(); return [m.a, m.b, m.c, m.d, m.e, m.f]; })();
       // Nähte zwischen Figuren (0.9.12): zuerst die Lage aller Puppenteile, damit eine Figur an eine andere angenäht sein kann
       const placeOf = (it, a) => {
         const pl = Anim.place(a, t);
@@ -143,10 +158,11 @@
       }
       const extFor = (it, cmNow) => {
         const L = (it.actor.seams || []).filter((s) => s.toActor && s.toPart);
-        if (!L.length) return {};
+        const holds = Anim.holdsFor(it, cmNow, camM, W, H);
+        if (!L.length) return holds.length ? { holds } : {};
         const ext = {}, icm = Puppet.m.inv(cmNow);
         for (const s of L) { const tg = sc.items.find((x) => x.actor.id === s.toActor); if (tg && tg._wm && tg._wm[s.toPart]) ext[s.id] = Puppet.m.mul(icm, tg._wm[s.toPart]); }
-        return { extSeams: L, ext };
+        return { extSeams: L, ext, holds };
       };
       for (const it of sc.items) {
         const a = it.actor;
@@ -199,6 +215,7 @@
         }
         ctx.restore();
         maps.push({ it, map, base: [baseX, baseY], boxH });
+        maps.cam = camM;
       }
       ctx.restore();
       return maps;

@@ -14,10 +14,17 @@ Ohne Installation (ZIP):
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
 
-NEU IN 0.9.13 · Die Naht wird zum Gelenk
+NEU IN 0.9.13 · Haftpunkte, die Naht wird zum Gelenk
+- Haftpunkte für Gliederpuppen („📌 Haftpunkte“ im Puppen-Editor): Punkte auf Körperteilen setzen wie Pins bei den
+  Bones – Handfläche, Ferse, Knie. Im Animations-Editor hält ein Doppelklick auf den Punkt diese Stelle fest: Bewegst
+  du die Figur, bleibt die Stelle kleben, die Glieder beugen sich dorthin, und wo sie nicht reichen, dehnt sich das
+  Bild. Die Reichweite der Dehnung ist pro Punkt einstellbar.
 - Wird ein Teil an ein anderes genäht, hängt es jetzt an diesem Teil und dreht sich um die Mitte der Naht – der alte
   Pin, der irgendwo im Bild liegen konnte, versetzt es nicht mehr. Das Teil bewegt sich mit dem Bild, an das es genäht
   ist. Für schon gezogene Nähte gibt es den Knopf „📍 Gelenk auf die Naht legen“.
+- Animations-Editor: Alt + Ziehen an einem beliebigen Teil einer Gliederpuppe verschiebt die ganze Figur (wie das
+  gelbe Quadrat und die Pfeile); die Hilfezeile erklärt das jetzt. Wird das Haupt-Teil (Körper) an ein anderes Teil
+  genäht, hängt nicht mehr die ganze Figur daran.
 - Doppelklick auf ein Körperteil im Puppen-Editor geht jetzt auch beim Bauen: Er schaltet „Ausprobieren“ ein und
   pinnt das Teil gleich fest.
 
