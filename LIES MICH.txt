@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.8
+VN Timeline Engine · Prototyp 0.9.9
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,16 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.9 · TV-Filter: Röhrenfernseher, LCD und RGB-Split
+- Neuer Filter „Röhren-Fernseher“ auf Effekt-Spuren: gewölbtes Bild mit runden, dunklen Rändern, Bildzeilen,
+  Flimmern und ein heller Streifen, der von oben nach unten gleitet. Wölbung, Bildzeilen, Flimmern, Ränder,
+  Streifen an/aus und seine Geschwindigkeit sind einstellbar. Dialoge und Menüs bleiben scharf darüber.
+- Neuer Filter „LCD-Fernseher“: feines Raster aus roten, grünen und blauen Bildpunkten und zarte Linien, wie ein
+  moderner Fernseher aus der Nähe (Stärke, Linien, Rastergröße).
+- Neuer Filter „RGB-Split“: Rot und Blau gegeneinander verschoben, Versatz, Richtung und Zittern (Glitch) einstellbar.
+  Filter auf mehreren Effekt-Spuren lassen sich kombinieren, z. B. Röhre + RGB-Split.
+- Mit „Ruhige Darstellung“ (Barrierefreiheit) oder weniger Bewegung im System sind Streifen und Flimmern aus.
 
 NEU IN 0.9.8 · Bones für Ebenen-Figuren, Puppenspiel mit festgepinnten Gliedern, feste Gelenke, Vorlage „Mensch“
 - Ebenen-Figuren (Körper, Gesicht, Outfit) können jetzt Bones nutzen: Bones am Bild der untersten Ebene einrichten,

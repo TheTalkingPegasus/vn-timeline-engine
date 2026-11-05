@@ -3948,7 +3948,24 @@ window.VN_I18N_EN = {
 "Gelenk begrenzen": "Limit the joint",
 "Von °": "From °",
 "Bis °": "To °",
-"Wie weit sich das Teil gegenüber der Ruhe-Lage drehen darf (positiv = Ende wandert nach links). So knicken Knie und Ellbogen beim Puppenspiel nur in eine Richtung.": "How far the part may rotate from its rest position (positive = the end moves to the left). This way knees and elbows only bend one way when puppeteering."
+"Wie weit sich das Teil gegenüber der Ruhe-Lage drehen darf (positiv = Ende wandert nach links). So knicken Knie und Ellbogen beim Puppenspiel nur in eine Richtung.": "How far the part may rotate from its rest position (positive = the end moves to the left). This way knees and elbows only bend one way when puppeteering.",
+"Röhren-Fernseher": "CRT TV",
+"LCD-Fernseher": "LCD TV",
+"RGB-Split": "RGB split",
+"Wölbung der Röhre": "Screen curvature",
+"flach": "flat",
+"Bildzeilen": "Scanlines",
+"Flimmern": "Flicker",
+"Dunkle Ränder": "Dark edges",
+"Streifen gleitet von oben nach unten": "Band rolls from top to bottom",
+"Dauer eines Durchlaufs": "Duration of one pass",
+"Pixelraster": "Pixel grid",
+"Feine Linien": "Fine lines",
+"Rastergröße": "Grid size",
+"Zittern (Glitch)": "Jitter (glitch)",
+"Wie ein alter Röhrenfernseher: gewölbtes Bild mit runden, dunklen Rändern, Bildzeilen, Flimmern und ein heller Streifen, der durchs Bild gleitet. Dialoge und Menüs bleiben scharf darüber.": "Like an old CRT TV: a curved picture with round, dark edges, scanlines, flicker and a bright band rolling through the image. Dialogue and menus stay sharp on top.",
+"Wie ein moderner Fernseher aus der Nähe: feines Raster aus roten, grünen und blauen Bildpunkten und zarte Linien.": "Like a modern TV seen up close: a fine grid of red, green and blue pixels and delicate lines.",
+"Rot und Blau werden gegeneinander verschoben – wie eine verstellte Kamera oder ein Bildfehler. Mit Zittern springt der Versatz (Glitch). Lässt sich mit anderen Filtern auf weiteren Effekt-Spuren kombinieren.": "Red and blue are shifted against each other – like a misaligned camera or a picture glitch. With jitter the offset jumps (glitch). Can be combined with other filters on further effect tracks."
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",

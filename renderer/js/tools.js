@@ -120,8 +120,28 @@
           field('Lider', sel(c.eyesColor || 'black', [['black', 'Schwarz'], ['red', 'Rötlich (Licht scheint durch)']], set(c, 'eyesColor'))),
           el('div', { class: 'muted small' }, 'Sicht der Figur: „Öffnen“ beginnt mit geschlossenen Augen, blinzelt und wird langsam scharf. „Schließen“ endet schwarz, bis der Clip vorbei ist. Testen mit ▶ ab Schritt.'));
       } else if (mode === 'filter') {
-        box.append(field('Filter', sel(c.filter, Fx.FILTERS, set(c, 'filter'))),
-          el('div', { class: 'muted small' }, 'Der Filter färbt Hintergrund und Figuren um. „Rückblende“ bringt Sepia und weiche, helle Ränder mit.'));
+        const v = (k) => Fx.fv(c, k);
+        box.append(field('Filter', sel(c.filter, Fx.FILTERS, set(c, 'filter'))));
+        // Fernseh-Filter (0.9.9)
+        if (c.filter === 'crt') box.append(
+          rng('Wölbung der Röhre', v('crtCurve'), 0, 100, 1, (x) => (x ? x + ' %' : 'flach'), set(c, 'crtCurve')),
+          rng('Bildzeilen', v('crtLines'), 0, 100, 1, (x) => (x ? x + ' %' : 'aus'), set(c, 'crtLines')),
+          rng('Flimmern', v('crtFlicker'), 0, 100, 1, (x) => (x ? x + ' %' : 'aus'), set(c, 'crtFlicker')),
+          rng('Dunkle Ränder', v('crtEdge'), 0, 100, 1, (x) => (x ? x + ' %' : 'aus'), set(c, 'crtEdge')),
+          el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!v('crtRoll'), onchange: (e) => set(c, 'crtRoll')(e.target.checked) }), 'Streifen gleitet von oben nach unten'),
+          v('crtRoll') ? rng('Dauer eines Durchlaufs', v('crtRollSpeed'), 1, 20, 0.5, (x) => x + ' s', set(c, 'crtRollSpeed')) : null);
+        else if (c.filter === 'lcd') box.append(
+          rng('Pixelraster', v('lcdStrength'), 0, 100, 1, (x) => (x ? x + ' %' : 'aus'), set(c, 'lcdStrength')),
+          rng('Feine Linien', v('lcdLines'), 0, 100, 1, (x) => (x ? x + ' %' : 'aus'), set(c, 'lcdLines')),
+          rng('Rastergröße', v('lcdSize'), 1, 4, 1, (x) => x + '×', set(c, 'lcdSize')));
+        else if (c.filter === 'rgb') box.append(
+          rng('Versatz', v('rgbShift'), 0, 40, 1, (x) => (x ? x : 'aus'), set(c, 'rgbShift')),
+          rng('Richtung', v('rgbAngle'), 0, 180, 5, (x) => x + '°', set(c, 'rgbAngle')),
+          rng('Zittern (Glitch)', v('rgbJitter'), 0, 100, 1, (x) => (x ? x + ' %' : 'aus'), set(c, 'rgbJitter')));
+        box.append(el('div', { class: 'muted small' }, c.filter === 'crt' ? 'Wie ein alter Röhrenfernseher: gewölbtes Bild mit runden, dunklen Rändern, Bildzeilen, Flimmern und ein heller Streifen, der durchs Bild gleitet. Dialoge und Menüs bleiben scharf darüber.'
+          : c.filter === 'lcd' ? 'Wie ein moderner Fernseher aus der Nähe: feines Raster aus roten, grünen und blauen Bildpunkten und zarte Linien.'
+          : c.filter === 'rgb' ? 'Rot und Blau werden gegeneinander verschoben – wie eine verstellte Kamera oder ein Bildfehler. Mit Zittern springt der Versatz (Glitch). Lässt sich mit anderen Filtern auf weiteren Effekt-Spuren kombinieren.'
+          : 'Der Filter färbt Hintergrund und Figuren um. „Rückblende“ bringt Sepia und weiche, helle Ränder mit.'));
       }
       return box;
     },

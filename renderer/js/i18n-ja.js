@@ -4009,7 +4009,24 @@ window.VN_I18N_JA = {
 "Gelenk begrenzen": "関節を制限",
 "Von °": "最小 °",
 "Bis °": "最大 °",
-"Wie weit sich das Teil gegenüber der Ruhe-Lage drehen darf (positiv = Ende wandert nach links). So knicken Knie und Ellbogen beim Puppenspiel nur in eine Richtung.": "基本姿勢からどこまで回転できるか(正 = 端が左へ動く)。これで人形操作中、ひざやひじは一方向にしか曲がりません。"
+"Wie weit sich das Teil gegenüber der Ruhe-Lage drehen darf (positiv = Ende wandert nach links). So knicken Knie und Ellbogen beim Puppenspiel nur in eine Richtung.": "基本姿勢からどこまで回転できるか(正 = 端が左へ動く)。これで人形操作中、ひざやひじは一方向にしか曲がりません。",
+"Röhren-Fernseher": "ブラウン管テレビ",
+"LCD-Fernseher": "液晶テレビ",
+"RGB-Split": "RGBずれ",
+"Wölbung der Röhre": "画面の湾曲",
+"flach": "平ら",
+"Bildzeilen": "走査線",
+"Flimmern": "ちらつき",
+"Dunkle Ränder": "暗い縁",
+"Streifen gleitet von oben nach unten": "帯が上から下へ流れる",
+"Dauer eines Durchlaufs": "1回の通過時間",
+"Pixelraster": "画素グリッド",
+"Feine Linien": "細い線",
+"Rastergröße": "グリッドサイズ",
+"Zittern (Glitch)": "揺れ(グリッチ)",
+"Wie ein alter Röhrenfernseher: gewölbtes Bild mit runden, dunklen Rändern, Bildzeilen, Flimmern und ein heller Streifen, der durchs Bild gleitet. Dialoge und Menüs bleiben scharf darüber.": "古いブラウン管テレビのように: 丸く暗い縁の湾曲した画面、走査線、ちらつき、画面を流れる明るい帯。セリフとメニューはその上でくっきり表示されます。",
+"Wie ein moderner Fernseher aus der Nähe: feines Raster aus roten, grünen und blauen Bildpunkten und zarte Linien.": "近くで見た現代のテレビのように: 赤・緑・青の画素の細かいグリッドと繊細な線。",
+"Rot und Blau werden gegeneinander verschoben – wie eine verstellte Kamera oder ein Bildfehler. Mit Zittern springt der Versatz (Glitch). Lässt sich mit anderen Filtern auf weiteren Effekt-Spuren kombinieren.": "赤と青が互いにずれます — ずれたカメラや映像の乱れのように。揺れを入れるとずれが跳ねます(グリッチ)。他のエフェクトトラックの別のフィルターと組み合わせられます。"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

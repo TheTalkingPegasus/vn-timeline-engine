@@ -4009,7 +4009,24 @@ window.VN_I18N_ES = {
 "Gelenk begrenzen": "Limitar la articulación",
 "Von °": "Desde °",
 "Bis °": "Hasta °",
-"Wie weit sich das Teil gegenüber der Ruhe-Lage drehen darf (positiv = Ende wandert nach links). So knicken Knie und Ellbogen beim Puppenspiel nur in eine Richtung.": "Cuánto puede girar la parte respecto a su posición de reposo (positivo = el extremo va a la izquierda). Así rodillas y codos solo se doblan en un sentido al manejar la marioneta."
+"Wie weit sich das Teil gegenüber der Ruhe-Lage drehen darf (positiv = Ende wandert nach links). So knicken Knie und Ellbogen beim Puppenspiel nur in eine Richtung.": "Cuánto puede girar la parte respecto a su posición de reposo (positivo = el extremo va a la izquierda). Así rodillas y codos solo se doblan en un sentido al manejar la marioneta.",
+"Röhren-Fernseher": "Televisor de tubo",
+"LCD-Fernseher": "Televisor LCD",
+"RGB-Split": "Separación RGB",
+"Wölbung der Röhre": "Curvatura del tubo",
+"flach": "plano",
+"Bildzeilen": "Líneas de barrido",
+"Flimmern": "Parpadeo",
+"Dunkle Ränder": "Bordes oscuros",
+"Streifen gleitet von oben nach unten": "Una franja se desliza de arriba abajo",
+"Dauer eines Durchlaufs": "Duración de una pasada",
+"Pixelraster": "Rejilla de píxeles",
+"Feine Linien": "Líneas finas",
+"Rastergröße": "Tamaño de la rejilla",
+"Zittern (Glitch)": "Temblor (glitch)",
+"Wie ein alter Röhrenfernseher: gewölbtes Bild mit runden, dunklen Rändern, Bildzeilen, Flimmern und ein heller Streifen, der durchs Bild gleitet. Dialoge und Menüs bleiben scharf darüber.": "Como un viejo televisor de tubo: imagen curvada con bordes redondos y oscuros, líneas de barrido, parpadeo y una franja clara que recorre la imagen. Diálogos y menús siguen nítidos encima.",
+"Wie ein moderner Fernseher aus der Nähe: feines Raster aus roten, grünen und blauen Bildpunkten und zarte Linien.": "Como un televisor moderno visto de cerca: una rejilla fina de píxeles rojos, verdes y azules y líneas suaves.",
+"Rot und Blau werden gegeneinander verschoben – wie eine verstellte Kamera oder ein Bildfehler. Mit Zittern springt der Versatz (Glitch). Lässt sich mit anderen Filtern auf weiteren Effekt-Spuren kombinieren.": "El rojo y el azul se desplazan entre sí, como una cámara desajustada o un fallo de imagen. Con temblor, el desplazamiento salta (glitch). Se puede combinar con otros filtros en más pistas de efectos."
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

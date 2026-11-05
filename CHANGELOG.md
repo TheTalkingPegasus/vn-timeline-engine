@@ -2,6 +2,16 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.9 – TV filters: CRT, LCD and RGB split
+- New filter “CRT TV” on effect tracks: curved picture with round, dark edges, scanlines, flicker and a bright band
+  that rolls from top to bottom. Curvature, scanlines, flicker, edges, band on/off and its speed are adjustable.
+  Dialogue and menus stay sharp on top.
+- New filter “LCD TV”: a fine grid of red, green and blue pixels and delicate lines, like a modern TV seen up close
+  (strength, lines, grid size).
+- New filter “RGB split”: red and blue shifted against each other, with adjustable offset, direction and optional
+  jitter (glitch). Filters on several effect tracks combine, e.g. CRT + RGB split.
+- With “Calm display” (accessibility) or reduced motion in the system, the band and flicker are switched off.
+
 ## 0.9.8 – Bones for layered characters, puppeteering with pinned limbs, firm joints, human template
 - Layered characters (body, face, outfit) can now use bones: set up the bones on the image of the lowest layer and all
   layers above – face, clothing, accessories – bend and move along, even parts that stick out beyond the body (cape,

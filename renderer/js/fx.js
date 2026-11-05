@@ -283,13 +283,110 @@
       else n.style.opacity = '0';
       return n;
     },
-    FILTERS: [['flashback', 'Rückblende (Sepia)'], ['bw', 'Schwarz-Weiß'], ['dream', 'Traum'], ['cold', 'Kalt'], ['warm', 'Warm']],
+    FILTERS: [['flashback', 'Rückblende (Sepia)'], ['bw', 'Schwarz-Weiß'], ['dream', 'Traum'], ['cold', 'Kalt'], ['warm', 'Warm'], ['crt', 'Röhren-Fernseher'], ['lcd', 'LCD-Fernseher'], ['rgb', 'RGB-Split']],
+    // Einstellungen der Fernseh-Filter (0.9.9) – Werte 0–100, sofern nicht anders angegeben
+    FILTER_DEF: {
+      crt: { crtCurve: 45, crtLines: 55, crtRoll: true, crtRollSpeed: 7, crtFlicker: 25, crtEdge: 60 },
+      lcd: { lcdStrength: 40, lcdSize: 1, lcdLines: 30 },
+      rgb: { rgbShift: 6, rgbAngle: 0, rgbJitter: 0 }
+    },
     FILTER_CSS: {
+      crt: 'contrast(1.14) saturate(1.18) brightness(1.06)',
+      lcd: 'contrast(1.05) saturate(1.06)',
+      rgb: '',
       flashback: 'sepia(0.8) contrast(0.92) brightness(1.06) saturate(0.85)',
       bw: 'grayscale(1) contrast(1.12)',
       dream: 'saturate(1.35) brightness(1.08) contrast(0.9) blur(0.4px)',
       cold: 'saturate(0.85) hue-rotate(12deg) brightness(0.97)',
       warm: 'sepia(0.25) saturate(1.2) brightness(1.03)'
+    },
+    // Wert einer Filter-Einstellung (Clip oder Standard)
+    fv(clip, k) { const d = (Fx.FILTER_DEF[clip.filter] || {})[k]; return clip[k] != null ? clip[k] : d; },
+    // Verzerrungs-Karte für die Röhren-Wölbung: Rot = Versatz nach links/rechts, Grün = nach oben/unten
+    _warpMap: null,
+    warpMap() {
+      if (Fx._warpMap) return Fx._warpMap;
+      const N = 128, c = document.createElement('canvas'); c.width = N; c.height = N;
+      const g = c.getContext('2d'), im = g.createImageData(N, N);
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+        const u = x / (N - 1) * 2 - 1, v = y / (N - 1) * 2 - 1, r2 = u * u + v * v;
+        const i = (y * N + x) * 4;
+        im.data[i] = Math.round(128 + 127 * Math.max(-1, Math.min(1, u * r2 / 2)));
+        im.data[i + 1] = Math.round(128 + 127 * Math.max(-1, Math.min(1, v * r2 / 2)));
+        im.data[i + 2] = 128; im.data[i + 3] = 255;
+      }
+      g.putImageData(im, 0, 0);
+      return (Fx._warpMap = c.toDataURL('image/png'));
+    },
+    // SVG-Filter für Wölbung (Röhre) und RGB-Split; je Einstellung ein eigener Filter im Dokument
+    svgFilter(clip, w, h) {
+      const NS = 'http://www.w3.org/2000/svg';
+      let host = document.getElementById('vn-svg-filters');
+      if (!host) { host = document.createElementNS(NS, 'svg'); host.id = 'vn-svg-filters'; host.setAttribute('width', '0'); host.setAttribute('height', '0'); host.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;pointer-events:none'; document.body.appendChild(host); }
+      w = Math.max(1, Math.round(w)); h = Math.max(1, Math.round(h));
+      let inner = '', key = '';
+      if (clip.filter === 'crt') {
+        const k = Fx.fv(clip, 'crtCurve') / 100;
+        if (k <= 0.01 || (window.Perf && !Perf.blurOk())) return '';
+        const sc = Math.round(Math.min(w, h) * 0.09 * k);
+        key = 'crt-' + sc + '-' + w + 'x' + h;
+        inner = `<feImage href="${Fx.warpMap()}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="none" result="m"/><feDisplacementMap in="SourceGraphic" in2="m" scale="${sc}" xChannelSelector="R" yChannelSelector="G"/>`;
+      } else if (clip.filter === 'rgb') {
+        const d = Number(Fx.fv(clip, 'rgbShift')) || 0, a = (Number(Fx.fv(clip, 'rgbAngle')) || 0) * Math.PI / 180, j = Number(Fx.fv(clip, 'rgbJitter')) || 0;
+        if (d <= 0 && j <= 0) return '';
+        // Versatz in Prozent der Bildbreite (bleibt bei jeder Fenstergröße gleich stark)
+        const px = d / 1000 * w, dx = +(Math.cos(a) * px).toFixed(2), dy = +(Math.sin(a) * px).toFixed(2);
+        key = 'rgb-' + dx + '-' + dy + '-' + j;
+        const jit = (v) => (j ? `<animate attributeName="dx" dur="${(2.4 - j / 60).toFixed(2)}s" repeatCount="indefinite" calcMode="discrete" values="${[v, v * 1.8, v, -v * 0.4, v * 2.6, v, v * 1.2].map((x) => (x + (x === v ? 0 : Math.sign(x || 1) * j / 25)).toFixed(2)).join(';')}"/>` : '');
+        inner = `<feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="r0"/><feOffset in="r0" dx="${dx}" dy="${dy}" result="r">${jit(dx)}</feOffset>` +
+          `<feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="g"/>` +
+          `<feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="b0"/><feOffset in="b0" dx="${-dx}" dy="${-dy}" result="b">${jit(-dx)}</feOffset>` +
+          `<feBlend in="r" in2="g" mode="screen" result="rg"/><feBlend in="rg" in2="b" mode="screen"/>`;
+      } else return '';
+      const id = 'vnf-' + key.replace(/[^a-z0-9-]/gi, '_');
+      if (!document.getElementById(id)) {
+        const f = document.createElementNS(NS, 'filter');
+        f.id = id;
+        f.setAttribute('filterUnits', 'userSpaceOnUse'); f.setAttribute('x', '0'); f.setAttribute('y', '0'); f.setAttribute('width', String(w)); f.setAttribute('height', String(h));
+        f.setAttribute('color-interpolation-filters', 'sRGB');
+        f.innerHTML = inner;
+        host.appendChild(f);
+      }
+      return 'url(#' + id + ')';
+    },
+    // Filter-Kette für die Spielwelt (Hintergrund + Figuren) aus allen aktiven Filter-Clips
+    filterFor(clips, w, h) {
+      const out = [];
+      for (const c of clips) {
+        if (!c || !c.filter) continue;
+        const svg = Fx.svgFilter(c, w, h);
+        if (svg) out.push(svg);
+        const css = Fx.FILTER_CSS[c.filter] || '';
+        if (css) out.push(window.Perf ? Perf.filterCss(css) : css);
+      }
+      return out.join(' ');
+    },
+    // Filter an die Welt binden – folgt der Größe (Fenster, Vollbild), weil die SVG-Filter in Pixeln rechnen
+    bindFilters(world, clips) {
+      world._vnf = (clips || []).filter((c) => c && c.filter);
+      const apply = () => { world.style.filter = Fx.filterFor(world._vnf, world.offsetWidth || 1280, world.offsetHeight || 720); };
+      if (!world._vnfRO && window.ResizeObserver) { world._vnfRO = new ResizeObserver(() => { if (world._vnf && world._vnf.length) apply(); }); world._vnfRO.observe(world); }
+      if (world.offsetWidth) apply(); else requestAnimationFrame(apply);
+    },
+    // Ebene über dem Bild: Zeilen, rollender Streifen, Flimmern und dunkle, runde Ränder (Röhre) bzw. Pixelraster (LCD)
+    tvOverlay(clip) {
+      const box = el('div', { class: 'fx-tv fx-tv-' + clip.filter });
+      if (clip.filter === 'crt') {
+        const lines = Fx.fv(clip, 'crtLines') / 100, edge = Fx.fv(clip, 'crtEdge') / 100, fl = Fx.fv(clip, 'crtFlicker') / 100, curve = Fx.fv(clip, 'crtCurve') / 100;
+        if (lines > 0) { const n = el('div', { class: 'tv-lines' + (fl > 0 ? ' tv-flicker' : ''), style: { opacity: String(0.15 + lines * 0.75), animationDuration: (0.06 + (1 - fl) * 0.18).toFixed(2) + 's' } }); n.style.setProperty('--tv-fl', String(0.15 + lines * 0.75 - fl * 0.3)); box.appendChild(n); }
+        if (Fx.fv(clip, 'crtRoll')) box.appendChild(el('div', { class: 'tv-roll', style: { animationDuration: Math.max(1, Number(Fx.fv(clip, 'crtRollSpeed')) || 7) + 's' } }));
+        if (edge > 0) box.appendChild(el('div', { class: 'tv-edge', style: { borderRadius: (2 + curve * 9) + '% / ' + (3 + curve * 13) + '%', boxShadow: `0 0 0 100vmax #000, inset 0 0 ${(2 + edge * 9).toFixed(1)}cqh ${(edge * 3).toFixed(1)}cqh rgba(0,0,0,${(0.35 + edge * 0.6).toFixed(2)})` } }));
+      } else if (clip.filter === 'lcd') {
+        const st = Fx.fv(clip, 'lcdStrength') / 100, sz = Math.max(1, Math.min(4, Number(Fx.fv(clip, 'lcdSize')) || 1)), ln = Fx.fv(clip, 'lcdLines') / 100;
+        box.appendChild(el('div', { class: 'tv-sub', style: { opacity: String(st), backgroundSize: (3 * sz) + 'px 100%' } }));
+        if (ln > 0) box.appendChild(el('div', { class: 'tv-hlines', style: { opacity: String(ln), backgroundSize: '100% ' + (3 * sz) + 'px' } }));
+      }
+      return box;
     },
     filterEdge(f) {
       if (f === 'flashback') return 'radial-gradient(ellipse at center, transparent 55%, rgba(236,214,170,0.55) 82%, rgba(240,225,190,0.95) 100%)';

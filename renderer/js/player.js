@@ -228,7 +228,7 @@
   const showFxExtra = (list) => {
     run.fxx = run.fxx || {};
     const want = {};
-    for (const [key, clip] of list) if (!clip.filter) want[key] = clip;
+    for (const [key, clip] of list) want[key] = clip;
     for (const key of Object.keys(run.fxx)) {
       if (want[key] && want[key].id === run.fxx[key].id) continue;
       const old = run.fxx[key].el; old.style.transition = 'opacity 0.6s'; old.style.opacity = '0'; later(() => old.remove(), 650);
@@ -238,14 +238,23 @@
       if (run.fxx[key]) continue;
       const node = Stage.fxEl(clip, 'fx-layer');
       node.style.zIndex = String(fxOrder(key));
-      if (clip.eyes) { eyeBox.appendChild(node); run.fxx[key] = { id: clip.id, el: node }; continue; }
+      if (clip.eyes) { eyeBox.appendChild(node); run.fxx[key] = { id: clip.id, el: node, clip }; continue; }
       node.style.opacity = '0';
       fxHost(clip).appendChild(node);
       void node.offsetWidth;
       node.style.transition = 'opacity 0.6s';
-      node.style.opacity = clip.particles ? '1' : String((clip.opacity != null ? clip.opacity : 100) / 100);
-      run.fxx[key] = { id: clip.id, el: node };
+      node.style.opacity = clip.particles || clip.filter ? '1' : String((clip.opacity != null ? clip.opacity : 100) / 100);
+      run.fxx[key] = { id: clip.id, el: node, clip };
     }
+    worldFilters();
+  };
+  // Filter aller aktiven Effekt-Spuren auf die Spielwelt legen (Röhre, LCD, RGB-Split, Sepia …)
+  const worldFilters = () => {
+    if (!world) return;
+    const clips = [run.fx && run.fx.clip, ...Object.values(run.fxx || {}).map((x) => x.clip)].filter((c) => c && c.filter);
+    world.style.transition = 'filter 0.8s';
+    if (!clips.length) { world._vnf = []; world.style.filter = ''; return; }
+    Fx.bindFilters(world, clips);
   };
 
   // Partikel eines Hubs (0.9.5): Regen, Schnee, Glühwürmchen … – optional nur unter Bedingungen (Tageszeit, Jahreszeit …)
@@ -254,20 +263,19 @@
     const id = clip ? clip.id : null;
     if (run.fx && run.fx.id === id) return;
     if (run.fx) { const old = run.fx.el; old.style.transition = 'opacity 0.6s'; old.style.opacity = '0'; later(() => old.remove(), 650); }
-    world.style.transition = 'filter 0.8s';
-    world.style.filter = clip && clip.filter ? (window.Perf ? Perf.filterCss(Fx.FILTER_CSS[clip.filter] || '') : Fx.FILTER_CSS[clip.filter] || '') : '';
     run.fx = null;
-    if (!clip) return;
+    if (!clip) { worldFilters(); return; }
     const node = Stage.fxEl(clip, 'fx-layer');
     node.style.zIndex = String(fxOrder('fx'));
-    if (clip.eyes) { eyeBox.appendChild(node); run.fx = { id, el: node }; return; }
+    if (clip.eyes) { eyeBox.appendChild(node); run.fx = { id, el: node, clip }; worldFilters(); return; }
     const target = String((clip.opacity != null ? clip.opacity : 100) / 100);
     node.style.opacity = '0';
     fxHost(clip).appendChild(node);
     void node.offsetWidth;
     node.style.transition = 'opacity 0.6s';
     node.style.opacity = clip.particles || clip.filter ? '1' : target;
-    run.fx = { id, el: node };
+    run.fx = { id, el: node, clip };
+    worldFilters();
   };
 
   // Zwischensequenz nach dem Ende ausblenden, damit Dialog und Bühne wieder sichtbar sind
@@ -1022,7 +1030,7 @@
     for (const n of stage.querySelectorAll('.pl-end, .plugin-overlay, .pl-spot, .pl-pointer, .dv-back, .dv-note-wrap')) n.remove();
     devCtl = null;
     charsBox.innerHTML = ''; fxBox.innerHTML = ''; hubBox.innerHTML = ''; dlgBox.hidden = true; choiceBox.hidden = true; msgBox.hidden = true; gainBox.hidden = true;
-    partBox.innerHTML = ''; eyeBox.innerHTML = ''; phoneBox.innerHTML = ''; parBack.innerHTML = ''; parFront.innerHTML = ''; world.style.filter = '';
+    partBox.innerHTML = ''; eyeBox.innerHTML = ''; phoneBox.innerHTML = ''; parBack.innerHTML = ''; parFront.innerHTML = ''; world.style.filter = ''; world._vnf = [];
     stage.querySelectorAll('.vid-layer, .gl-pop').forEach((n) => n.remove());
     Fx.applyCam(world, Fx.CAM0, 0);
     bgLayers.forEach((b) => { b.style.transition = 'none'; b.style.opacity = '0'; });
@@ -1561,7 +1569,7 @@
       if (!run || !run.fx || !world) return;
       const s = VN.scene(run.scene);
       const st = s && s.type === 'story' ? Stage.state(s, run.beat) : null;
-      if (st && st.fx && st.fx.filter) world.style.filter = Perf.filterCss(Fx.FILTER_CSS[st.fx.filter] || '');
+      if (st) worldFilters();
     },
     // Konsole: springen, Werte setzen, neu laden
     jump(sceneId, beat) {

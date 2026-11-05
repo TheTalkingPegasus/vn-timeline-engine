@@ -2094,3 +2094,18 @@ body.cbsim-tritan #center .stage, body.cbsim-tritan #player { filter: url(#vn-cb
 /* Vier Sprachen (0.9.6): Sprachwahl über dem Logo statt daneben, damit nichts überlappt */
 .welcome-card .w-lang { position: static; align-self: center; margin: -8px auto 14px; width: max-content; }
 #topbar #save-status { flex: 0 10 76px; min-width: 0; }
+
+/* Fernseh-Filter (0.9.9): Röhre (Zeilen, rollender Streifen, Flimmern, runde dunkle Ränder) und LCD (Pixelraster) */
+.fx-tv { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.fx-tv > div { position: absolute; inset: 0; }
+.tv-lines { background: repeating-linear-gradient(to bottom, rgba(0,0,0,0.55) 0, rgba(0,0,0,0.55) 0.18cqh, transparent 0.18cqh, transparent 0.42cqh); mix-blend-mode: multiply; }
+.tv-flicker { animation: tvFlicker 0.12s steps(2) infinite; }
+@keyframes tvFlicker { 50% { opacity: var(--tv-fl, 0.4); } }
+.tv-roll { inset: auto 0 auto 0 !important; height: 22%; top: -25%; background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.07) 40%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.07) 60%, transparent); animation: tvRoll 7s linear infinite; mix-blend-mode: screen; }
+@keyframes tvRoll { from { transform: translateY(0); } to { transform: translateY(580%); } }
+.tv-edge { background: radial-gradient(ellipse at center, transparent 62%, rgba(0,0,0,0.25) 88%, rgba(0,0,0,0.55) 100%); }
+.tv-sub { background-image: linear-gradient(to right, rgba(255,40,40,0.55) 0 33.3%, rgba(40,255,40,0.42) 33.3% 66.6%, rgba(60,80,255,0.55) 66.6% 100%); background-repeat: repeat; mix-blend-mode: overlay; }
+.tv-hlines { background-image: linear-gradient(to bottom, rgba(0,0,0,0.5) 0 1px, transparent 1px 100%); background-repeat: repeat; mix-blend-mode: multiply; }
+@media (prefers-reduced-motion: reduce) { .tv-roll, .tv-flicker { animation: none; } }
+.a11y-calm .tv-roll, .a11y-calm .tv-flicker { animation: none !important; }
+.a11y-calm .tv-roll { opacity: 0; }

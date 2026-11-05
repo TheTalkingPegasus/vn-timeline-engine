@@ -149,7 +149,12 @@
       const box = el('div', { class: cls || 'fx-layer' });
       if (clip.particles && window.Fx) { box.classList.add('fx-parts'); box.appendChild(Fx.particleEl(clip)); return box; }
       if (clip.eyes && window.Fx) { box.classList.add('fx-eyes'); box.appendChild(Fx.eyesEl(clip, cls === 'fx-layer')); return box; }
-      if (clip.filter) { box.classList.add('fx-filter'); const e = window.Fx ? Fx.filterEdge(clip.filter) : ''; if (e) box.style.background = e; return box; }
+      if (clip.filter) {
+        box.classList.add('fx-filter');
+        const e = window.Fx ? Fx.filterEdge(clip.filter) : ''; if (e) box.style.background = e;
+        if (window.Fx && (clip.filter === 'crt' || clip.filter === 'lcd')) box.appendChild(Fx.tvOverlay(clip));
+        return box;
+      }
       const url = VN.assetUrl(clip.asset);
       if (url) box.appendChild(el('img', { src: url, draggable: 'false' }));
       else box.style.background = clip.color || '#3c4a8c';
@@ -267,12 +272,14 @@
       fxBox.dataset.depth = 1;
       world.appendChild(fxBox);
       if (st.fx && !st.fx.particles) { const n = Stage.fxEl(st.fx); n.dataset.clip = st.fx.id; (st.fx.filter || st.fx.eyes ? stage : fxBox).appendChild(n); }
-      if (st.fx && st.fx.filter) world.style.filter = Fx.FILTER_CSS[st.fx.filter] || '';
+      // Filter aller Effekt-Spuren zusammen (0.9.9: auch Fernseh-Filter auf weiteren Spuren)
+      const filt = [st.fx, ...(st.fxX || []).map((x) => x[1])].filter((c) => c && c.filter);
+      if (filt.length) Fx.bindFilters(world, filt);
       stage.appendChild(world);
       if (st.bg && st.bg.vignette) stage.appendChild(VN.vignetteEl(st.bg));
       if (st.fx && st.fx.filter) stage.appendChild(stage.querySelector('.fx-filter'));
       if (st.fx && st.fx.particles) { const n = Stage.fxEl(st.fx); n.dataset.clip = st.fx.id; stage.appendChild(n); }
-      for (const [, c] of st.fxX || []) { if (c.filter) continue; const n = Stage.fxEl(c); n.dataset.clip = c.id; (c.particles || c.eyes ? stage : fxBox).appendChild(n); }
+      for (const [, c] of st.fxX || []) { const n = Stage.fxEl(c); n.dataset.clip = c.id; (c.particles || c.eyes || c.filter ? stage : fxBox).appendChild(n); }
       // Augen auf/zu immer ganz vorne über allen Effekten (0.7.7)
       stage.querySelectorAll(':scope > .fx-eyes').forEach((n) => { n.style.zIndex = '4'; stage.appendChild(n); });
       if (st.cam) Fx.applyCam(world, st.cam, 0);
