@@ -187,12 +187,92 @@
     return res;
   };
 
+  // ---------- Nähte (0.9.12) ----------
+  // Ein Teil kann an einer Linie an ein anderes „angenäht“ werden (p.seams). Punkte auf der Naht wandern exakt mit
+  // dem anderen Teil mit, der Rest folgt dem eigenen Gelenk; dazwischen wird das Bild weich verformt. So entstehen
+  // an Übergängen (Hüfte–Oberschenkel, Schulter–Oberarm) keine Lücken oder Risse, egal wie sich die Teile bewegen.
+  // seam: { id, to: Teil-ID, pts: [[u, v], …] im eigenen Bild (Ruhe-Lage), soft: 5–100 (% der kleineren Bildseite) }
+  P.seamsOf = (pup, p) => (p.seams || []).filter((s) => s && s.to && s.to !== p.id && s.pts && s.pts.length >= 2 && P.part(pup, s.to));
+  const segInfo = (x, y, pts) => {
+    // Abstand zur Linie und auf welcher Seite der Punkt liegt (Vorzeichen des Kreuzprodukts zum nächsten Stück)
+    let best = Infinity, side = 0;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const [ax, ay] = pts[i], [bx, by] = pts[i + 1], vx = bx - ax, vy = by - ay, L2 = vx * vx + vy * vy || 1e-9;
+      const t = Math.max(0, Math.min(1, ((x - ax) * vx + (y - ay) * vy) / L2));
+      const d = Math.hypot(x - ax - vx * t, y - ay - vy * t);
+      if (d < best) { best = d; side = vx * (y - ay) - vy * (x - ax); }
+    }
+    return { d: best, side };
+  };
+  const sm = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
+  // Gitter über das Bild mit Gewichten je Naht (gecacht, solange sich Teil, Nähte und Ruhe-Lage nicht ändern)
+  // ext: Nähte an Teile einer anderen Figur (Zwischensequenz): { id, pts, soft, rel } – rel = eigenes Bild → Bild des Ziels
+  P.seamMesh = (pup, p, rest, ext) => {
+    const seams = rest ? P.seamsOf(pup, p) : [];
+    ext = ext || [];
+    if (!seams.length && !ext.length) return null;
+    const key = JSON.stringify([p.w, p.h, p.flipX, seams, ext, rest && rest[p.id], rest && seams.map((s) => rest[s.to]), p.tx, p.ty, p.ax, p.ay]);
+    if (p._sm && p._sm.key === key) return p._sm;
+    const L = Math.max(p.w, p.h), cell = L / 18;
+    const nx = Math.max(3, Math.min(30, Math.round(p.w / cell))), ny = Math.max(3, Math.min(30, Math.round(p.h / cell)));
+    const tip = P.tip(p, pup);
+    const vs = [];
+    for (let j = 0; j <= ny; j++) for (let i = 0; i <= nx; i++) {
+      const iu = i / nx * p.w, iv = j / ny * p.h;           // Bild-Koordinaten
+      const u = p.flipX ? p.w - iu : iu, v = iv;            // eigene Koordinaten
+      const W0 = rest ? ap(rest[p.id], u, v) : null;
+      const wOf = (s) => {
+        const R0 = Math.max(4, (Number(s.soft) || 60) / 100 * Math.min(p.w, p.h));
+        const a = segInfo(u, v, s.pts), b = segInfo(tip[0], tip[1], s.pts);
+        // Jenseits der Naht (weg vom Körper des Teils) klebt alles fest am anderen Teil
+        return a.side * b.side < 0 ? 1 : sm(1 - a.d / R0);
+      };
+      const ws = seams.map((s) => ({ w: wOf(s), q: ap(inv(rest[s.to]), W0[0], W0[1]), to: s.to }))
+        .concat(ext.map((s) => ({ w: wOf(s), q: ap(s.rel, u, v), ext: s.id })));
+      vs.push({ iu, iv, u, v, ws });
+    }
+    const tris = [];
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+      const a = j * (nx + 1) + i, b = a + 1, c = a + nx + 1, d = c + 1;
+      tris.push([a, b, d], [a, d, c]);
+    }
+    p._sm = { key, vs, tris, nx, ny };
+    return p._sm;
+  };
+  // Ein Dreieck aus dem Bild verzerrt zeichnen. k: Grund-Matrix des ctx; s: Bild-Koordinaten, d: Ziel (vor k)
+  const triDraw = (ctx, k, draw, s0, s1, s2, d0, d1, d2) => {
+    const den = (s1[0] - s0[0]) * (s2[1] - s0[1]) - (s2[0] - s0[0]) * (s1[1] - s0[1]);
+    if (!den) return;
+    const a = ((d1[0] - d0[0]) * (s2[1] - s0[1]) - (d2[0] - d0[0]) * (s1[1] - s0[1])) / den;
+    const c = ((d2[0] - d0[0]) * (s1[0] - s0[0]) - (d1[0] - d0[0]) * (s2[0] - s0[0])) / den;
+    const b = ((d1[1] - d0[1]) * (s2[1] - s0[1]) - (d2[1] - d0[1]) * (s1[1] - s0[1])) / den;
+    const d = ((d2[1] - d0[1]) * (s1[0] - s0[0]) - (d1[1] - d0[1]) * (s2[0] - s0[0])) / den;
+    const e = d0[0] - a * s0[0] - c * s0[1], f = d0[1] - b * s0[0] - d * s0[1];
+    const W = mul(k, [a, b, c, d, e, f]);
+    ctx.save();
+    ctx.setTransform(W[0], W[1], W[2], W[3], W[4], W[5]);
+    // Dreieck minimal vergrößern gegen feine Nähte zwischen den Dreiecken
+    // um ca. 1,2 Bildschirm-Pixel nach außen, damit zwischen den Dreiecken keine hellen Linien durchscheinen
+    const cx = (s0[0] + s1[0] + s2[0]) / 3, cy = (s0[1] + s1[1] + s2[1]) / 3, e0 = 1.2 / Math.max(0.05, Math.sqrt(Math.abs(W[0] * W[3] - W[1] * W[2])));
+    const ex = (q) => { const dx = q[0] - cx, dy = q[1] - cy, L = Math.hypot(dx, dy) || 1; return [q[0] + dx / L * e0, q[1] + dy / L * e0]; };
+    const [q0, q1, q2] = [ex(s0), ex(s1), ex(s2)];
+    ctx.beginPath();
+    ctx.moveTo(q0[0], q0[1]); ctx.lineTo(q1[0], q1[1]); ctx.lineTo(q2[0], q2[1]);
+    ctx.closePath(); ctx.clip();
+    const x0 = Math.min(q0[0], q1[0], q2[0]) - 1, y0 = Math.min(q0[1], q1[1], q2[1]) - 1, x1 = Math.max(q0[0], q1[0], q2[0]) + 1, y1 = Math.max(q0[1], q1[1], q2[1]) + 1;
+    draw(x0, y0, x1 - x0, y1 - y0);
+    ctx.restore();
+  };
+
   // ---------- Zeichnen ----------
   // base: Matrix Puppen-Fläche → Canvas. Liefert die Matrizen (eigenes Bild → Canvas) je Teil.
   P.draw = (ctx, pup, res, base, t, dt, pose, st, opts = {}) => {
     // Bones zuerst verformen, damit die Pins der Kinder der Verformung folgen
     if (res) for (const p of pup.parts) { const inst = res.rigs[p.id]; if (inst && !(opts.override && opts.override[p.id])) Rig.renderAt(inst, t || 0, dt || 0, null); }
-    const mats = P.solve(pup, pose, t, st, dt, res ? P.deformFn(pup, res) : null);
+    const deform = res ? P.deformFn(pup, res) : null;
+    const mats = P.solve(pup, pose, t, st, dt, deform);
+    const rest = pup.parts.some((p) => p.seams && p.seams.length) ? P.solve(pup, null, null, null, 0) : null;
+    const extS = opts.extSeams || [];
     const out = {};
     const keep = ctx.getTransform();
     const k = [keep.a, keep.b, keep.c, keep.d, keep.e, keep.f];
@@ -205,6 +285,35 @@
       ctx.setTransform(W[0], W[1], W[2], W[3], W[4], W[5]);
       const inst = res && res.rigs[p.id];
       const ov = opts.override && opts.override[p.id];
+      // Angenähtes Teil: als verformtes Gitter zeichnen
+      const myExt = extS.filter((s) => s.part === p.id && opts.ext && opts.ext[s.id]);
+      const mesh = (rest || myExt.length) && (ov || inst || (res && res.imgs[p.id])) ? P.seamMesh(pup, p, rest, myExt) : null;
+      if (mesh) {
+        const im = res && res.imgs[p.id], PAD = window.Rig ? Rig.PAD : 0.15;
+        // Ausschnitt (Bild-Koordinaten) aus der Quelle zeichnen
+        const draw = ov ? (x, y, w, h) => { const sx = ov.width / p.w, sy = ov.height / p.h; ctx.drawImage(ov, x * sx, y * sy, w * sx, h * sy, x, y, w, h); }
+          : inst ? (x, y, w, h) => { const cv = inst.cv, sx = cv.width / (p.w * (1 + 2 * PAD)), sy = cv.height / (p.h * (1 + 2 * PAD)); ctx.drawImage(cv, (x + PAD * p.w) * sx, (y + PAD * p.h) * sy, w * sx, h * sy, x, y, w, h); }
+          : (x, y, w, h) => { const sx = (im.naturalWidth || im.width) / p.w, sy = (im.naturalHeight || im.height) / p.h; const cx0 = Math.max(0, x), cy0 = Math.max(0, y), cx1 = Math.min(p.w, x + w), cy1 = Math.min(p.h, y + h); if (cx1 > cx0 && cy1 > cy0) ctx.drawImage(im, cx0 * sx, cy0 * sy, (cx1 - cx0) * sx, (cy1 - cy0) * sy, cx0, cy0, cx1 - cx0, cy1 - cy0); };
+        const pts = mesh.vs.map((q) => {
+          let [x, y] = ap(M, q.u, q.v);
+          let sw = 0, ax = 0, ay = 0;
+          for (const s of q.ws) {
+            if (!s.w) continue;
+            let tx, ty;
+            if (s.ext) [tx, ty] = ap(opts.ext[s.ext], s.q[0], s.q[1]);
+            else {
+              if (!mats[s.to]) continue;
+              const df = deform ? deform(s.to, s.q[0], s.q[1]) : null;
+              [tx, ty] = ap(mul(base, mats[s.to]), s.q[0] + (df ? df.dx : 0), s.q[1] + (df ? df.dy : 0));
+            }
+            ax += tx * s.w; ay += ty * s.w; sw += s.w;
+          }
+          if (sw > 0) { const k2 = Math.min(1, sw); x = x * (1 - k2) + ax / sw * k2; y = y * (1 - k2) + ay / sw * k2; }
+          return [x, y];
+        });
+        for (const [a, b, c] of mesh.tris) triDraw(ctx, k, draw, [mesh.vs[a].iu, mesh.vs[a].iv], [mesh.vs[b].iu, mesh.vs[b].iv], [mesh.vs[c].iu, mesh.vs[c].iv], pts[a], pts[b], pts[c]);
+        continue;
+      }
       if (ov) ctx.drawImage(ov, 0, 0, p.w, p.h);
       else if (inst) {
         ctx.drawImage(inst.cv, -PAD * p.w, -PAD * p.h, p.w * (1 + 2 * PAD), p.h * (1 + 2 * PAD));

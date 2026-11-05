@@ -127,7 +127,9 @@
         el('button', { class: 'btn', onclick: () => { ui().animT = 0; VN.render(); } }, '⏮'),
         el('button', { class: 'btn primary', onclick: () => { ui().animPlay = !playing; VN.render(); } }, playing ? '■ Stopp' : '▶ Abspielen'),
         el('label', { class: 'check btn' }, el('input', { type: 'checkbox', checked: !!ui().animOnion, onchange: (e) => { ui().animOnion = e.target.checked; VN.render(); } }), 'Zwiebelhaut'),
-        el('label', { class: 'check btn' }, el('input', { type: 'checkbox', checked: ui().animBones !== false, onchange: (e) => { ui().animBones = e.target.checked; VN.render(); } }), 'Knochen')));
+        el('label', { class: 'check btn' }, el('input', { type: 'checkbox', checked: ui().animBones !== false, onchange: (e) => { ui().animBones = e.target.checked; VN.render(); } }), 'Knochen'),
+        // Nähte zwischen Figuren (0.9.12): z. B. Hand von Figur 2 an die Schulter von Figur 1
+        a.type === 'scene' && a.actors.filter((x) => x.puppet).length >= 2 ? el('button', { class: 'btn' + (ui().animSew ? ' primary' : ''), title: VN.t('Ein Teil der gewählten Gliederpuppe an ein Teil einer anderen Figur annähen – es bewegt sich dann mit der anderen Figur mit'), onclick: () => { ui().animSew = !ui().animSew; ui().animPlay = false; VN.render(); } }, ui().animSew ? '✓ Annähen' : '🧵 Annähen') : null));
       // Bühne
       const wrap = el('div', { class: 'stage-wrap an-stage-wrap' });
       const stage = el('div', { class: 'stage an-stage' });
@@ -217,6 +219,7 @@
         const kx = (svg.viewBox.baseVal && svg.viewBox.baseVal.width ? svg.viewBox.baseVal.width / r.width : 1);
         const px = (e.clientX - r.left) * kx, py = (e.clientY - r.top) * kx;
         const actor = actorOf(a);
+        if (ui().animSew && actor && actor.puppet) { AnimEd.sewDown(e, svg, r, kx, a, actor); return; }
         if (actor && actor.puppet && AnimEd.pupDown(e, px, py, r, kx, a, actor)) return;
         const hit = (AnimEd._joints || []).slice().reverse().find((j) => Math.hypot(j.tx - px, j.ty - py) < 12);
         const t = ui().animT || 0;
@@ -406,6 +409,65 @@
       }
       return null;
     },
+    // Teil einer beliebigen Puppen-Figur unter einem Punkt (oberstes zuerst)
+    partAt(actor, px, py) {
+      const pup = actor && Puppet.get(actor.puppet);
+      const m = (AnimEd._maps || []).find((x) => x.it.actor === actor);
+      if (!pup || !m || !m.it.pmats) return null;
+      for (let i = pup.parts.length - 1; i >= 0; i--) {
+        const p = pup.parts[i], M = m.it.pmats[p.id];
+        if (!M || p.hidden) continue;
+        const [u, v] = Puppet.m.ap(Puppet.m.inv(M), px, py);
+        if (u >= 0 && v >= 0 && u <= p.w && v <= p.h) return p.id;
+      }
+      return null;
+    },
+    // Annähen (0.9.12): Linie über ein Teil der gewählten Puppe ziehen, das auf einem Teil einer anderen Figur liegt
+    sewDown(e, svg, r, kx, a, actor) {
+      const at = (ev) => [(ev.clientX - r.left) * kx, (ev.clientY - r.top) * kx];
+      const p0 = at(e);
+      const ownId = AnimEd.partAt(actor, p0[0], p0[1]);
+      if (!ownId) { VN.toast(VN.t('Auf einem Teil der gewählten Figur beginnen')); return; }
+      const own = { pid: ownId };
+      e.preventDefault();
+      const line = [p0];
+      const NS = 'http://www.w3.org/2000/svg';
+      const pl = document.createElementNS(NS, 'polyline');
+      pl.setAttribute('fill', 'none'); pl.setAttribute('stroke', '#ffd166'); pl.setAttribute('stroke-width', '3'); pl.setAttribute('stroke-dasharray', '6 5');
+      svg.appendChild(pl);
+      VN.drag(e, (dx, dy, ev) => {
+        const q = at(ev), L = line[line.length - 1];
+        if (Math.hypot(q[0] - L[0], q[1] - L[1]) > 5 * kx) { line.push(q); pl.setAttribute('points', line.map((x) => x.join(',')).join(' ')); }
+      }, () => {
+        pl.remove();
+        if (line.length < 2) return;
+        const mid = line[Math.floor(line.length / 2)];
+        let tgt = null;
+        for (const o of a.actors.slice().reverse()) { if (o === actor || !o.puppet) continue; const pid = AnimEd.partAt(o, mid[0], mid[1]); if (pid) { tgt = { actor: o, pid }; break; } }
+        if (!tgt) { VN.toast(VN.t('Unter der Linie liegt kein Teil einer anderen Figur')); return; }
+        const mOwn = (AnimEd._maps || []).find((x) => x.it.actor === actor), mT = (AnimEd._maps || []).find((x) => x.it.actor === tgt.actor);
+        const Ow = mOwn && mOwn.it.pmats[own.pid], Tw = mT && mT.it.pmats[tgt.pid];
+        if (!Ow || !Tw) return;
+        const iO = Puppet.m.inv(Ow);
+        const rel = Puppet.m.mul(Puppet.m.inv(Tw), Ow).map((n) => Math.round(n * 1e5) / 1e5);
+        const pts = line.map(([x, y]) => Puppet.m.ap(iO, x, y).map((n) => Math.round(n * 10) / 10));
+        VN.mutate(() => { actor.seams = actor.seams || []; actor.seams.push({ id: VN.uid('sm'), part: own.pid, toActor: tgt.actor.id, toPart: tgt.pid, pts, soft: 60, rel }); });
+        const pn = (ac, pid) => { const pp = Puppet.get(ac.puppet); const x = pp && Puppet.part(pp, pid); return x ? x.name : '?'; };
+        VN.toast(VN.tf('„{a}“ an „{b}“ angenäht', { a: pn(actor, own.pid), b: pn(tgt.actor, tgt.pid) }));
+      });
+    },
+    // Liste der Nähte der gewählten Figur
+    seamCard(a, actor) {
+      const L = actor.seams || [];
+      const pn = (ac, pid) => { const pp = ac && Puppet.get(ac.puppet); const x = pp && Puppet.part(pp, pid); return x ? x.name : '?'; };
+      const nameOf = (ac) => (ac && ac.puppet && Puppet.get(ac.puppet) ? Puppet.get(ac.puppet).name : '?');
+      return el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Nähte an andere Figuren'),
+        ...L.map((s) => { const to = a.actors.find((x) => x.id === s.toActor); return el('div', { class: 'opt-card', style: { margin: '4px 0' } },
+          el('div', { class: 'row gap8' }, el('span', { style: { flex: '1' } }, '🧵 ' + pn(actor, s.part) + ' → ' + nameOf(to) + ': ' + pn(to, s.toPart)),
+            el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { actor.seams = actor.seams.filter((x) => x !== s); if (!actor.seams.length) delete actor.seams; }) }, '×')),
+          el('div', { class: 'field' }, el('div', { class: 'lbl' }, VN.t('Weichheit') + ': ' + (s.soft != null ? s.soft : 60) + ' %'), el('input', { type: 'range', min: 5, max: 100, value: s.soft != null ? s.soft : 60, onchange: (e) => VN.mutate(() => { s.soft = Number(e.target.value); }) }))); }),
+        el('div', { class: 'muted small' }, L.length ? 'Die Naht bleibt in der Lage, in der sie gezogen wurde. Wer die Puppen danach anders stellen will: Naht löschen und neu ziehen.' : 'Mit „🧵 Annähen“ oben eine Linie über ein Teil dieser Figur ziehen, das auf einer anderen Figur liegt (z. B. Hand auf der Schulter). Es bewegt sich dann mit der anderen Figur mit.'));
+    },
     pupDown(e, px, py, r, kx, a, actor) {
       const hit = AnimEd.pupHit(actor, px, py);
       if (!hit) return false;
@@ -541,6 +603,7 @@
         if (actor.puppet && Puppet.get(actor.puppet)) acCard.appendChild(AnimEd.puppetCard(a, actor, t));
       }
       box.appendChild(acCard);
+      if (a.type === 'scene' && actor && actor.puppet && a.actors.filter((x) => x.puppet).length >= 2) box.appendChild(AnimEd.seamCard(a, actor));
 
       // Ausgewählter Keyframe
       const kSel = ui().animKey;

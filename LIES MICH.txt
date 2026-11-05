@@ -14,7 +14,13 @@ Ohne Installation (ZIP):
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
 
-NEU IN 0.9.12 · Fehlerbehebung: Glieder festpinnen
+NEU IN 0.9.12 · Nähte für Gliederpuppen, Fehlerbehebung beim Festpinnen
+- Nähte: zwei sich überlappende Teile einer Gliederpuppe an einer Linie zusammennähen („🧵 Nähen“ im Puppen-Editor),
+  z. B. Oberschenkel an die Hüfte oder Oberarm an die Schulter. Die Naht-Punkte kleben exakt am anderen Teil, der Rest
+  folgt dem eigenen Gelenk, dazwischen wird das Bild weich verformt – keine Lücken oder Risse mehr an Gelenken, auch
+  beim Idle, Animieren, bei niedriger Bildrate und Smear-Bildern. Weichheit und Ziel pro Naht einstellbar.
+- Nähte zwischen Figuren in Zwischensequenzen („🧵 Annähen“ im Animations-Editor): z. B. die Hand von Figur 2 an die
+  Schulter von Figur 1 nähen – die Hand bewegt sich dann mit Figur 1 mit.
 - Behoben: Doppelklick auf ein Körperteil einer Gliederpuppe (beim „Ausprobieren“ und im Animations-Editor) tat
   nichts, Füße und Hände ließen sich nicht festpinnen. Der Editor zeichnet nach dem ersten Klick neu und hat den
   Doppelklick dabei verschluckt; jetzt erkennt die Engine ihn selbst.

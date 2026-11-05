@@ -2,7 +2,13 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
-## 0.9.12 – Fix: pinning puppet limbs
+## 0.9.12 – Seams for jointed puppets, fix for pinning limbs
+- Seams: sew two overlapping parts of a jointed puppet together along a line (“🧵 Sew” in the puppet editor), e.g.
+  thigh to hip or upper arm to shoulder. The seam points stick exactly to the other part, the rest follows its own
+  joint, and the image bends smoothly in between – no more gaps or cracks at joints, also during idle, animation,
+  stepped frame rates and smear frames. Softness and target are adjustable per seam.
+- Seams between characters in cutscenes (“🧵 Sew on” in the animation editor): e.g. sew the hand of character 2 to
+  the shoulder of character 1 – the hand then moves along with character 1.
 - Fixed: double-clicking a body part of a jointed puppet (in “Try out” and in the animation editor) did nothing, so
   feet and hands could not be pinned. The editor redraws after the first click, which swallowed the double-click;
   the engine now detects it itself.
