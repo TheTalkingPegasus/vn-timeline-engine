@@ -14,6 +14,11 @@ Ohne Installation (ZIP):
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
 
+NEU IN 0.9.16 · Fehlerbehebung: Stift bleibt unter der Maus
+- Puppen-Editor: Inpaint-Stift und Radierer konnten sich von der Maus entfernen, wenn eine Pose oder die Bones des
+  Eltern-Teils das Teil verschoben hatten. Beide arbeiten jetzt genau auf dem, was zu sehen ist. „Ausprobieren“
+  beendet diese Werkzeuge.
+
 NEU IN 0.9.15 · Inpaint-Stift für Gliederpuppen
 - Puppen-Editor: neuer „🖌 Inpaint-Stift“. Lücke an einem Teil per Lasso, Lineal oder Pinsel maskieren und füllen – ganz
   ohne KI-Modell. Die Farben kommen vom Maskenrand, aus einer gewählten Farbe oder als Verlauf zwischen zwei Punkten

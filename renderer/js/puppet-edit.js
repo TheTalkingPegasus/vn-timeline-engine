@@ -176,7 +176,7 @@
       el('input', { class: 'name-input', value: pup.name, onchange: (e) => VN.mutate(() => { pup.name = e.target.value || 'Gliederpuppe'; }) }),
       el('span', { class: 'muted' }, pup.parts.length + ' ' + VN.t('Teile')),
       el('div', { class: 'spacer' }),
-      el('button', { class: 'btn' + (testing ? ' primary' : ''), title: VN.t('Teile um ihre Pins drehen (Umschalt = IK), ohne zu speichern'), onclick: () => { ui().pupTest = testing ? null : {}; VN.render(); } }, testing ? '✓ Ausprobieren' : '🤸 Ausprobieren'),
+      el('button', { class: 'btn' + (testing ? ' primary' : ''), title: VN.t('Teile um ihre Pins drehen (Umschalt = IK), ohne zu speichern'), onclick: () => { ui().pupTest = testing ? null : {}; if (!testing) ui().pupErase = null; VN.render(); } }, testing ? '✓ Ausprobieren' : '🤸 Ausprobieren'),
       testing ? el('button', { class: 'btn', onclick: () => { ui().pupTest = {}; VN.render(); } }, VN.t('Zurücksetzen')) : null,
       el('button', { class: 'btn' + (ui().pupErase && ui().pupErase.mode !== 'inpaint' ? ' primary' : ''), title: VN.t('Kanten und harte Übergänge an einem Teil wegradieren – Größe und Weichheit einstellbar'), onclick: () => PupEd.toggleErase(pup) }, ui().pupErase && ui().pupErase.mode !== 'inpaint' ? '✓ Radierer' : '🧽 Radierer'),
       el('button', { class: 'btn' + (ui().pupErase && ui().pupErase.mode === 'inpaint' ? ' primary' : ''), title: VN.t('Lücken an einem Teil maskieren und mit einem passenden Farbverlauf füllen – läuft ohne KI-Modell'), onclick: () => PupEd.toggleInpaint(pup) }, ui().pupErase && ui().pupErase.mode === 'inpaint' ? '✓ Inpaint-Stift' : '🖌 Inpaint-Stift'),
@@ -215,6 +215,7 @@
     const t0 = performance.now();
     let last = t0;
     let drag = null;
+    PupEd._ms = null;
     // Ansicht: Puppe passend einpassen (bleibt beim Ziehen stehen)
     const view = () => {
       const r = canvas.getBoundingClientRect();
@@ -228,7 +229,13 @@
     const baseM = () => { const v = view(); return [v.k, 0, 0, v.k, v.x, v.y]; };
     const toPup = (cx, cy) => { const r = canvas.getBoundingClientRect(); const v = view(); return [(cx - r.left - v.x) / v.k, (cy - r.top - v.y) / v.k]; };
     const pose = () => (ui().pupTest ? ui().pupTest : null);
-    const mats = () => Puppet.solve(pup, pose(), null, null, 0);
+    // Radierer und Inpaint-Stift arbeiten auf dem, was gerade zu sehen ist – so bleibt der Stift auch dann unter der
+    // Maus, wenn eine Pose oder die Bones eines Eltern-Teils das Teil verschoben haben
+    const mats = () => {
+      const out = Puppet.solve(pup, pose(), null, null, 0);
+      if (ui().pupErase && PupEd._ms) { const ib = M().inv(baseM()); for (const id of Object.keys(PupEd._ms)) out[id] = M().mul(ib, PupEd._ms[id]); }
+      return out;
+    };
     // Teil unter einem Punkt (Puppen-Koordinaten), oberstes zuerst, durchsichtige Stellen zählen nicht
     const hitPart = (x, y, skip) => {
       const ms = mats();
@@ -269,6 +276,7 @@
       if (bb) { const [, gy] = M().ap(base, 0, bb.y + bb.h); ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(r.width, gy); ctx.stroke(); }
       const ed = PupEd._edit;
       const ms = Puppet.draw(ctx, pup, PupEd._res, base, t, t != null ? dt : 0, erasing ? null : pose(), st, { placeholder: true, override: ed && ed.cv ? { [ed.pid]: ed.cv } : null });
+      PupEd._ms = ms;
       // Auswahl, Pins, Verbindungen
       const sel = selPart(pup);
       if (sel && ms[sel.id]) {

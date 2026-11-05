@@ -926,6 +926,37 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Inpaint-Stift: mehr Platz am Rand');
   } catch (e) { general.push('Inpaint: ' + e.message); }
 
+  // 15. Inpaint-Stift bleibt unter der Maus, auch wenn eine Pose das Teil verschoben hat
+  try {
+    const pos = JSON.parse(await js(`(async () => {
+      const c = document.createElement('canvas'); c.width = 200; c.height = 200; c.getContext('2d').fillRect(0, 0, 200, 200);
+      const rel = await VN.api.writeAsset(VN.dir, 'assets/stifttest.png', new Uint8Array(await (await new Promise((r) => c.toBlob(r, 'image/png'))).arrayBuffer()));
+      const a = { id: VN.uid('a'), name: 'stifttest', kind: 'image', file: rel }; VN.project.assets.push(a);
+      const t = Puppet.newPart(a.id, 200, 200, 0, 0), u = Puppet.newPart(a.id, 200, 200, 80, 150); u.parent = t.id;
+      VN.project.puppets = VN.project.puppets || []; const pup = { id: VN.uid('pup'), name: 'Stift', parts: [t, u] }; VN.project.puppets.push(pup);
+      document.querySelectorAll('.modal-back').forEach((m) => m.remove());
+      Object.assign(VN.ui, { view: 'bones', figSub: 'puppet', pupSel: pup.id, pupPart: u.id, pupView: null, pupTest: { [u.id]: { r: 50 } }, pupErase: { mode: 'inpaint', tool: 'brush', size: 16, soft: 50, source: 'auto', color: [1, 1, 1], pick: null, pid: null } });
+      VN.render(); [...document.querySelectorAll('button')].find((b) => b.textContent === 'Beenden')?.click();
+      await new Promise((r) => setTimeout(r, 600));
+      const rc = document.querySelector('.pup-ed-canvas').getBoundingClientRect(), s = Puppet.m.ap(PupEd._ms[u.id], 100, 100);
+      return JSON.stringify({ x: Math.round(rc.left + s[0]), y: Math.round(rc.top + s[1]) });
+    })()`));
+    const inp = (type) => win.webContents.sendInputEvent(Object.assign({ type, x: pos.x, y: pos.y }, type === 'mouseMove' ? {} : { button: 'left', clickCount: 1 }));
+    win.show(); win.focus(); inp('mouseMove'); inp('mouseDown'); await wait(500); inp('mouseUp'); await wait(300);
+    const off = await js(`(() => {
+      const ed = PupEd._edit, u = VN.project.puppets[VN.project.puppets.length - 1].parts[1];
+      if (!ed || !ed.mask) return -1;
+      const W = ed.mask.width, H = ed.mask.height, d = ed.mask.getContext('2d').getImageData(0, 0, W, H).data;
+      let n = 0, sx = 0, sy = 0; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (d[(y * W + x) * 4 + 3] > 127) { n++; sx += x; sy += y; }
+      if (!n) return -1;
+      const k = Math.hypot(sx / n * u.w / W - 100, sy / n * u.h / H - 100);
+      VN.project.puppets.pop(); Object.assign(VN.ui, { pupErase: null, pupTest: null }); PupEd._edit = null; VN.ui.view = 'scene'; VN.render();
+      return k;
+    })()`);
+    if (off < 0 || off > 3) general.push('Inpaint-Stift nicht unter der Maus (Versatz ' + off + ')');
+    else log('✓ Inpaint-Stift bleibt unter der Maus');
+  } catch (e) { general.push('Inpaint Maus: ' + e.message); }
+
   const failed = results.filter((r) => r.errors.length);
   for (const g of general) log('✗ ' + g);
   log(`\n${failed.length || general.length ? 'FEHLGESCHLAGEN' : 'ALLES BESTANDEN'}: ${results.length - failed.length}/${results.length} Projekte ok${general.length ? ', ' + general.length + ' allgemeine Fehler' : ''} · ${((Date.now() - t0) / 1000).toFixed(0)} s`);

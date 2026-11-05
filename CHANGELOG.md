@@ -2,6 +2,10 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.16 – Fix: inpaint brush and eraser stay under the mouse
+- Puppet editor: the inpaint brush and the eraser could drift away from the mouse on parts that had been moved by a pose
+  or by the bones of their parent part. Both now work on exactly what is shown. “Try out” closes these tools.
+
 ## 0.9.15 – Inpaint brush for jointed puppets
 - Puppet editor: new “🖌 Inpaint brush”. Mask a gap on a part with the lasso, ruler or brush and fill it – no AI model
   needed. Colors come from the edge of the mask, from one chosen color or as a gradient between two points (A → B), also
