@@ -926,6 +926,47 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Inpaint-Stift: mehr Platz am Rand');
   } catch (e) { general.push('Inpaint: ' + e.message); }
 
+  // 15. Spielhalle (Dart, Billard, Spielautomat): Zählen, Physik, Computer-Gegner, Auszahlung
+  try {
+    await js(fs.readFileSync(path.join(__dirname, '..', 'templates', 'spielhalle.js'), 'utf8') + '\n;1');
+    const r = JSON.parse(await js(`(() => {
+      const out = [], P = VNPlugin.plugins.spielhalle, I = P && P._intern;
+      if (!I) return JSON.stringify(['Plugin nicht geladen']);
+      ['dart', 'billard', 'automat'].forEach((k) => { if (!VNPlugin.actionDef('spielhalle.' + k)) out.push('Aktion ' + k + ' fehlt'); });
+      // Dart: Zielpunkte zählen richtig
+      for (const [code, want] of [['T20', 60], ['D16', 32], ['S5', 5], ['BULL', 50], ['25', 25], ['T19', 57], ['D1', 2]]) { const [x, y] = I.dartTarget(code); const s = I.dartScore(x, y); if (s.pts !== want) out.push('Dart ' + code + ' = ' + s.pts); }
+      if (I.dartScore(0, -180).pts !== 0) out.push('Dart daneben');
+      if (!I.dartScore(...I.dartTarget('D20')).dbl) out.push('Dart Doppel');
+      if (I.aiDartAim({ taktik: 90 }, 32, 'x01', true) !== 'D16') out.push('Dart-Gegner Checkout');
+      if (I.aiDartAim({ taktik: 90 }, 50, 'x01', true) !== 'BULL') out.push('Dart-Gegner Bull');
+      // Billard: gerader Stoß versenkt die Kugel vor der Tasche, Kugeln bleiben auf dem Tisch
+      const C = I.consts;
+      const cue = { n: 0, x: 300, y: 250, vx: 1500, vy: 0, in: false }, ob = { n: 1, x: 900, y: 250, vx: 0, vy: 0, in: false };
+      const tg = { n: 2, x: C.BL - 60, y: C.BW - 60, vx: 0, vy: 0, in: false };
+      const balls = [cue, ob, tg], pots = [];
+      const ev = { hit() {}, pot: (b) => pots.push(b.n), rail() {} };
+      for (let k = 0; k < 2000 && balls.some((b) => !b.in && (b.vx || b.vy)); k++) for (let i = 0; i < 8; i++) I.physStep(balls, 1 / 480, ev);
+      if (balls.some((b) => !b.in && (b.x < 0 || b.x > C.BL || b.y < 0 || b.y > C.BW))) out.push('Billard: Kugel außerhalb');
+      if (balls.some((b) => b.vx || b.vy)) out.push('Billard: Kugeln rollen ewig');
+      const cb = { n: 0, x: C.BL - 300, y: C.BW - 300, in: false }; const sh = I.aiShot([cb, { n: 1, x: C.BL - 120, y: C.BW - 120, in: false }], cb, (b) => b.n > 0, { taktik: 100 });
+      if (!sh || Math.abs(sh.ang - Math.PI / 4) > 0.05) out.push('Billard-Gegner zielt falsch ' + (sh && sh.ang));
+      const rk = I.rack(15, true);
+      if (rk.length !== 15 || rk[4].n !== 8 || new Set(rk.map((b) => b.n)).size !== 15) out.push('8-Ball-Dreieck');
+      // Automat: Auszahlung der Vorlage zwischen 80 und 100 %, Joker zählt
+      VNPlugin.actionDef('spielhalle.automat').params[0].options;
+      const auto = VN.project.pluginData.spielhalle.automaten[0];
+      const R = I.rtp(auto, 60000);
+      if (!(R.rtp > 80 && R.rtp < 100)) out.push('Automat-Auszahlung ' + R.rtp.toFixed(1));
+      const jm = { walzen: 3, joker: 'j', gewinne: [{ symbol: 'a', anzahl: 3, faktor: 10 }] };
+      if (I.evalSpin(jm, [['a'], ['j'], ['a']], [[0, 0, 0]]).win !== 10) out.push('Joker');
+      if (I.evalSpin(jm, [['a'], ['b'], ['a']], [[0, 0, 0]]).win !== 0) out.push('Automat zählt falsch');
+      if (I.lines({ walzen: 5, reihen: 3, linien: 'fuenf' }).length !== 5) out.push('Gewinnlinien');
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Spielhalle: ' + r.join(', '));
+    else log('✓ Spielhalle: Dart zählt, Billard-Physik und -Gegner, Automat-Auszahlung');
+  } catch (e) { general.push('Spielhalle: ' + e.message); }
+
   // 14. Neu in 0.9.16: GIF-Encoder, Formeln/Code, Ordner im Puppen-Modus
   try {
     const r = JSON.parse(await js(`(async () => {

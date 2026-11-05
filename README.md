@@ -7,7 +7,7 @@ every column is one click of the player. Free, source available (VN Timeline Eng
 
 ![Editor with timeline](docs/screenshots/en/editor-timeline.png)
 
-> **Status:** prototype (0.9.16). It works and is tested, but expect rough edges. Back up your projects.
+> **Status:** prototype (0.9.17). It works and is tested, but expect rough edges. Back up your projects.
 
 ## Try it in the browser
 
@@ -73,6 +73,8 @@ Because the program isn’t code-signed, Windows may show “Windows protected y
 - Time of day, seasons and ambient sounds; game over screen with retry
 - Bundled plugins: Jobs and seven minigames (click reflex, memory, puzzle, cooking & brewing, coin toss, petals,
   quicktime circle) – minigames can be won or lost and made easier with skill tree perks or equipment
+- **Arcade:** darts, pool and a slot machine – darts and pool against computer opponents whose accuracy, tactics and
+  thinking time you set; board, table, balls, reels and cabinet designable with your own images
 
 **For players** (in every game automatically): history, auto mode, skip, save slots, quick save,
 reading & accessibility options, graphics quality, sound output, language switch.
@@ -163,7 +165,7 @@ jede Spalte ist ein Klick des Spielers. Kostenlos, Quellcode einsehbar (VN Timel
 
 ![Editor mit Timeline](docs/screenshots/de/editor-timeline.png)
 
-> **Stand:** Prototyp (0.9.16). Funktioniert und ist getestet, aber noch nicht in allem rund. Mach Sicherungen deiner Projekte.
+> **Stand:** Prototyp (0.9.17). Funktioniert und ist getestet, aber noch nicht in allem rund. Mach Sicherungen deiner Projekte.
 
 ### Im Browser ausprobieren
 
@@ -205,6 +207,8 @@ Weil das Programm nicht signiert ist, zeigt Windows evtl. „Der Computer wurde 
   freischalten, zeitweise sperren oder für immer entfernen), Questlog, Skilltrees, rundenbasierter Kampf (Kämpfer mit Bones
   oder Gliederpuppe bekommen eigene Idle-, Angriffs-, Treffer-, K.O.- und Sieg-Animationen mit weicher Überblendung),
   Aufbau (Idle), Ausrüstung, Game Over, Jobs und sieben Minispiele (auch verlierbar, mit Perks leichter)
+- **Spielhalle:** Dart, Billard und Spielautomat – Dart und Billard gegen Computer-Gegner mit einstellbarer
+  Treffsicherheit, Taktik und Bedenkzeit; Scheibe, Tisch, Kugeln, Walzen und Gehäuse mit eigenen Bildern
 - **Geräte:** Handy oder Computer im Spiel mit Apps (Nachrichten, Inventar, Beziehungen, Galerie, Quests, Karte … und eigene
   Apps), komplett gestaltbar, auf Wunsch mit PIN oder Passwort · **Nachrichten über Szenen hinweg** mit Kontakten,
   Routen-Varianten, Antworten zum Auswählen, versteckten Nachrichten, Nachrichten nur fürs Handy oder nur für den PC –

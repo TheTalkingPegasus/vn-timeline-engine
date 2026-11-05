@@ -2,6 +2,28 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.17 – Arcade: darts, pool and slot machine
+- New bundled plugin **Arcade** (switch it on under Game systems → Overview). Three minigames that, like the others,
+  end in a win or a loss (scene afterwards, result in a variable):
+  - **Darts:** the crosshair floats over the board, click at the right moment. 301 or 501 (optionally finishing on a
+    double) or highest score after X rounds; against an opponent or alone against a target score. Real board geometry
+    for scoring. Board, dart, crosshair and background can be replaced with your own images.
+  - **Pool:** aim with the mouse, press, pull back and swing forward – the faster the swing, the harder the shot.
+    Real physics with cushions and pockets, guide line (long, short, off). 8-ball (solids/stripes, the 8 last, fouls,
+    ball in hand) or “whoever pots more balls”; alone: pot all balls within a number of shots. Table, cloth, cue and
+    each ball 1–15 can be designed.
+  - **Slot machine:** 3–5 reels, 1 or 3 rows, 1, 3 or 5 paylines; symbols as emoji or your own images with a
+    frequency each, payout table, wild symbol. Bets in a currency of your game or with play money. Cabinet colours,
+    lights, lever and background – or your own cabinet image with the reel window placed where you want it. The
+    editor shows the average payout and how often a spin wins.
+- **Computer opponents** for darts and pool (Game systems → Arcade → Opponents): name, portrait, accuracy, feel for
+  shot strength, tactics (works out darts checkouts, picks the easiest pool shot), thinking time, favourite target and
+  lines at the start, on winning and on losing. Templates “Beginner”, “Pub pro” and “Master”; try every opponent
+  right from the editor.
+- Skill-tree perks: steadier crosshair (darts) and longer guide line (pool).
+- Formulas and code: error messages are translated, names may contain any letters (ñ, é, Japanese), the code examples
+  in the help follow the interface language. The AI guide describes everything new since 0.9.5.
+
 ## 0.9.16 – Pixel art, battle animations, code track, puppet folders
 - Design → “🎨 Pixel art”: a pixel editor for drawing and animating frame by frame. Pen, eraser, fill, line,
   rectangle, circle, eyedropper and move layer; mirror drawing, onion skin, grid, Ctrl + wheel zoom, right click erases.

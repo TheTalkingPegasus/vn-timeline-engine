@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototype 0.9.16
+VN Timeline Engine · Prototype 0.9.17
 ====================================
 (Deutsch: siehe LIES MICH.txt)
 
@@ -15,6 +15,10 @@ Without installing (ZIP):
    isn't signed: "More info" → "Run anyway".
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
+
+NEW IN 0.9.17 · Arcade: darts, pool and slot machine
+- New bundled plugin "Arcade": darts and pool against computer opponents whose skill you set, and a slot machine with
+  your own symbols, payouts and cabinet. Board, table, balls and reels can use your own images.
 
 NEW IN 0.9.16 · Pixel art, battle animations, code track, puppet folders
 - Pixel art editor (Design → Pixel art): draw and animate frame by frame; finished animations become pixel-sharp
@@ -79,7 +83,8 @@ Game systems (switch on what you need)
   offline or game time; time preview in the editor.
 - Equipment, seasons and ambient sounds, game over screen.
 - Devices: phone or computer with apps, lock code; messages across scenes with routes, replies and unlocks.
-- Bundled plugins: Jobs and seven minigames. Write your own plugins in JavaScript (see PLUGINS.en.md).
+- Bundled plugins: Jobs, seven minigames and the Arcade (darts, pool, slot machine with computer opponents).
+  Write your own plugins in JavaScript (see PLUGINS.en.md).
 For players (in every game automatically)
 - History, auto mode, skip, quick save, save slots, settings, reading & accessibility options,
   graphics quality, sound output.

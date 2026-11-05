@@ -24,7 +24,7 @@
     { key: 'trade', label: 'Handel', icon: '🛒', on: () => !!(P().economy && P().economy.enabled) },
     { key: 'rel', label: 'Beziehungen', icon: '♥', on: () => !!(VN.Life && VN.Life.relOn && VN.Life.relOn()) },
     { key: 'life', label: 'Leben & Arbeit', icon: '🧭', on: () => plugOn('jobs.js') || !!(VN.World && VN.World.on()) },
-    { key: 'minigame', label: 'Minispiele', icon: '🎲', on: () => plugOn('minispiele.js') || plugOn('schlossknacken.js') },
+    { key: 'minigame', label: 'Minispiele', icon: '🎲', on: () => plugOn('minispiele.js') || plugOn('schlossknacken.js') || plugOn('spielhalle.js') },
     { key: 'stats', label: 'Werte', icon: '💪', on: () => (P().vars || []).some((v) => v.type !== 'flag') },
     { key: 'story', label: 'Story & Freischalten', icon: '🔓', on: () => true }
   ];
