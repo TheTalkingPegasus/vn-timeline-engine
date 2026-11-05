@@ -52,10 +52,26 @@
         const f = u.f;
         const url = f.image && VN.assetUrl(f.image);
         const sc = (Number(f.scale) || 100) / 100;
-        const sprite = url ? el('img', { class: 'cb-img', src: url, draggable: 'false', style: { height: (u.side === 'hero' ? 24 : 28) * sc + 'cqh', transform: f.flip ? 'scaleX(-1)' : '' } })
+        // Animierte Kämpfer (0.9.16): Gliederpuppe oder Bild mit Bones – mit Idle, Bildrate und Smear-Bildern
+        const body = el('div', { class: 'cb-body' });
+        const hgt = (u.side === 'hero' ? 24 : 28) * sc + 'cqh';
+        const figClip = { idleAnim: f.idleAnim || undefined, fps: f.fps, smear: f.smear };
+        let sprite = null;
+        try {
+          if (f.puppet && window.Puppet && Puppet.get(f.puppet)) sprite = Puppet.canvasFor(f.puppet, figClip, body);
+          else if (url && window.Rig && Rig.has(f.image) && window.Anim) sprite = Rig.canvasFor(f.image, figClip, { extraFn: Anim.extraFnFor(figClip, body) });
+        } catch (er) { console.error('Kämpfer-Figur', er); sprite = null; }
+        if (sprite) {
+          sprite.classList.add('cb-anim');
+          sprite.style.height = hgt;
+          if (f.flip) sprite.style.transform = 'scaleX(-1)';
+          u.animated = true;
+        } else sprite = url ? el('img', { class: 'cb-img', src: url, draggable: 'false', style: { height: hgt, transform: f.flip ? 'scaleX(-1)' : '' } })
           : el('div', { class: 'cb-ph', style: { fontSize: (u.side === 'hero' ? 11 : 13) * sc + 'cqh' } }, f.icon || (u.side === 'hero' ? '🛡️' : '👾'));
+        body.appendChild(sprite);
+        u.body = body;
         u.el = el('div', { class: 'cb-unit ' + u.side, style: { left: u.pos[0] + '%', top: u.pos[1] + '%', zIndex: String(10 + Math.round(u.pos[1])) } },
-          el('div', { class: 'cb-shadow' }), el('div', { class: 'cb-body' }, sprite),
+          el('div', { class: 'cb-shadow' }), body,
           el('div', { class: 'cb-tag' }, el('span', { class: 'cb-nm' }, u.name), u.side === 'enemy' ? el('div', { class: 'cb-mini' }, el('i')) : null),
           el('div', { class: 'cb-buffs' }));
         u.el.addEventListener('mouseenter', () => { if (mode === 'target' && targets.includes(u)) { tIdx = targets.indexOf(u); drawTargets(); } });
@@ -109,15 +125,26 @@
       };
       const anim = (u, cls, ms) => { u.el.classList.remove(cls); void u.el.offsetWidth; u.el.classList.add(cls); setTimeout(() => u.el.classList.remove(cls), ms); };
       const say = (text) => { banner.hidden = !text; banner.textContent = text || ''; };
+      // Eigene Animation einer Figur abspielen (Geste aus dem Animations-Editor), mit Überblendung aus dem Idle
+      const anims = (u) => u.f.anims || {};
+      const play = (u, animId, o = {}) => (u.animated && animId && window.Anim ? Anim.gesture(u.body, animId, Object.assign({ blendIn: u.f.blend != null ? Number(u.f.blend) : 0.15, blendOut: 0.25 }, o)) : null);
 
       // Eine Handlung ausführen und zeigen
       const perform = async (u, cmd) => {
         const ab = cmd.ab;
         say(cmd.kind === 'attack' ? u.name + ' · ' + tt('Angriff') : cmd.kind === 'skill' ? u.name + ' · ' + (ab.icon ? ab.icon + ' ' : '') + cb.name(ab) : cmd.kind === 'item' ? u.name + ' · ' + VN.tr(cmd.item.id + ':name', cmd.item.name) : cmd.kind === 'defend' ? u.name + ' · ' + tt('Verteidigen') : u.name + ' · ' + tt('Flucht') + ' …');
         const melee = cmd.kind === 'attack' || (ab && ab.kind === 'phys');
-        if (cmd.kind === 'attack' || cmd.kind === 'skill' || cmd.kind === 'item') anim(u, melee ? 'lunge' : 'cast', T(520));
+        // Eigene Angriffs-Animation? Dann statt des Standard-Sprungs abspielen und bis zum Trefferpunkt warten
+        const myAnim = cmd.kind === 'attack' ? anims(u).attack : cmd.kind === 'skill' ? (ab.anim || (melee ? anims(u).attack : anims(u).cast)) : cmd.kind === 'item' ? anims(u).item : cmd.kind === 'defend' ? anims(u).defend : null;
+        const ga = play(u, myAnim, ab && ab.blend != null && ab.blend !== '' ? { blendIn: Number(ab.blend) } : {});
+        let rest = 0;
+        if (ga) {
+          const hitAt = ga.hitAt != null ? Number(ga.hitAt) : (ga.dur || 1) * 0.5;
+          await wait(Math.max(0, hitAt) * 1000 + (ab && ab.blend != null && ab.blend !== '' ? Number(ab.blend) : 0.15) * 1000);
+          rest = Math.max(0, (ga.dur || 1) - hitAt) * 1000;
+        } else if (cmd.kind === 'attack' || cmd.kind === 'skill' || cmd.kind === 'item') anim(u, melee ? 'lunge' : 'cast', T(520));
         if (cmd.kind === 'item' && opts.rs.inv) { opts.rs.inv[cmd.item.id] = Math.max(0, (opts.rs.inv[cmd.item.id] || 0) - 1); if (!opts.rs.inv[cmd.item.id]) delete opts.rs.inv[cmd.item.id]; }
-        await wait(T(melee ? 260 : 380));
+        if (!ga) await wait(T(melee ? 260 : 380));
         const ev = cb.act(fi, u, cmd);
         const fxKind = cmd.kind === 'attack' ? 'slash' : ab ? (ab.fx && ab.fx !== 'auto' ? ab.fx : EL_FX[ab.element] || FX_OF[ab.kind] || 'hit') : cmd.kind === 'item' ? ({ heal: 'heal', mp: 'heal', revive: 'holy', dmg: 'fire' })[(cb.itemFight(cmd.item) || {}).kind] : null;
         const conf = cb.cfg().sounds || {};
@@ -129,18 +156,18 @@
         for (const e of ev) if (e.u && e.t !== 'ko' && !hitUnits.has(e.u) && e.t !== 'defend' && e.t !== 'flee' && e.t !== 'fleefail') { hitUnits.add(e.u); showFx(e.u, fxKind, ab && ab.fxImage); }
         await wait(T(240));
         for (const e of ev) {
-          if (e.t === 'dmg') { number(e.u, String(e.n), (e.crit ? 'crit' : '') + (e.u.side === 'hero' ? ' hurt' : '')); anim(e.u, 'hit', 420); if (e.weak) number(e.u, tt('Schwachpunkt!'), 'tag'); else if (e.resist) number(e.u, tt('Resistent'), 'tag dim'); if (e.crit) { root.classList.remove('shake'); void root.offsetWidth; root.classList.add('shake'); } }
+          if (e.t === 'dmg') { number(e.u, String(e.n), (e.crit ? 'crit' : '') + (e.u.side === 'hero' ? ' hurt' : '')); if (!play(e.u, (ab && ab.hitAnim) || anims(e.u).hit)) anim(e.u, 'hit', 420); if (e.weak) number(e.u, tt('Schwachpunkt!'), 'tag'); else if (e.resist) number(e.u, tt('Resistent'), 'tag dim'); if (e.crit) { root.classList.remove('shake'); void root.offsetWidth; root.classList.add('shake'); } }
           else if (e.t === 'heal') number(e.u, '+' + e.n, 'heal');
           else if (e.t === 'mp') number(e.u, '+' + e.n + ' ' + tt('MP'), 'mp');
           else if (e.t === 'revive') number(e.u, tt('Wieder da!'), 'heal');
           else if (e.t === 'miss') number(e.u, tt('Verfehlt'), 'tag dim');
           else if (e.t === 'buff') number(e.u, (e.pct > 0 ? '▲ ' : '▼ ') + tt(STAT_SHORT[e.stat] || e.stat), e.pct > 0 ? 'heal' : 'tag dim');
-          else if (e.t === 'ko') { sfx(conf.ko); }
+          else if (e.t === 'ko') { sfx(conf.ko); play(e.u, anims(e.u).ko, { hold: true }); }
           else if (e.t === 'fleefail') say(tt('Flucht misslungen!'));
           else if (e.t === 'flee') say(tt('Entkommen!'));
         }
         all();
-        await wait(T(ev.some((e) => e.t === 'ko') ? 900 : 700));
+        await wait(Math.max(T(ev.some((e) => e.t === 'ko') ? 900 : 700), rest));
       };
 
       // ---------- Spieler-Eingabe ----------
@@ -241,6 +268,8 @@
 
       const result = (res, info) => new Promise((resolve) => {
         const c = cb.cfg();
+        // Sieg-Animation der Helden, die noch stehen
+        if (res === 'win') for (const u of fi.units) if (u.side === 'hero' && !u.ko) play(u, anims(u).victory, { hold: true });
         const box = el('div', { class: 'cb-result ' + res });
         if (window.UiDesign) UiDesign.apply('combat', box);
         box.appendChild(el('h2', null, res === 'win' ? tt('Sieg!') : res === 'lose' ? tt('Niederlage') : tt('Entkommen!')));

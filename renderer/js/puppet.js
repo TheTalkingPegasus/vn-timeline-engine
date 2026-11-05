@@ -283,7 +283,7 @@
     const k = [keep.a, keep.b, keep.c, keep.d, keep.e, keep.f];
     const PAD = window.Rig ? Rig.PAD : 0.15;
     for (const p of pup.parts) {
-      if (p.hidden) continue;
+      if (p.hidden || (opts.skip && opts.skip.has(p.id))) continue;
       const M = mul(base, mats[p.id]);
       out[p.id] = M;
       const W = mul(k, p.flipX ? mul(M, [-1, 0, 0, 1, p.w, 0]) : M);
@@ -516,9 +516,9 @@
     const g = it.holder && it.holder._gesture;
     if (g && g.anim) {
       const ga = (g.anim.actors || []).find((x) => x.puppet === pup.id);
-      const lt = now() - g.t0, d = g.anim.dur || 1;
-      if (!ga || lt > d + 0.3) it.holder._gesture = null;
-      else pose = P.addPose(pose, P.poseAt(ga, Math.min(lt, d)), Math.max(0, Math.min(1, lt / 0.2, (d + 0.3 - lt) / 0.3)));
+      const lt = now() - g.t0, d = g.anim.dur || 1, bi = g.bi != null ? g.bi : 0.2, bo = g.bo != null ? g.bo : 0.3;
+      if (!ga || (lt > d + bo && !g.hold)) it.holder._gesture = null;
+      else pose = P.addPose(pose, P.poseAt(ga, Math.min(lt, d)), g.hold && lt > d ? 1 : Math.max(0, Math.min(1, bi > 0 ? lt / bi : 1, bo > 0 ? (d + bo - lt) / bo : (lt <= d ? 1 : 0))));
     }
     it.mats = P.draw(ctx, pup, it.res, base, it.static ? 0 : t, it.static ? 0 : dt, pose, it.st);
   };

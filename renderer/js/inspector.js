@@ -130,6 +130,26 @@
         el('button', { class: 'btn tiny', onclick: () => App.openBones(base) }, 'Knochen bearbeiten'));
     },
 
+    // Kurze Hilfe zur Code-Spur und zu Formeln (0.9.16)
+    codeHelp() {
+      const ex = [
+        ['gold += 5', 'Variable „gold“ um 5 erhöhen'],
+        ['[Tür offen] = wahr', 'Namen mit Leerzeichen in eckigen Klammern'],
+        ['if mut > 3 and not geflohen: punkte += 1', 'Wenn-Dann in einer Zeile'],
+        ['give("Schlüssel")  take("Heiltrank", 2)', 'Gegenstände geben und nehmen'],
+        ['earn("Gold", 10)  spend("Gold", 3)', 'Geld dazu oder weg'],
+        ['goto("Marktplatz")', 'Zu einer Szene oder einem Hub springen'],
+        ['wurf = random(1, 6)', 'Zufallszahl von 1 bis 6'],
+        ['# Notiz', 'Kommentar, wird ignoriert']
+      ];
+      return el('div', { class: 'hint-box' },
+        el('strong', null, 'So schreibst du Code'), el('br'),
+        el('span', { class: 'muted small' }, 'Eine Anweisung pro Zeile. Variablen legst du unter „Variablen“ an – oder mit dem +-Knopf, wenn ein Name noch fehlt.'),
+        el('table', { class: 'code-help' }, ...ex.map(([c, d]) => el('tr', null, el('td', null, el('code', null, c)), el('td', { class: 'muted small' }, d)))),
+        el('div', { class: 'muted small' }, 'Funktionen: min, max, round, floor, ceil, abs, random, chance(30), item("Name"), money("Gold"), seen("Szene"). Vergleiche: == != < <= > >=, verknüpfen mit and/und, or/oder, not/nicht.'),
+        el('div', { class: 'muted small' }, 'Dieselben Formeln gehen auch als Bedingung: „🧮 Formel“, z. B. gold >= 10 and item("Schlüssel") > 0.'));
+    },
+
     designLink(what) {
       return el('button', { class: 'btn design-link', onclick: () => Design.openTab() }, el('span', null, '🎨 Design'), el('span', { class: 'muted small' }, what));
     },
@@ -173,6 +193,10 @@
           range('Übergangsdauer', c.dur != null ? c.dur : 1, 0, 3, 0.1, (v) => v.toFixed(1) + ' s', set(c, 'dur')),
           Tools.bgExtras(c),
           Inspector.designLink('Zoom, Ausschnitt, Vignette, Farbe'), timing);
+      } else if (tb === 'code') {
+        const [ta, msg] = VN.Formula.editor(c, 'code', true, 8);
+        ta.style.width = '100%';
+        box.append(field('Code (läuft, sobald dieser Schritt beginnt)', ta), msg, timing, Inspector.codeHelp());
       } else if (tb === 'cam') {
         box.appendChild(Tools.camInspector(s, c, t, timing));
       } else if (tb === 'video') {

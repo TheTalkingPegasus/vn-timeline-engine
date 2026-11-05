@@ -52,6 +52,27 @@
       field('Größe %', num(f.scale || 100, (v) => { f.scale = Math.max(20, v || 100); }, '60px', 5)),
       check(f.flip, 'spiegeln', (v) => { f.flip = v; }, side === 'hero' ? 'Helden sollten nach links schauen' : 'Gegner sollten nach rechts schauen')));
     box.appendChild(el('div', { class: 'muted small' }, side === 'hero' ? 'Helden stehen rechts und schauen nach links. Ohne Bild erscheint das Symbol.' : 'Gegner stehen links und schauen nach rechts. Ohne Bild erscheint das Symbol.'));
+    // Animationen (0.9.16): Gliederpuppe oder Bild mit Bones, eigene Animationen aus dem Animations-Editor
+    {
+      const A = (VN.project.anims || []);
+      const animSel = (val, types, fn) => sel(val || '', [['', '— Standard —'], ...A.filter((x) => types.includes(x.type || 'gesture')).map((x) => [x.id, x.name])], fn);
+      f.anims = f.anims || {};
+      const rigged = f.image && window.Rig && Rig.has(f.image);
+      const pups = VN.project.puppets || [];
+      box.appendChild(sec('Animationen',
+        el('div', { class: 'sk-grid2' },
+          pups.length ? field('Gliederpuppe statt Bild', sel(f.puppet || '', [['', '— keine —'], ...pups.map((p) => [p.id, p.name])], (v) => { if (v) f.puppet = v; else delete f.puppet; })) : null,
+          field('Idle (Stehen)', animSel(f.idleAnim, ['idle'], (v) => { if (v) f.idleAnim = v; else delete f.idleAnim; })),
+          field('Standardangriff', animSel(f.anims.attack, ['gesture'], (v) => { if (v) f.anims.attack = v; else delete f.anims.attack; })),
+          field('Zauber (wenn die Fähigkeit keine eigene hat)', animSel(f.anims.cast, ['gesture'], (v) => { if (v) f.anims.cast = v; else delete f.anims.cast; })),
+          field('Getroffen', animSel(f.anims.hit, ['gesture'], (v) => { if (v) f.anims.hit = v; else delete f.anims.hit; })),
+          field('Verteidigen', animSel(f.anims.defend, ['gesture'], (v) => { if (v) f.anims.defend = v; else delete f.anims.defend; })),
+          field('Gegenstand benutzen', animSel(f.anims.item, ['gesture'], (v) => { if (v) f.anims.item = v; else delete f.anims.item; })),
+          field('K.O. (bleibt am Ende stehen)', animSel(f.anims.ko, ['gesture'], (v) => { if (v) f.anims.ko = v; else delete f.anims.ko; })),
+          side === 'hero' ? field('Sieg', animSel(f.anims.victory, ['gesture'], (v) => { if (v) f.anims.victory = v; else delete f.anims.victory; })) : null,
+          field('Überblendung aus dem Idle', sel(String(f.blend != null ? f.blend : 0.15), [['0', 'hart (0 s)'], ['0.08', 'sehr schnell'], ['0.15', 'schnell'], ['0.25', 'normal'], ['0.4', 'weich']], (v) => { f.blend = Number(v); }))),
+        el('div', { class: 'muted small' }, f.puppet || rigged ? 'Animationen kommen aus dem Reiter „Animation“ (Idle und Gesten für diese Figur). Beim Wechsel blendet die Pose weich vom Idle in den ersten Keyframe über und am Ende zurück. Leer = einfacher Sprung bzw. Zucken wie bisher.' : 'Eigene Animationen brauchen eine Figur mit Bones (Reiter „Figuren“ → „Bones & Blinzeln“) oder eine Gliederpuppe. Mit einem einfachen Bild gibt es den Standard-Sprung.')));
+    }
     box.appendChild(sec(side === 'hero' ? 'Werte auf Stufe 1' : 'Werte',
       el('div', { class: 'sk-grid2' }, ...CB().STATS.map(([k, l]) => field(l, num(f[k], (v) => { f[k] = Math.max(0, v); }, '58px', 1))))));
     if (side === 'hero') {
@@ -119,8 +140,12 @@
       el('div', { class: 'sk-grid2' },
         field('Effekt', sel(a.fx || 'auto', CB().FX, (v) => { a.fx = v; })),
         field('Eigenes Effekt-Bild (statt Effekt)', VN.assetSelect('image', a.fxImage, (v) => VN.mutate(() => { a.fxImage = v; }))),
-        field('Ton', VN.assetSelect('audio', a.sound, (v) => VN.mutate(() => { a.sound = v; })))),
-      el('div', { class: 'muted small' }, 'Eigene Bilder (z. B. ein PNG mit Feuerball) erscheinen kurz groß über dem Ziel. So lassen sich alle Effekte austauschen.')));
+        field('Ton', VN.assetSelect('audio', a.sound, (v) => VN.mutate(() => { a.sound = v; }))),
+        // Eigene Animationen (0.9.16)
+        field('Animation des Angreifers', sel(a.anim || '', [['', '— Standard der Figur —'], ...(VN.project.anims || []).filter((x) => (x.type || 'gesture') === 'gesture').map((x) => [x.id, x.name])], (v) => { if (v) a.anim = v; else delete a.anim; })),
+        field('Reaktion des Ziels', sel(a.hitAnim || '', [['', '— Standard der Figur —'], ...(VN.project.anims || []).filter((x) => (x.type || 'gesture') === 'gesture').map((x) => [x.id, x.name])], (v) => { if (v) a.hitAnim = v; else delete a.hitAnim; })),
+        field('Überblendung', sel(a.blend != null ? String(a.blend) : '', [['', '— wie die Figur —'], ['0', 'hart (0 s)'], ['0.08', 'sehr schnell'], ['0.15', 'schnell'], ['0.25', 'normal'], ['0.4', 'weich']], (v) => { if (v === '') delete a.blend; else a.blend = Number(v); }))),
+      el('div', { class: 'muted small' }, 'Eigene Bilder (z. B. ein PNG mit Feuerball) erscheinen kurz groß über dem Ziel. So lassen sich alle Effekte austauschen. Eigene Animationen: Effekt, Schaden und Ton kommen im Trefferpunkt der Animation („💥 Treffer hier“ im Animations-Editor, sonst in der Mitte).')));
     box.appendChild(el('div', { class: 'muted small' }, users.length ? VN.t('Können') + ': ' + users.map((f) => f.name).join(', ') : 'Noch niemand hat diese Fähigkeit.'));
     return box;
   };

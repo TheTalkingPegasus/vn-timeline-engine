@@ -771,6 +771,16 @@
     showAmbient([...(st.musicX || []), ...ambNow(s)]);
     showFxExtra(st.fxX || []);
     if (window.VNPlugin) VNPlugin.hook('onBeat', s, b, ctx());
+    // Code-Spur (0.9.16): läuft einmal, bevor der Text erscheint, damit {Variablen} schon den neuen Wert zeigen
+    const codeT = tl.find((t) => t.key === 'code');
+    for (const c of codeT && VN.trackOn(s, codeT, tl) ? s.tracks.code || [] : []) {
+      if (c.start !== b || !String(c.code || '').trim() || run.rs.fired[c.id]) continue;
+      run.rs.fired[c.id] = true;
+      const myRun = run;
+      const gains = await doActions([{ type: 'code', code: c.code }], c.id);
+      if (myRun !== run || gains === null) return;
+      if (gains && gains.length) showGains(gains);
+    }
     if (run.blocked === 'video') { run.pendingDialog = st.dialog; } else showDialog(st.dialog);
     run.pendingChoice = st.choice;
     if (st.dialog && st.dialog.start === b && st.dialog.actions && st.dialog.actions.length && !run.rs.fired[st.dialog.id]) {

@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.15
+VN Timeline Engine · Prototyp 0.9.16
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,32 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.16 · Pixel-Art, Kampf-Animationen, Code-Spur, Ordner für Puppen
+- Design → „🎨 Pixel-Art“: Pixel-Editor zum Zeichnen und Animieren Bild für Bild. Stift, Radierer, Füllen, Linie,
+  Rechteck, Kreis, Pipette und Ebene verschieben; Spiegeln beim Zeichnen, Zwiebelschicht, Raster, Strg + Mausrad zum
+  Zoomen, Rechtsklick radiert. Paletten (Vorlagen oder eigene Farben – ändert man eine Farbe, ändert sie sich in allen
+  Bildern), Ebenen, mehrere Animationen pro Sprite mit Bildleiste (verdoppeln, leeres Bild, umsortieren, Dauer pro Bild)
+  und Live-Vorschau. „Ins Projekt“ speichert jede Animation als animiertes GIF (oder alle als Sprite-Sheet) bei den
+  Bildern, pixelscharf und ×1–×8 vergrößerbar, nutzbar als Figur, Hintergrund, Hub-Objekt oder Kämpfer. Aktualisieren
+  ersetzt die Datei, alle Stellen zeigen dann die neue Fassung. Sprite-Sheets aus anderen Pixel-Programmen lassen sich
+  importieren.
+- Kampf: Kämpfer können eine Figur mit Bones oder eine Gliederpuppe nutzen, mit eigenem Idle und eigenen Animationen für
+  Angriff, Zauber, Getroffen, Verteidigen, Gegenstand, K.O. (bleibt in der letzten Pose) und Sieg. Jede Fähigkeit kann
+  eine eigene Animation des Angreifers und eine Reaktion des Ziels haben. Die Animationen blenden weich aus dem Idle
+  heraus und wieder zurück (einstellbar pro Kämpfer oder Fähigkeit). Im Animations-Editor legt „💥 Treffer hier“ fest,
+  wann im Kampf Effekt, Schaden und Ton kommen.
+- Story-Timeline: neue Spur „Code“. Ein Code-Clip läuft einmal, sobald sein Schritt beginnt – noch bevor der Text
+  erscheint, damit {Variablen} schon den neuen Wert zeigen. Eine Anweisung pro Zeile: gold += 5,
+  if mut > 3 and not geflohen: punkte += 1, [Tür offen] = wahr, give("Schlüssel"), take("Heiltrank", 2),
+  earn("Gold", 10), spend("Gold", 3), goto("Marktplatz"), wurf = random(1, 6), # Kommentare. Fehler zeigt das Feld
+  schon beim Tippen mit Zeilennummer, fehlende Variablen lassen sich mit einem Klick anlegen. Dasselbe gibt es als
+  Aktion „🧮 Rechnen / Code“ (Dialoge, Antworten, Hub-Objekte), und Formeln gehen als Bedingung „🧮 Formel“, z. B.
+  gold >= 10 and item("Schlüssel") > 0.
+- Puppen-Editor: Ordner für Teile. Teile und Ordner per Ziehen einsortieren, Ordner verschachteln, zuklappen, per
+  Doppelklick umbenennen, im Editor ausblenden oder sperren (im Spiel ist immer alles sichtbar), Blöcke nach oben und
+  unten schieben, Teile suchen. Ordner sortieren nur und bestimmen die Zeichenreihenfolge – die Bewegung bestimmt
+  weiterhin „Hängt an“.
 
 NEU IN 0.9.15 · Inpaint-Stift für Gliederpuppen
 - Puppen-Editor: neuer „🖌 Inpaint-Stift“. Lücke an einem Teil per Lasso, Lineal oder Pinsel maskieren und füllen – ganz
