@@ -56,9 +56,20 @@
         window.Smear && a ? el('div', { class: 'muted small' }, 'Diese Animation') : null,
         window.Smear && a ? Smear.fields(a, 'smear', VN.t('Wie im Projekt')) : null,
         window.Smear && a ? AnimEd.smearMarks(a) : null,
+        a && (a.type || 'gesture') === 'gesture' ? AnimEd.hitMark(a) : null,
         window.Smear ? el('div', { class: 'muted small' }, 'Grundeinstellung fürs ganze Projekt') : null,
         window.Smear ? Smear.fields(p, 'smear', null) : null,
         window.Smear ? el('div', { class: 'muted small' }, 'Bei sehr schnellen Bewegungen (Faustschlag, Ausholen, Sprung) zeichnet die Engine ein Smear-Bild: Mehrfachbilder, ein lang gezogenes Körperteil oder Speedlines. Passt besonders gut zu 12 oder 8 Bildern pro Sekunde.') : null);
+    },
+    // Trefferpunkt (0.9.16): wann im Kampf Effekt, Schaden und Ton erscheinen
+    hitMark(a) {
+      const t = Math.round((VN.ui.animT || 0) * 100) / 100;
+      return el('div', { class: 'field' },
+        el('div', { class: 'lbl' }, VN.t('Trefferpunkt im Kampf') + ': ' + (a.hitAt != null ? Number(a.hitAt).toFixed(2) + ' s' : VN.t('Mitte'))),
+        el('div', { class: 'row gap8' },
+          el('button', { class: 'btn tiny', title: VN.t('Im Kampf erscheinen Effekt, Schaden und Ton genau hier'), onclick: () => VN.mutate(() => { a.hitAt = t; }) }, '💥 ' + VN.t('Treffer hier') + ' · ' + t.toFixed(2) + ' s'),
+          a.hitAt != null ? el('button', { class: 'btn tiny', onclick: () => { VN.ui.animT = a.hitAt; VN.render(); } }, VN.t('Hinspringen')) : null,
+          a.hitAt != null ? el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { delete a.hitAt; }) }, '×') : null));
     },
     // Smear-Bilder von Hand an der Stelle des Abspielkopfs
     smearMarks(a) {

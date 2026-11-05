@@ -66,10 +66,11 @@
         }
         const g = holder._gesture;
         if (g && g.anim && g.anim.actors && g.anim.actors[0]) {
-          const lt = now - g.t0, d = g.anim.dur || 1;
-          if (lt > d + 0.3) holder._gesture = null;
+          const lt = now - g.t0, d = g.anim.dur || 1, bi = g.bi != null ? g.bi : 0.2, bo = g.bo != null ? g.bo : 0.3;
+          if (lt > d + bo && !g.hold) holder._gesture = null;
           else {
-            const w = Math.max(0, Math.min(1, lt / 0.2, (d + 0.3 - lt) / 0.3));
+            // Überblenden: Pose von Idle/Stand weich in den ersten Keyframe der Geste und am Ende zurück (bi/bo Sekunden)
+            const w = g.hold && lt > d ? 1 : Math.max(0, Math.min(1, bi > 0 ? lt / bi : 1, bo > 0 ? (d + bo - lt) / bo : (lt <= d ? 1 : 0)));
             const ga = Anim.angles(g.anim.actors[0], Math.min(lt, d));
             const keys = new Set([...Object.keys(out), ...Object.keys(ga)]);
             for (const k of keys) out[k] = (out[k] || 0) * (1 - w) + (ga[k] || 0) * w;
@@ -78,7 +79,8 @@
         return out;
       };
     },
-    gesture(holder, animId) { const a = Anim.get(animId); if (a) holder._gesture = { anim: a, t0: performance.now() / 1000 }; },
+    // o: { blendIn, blendOut (Sekunden), hold: am Ende stehen bleiben (z. B. K.O.) }
+    gesture(holder, animId, o = {}) { const a = Anim.get(animId); if (a) holder._gesture = { anim: a, t0: performance.now() / 1000, bi: o.blendIn, bo: o.blendOut, hold: !!o.hold }; return a; },
 
     // ---------- Zusammensetzen auf ein Canvas (Editor, Spiel, Video) ----------
     // scene: { anim, actors: [{ actor, inst, img }] , bgImg }
