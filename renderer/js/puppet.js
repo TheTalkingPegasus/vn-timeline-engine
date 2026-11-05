@@ -16,6 +16,9 @@
   const inv = (m) => { const d = m[0] * m[3] - m[1] * m[2] || 1e-9; return [m[3] / d, -m[1] / d, -m[2] / d, m[0] / d, (m[2] * m[5] - m[3] * m[4]) / d, (m[1] * m[4] - m[0] * m[5]) / d]; };
   P.m = { mul, T, R, S, ap, inv, I: [1, 0, 0, 1, 0, 0] };
 
+  // Feste Gelenke (0.9.8, Standard): Teile, die an einem anderen hängen, bleiben immer an ihrem Gelenk – sie drehen
+  // sich nur noch, verschieben sich nie (auch nicht durch Wippen oder alte Keyframes). Aus: pup.freeJoints = true.
+  P.fixed = (pup) => !(pup && pup.freeJoints);
   P.IDLE = [['none', 'Keine'], ['sway', 'Wackeln (pendelt)'], ['breathe', 'Atmen (dehnt sich)'], ['bob', 'Wippen (auf und ab)'], ['jiggle', 'Jiggle (schwingt nach)']];
   P.list = () => (VN.project && VN.project.puppets) || [];
   P.get = (id) => P.list().find((x) => x.id === id) || null;
@@ -48,7 +51,18 @@
   // Ruhe-Matrix (ohne Animation): eigenes Bild → Puppen-Fläche
   P.rest = (p) => mul(mul(T(p.x + p.ax, p.y + p.ay), R(p.rot || 0)), T(-p.ax, -p.ay));
   // Endpunkt eines Teils (für IK und Griffe): eingestellt oder dem Pin gegenüber
-  P.tip = (p) => (p.tx != null ? [p.tx, p.ty] : [p.w - p.ax, p.h - p.ay]);
+  // Ohne eigene Länge (Lineal, 0.9.8): bei genau einem Kind dessen Gelenk (Oberschenkel bis Knie), sonst gegenüber
+  P.tip = (p, pup) => {
+    if (p.tx != null) return [p.tx, p.ty];
+    const kids = pup ? P.children(pup, p.id) : [];
+    if (kids.length === 1) return ap(inv(P.rest(p)), kids[0].x + kids[0].ax, kids[0].y + kids[0].ay);
+    return [p.w - p.ax, p.h - p.ay];
+  };
+  // Länge eines Glieds (Gelenk bis Endpunkt) in Pixeln
+  P.length = (p, pup) => { const [x, y] = P.tip(p, pup); return Math.hypot(x - p.ax, y - p.ay); };
+  // Gelenk-Grenzen (0.9.8): Drehung gegenüber der Ruhe-Lage, in Grad (min ≤ r ≤ max)
+  P.lim = (p) => (p && p.lim && p.lim.on !== false && Number.isFinite(Number(p.lim.min)) && Number.isFinite(Number(p.lim.max)) ? [Math.min(Number(p.lim.min), Number(p.lim.max)), Math.max(Number(p.lim.min), Number(p.lim.max))] : null);
+  P.clampR = (p, r) => { const L = P.lim(p); return L ? Math.max(L[0], Math.min(L[1], r)) : r; };
 
   // ---------- Pins folgen den Bones des Eltern-Teils (0.7.8) ----------
   // Hat das Eltern-Teil Bones, verformt es sich (Atmen, Schwanken, Physik). Der Pin eines Kindes wandert dann mit
@@ -102,9 +116,11 @@
       const id = p.idle || {};
       const amp = Number(id.amp) || 0, spd = Math.max(0.2, Number(id.speed) || 3), ph = (Number(id.phase) || 0) * D2R;
       const wave = t != null ? Math.sin(2 * Math.PI * t / spd + ph) : 0;
-      let rot = Number(ps.r) || 0, ox = Number(ps.x) || 0, oy = Number(ps.y) || 0, sx = 1, sy = 1;
+      const anchored = !!(p.parent && P.fixed(pup));
+      let rot = Number(ps.r) || 0, ox = anchored ? 0 : Number(ps.x) || 0, oy = anchored ? 0 : Number(ps.y) || 0, sx = 1, sy = 1;
       if (id.type === 'sway') rot += amp * wave;
-      else if (id.type === 'bob') oy += amp * wave;
+      // Wippen an einem festen Gelenk: federt in sich (dehnt sich entlang des Teils) statt vom Gelenk wegzurutschen
+      else if (id.type === 'bob') { if (anchored) sy += amp / 200 * wave; else oy += amp * wave; }
       else if (id.type === 'breathe') { sy += amp / 100 * wave; sx += amp / 250 * wave; }
       let base, local;
       if (p.parent && mats[p.parent]) {
@@ -195,7 +211,12 @@
       } else {
         const im = res && res.imgs[p.id];
         if (im) ctx.drawImage(im, 0, 0, p.w, p.h);
-        else if (opts.placeholder) { ctx.fillStyle = 'rgba(160,160,180,0.35)'; ctx.fillRect(0, 0, p.w, p.h); }
+        else if (opts.placeholder) {
+          // Leerer Platz (Vorlage): grau mit gestricheltem Rand und Namen
+          ctx.fillStyle = 'rgba(160,160,180,0.22)'; ctx.fillRect(0, 0, p.w, p.h);
+          ctx.strokeStyle = 'rgba(200,200,220,0.7)'; ctx.lineWidth = 2; ctx.setLineDash([6, 5]); ctx.strokeRect(1, 1, p.w - 2, p.h - 2); ctx.setLineDash([]);
+          if (p.name) { ctx.fillStyle = 'rgba(230,230,240,0.9)'; ctx.font = Math.max(11, Math.min(22, p.w / 6)) + 'px Segoe UI, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(p.name, p.w / 2, p.h / 2, p.w - 6); }
+        }
       }
     }
     ctx.setTransform(keep);
@@ -239,7 +260,7 @@
         let d = (Math.atan2(target[1] - piv[1], target[0] - piv[0]) - Math.atan2(end[1] - piv[1], end[0] - piv[0])) / D2R;
         if (d > 180) d -= 360; if (d < -180) d += 360;
         const ps = pose[j.id] || (pose[j.id] = { r: 0, x: 0, y: 0 });
-        ps.r = Math.max(-360, Math.min(360, (ps.r || 0) + d * 0.9));
+        ps.r = P.clampR(j, Math.max(-360, Math.min(360, (ps.r || 0) + d * 0.9)));
       }
       const mats = P.solve(pup, pose, null, null, 0);
       const end = ap(mats[endId], endPt[0], endPt[1]);
@@ -251,10 +272,87 @@
     for (const pid of pins) {
       const part = P.part(pup, pid);
       if (!part || !before[pid]) continue;
-      P.ik(pup, pose, pid, P.tip(part), before[pid], { links: 3, lock: new Set(P.roots(pup).map((r) => r.id)) });
+      P.ik(pup, pose, pid, P.tip(part, pup), before[pid], { links: 6, lock: new Set(P.roots(pup).map((r) => r.id)) });
     }
   };
-  P.tipWorld = (pup, pose, pid) => { const part = P.part(pup, pid); const m = P.solve(pup, pose, null, null, 0)[pid]; return part && m ? ap(m, ...P.tip(part)) : null; };
+  P.tipWorld = (pup, pose, pid) => { const part = P.part(pup, pid); const m = P.solve(pup, pose, null, null, 0)[pid]; return part && m ? ap(m, ...P.tip(part, pup)) : null; };
+  // Wurzel eines Teils (oberstes Eltern-Teil)
+  P.rootOf = (pup, id) => { let p = P.part(pup, id), n = 0; while (p && p.parent && n++ < 40) p = P.part(pup, p.parent); return p; };
+
+  // ---------- Puppenspiel mit festgeklebten Gliedern (0.9.8) ----------
+  // Körper (Wurzel-Teil) bewegen oder neigen, während festgepinnte Teile (z. B. Füße) an ihrem Platz bleiben:
+  // Die Ketten dazwischen (Unterschenkel, Oberschenkel) beugen sich – nur so weit, wie Gelenk-Grenzen es erlauben.
+  // Reichen die Glieder nicht, bleibt der Körper so weit wie möglich stehen (gestreckte Beine = höchster Punkt).
+  // want: { x, y, r } gewünschte Wurzel-Pose; pins: Teil-IDs; fixed: { id: [x, y] } Zielpunkte der Pins
+  const wAng = (m) => Math.atan2(m[1], m[0]) / D2R;
+  const norm = (d) => { while (d > 180) d -= 360; while (d < -180) d += 360; return d; };
+  // Zwei Glieder (z. B. Oberschenkel + Unterschenkel) so drehen, dass das Gelenk von E (Knöchel) bei T liegt.
+  // Von den zwei möglichen Knick-Richtungen wird die genommen, die die Gelenk-Grenzen einhält.
+  const twoBone = (pup, pose, B, A, E, T) => {
+    const loc = (par, child) => ap(inv(P.rest(par)), child.x + child.ax, child.y + child.ay);
+    const kA = loc(B, A), kE = loc(A, E);
+    const L1 = Math.hypot(kA[0] - B.ax, kA[1] - B.ay), L2 = Math.hypot(kE[0] - A.ax, kE[1] - A.ay);
+    const b0 = Math.atan2(kA[1] - B.ay, kA[0] - B.ax) / D2R, a0 = Math.atan2(kE[1] - A.ay, kE[0] - A.ax) / D2R;
+    const psB = pose[B.id] || (pose[B.id] = { r: 0, x: 0, y: 0 }), psA = pose[A.id] || (pose[A.id] = { r: 0, x: 0, y: 0 });
+    const m = P.solve(pup, pose, null, null, 0);
+    const bp = ap(m[B.id], B.ax, B.ay);
+    let d = Math.hypot(T[0] - bp[0], T[1] - bp[1]);
+    d = Math.max(Math.abs(L1 - L2) + 0.01, Math.min(L1 + L2 - 0.01, d));
+    const phi = Math.atan2(T[1] - bp[1], T[0] - bp[0]) / D2R;
+    const al = Math.acos(Math.max(-1, Math.min(1, (L1 * L1 + d * d - L2 * L2) / (2 * L1 * d)))) / D2R;
+    const thB = wAng(m[B.id]), thA = wAng(m[A.id]);
+    let best = null;
+    for (const sgn of [1, -1]) {
+      const dirB = phi + sgn * al;
+      const rB = (psB.r || 0) + norm(dirB - b0 - thB);
+      // Knie-Position und Richtung des Unterschenkels zum Ziel
+      const kx = bp[0] + L1 * Math.cos(dirB * D2R), ky = bp[1] + L1 * Math.sin(dirB * D2R);
+      const dirA = Math.atan2(T[1] - ky, T[0] - kx) / D2R;
+      // Welt-Winkel von A nach der Drehung von B: thA ändert sich um dieselbe Differenz wie B
+      const thA2 = thA + (rB - (psB.r || 0));
+      const rA = (psA.r || 0) + norm(dirA - a0 - thA2);
+      const over = (p, r) => { const L = P.lim(p); return L ? Math.max(0, L[0] - r, r - L[1]) : 0; };
+      const cost = over(B, rB) * 10 + over(A, rA) * 10 + Math.abs(norm(rA - (psA.r || 0))) * 0.01 + Math.abs(norm(rB - (psB.r || 0))) * 0.01;
+      if (!best || cost < best.cost) best = { cost, rB, rA };
+    }
+    psB.r = P.clampR(B, best.rB);
+    psA.r = P.clampR(A, best.rA);
+  };
+  P.moveBody = (pup, pose, rootId, want, pins, fixed) => {
+    // Festgepinnte Teile: Gelenk-Position und Welt-Winkel vor der Bewegung merken (der Fuß bleibt, wie er steht)
+    const m0 = P.solve(pup, pose, null, null, 0);
+    const anchor = {};
+    for (const pid of pins) { const e = P.part(pup, pid); if (e && m0[pid]) anchor[pid] = { p: ap(m0[pid], e.ax, e.ay), a: wAng(m0[pid]) }; }
+    const ps = pose[rootId] || (pose[rootId] = { r: 0, x: 0, y: 0 });
+    if (want.r != null) ps.r = P.clampR(P.part(pup, rootId), want.r);
+    ps.x = want.x; ps.y = want.y;
+    const mine = pins.filter((pid) => anchor[pid] && P.rootOf(pup, pid) && P.rootOf(pup, pid).id === rootId && pid !== rootId);
+    if (!mine.length) return pose;
+    const lock = new Set([rootId]);
+    for (let it = 0; it < 12; it++) {
+      for (const pid of mine) {
+        const E = P.part(pup, pid), A = E.parent && P.part(pup, E.parent), B = A && A.parent && P.part(pup, A.parent);
+        if (A && B && B.id !== rootId && A.id !== rootId) {
+          twoBone(pup, pose, B, A, E, anchor[pid].p);
+          // Der festgepinnte Teil behält seinen Winkel (Fuß bleibt flach am Boden)
+          const m = P.solve(pup, pose, null, null, 0);
+          const pe = pose[pid] || (pose[pid] = { r: 0, x: 0, y: 0 });
+          pe.r = P.clampR(E, (pe.r || 0) + norm(anchor[pid].a - wAng(m[pid])));
+        } else if (fixed && fixed[pid]) P.ik(pup, pose, pid, P.tip(E, pup), fixed[pid], { links: 6, lock, iter: 6 });
+      }
+      // Was nicht erreicht wird, zieht den Körper zurück zu den Pins (gestreckte Glieder = so weit es geht)
+      const m = P.solve(pup, pose, null, null, 0);
+      let sx = 0, sy = 0, n = 0;
+      for (const pid of mine) {
+        const E = P.part(pup, pid), t = ap(m[pid], E.ax, E.ay);
+        const dx = anchor[pid].p[0] - t[0], dy = anchor[pid].p[1] - t[1];
+        if (Math.hypot(dx, dy) > 0.6) { sx += dx; sy += dy; n++; }
+      }
+      if (!n) break;
+      ps.x += sx / mine.length * 0.9; ps.y += sy / mine.length * 0.9;
+    }
+    return pose;
+  };
 
   // ---------- Darstellung auf der Bühne (Timeline, Spiel) ----------
   // Platz um die Figur, damit ausgestreckte Arme, erhobene Hände und Sprünge nicht abgeschnitten werden

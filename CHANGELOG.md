@@ -2,6 +2,24 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.8 – Bones for layered characters, puppeteering with pinned limbs, firm joints, human template
+- Layered characters (body, face, outfit) can now use bones: set up the bones on the image of the lowest layer and all
+  layers above – face, clothing, accessories – bend and move along, even parts that stick out beyond the body (cape,
+  wide skirt, hat). Idle animations, gestures, the animation editor, blinking and lip sync work with outfits.
+- Jointed puppets: joints are anchored firmly. Attached parts only rotate around their joint and never slide away –
+  also not when animating or bobbing. Dragging an attached part in the editor rotates it around its joint
+  (Shift: 15° steps, Alt: move freely). Can be switched off per puppet (“Anchor joints firmly”).
+- New template “Human” for jointed puppets: grey slots for head, torso, arms, hands, legs and feet, already connected
+  with joints. Drag images onto the slots – they are fitted in and the joint stays – then adjust the proportions.
+- Puppeteering like with a doll whose feet are glued to the floor: pin feet (or hands) with a double-click, then drag
+  the body – pinned parts stay where they are and everything in between bends along. Body down = the figure kneels,
+  body up = it stands up again, but only as far as the limbs reach. Shift + drag the body = lean. Works in “Try out”
+  and in the animation editor, where every pose becomes keyframes.
+- Joint limits per part (“Limit the joint”, from/to in degrees) so knees and elbows only bend one way; the human
+  template comes with sensible limits.
+- Ruler tool “📏 Lengths”: mark the length of each limb from joint to joint. Without a marked length, a limb reaches to
+  the joint of the attached part.
+
 ## 0.9.7 – Packed game files
 - New export option “Game files”: **Don’t pack** (as before – images, sounds and dialogue lie as normal files in the
   game folder, good for modding), **Packed** (everything encrypted in one file, data.vnpak – makes copying harder and

@@ -22,7 +22,8 @@
         el('div', { class: 'hint-box' }, el('strong', null, 'So geht’s'), el('br'),
           '1. Figur anlegen. 2. Ebenen hinzufügen, z. B. Körper, Gesicht, Kleidung, Accessoire (unten nach oben). 3. Jede Ebene bekommt Varianten: alle Bilder gleich groß, mit transparentem Hintergrund.', el('br'), el('br'),
           'Auf der Timeline wählst du am Figuren-Clip „Art der Figur“ → diese Ebenen-Figur. Pro Schritt änderst du dann Ausdruck und Outfit aus einer Liste.', el('br'), el('br'),
-          'Eine Ebene kann einer Variable folgen: Hat die Variante einen passenden „Wert“, wird sie automatisch gewählt (z. B. Outfit = 2 → Rüstung).'));
+          'Eine Ebene kann einer Variable folgen: Hat die Variante einen passenden „Wert“, wird sie automatisch gewählt (z. B. Outfit = 2 → Rüstung).', el('br'), el('br'),
+          'Bones: am Bild der untersten Ebene einrichten – alle Ebenen bewegen sich mit. Blinzeln und Lippensync markierst du an der Ebene mit dem Gesicht.'));
       return el('div', { class: 'insp' }, el('div', null, el('h3', null, 'Figuren'), el('div', { class: 'insp-title' }, 'Lippensync')),
         el('div', { class: 'hint-box' }, el('strong', null, 'Mund markieren'), el('br'),
           'Zieh im Bild ein Rechteck um den Mund. Im Spiel öffnet und schließt er sich dann nach der Lautstärke der Sprachaufnahme. Ohne Aufnahme bewegt er sich, solange der Text getippt wird.', el('br'), el('br'),
@@ -84,6 +85,15 @@
       const prev = el('div', { class: 'fig-preview' });
       const fake = { set: f.id, pick: {}, x: 50, scale: 100 };
       for (const L of f.layers) fake.pick[L.id] = pick(L);
+      // Bones (0.9.8): Knochen der untersten Ebene gelten für die ganze Figur
+      const rb = Stage.figureRigBase(fake, 0);
+      const firstImg = Stage.figureAssets(fake, 0)[0];
+      ed.appendChild(el('div', { class: 'opt-card' },
+        el('div', { class: 'sec-title' }, 'Bones & Animation'),
+        el('div', { class: 'muted small' }, rb
+          ? VN.tf('Knochen kommen vom Bild „{name}“. Gesicht, Kleidung und Accessoires bewegen sich mit – auch Teile, die über den Körper hinausragen. Idle-Animationen, Gesten, Blinzeln und Lippensync gelten für die ganze Figur.', { name: (VN.asset(rb) || {}).name || rb })
+          : 'Richte Bones am Bild der untersten Ebene (z. B. Körper) ein – dann bewegen sich alle Ebenen darüber mit. Alle Bilder brauchen dieselbe Leinwand.'),
+        firstImg ? el('button', { class: 'btn tiny', onclick: () => App.openBones(rb || firstImg) }, rb ? 'Knochen bearbeiten' : 'Bones für die Körper-Ebene einrichten') : null));
       const st = el('div', { class: 'fig-stage' });
       st.appendChild(Stage.charEl(fake, 'char', { beat: 0 }));
       prev.append(el('div', { class: 'sec-title' }, 'Vorschau (Klick auf eine Variante wählt sie aus)'), st);

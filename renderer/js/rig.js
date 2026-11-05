@@ -59,12 +59,33 @@
       return analyzeCache[key];
     },
 
-    // Gitter über den sichtbaren Teil des Bildes
-    async mesh(assetId) {
-      const info = await Rig.analyze(assetId);
+    // Ebenen-Figuren (0.9.8): alle Ebenen in die Größe des Bones-Bildes zeichnen → ein Bild (Textur) mit
+    // gemeinsamer Transparenz. So bewegt sich Kleidung über die Körperform hinaus mit (Umhang, weiter Rock).
+    async composite(baseId, layerIds) {
+      const info = await Rig.analyze(baseId);
+      const key = 'L|' + baseId + '|' + layerIds.join(',') + '|' + layerIds.map((id) => VN.assetUrl(id)).join(',');
+      if (analyzeCache[key]) return analyzeCache[key];
+      analyzeCache[key] = (async () => {
+        const { w, h } = info;
+        const cv = document.createElement('canvas');
+        cv.width = w; cv.height = h;
+        const ctx = cv.getContext('2d', { willReadFrequently: true });
+        for (const id of layerIds) {
+          try { const li = await Rig.analyze(id); ctx.drawImage(li.canvas, 0, 0, w, h); } catch (e) { /* Ebene fehlt */ }
+        }
+        let alpha;
+        try { const d = ctx.getImageData(0, 0, w, h).data; alpha = new Uint8Array(w * h); for (let i = 0; i < w * h; i++) alpha[i] = d[i * 4 + 3]; } catch (e) { alpha = info.alpha; }
+        return { w, h, canvas: cv, alpha, bbox: info.bbox, key };
+      })();
+      return analyzeCache[key];
+    },
+
+    // Gitter über den sichtbaren Teil des Bildes (layers: Ebenen-Figur, siehe composite)
+    async mesh(assetId, layers) {
+      const info = layers && layers.length ? await Rig.composite(assetId, layers) : await Rig.analyze(assetId);
       const rig = Rig.get(assetId);
       const res = rig && rig.grid ? rig.grid : 40;
-      const key = assetId + '|' + res + '|' + info.w;
+      const key = (info.key || assetId) + '|' + res + '|' + info.w;
       if (!meshCache[key]) {
         const { w, h, alpha } = info;
         const cell = Math.max(w, h) / res;
@@ -323,7 +344,7 @@
       cv._inst = inst;
       let readyRes;
       inst.ready = new Promise((r) => { readyRes = r; });
-      Rig.mesh(assetId).then(({ info, mesh }) => {
+      Rig.mesh(assetId, opts.layers).then(({ info, mesh }) => {
         const rig = Rig.get(assetId);
         if (!rig) return;
         rig.bbox = info.bbox;
@@ -342,7 +363,7 @@
           if (!inst.ctx2d) return;
         }
         // Blinzeln in die Textur zeichnen
-        const bc = window.Blink && !inst.static ? Blink.cfg(assetId) : null;
+        const bc = window.Blink && !inst.static ? Blink.cfg(opts.blinkAsset || assetId) : null;
         if (bc) {
           const tex = document.createElement('canvas');
           tex.width = info.w; tex.height = info.h;

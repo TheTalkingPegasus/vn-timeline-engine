@@ -641,6 +641,55 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     try { fs.rmSync(path.join(pdir, 'assets', 'Bilder Ä'), { recursive: true, force: true }); } catch (e) { /* egal */ }
   } catch (e) { general.push('Gepackt: ' + e.message); }
 
+  // 9. Figuren (0.9.8): Puppen-Vorlage „Mensch“, feste Gelenke, Ebenen-Figur mit Bones
+  try {
+    const r = JSON.parse(await js(`(async () => {
+      const p = VN.project, out = [];
+      const keepP = p.puppets, keepF = p.figures;
+      p.puppets = [];
+      PupEd.newFromTemplate();
+      const pup = p.puppets[0];
+      if (!pup || pup.parts.length !== 14) out.push('Vorlage: ' + (pup ? pup.parts.length : 0) + ' Teile');
+      else {
+        const ua = pup.parts.find((x) => x.slot === 'Unterarm L'), oa = pup.parts.find((x) => x.slot === 'Oberarm L');
+        const pose = { [oa.id]: { r: 60 }, [ua.id]: { r: 30, x: 50, y: 50 } };
+        const m = Puppet.solve(pup, pose, 1.3, {}, 0.016);
+        const elbow = Puppet.m.ap(m[oa.id], oa.ax + (ua.x + ua.ax - oa.x - oa.ax), oa.ay + (ua.y + ua.ay - oa.y - oa.ay));
+        const pin = Puppet.m.ap(m[ua.id], ua.ax, ua.ay);
+        if (Math.hypot(elbow[0] - pin[0], elbow[1] - pin[1]) > 0.5) out.push('Gelenk nicht fest');
+        // Puppenspiel: Füße festgepinnt, Körper runter = Knie beugen, Füße bleiben; Körper hoch = bleibt stehen
+        const P = (n) => pup.parts.find((x) => x.slot === n);
+        const pins = [P('Fuß L').id, P('Fuß R').id], fixed = {};
+        for (const id of pins) fixed[id] = Puppet.tipWorld(pup, {}, id);
+        const down = Puppet.moveBody(pup, {}, P('Torso').id, { x: 0, y: 200 }, pins, fixed);
+        const err = Math.max(...pins.map((id) => { const t = Puppet.tipWorld(pup, down, id); return Math.hypot(t[0] - fixed[id][0], t[1] - fixed[id][1]); }));
+        if (Math.abs(down[P('Torso').id].y - 200) > 2 || err > 1) out.push('Puppenspiel runter: ' + Math.round(down[P('Torso').id].y) + '/' + Math.round(err));
+        const kl = (down[P('Unterschenkel L').id] || {}).r || 0, lim = Puppet.lim(P('Unterschenkel L'));
+        if (!lim || kl < lim[0] - 0.1 || kl > lim[1] + 0.1 || Math.abs(kl) < 20) out.push('Knie: ' + Math.round(kl));
+        const up = Puppet.moveBody(pup, {}, P('Torso').id, { x: 0, y: -250 }, pins, fixed);
+        if (Math.abs(up[P('Torso').id].y) > 3) out.push('Puppenspiel hoch: ' + Math.round(up[P('Torso').id].y));
+      }
+      p.puppets = keepP;
+      // Ebenen-Figur: Bones des untersten Bildes mit Bones
+      const img = p.assets.find((a) => a.kind === 'image');
+      if (img) {
+        const hadRig = p.rigs[img.id];
+        p.rigs[img.id] = p.rigs[img.id] || { bones: [{ id: 'b1', name: 'x', parent: null, hx: 0.5, hy: 0.9, tx: 0.5, ty: 0.1 }], pins: [], global: {} };
+        p.figures = [{ id: '__f', name: 'T', layers: [{ id: 'l1', name: 'A', options: [{ id: 'o1', asset: img.id }] }, { id: 'l2', name: 'B', options: [{ id: 'o2', asset: img.id }] }] }];
+        const clip = { set: '__f', pick: {}, start: 0, len: 1, x: 50 };
+        if (Stage.figureRigBase(clip, 0) !== img.id) out.push('Bones-Basis nicht gefunden');
+        const box = document.createElement('div');
+        const node = Stage.figureEl(clip, 0, null, box);
+        if (!node.classList.contains('rig-canvas')) out.push('keine Bones-Leinwand');
+        if (hadRig) p.rigs[img.id] = hadRig; else delete p.rigs[img.id];
+      }
+      p.figures = keepF;
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Figuren: ' + r.join(', '));
+    else log('✓ Figuren: Puppen-Vorlage, feste Gelenke, Puppenspiel mit Pins, Ebenen-Figur mit Bones');
+  } catch (e) { general.push('Figuren: ' + e.message); }
+
   const failed = results.filter((r) => r.errors.length);
   for (const g of general) log('✗ ' + g);
   log(`\n${failed.length || general.length ? 'FEHLGESCHLAGEN' : 'ALLES BESTANDEN'}: ${results.length - failed.length}/${results.length} Projekte ok${general.length ? ', ' + general.length + ' allgemeine Fehler' : ''} · ${((Date.now() - t0) / 1000).toFixed(0)} s`);
