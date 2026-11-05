@@ -869,6 +869,63 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Gitter bearbeiten: Kästchen hinzufügen und entfernen');
   } catch (e) { general.push('Gitter: ' + e.message); }
 
+  // 14. Inpaint-Stift (0.9.15): Lücke füllen mit Verlauf, fester Farbe und Verlauf A → B
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [], W = 60, H = 40;
+      const mk = () => { const data = new Uint8ClampedArray(W * H * 4); for (let x = 0; x < W; x++) for (let y = 0; y < H; y++) { const q = (y * W + x) * 4; const left = x < 30; data[q] = left ? 200 : 40; data[q + 1] = 60; data[q + 2] = left ? 40 : 200; data[q + 3] = 255; } return { data, width: W, height: H }; };
+      const hole = (img) => { const m = new Uint8Array(W * H); for (let y = 10; y < 30; y++) for (let x = 20; x < 40; x++) { m[y * W + x] = 255; img.data[(y * W + x) * 4 + 3] = 0; } return m; };
+      const px = (img, x, y) => Array.from(img.data.slice((y * W + x) * 4, (y * W + x) * 4 + 4));
+      let a = mk(), m = hole(a);
+      let res = Inpaint.run(a, m, { mode: 'auto', soft: 50 });
+      if (!res.ok) out.push('Verlauf: nicht gefüllt');
+      for (let y = 10; y < 30; y++) for (let x = 20; x < 40; x++) if (a.data[(y * W + x) * 4 + 3] !== 255) { out.push('Loch nicht ganz deckend'); y = 99; break; }
+      const L = px(a, 22, 20), M = px(a, 30, 20), R = px(a, 37, 20);
+      if (!(L[0] > M[0] && M[0] > R[0] && L[2] < M[2] && M[2] < R[2])) out.push('Kein Verlauf von links nach rechts: ' + [L, M, R].join(' | '));
+      if (px(a, 5, 5)[0] !== 200 || px(a, 55, 5)[2] !== 200) out.push('Bild außerhalb der Maske verändert');
+      a = mk(); m = hole(a);
+      Inpaint.run(a, m, { mode: 'color', color: [1, 2, 3], soft: 0 });
+      if (px(a, 30, 20).join() !== '1,2,3,255') out.push('Feste Farbe: ' + px(a, 30, 20));
+      a = mk(); m = hole(a);
+      Inpaint.run(a, m, { mode: 'grad', a: { x: 20, y: 20, c: [0, 0, 0] }, b: { x: 40, y: 20, c: [200, 200, 200] }, soft: 0 });
+      if (Math.abs(px(a, 30, 20)[0] - 100) > 3) out.push('Verlauf A → B: ' + px(a, 30, 20));
+      // Dunkler Umriss neben der Lücke darf die Füllung nicht verschmutzen
+      a = mk(); for (let i = 0; i < W * H; i++) { const q = i * 4; a.data[q] = 220; a.data[q + 1] = 180; a.data[q + 2] = 150; }
+      m = hole(a);
+      for (let x = 0; x < W; x++) for (const y of [9, 30]) { const q = (y * W + x) * 4; a.data[q] = a.data[q + 1] = a.data[q + 2] = 10; }
+      Inpaint.run(a, m, { mode: 'auto', soft: 50 });
+      if (px(a, 30, 12)[0] < 200) out.push('Umriss färbt die Füllung: ' + px(a, 30, 12));
+      const none = new Uint8Array(W * H);
+      if (Inpaint.run(mk(), none, { mode: 'auto' }).reason !== 'empty') out.push('Leere Maske nicht erkannt');
+      const clear = { data: new Uint8ClampedArray(W * H * 4), width: W, height: H };
+      if (Inpaint.run(clear, new Uint8Array(W * H).fill(255), { mode: 'auto' }).reason !== 'nosource') out.push('Fehlende Farben nicht erkannt');
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Inpaint: ' + r.join(', '));
+    else log('✓ Inpaint-Stift: Verlauf, feste Farbe, Verlauf A → B, Fehlerfälle');
+    // Mehr Platz am Rand: Gelenk, Haftpunkt und Naht bleiben an derselben Stelle
+    const g = JSON.parse(await js(`(async () => {
+      const out = [];
+      const c = document.createElement('canvas'); c.width = 80; c.height = 60; c.getContext('2d').fillRect(0, 0, 80, 60);
+      const bytes = new Uint8Array(await (await new Promise((r) => c.toBlob(r, 'image/png'))).arrayBuffer());
+      const rel = await VN.api.writeAsset(VN.dir, 'assets/randtest.png', bytes);
+      const a = { id: VN.uid('a'), name: 'randtest', kind: 'image', file: rel }; VN.project.assets.push(a);
+      const p = Puppet.newPart(a.id, 80, 60, 10, 20); p.rot = 30; p.tx = 50; p.ty = 40; p.holdPts = [{ id: 'h', u: 20, v: 10, soft: 60 }]; p.seams = [{ id: 's', to: 'x', pts: [[1, 2], [3, 4]], soft: 60 }];
+      const pup = { id: VN.uid('pup'), name: 'Rand', parts: [p] }; VN.project.puppets = VN.project.puppets || []; VN.project.puppets.push(pup);
+      const w0 = Puppet.m.ap(Puppet.rest(p), 20, 10);
+      if (!(await PupEd.growPart(pup, p, 40))) out.push('nicht erweitert');
+      const w1 = Puppet.m.ap(Puppet.rest(p), p.holdPts[0].u, p.holdPts[0].v);
+      if (Math.hypot(w0[0] - w1[0], w0[1] - w1[1]) > 0.01) out.push('Stelle verschoben');
+      if (p.w !== 160 || p.h !== 140 || p.tx !== 90 || p.seams[0].pts[0][0] !== 41) out.push('Maße falsch');
+      const im = await new Promise((r) => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = VN.assetUrl(p.asset); });
+      if (!im || im.naturalWidth !== 160 || im.naturalHeight !== 140) out.push('Bildgröße ' + (im && im.naturalWidth));
+      VN.project.puppets = VN.project.puppets.filter((x) => x !== pup);
+      return JSON.stringify(out);
+    })()`));
+    if (g.length) general.push('Inpaint Rand: ' + g.join(', '));
+    else log('✓ Inpaint-Stift: mehr Platz am Rand');
+  } catch (e) { general.push('Inpaint: ' + e.message); }
+
   const failed = results.filter((r) => r.errors.length);
   for (const g of general) log('✗ ' + g);
   log(`\n${failed.length || general.length ? 'FEHLGESCHLAGEN' : 'ALLES BESTANDEN'}: ${results.length - failed.length}/${results.length} Projekte ok${general.length ? ', ' + general.length + ' allgemeine Fehler' : ''} · ${((Date.now() - t0) / 1000).toFixed(0)} s`);

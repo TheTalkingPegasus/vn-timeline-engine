@@ -14,6 +14,15 @@ Ohne Installation (ZIP):
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
 
+NEU IN 0.9.15 · Inpaint-Stift für Gliederpuppen
+- Puppen-Editor: neuer „🖌 Inpaint-Stift“. Lücke an einem Teil per Lasso, Lineal oder Pinsel maskieren und füllen – ganz
+  ohne KI-Modell. Die Farben kommen vom Maskenrand, aus einer gewählten Farbe oder als Verlauf zwischen zwei Punkten
+  (A → B), auch von einem anderen Teil. Die Weichheit lässt sich einstellen und wirkt auch nach dem Füllen noch; Füllen
+  lässt sich rückgängig machen. Gespeichert wird als neue Bilddatei, das Original bleibt erhalten.
+- „Mehr Platz am Rand“ legt einen durchsichtigen Rand um ein eng zugeschnittenes Teil, damit auch Lücken außerhalb des
+  Bildes gefüllt werden können. Teil, Gelenk, Nähte und Haftpunkte bleiben an ihrer Stelle. Nicht bei Teilen mit Bones
+  oder Blinzeln.
+
 NEU IN 0.9.14 · Gitter der Bones bearbeiten
 - Bones & Blinzeln: neues Werkzeug „Gitter bearbeiten“. Jedes Kästchen des Gitters ist sichtbar; Klicken oder Ziehen
   über leere Kästchen fügt sie hinzu (z. B. feine Haarsträhnen oder Spitzen, die nicht erkannt wurden), über volle
