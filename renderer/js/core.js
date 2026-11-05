@@ -52,6 +52,14 @@
   };
   // Neues Bild fällig? (Schritt-Nummer auf dem Zeitraster der Bildrate)
   VN.fpsStep = (o, sec, fps) => { if (!fps) return true; const k = Math.floor(sec * fps + 1e-6); if (o._fpsK === k) return false; o._fpsK = k; return true; };
+  // Doppelklick selbst erkennen (0.9.12): Editoren zeichnen nach einem Klick neu, dann kommt das dblclick-Ereignis nie an
+  VN._dbl = null;
+  VN.isDouble = (e, key) => {
+    const now = performance.now(), L = VN._dbl;
+    const hit = !!(L && L.key === key && now - L.t < 450 && Math.hypot(e.clientX - L.x, e.clientY - L.y) < 8);
+    VN._dbl = hit ? null : { key, t: now, x: e.clientX, y: e.clientY };
+    return hit;
+  };
   VN.track = (key) => VN.TRACKS.find((t) => t.key === key);
 
   VN.uid = (p) => {

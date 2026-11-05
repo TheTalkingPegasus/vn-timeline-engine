@@ -2,6 +2,11 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.12 – Fix: pinning puppet limbs
+- Fixed: double-clicking a body part of a jointed puppet (in “Try out” and in the animation editor) did nothing, so
+  feet and hands could not be pinned. The editor redraws after the first click, which swallowed the double-click;
+  the engine now detects it itself.
+
 ## 0.9.11 – Places: unlock by condition, lock while …, locked and gone
 - World & places: a place can now be unlocked “if …” a condition is met (e.g. scene seen, item in inventory) and
   stays open afterwards.
