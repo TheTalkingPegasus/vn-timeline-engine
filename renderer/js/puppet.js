@@ -283,7 +283,7 @@
     const k = [keep.a, keep.b, keep.c, keep.d, keep.e, keep.f];
     const PAD = window.Rig ? Rig.PAD : 0.15;
     for (const p of pup.parts) {
-      if (p.hidden) continue;
+      if (p.hidden || (opts.skip && opts.skip.has(p.id))) continue;
       const M = mul(base, mats[p.id]);
       out[p.id] = M;
       const W = mul(k, p.flipX ? mul(M, [-1, 0, 0, 1, p.w, 0]) : M);

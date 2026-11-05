@@ -2131,3 +2131,14 @@ body.cbsim-tritan #center .stage, body.cbsim-tritan #player { filter: url(#vn-cb
 .light-h.aim { width: 14px; height: 14px; margin: -7px 0 0 -7px; background: var(--lc, #ffe9a8); cursor: crosshair; }
 .light-h:hover { transform: scale(1.12); }
 .light-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 6px currentColor; }
+
+/* ---------- Ordner im Puppen-Modus (0.9.15) ---------- */
+.pup-layer.pup-folder { background: rgba(255,255,255,0.03); font-weight: 600; }
+.pup-layer.pup-folder.hid { opacity: 0.55; }
+.pup-layer.locked .name { opacity: 0.6; }
+.pup-layer.drop, .pup-root-drop.drop { outline: 2px dashed var(--accent); outline-offset: -2px; }
+.pup-caret { width: 12px; text-align: center; color: var(--muted, #999); }
+.pup-layer.pup-folder .name { min-width: 64px; }
+.pup-layer.pup-folder .btn.tiny { padding: 1px 4px; min-width: 0; }
+.pup-layer.pup-folder .btn.tiny:not(.primary):not(.danger) { opacity: 0.55; }
+.pup-layer.pup-folder:hover .btn.tiny { opacity: 1; }

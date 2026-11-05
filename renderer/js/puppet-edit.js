@@ -120,6 +120,54 @@
     if (ui().pupPart === p.id) ui().pupPart = null;
   });
   // Pin verschieben, ohne dass das Bild springt (auch bei gedrehten Teilen)
+  // ---------- Ordner (0.9.15) ----------
+  // pup.folders: [{ id, name, parent, open, hidden, locked }] · p.folder = Ordner-ID. Nur Ordnung und Zeichenreihenfolge –
+  // die Bewegung bestimmt weiterhin das Gelenk („Hängt an“).
+  PupEd.folder = (pup, id) => (pup.folders || []).find((f) => f.id === id) || null;
+  PupEd.fChain = (pup, fid) => { const out = []; let f = PupEd.folder(pup, fid), n = 0; while (f && n++ < 20) { out.unshift(f.id); f = PupEd.folder(pup, f.parent); } return out; };
+  PupEd.fDesc = (pup, fid) => { const out = new Set([fid]); let grew = true; while (grew) { grew = false; for (const f of pup.folders || []) if (f.parent && out.has(f.parent) && !out.has(f.id)) { out.add(f.id); grew = true; } } return out; };
+  // Teile eines Ordners (samt Unterordnern) liegen in der Zeichenreihenfolge immer zusammen
+  PupEd.normalize = (pup) => {
+    const root = { kids: [] }, nodes = {};
+    for (const p of pup.parts) {
+      if (p.folder && !PupEd.folder(pup, p.folder)) delete p.folder;
+      let cur = root;
+      for (const fid of PupEd.fChain(pup, p.folder)) { if (!nodes[fid]) { nodes[fid] = { kids: [] }; cur.kids.push(nodes[fid]); } cur = nodes[fid]; }
+      cur.kids.push(p);
+    }
+    const out = [], walk = (n) => { for (const k of n.kids) { if (k.kids) walk(k); else out.push(k); } };
+    walk(root);
+    pup.parts.splice(0, pup.parts.length, ...out);
+  };
+  // Teile in ausgeblendeten bzw. gesperrten Ordnern (nur im Editor)
+  PupEd.fFlag = (pup, key) => {
+    const set = new Set();
+    for (const p of pup.parts) if (p.folder && PupEd.fChain(pup, p.folder).some((fid) => (PupEd.folder(pup, fid) || {})[key])) set.add(p.id);
+    return set;
+  };
+  // Block (Teil oder ganzer Ordner) eine Stelle nach vorne (+1) oder hinten (−1) – über das Nachbar-Element derselben Ebene
+  PupEd.moveItem = (pup, item, dir) => {
+    PupEd.normalize(pup);
+    const level = item.part ? (item.part.folder || null) : (PupEd.folder(pup, item.fid).parent || null);
+    // Elemente dieser Ebene in Zeichenreihenfolge: Teile direkt in der Ebene und Unterordner als Block
+    const units = [];
+    for (const p of pup.parts) {
+      const ch = PupEd.fChain(pup, p.folder), li = level ? ch.indexOf(level) : -1;
+      if (level && li < 0) continue;
+      const key = ch[li + 1] ? 'f:' + ch[li + 1] : 'p:' + p.id;
+      let u = units[units.length - 1];
+      if (!u || u.key !== key) { u = { key, parts: [] }; units.push(u); }
+      u.parts.push(p);
+    }
+    const key = item.part ? 'p:' + item.part.id : 'f:' + item.fid;
+    const i = units.findIndex((u) => u.key === key), j = i + dir;
+    if (i < 0 || j < 0 || j >= units.length) return false;
+    [units[i], units[j]] = [units[j], units[i]];
+    const flat = units.flatMap((u) => u.parts), set = new Set(flat.map((p) => p.id));
+    const start = pup.parts.findIndex((p) => set.has(p.id));
+    pup.parts.splice(start, flat.length, ...flat);
+    return true;
+  };
   // Mitte einer Naht (halbe Länge der Linie), im Bild des Teils
   PupEd.seamMid = (pts) => {
     let L = 0; for (let i = 1; i < pts.length; i++) L += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
@@ -234,7 +282,7 @@
       const ms = mats();
       for (let i = pup.parts.length - 1; i >= 0; i--) {
         const p = pup.parts[i];
-        if (p.hidden || (skip && skip.has(p.id))) continue;
+        if (p.hidden || (skip && skip.has(p.id)) || PupEd.fFlag(pup, 'hidden').has(p.id) || PupEd.fFlag(pup, 'locked').has(p.id)) continue;
         let [u, v] = M().ap(M().inv(ms[p.id]), x, y);
         if (u < 0 || v < 0 || u > p.w || v > p.h) continue;
         if (p.flipX) u = p.w - u;
@@ -268,7 +316,7 @@
       const bb = pup.parts.length ? Puppet.bounds(pup) : null;
       if (bb) { const [, gy] = M().ap(base, 0, bb.y + bb.h); ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(r.width, gy); ctx.stroke(); }
       const ed = PupEd._edit;
-      const ms = Puppet.draw(ctx, pup, PupEd._res, base, t, t != null ? dt : 0, erasing ? null : pose(), st, { placeholder: true, override: ed && ed.cv ? { [ed.pid]: ed.cv } : null });
+      const ms = Puppet.draw(ctx, pup, PupEd._res, base, t, t != null ? dt : 0, erasing ? null : pose(), st, { placeholder: true, override: ed && ed.cv ? { [ed.pid]: ed.cv } : null, skip: PupEd.fFlag(pup, 'hidden') });
       // Auswahl, Pins, Verbindungen
       const sel = selPart(pup);
       if (sel && ms[sel.id]) {
@@ -560,21 +608,91 @@
     const field = (label, ...kids) => el('div', { class: 'field' }, el('div', { class: 'lbl' }, label), ...kids);
     const num = (v, fn, step) => el('input', { type: 'number', step: step || 1, value: Math.round((v || 0) * 100) / 100, onchange: (e) => VN.mutate(() => fn(Number(String(e.target.value).replace(',', '.')) || 0)) });
     const sel = (v, opts, fn) => { const s = el('select', { onchange: (e) => VN.mutate(() => fn(e.target.value)) }); for (const [k, l] of opts) s.appendChild(el('option', { value: k, selected: String(k) === String(v == null ? '' : v) }, l)); return s; };
-    // Ebenen-Liste (oben = vorne)
-    const layers = el('div', { class: 'opt-card pup-layers' }, el('div', { class: 'sec-title' }, 'Teile (oben = vorne)'));
-    const depth = (p) => { let d = 0, q = p; while (q && q.parent && d < 12) { d++; q = Puppet.part(pup, q.parent); } return d; };
-    pup.parts.slice().reverse().forEach((p) => {
+    // Ebenen-Liste (oben = vorne), mit Ordnern (0.9.15)
+    PupEd.normalize(pup);
+    const q = (ui().pupFind || '').trim().toLowerCase();
+    const addFolder = () => VN.mutate(() => { pup.folders = pup.folders || []; const f = { id: VN.uid('pf'), name: VN.t('Ordner') + ' ' + (pup.folders.length + 1), parent: null, open: true }; pup.folders.push(f); const sp = selPart(pup); if (sp) { sp.folder = f.id; PupEd.normalize(pup); } ui().pupRename = f.id; });
+    const layers = el('div', { class: 'opt-card pup-layers' },
+      el('div', { class: 'row gap8 pup-root-drop', ondragover: (e) => { if (PupEd._dnd) { e.preventDefault(); e.currentTarget.classList.add('drop'); } }, ondragleave: (e) => e.currentTarget.classList.remove('drop'),
+        ondrop: (e) => { e.preventDefault(); const d = PupEd._dnd; PupEd._dnd = null; if (!d) return; VN.mutate(() => { if (d.part) delete Puppet.part(pup, d.part).folder; else PupEd.folder(pup, d.fid).parent = null; PupEd.normalize(pup); }); } },
+        el('div', { class: 'sec-title', style: { flex: '1', margin: 0 } }, 'Teile (oben = vorne)'),
+        el('button', { class: 'btn tiny', title: VN.t('Neuer Ordner – nur zur Ordnung und Zeichenreihenfolge, die Bewegung bestimmt weiter „Hängt an“'), onclick: addFolder }, '+ 📁')),
+      pup.parts.length > 8 || q ? el('input', { type: 'search', class: 'small-input', placeholder: VN.t('Teile suchen …'), value: ui().pupFind || '', style: { width: '100%', margin: '4px 0' }, oninput: (e) => { ui().pupFind = e.target.value; clearTimeout(PupEd._ft); PupEd._ft = setTimeout(() => { VN.render(); const n = document.querySelector('.pup-layers input[type=search]'); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }, 250); } }) : null);
+    const dragStart = (d) => (e) => { PupEd._dnd = d; e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', 'pup'); } catch (er) { /* egal */ } };
+    const over = (e) => { if (PupEd._dnd) { e.preventDefault(); e.currentTarget.classList.add('drop'); } };
+    const leave = (e) => e.currentTarget.classList.remove('drop');
+    // Ablegen auf einem Teil: davor (= weiter vorne) einsortieren, in dessen Ordner
+    const dropOnPart = (t) => (e) => {
+      e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.remove('drop');
+      const d = PupEd._dnd; PupEd._dnd = null; if (!d) return;
+      VN.mutate(() => {
+        let moving;
+        if (d.part) { const p = Puppet.part(pup, d.part); if (!p || p === t) return; if (t.folder) p.folder = t.folder; else delete p.folder; moving = [p]; }
+        else { const f = PupEd.folder(pup, d.fid); if (!f || (t.folder && PupEd.fDesc(pup, f.id).has(t.folder))) return; f.parent = t.folder || null; const ds = PupEd.fDesc(pup, f.id); moving = pup.parts.filter((x) => x.folder && ds.has(x.folder)); }
+        const set = new Set(moving.map((x) => x.id));
+        const rest = pup.parts.filter((x) => !set.has(x.id));
+        rest.splice(rest.indexOf(t) + 1, 0, ...moving);
+        pup.parts.splice(0, pup.parts.length, ...rest);
+        PupEd.normalize(pup);
+      });
+    };
+    const dropOnFolder = (f) => (e) => {
+      e.preventDefault(); e.stopPropagation(); e.currentTarget.classList.remove('drop');
+      const d = PupEd._dnd; PupEd._dnd = null; if (!d) return;
+      VN.mutate(() => {
+        if (d.part) { const p = Puppet.part(pup, d.part); if (p) p.folder = f.id; f.open = true; }
+        else if (d.fid !== f.id && !PupEd.fDesc(pup, d.fid).has(f.id)) PupEd.folder(pup, d.fid).parent = f.id;
+        PupEd.normalize(pup);
+      });
+    };
+    const lockedSet = PupEd.fFlag(pup, 'locked');
+    const partRow = (p, lvl) => {
       const i = pup.parts.indexOf(p);
       const rigged = window.Rig && Rig.has(p.asset);
-      layers.appendChild(el('div', { class: 'pup-layer' + (ui().pupPart === p.id ? ' on' : ''), onclick: () => { ui().pupPart = p.id; VN.render(); } },
-        el('span', { class: 'pup-indent', style: { width: depth(p) * 10 + 'px' } }),
+      return el('div', { class: 'pup-layer' + (ui().pupPart === p.id ? ' on' : '') + (lockedSet.has(p.id) ? ' locked' : ''), draggable: 'true', ondragstart: dragStart({ part: p.id }), ondragover: over, ondragleave: leave, ondrop: dropOnPart(p), onclick: () => { ui().pupPart = p.id; VN.render(); } },
+        el('span', { class: 'pup-indent', style: { width: lvl * 14 + 'px' } }),
+        p.parent ? el('span', { class: 'muted small', title: VN.t('hängt an') + ' ' + ((Puppet.part(pup, p.parent) || {}).name || '?') }, '↳') : null,
         el('span', { class: 'mini-thumb', style: { backgroundImage: `url("${VN.assetUrl(p.asset) || ''}")` } }),
         el('span', { class: 'name' }, p.name),
         rigged && p.bones !== false ? el('span', { class: 'chip green', title: VN.t('hat Bones') }, '🦴') : null,
         p.idle && p.idle.type !== 'none' ? el('span', { class: 'chip', title: VN.t('Idle') }, '∿') : null,
-        el('button', { class: 'btn tiny', title: VN.t('nach vorne'), disabled: i === pup.parts.length - 1, onclick: (e) => { e.stopPropagation(); VN.mutate(() => { pup.parts.splice(i, 1); pup.parts.splice(i + 1, 0, p); }); } }, '▲'),
-        el('button', { class: 'btn tiny', title: VN.t('nach hinten'), disabled: i === 0, onclick: (e) => { e.stopPropagation(); VN.mutate(() => { pup.parts.splice(i, 1); pup.parts.splice(i - 1, 0, p); }); } }, '▼')));
-    });
+        el('button', { class: 'btn tiny', title: VN.t('nach vorne'), onclick: (e) => { e.stopPropagation(); VN.mutate(() => { PupEd.moveItem(pup, { part: p }, 1); }); } }, '▲'),
+        el('button', { class: 'btn tiny', title: VN.t('nach hinten'), onclick: (e) => { e.stopPropagation(); VN.mutate(() => { PupEd.moveItem(pup, { part: p }, -1); }); } }, '▼'));
+    };
+    const folderRow = (f, lvl, count) => {
+      const tog = (k, on, off, title) => el('button', { class: 'btn tiny' + (f[k] ? ' primary' : ''), title: VN.t(title), onclick: (e) => { e.stopPropagation(); VN.mutate(() => { f[k] = !f[k]; if (!f[k]) delete f[k]; }); } }, f[k] ? on : off);
+      const name = ui().pupRename === f.id
+        ? el('input', { type: 'text', value: f.name, class: 'small-input', style: { flex: '1' }, onclick: (e) => e.stopPropagation(), onkeydown: (e) => { if (e.key === 'Enter') e.target.blur(); if (e.key === 'Escape') { ui().pupRename = null; VN.render(); } }, onblur: (e) => { const v = e.target.value.trim(); ui().pupRename = null; VN.mutate(() => { if (v) f.name = v; }); } })
+        : el('span', { class: 'name', title: VN.t('Doppelklick = umbenennen'), ondblclick: (e) => { e.stopPropagation(); ui().pupRename = f.id; VN.render(); } }, '📁 ' + f.name);
+      return el('div', { class: 'pup-layer pup-folder' + (f.hidden ? ' hid' : ''), draggable: 'true', ondragstart: dragStart({ fid: f.id }), ondragover: over, ondragleave: leave, ondrop: dropOnFolder(f), onclick: () => VN.mutate(() => { f.open = !f.open; }) },
+        el('span', { class: 'pup-indent', style: { width: lvl * 14 + 'px' } }),
+        el('span', { class: 'pup-caret' }, f.open === false ? '▸' : '▾'),
+        name,
+        el('span', { class: 'muted small' }, String(count)),
+        tog('hidden', '🙈', '👁', 'Im Editor ausblenden (im Spiel bleibt alles sichtbar)'),
+        tog('locked', '🔒', '🔓', 'Sperren: Teile darin lassen sich auf der Fläche nicht anklicken oder verschieben'),
+        el('button', { class: 'btn tiny', title: VN.t('nach vorne'), onclick: (e) => { e.stopPropagation(); VN.mutate(() => { PupEd.moveItem(pup, { fid: f.id }, 1); }); } }, '▲'),
+        el('button', { class: 'btn tiny', title: VN.t('nach hinten'), onclick: (e) => { e.stopPropagation(); VN.mutate(() => { PupEd.moveItem(pup, { fid: f.id }, -1); }); } }, '▼'),
+        el('button', { class: 'btn tiny danger', title: VN.t('Ordner auflösen (die Teile bleiben)'), onclick: (e) => { e.stopPropagation(); VN.mutate(() => { for (const p of pup.parts) if (p.folder === f.id) { if (f.parent) p.folder = f.parent; else delete p.folder; } for (const g of pup.folders) if (g.parent === f.id) g.parent = f.parent || null; pup.folders = pup.folders.filter((x) => x !== f); if (!pup.folders.length) delete pup.folders; }); } }, '×'));
+    };
+    if (q) {
+      for (const p of pup.parts.slice().reverse()) if (String(p.name).toLowerCase().includes(q)) layers.appendChild(partRow(p, 0));
+    } else {
+      const countIn = (fid) => { const ds = PupEd.fDesc(pup, fid); return pup.parts.filter((p) => p.folder && ds.has(p.folder)).length; };
+      // Leere Ordner oben
+      for (const f of pup.folders || []) if (!countIn(f.id) && !(f.parent && countIn(f.parent))) layers.appendChild(folderRow(f, PupEd.fChain(pup, f.parent).length, 0));
+      let last = [];
+      for (const p of pup.parts.slice().reverse()) {
+        const ch = PupEd.fChain(pup, p.folder);
+        let k = 0; while (k < ch.length && k < last.length && ch[k] === last[k]) k++;
+        for (let j = k; j < ch.length; j++) {
+          const hiddenAbove = ch.slice(0, j).some((fid) => (PupEd.folder(pup, fid) || {}).open === false);
+          if (!hiddenAbove) layers.appendChild(folderRow(PupEd.folder(pup, ch[j]), j, countIn(ch[j])));
+        }
+        last = ch;
+        if (!ch.some((fid) => (PupEd.folder(pup, fid) || {}).open === false)) layers.appendChild(partRow(p, ch.length));
+      }
+    }
     layers.appendChild(el('div', { class: 'row gap8' },
       (() => { const s = VN.assetSelect('image', '', (v) => { if (v) PupEd.addPart(pup, v); }); s.title = VN.t('Bild als neues Teil hinzufügen'); return s; })()));
     box.appendChild(layers);
@@ -586,6 +704,7 @@
       const notMine = new Set([p.id, ...Puppet.descendants(pup, p.id)]);
       box.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Teil · ' + p.name),
         field('Name', el('input', { type: 'text', value: p.name, onchange: (e) => VN.mutate(() => { p.name = e.target.value || 'Teil'; }) })),
+        (pup.folders || []).length ? field('Ordner', sel(p.folder || '', [['', '— kein Ordner —'], ...pup.folders.map((f) => [f.id, '📁 ' + PupEd.fChain(pup, f.id).map((id) => PupEd.folder(pup, id).name).join(' / ')])], (v) => { if (v) p.folder = v; else delete p.folder; PupEd.normalize(pup); })) : null,
         field('Bild', VN.assetSelect('image', p.asset, (v) => { if (!p.asset && v) PupEd.fillSlot(pup, p, v); else VN.mutate(() => { p.asset = v; }); })),
         !p.asset ? el('div', { class: 'muted small' }, 'Leerer Platz: Bild aus der Dateiliste auf den grauen Platz ziehen oder hier wählen. Es wird eingepasst, das Gelenk bleibt.') : null,
         field('Hängt an (Eltern-Teil)', sel(p.parent || '', [['', '— nichts (Wurzel, z. B. Torso) —'], ...pup.parts.filter((x) => !notMine.has(x.id)).map((x) => [x.id, x.name])], (v) => { p.parent = v || null; })),
