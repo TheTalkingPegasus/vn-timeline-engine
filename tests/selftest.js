@@ -784,6 +784,43 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Orte: frei per Bedingung, gesperrt solange …, gesperrt und weg (auch per Aktion); Doppelklick zum Festpinnen');
   } catch (e) { general.push('Orte: ' + e.message); }
 
+  // 12. Nähte (0.9.12): Gewichte an der Naht, verformtes Zeichnen, Naht an eine andere Figur
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [], P = Puppet;
+      const A = Object.assign(P.newPart(null, 200, 260, 0, 0), { id: 'tA', name: 'Torso', ax: 100, ay: 130 });
+      const B = Object.assign(P.newPart(null, 90, 240, 55, 200), { id: 'tB', name: 'Bein', parent: 'tA', ax: 45, ay: 40, seams: [{ id: 's1', to: 'tA', pts: [[0, 30], [90, 30]], soft: 60 }] });
+      const pup = { id: 'tp', parts: [A, B] };
+      const rest = P.solve(pup, null, null, null, 0);
+      const mesh = P.seamMesh(pup, B, rest);
+      if (!mesh) out.push('kein Gitter');
+      else {
+        const top = mesh.vs.find((v) => v.iv === 0), mid = mesh.vs.find((v) => Math.abs(v.iv - 30) < 15 && v.iu > 30 && v.iu < 60), bot = mesh.vs[mesh.vs.length - 1];
+        if (!(top.ws[0].w === 1)) out.push('oberhalb der Naht nicht fest: ' + top.ws[0].w);
+        if (!(mid.ws[0].w > 0.6)) out.push('an der Naht zu schwach: ' + mid.ws[0].w);
+        if (!(bot.ws[0].w === 0)) out.push('unten nicht frei: ' + bot.ws[0].w);
+      }
+      // Zeichnen mit Bild: das Bein dreht sich, die Naht bleibt am Torso
+      const im = document.createElement('canvas'); im.width = 90; im.height = 240; const g = im.getContext('2d'); g.fillStyle = '#00f'; g.fillRect(0, 0, 90, 240);
+      const cv = document.createElement('canvas'); cv.width = 600; cv.height = 600; const ctx = cv.getContext('2d');
+      const res = { imgs: { tB: im }, rigs: {} };
+      P.draw(ctx, pup, res, [1, 0, 0, 1, 200, 100], null, 0, { tB: { r: 60 } }, {});
+      const M = rest.tB; const p0 = P.m.ap(M, 45, 10);
+      const px = ctx.getImageData(Math.round(p0[0] + 200), Math.round(p0[1] + 100), 1, 1).data;
+      if (!(px[2] > 200 && px[3] > 200)) out.push('Naht-Stelle nicht mehr am Torso');
+      // Naht an eine andere Figur: Ziel-Matrix verschoben → Bein-Oberkante wandert mit
+      const pup2 = { id: 'tq', parts: [Object.assign({}, B, { seams: [] })] };
+      const cv2 = document.createElement('canvas'); cv2.width = 600; cv2.height = 600; const c2 = cv2.getContext('2d');
+      const rel = [1, 0, 0, 1, 0, 0];
+      P.draw(c2, pup2, res, [1, 0, 0, 1, 100, 100], null, 0, {}, {}, { extSeams: [{ id: 'x1', part: 'tB', pts: [[0, 30], [90, 30]], soft: 60, rel }], ext: { x1: [1, 0, 0, 1, 250, 100] } });
+      const q = c2.getImageData(250 + 45, 100 + 5, 1, 1).data;
+      if (!(q[2] > 200 && q[3] > 200)) out.push('Naht an andere Figur folgt nicht');
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Nähte: ' + r.join(', '));
+    else log('✓ Nähte: Gewichte, verformtes Zeichnen, Naht an eine andere Figur');
+  } catch (e) { general.push('Nähte: ' + e.message); }
+
   const failed = results.filter((r) => r.errors.length);
   for (const g of general) log('✗ ' + g);
   log(`\n${failed.length || general.length ? 'FEHLGESCHLAGEN' : 'ALLES BESTANDEN'}: ${results.length - failed.length}/${results.length} Projekte ok${general.length ? ', ' + general.length + ' allgemeine Fehler' : ''} · ${((Date.now() - t0) / 1000).toFixed(0)} s`);

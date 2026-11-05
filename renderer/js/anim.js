@@ -122,6 +122,32 @@
       }
       const maps = [];
       const smearOn = !!(window.Smear && dt > 0 && opts.alpha == null);
+      // Nähte zwischen Figuren (0.9.12): zuerst die Lage aller Puppenteile, damit eine Figur an eine andere angenäht sein kann
+      const placeOf = (it, a) => {
+        const pl = Anim.place(a, t);
+        const boxH = 0.88 * pl.scale / 100 * H;
+        ctx.save();
+        ctx.translate(pl.x / 100 * W, H - pl.y / 100 * H); ctx.rotate(pl.rot * Math.PI / 180); if (a.flip) ctx.scale(-1, 1);
+        const m = ctx.getTransform(); ctx.restore();
+        const pup = Puppet.get(a.puppet) || it.pupDef, bb = Puppet.bounds(pup), k = boxH / bb.h;
+        const base = Puppet.m.mul(Puppet.m.S(k, k), Puppet.m.T(-(bb.x + bb.w / 2), -(bb.y + bb.h)));
+        const cm = [m.a, m.b, m.c, m.d, m.e, m.f];
+        return { cm, pup, base };
+      };
+      if (sc.items.some((it) => it.pup && (it.actor.seams || []).length)) {
+        for (const it of sc.items) {
+          if (!it.pup) { it._wm = null; continue; }
+          const P0 = placeOf(it, it.actor), ms = Puppet.solve(P0.pup, opts.pose || Puppet.poseAt(it.actor, t), null, null, 0);
+          it._wm = {}; for (const [pid, pm] of Object.entries(ms)) it._wm[pid] = Puppet.m.mul(P0.cm, Puppet.m.mul(P0.base, pm));
+        }
+      }
+      const extFor = (it, cmNow) => {
+        const L = (it.actor.seams || []).filter((s) => s.toActor && s.toPart);
+        if (!L.length) return {};
+        const ext = {}, icm = Puppet.m.inv(cmNow);
+        for (const s of L) { const tg = sc.items.find((x) => x.actor.id === s.toActor); if (tg && tg._wm && tg._wm[s.toPart]) ext[s.id] = Puppet.m.mul(icm, tg._wm[s.toPart]); }
+        return { extSeams: L, ext };
+      };
       for (const it of sc.items) {
         const a = it.actor;
         const pl = Anim.place(a, t);
@@ -146,12 +172,12 @@
             const L = Smear.layer(W, H), lg = L.getContext('2d');
             lg.setTransform(1, 0, 0, 1, 0, 0); lg.clearRect(0, 0, W, H);
             const m0 = ctx.getTransform(); lg.setTransform(m0);
-            out = Puppet.draw(lg, pup, it.pup, base, t, dt, pose, it.st);
+            out = Puppet.draw(lg, pup, it.pup, base, t, dt, pose, it.st, extFor(it, [m0.a, m0.b, m0.c, m0.d, m0.e, m0.f]));
             const cm0 = [m0.a, m0.b, m0.c, m0.d, m0.e, m0.f], wm = {};
             for (const [pid, pm] of Object.entries(out)) wm[pid] = Puppet.m.mul(cm0, pm);
             Smear.inPlace(L, it._sm || (it._sm = {}), Smear.pupPts(pup, wm), t, boxH, smc, (dtF) => Smear.marked(anim, t - dtF, t));
             ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(L, 0, 0); ctx.setTransform(m0);
-          } else out = Puppet.draw(ctx, pup, it.pup, base, t, dt, pose, it.st);
+          } else { const m1 = ctx.getTransform(); out = Puppet.draw(ctx, pup, it.pup, base, t, dt, pose, it.st, extFor(it, [m1.a, m1.b, m1.c, m1.d, m1.e, m1.f])); }
           const m = ctx.getTransform(), cm = [m.a, m.b, m.c, m.d, m.e, m.f];
           it.pmats = {}; for (const [pid, pm] of Object.entries(out)) it.pmats[pid] = Puppet.m.mul(cm, pm);
           it.pbase = Puppet.m.mul(cm, base);

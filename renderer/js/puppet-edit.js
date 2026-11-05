@@ -161,14 +161,17 @@
       el('button', { class: 'btn' + (testing ? ' primary' : ''), title: VN.t('Teile um ihre Pins drehen (Umschalt = IK), ohne zu speichern'), onclick: () => { ui().pupTest = testing ? null : {}; VN.render(); } }, testing ? '✓ Ausprobieren' : '🤸 Ausprobieren'),
       testing ? el('button', { class: 'btn', onclick: () => { ui().pupTest = {}; VN.render(); } }, VN.t('Zurücksetzen')) : null,
       el('button', { class: 'btn' + (ui().pupErase ? ' primary' : ''), title: VN.t('Kanten und harte Übergänge an einem Teil wegradieren – Größe und Weichheit einstellbar'), onclick: () => PupEd.toggleErase(pup) }, ui().pupErase ? '✓ Radierer' : '🧽 Radierer'),
-      testing ? null : el('button', { class: 'btn' + (ui().pupRuler ? ' primary' : ''), title: VN.t('Länge jedes Glieds markieren: vom Gelenk bis zum nächsten Gelenk (z. B. Oberschenkel bis Knie). Bestimmt, wie weit sich die Figur beim Puppenspiel strecken kann.'), onclick: () => { ui().pupRuler = !ui().pupRuler; ui().pupErase = null; VN.render(); } }, ui().pupRuler ? '✓ Längen' : '📏 Längen'),
+      testing ? null : el('button', { class: 'btn' + (ui().pupSew ? ' primary' : ''), title: VN.t('Zwei sich überlappende Teile an einer Linie zusammennähen – die Naht-Punkte wandern exakt mit dem anderen Teil mit, keine Lücken mehr am Übergang'), onclick: () => { ui().pupSew = !ui().pupSew; ui().pupRuler = false; ui().pupErase = null; VN.render(); } }, ui().pupSew ? '✓ Nähen' : '🧵 Nähen'),
+      testing ? null : el('button', { class: 'btn' + (ui().pupRuler ? ' primary' : ''), title: VN.t('Länge jedes Glieds markieren: vom Gelenk bis zum nächsten Gelenk (z. B. Oberschenkel bis Knie). Bestimmt, wie weit sich die Figur beim Puppenspiel strecken kann.'), onclick: () => { ui().pupRuler = !ui().pupRuler; ui().pupErase = null; ui().pupSew = false; VN.render(); } }, ui().pupRuler ? '✓ Längen' : '📏 Längen'),
       el('label', { class: 'check btn' }, el('input', { type: 'checkbox', checked: !!ui().pupIdle, onchange: (e) => { ui().pupIdle = e.target.checked; } }), 'Idle abspielen'),
       el('label', { class: 'check btn' }, el('input', { type: 'checkbox', checked: ui().pupPins !== false, onchange: (e) => { ui().pupPins = e.target.checked; } }), 'Pins')));
     const wrap = el('div', { class: 'pup-stage-wrap' });
     const canvas = el('canvas', { class: 'pup-ed-canvas', tabindex: '0' });
     wrap.appendChild(canvas);
     main.appendChild(wrap);
-    main.appendChild(el('div', { class: 'muted small pup-help' }, ui().pupRuler && !testing
+    main.appendChild(el('div', { class: 'muted small pup-help' }, ui().pupSew && !testing
+      ? 'Nähen: Teil wählen (z. B. Oberschenkel) und entlang der Kante eine Linie ziehen, wo es auf dem anderen Teil liegt (z. B. an der Hüfte). Das Teil darunter wird automatisch erkannt. Die Naht-Punkte kleben dann am anderen Teil fest, der Rest folgt dem eigenen Gelenk – dazwischen wird das Bild weich verformt. Weichheit und Ziel rechts unter „Nähte“.'
+      : ui().pupRuler && !testing
       ? 'Längen: Auf einem Teil vom Gelenk zum Ende ziehen (z. B. Oberschenkel bis zum Knie) – die gelbe Linie ist die Länge des Glieds. Ohne eigene Länge gilt: bis zum Gelenk des angehängten Teils.'
       : ui().pupErase
       ? 'Radierer: Teil wählen und über die Kante malen · Größe und Kantenweichheit rechts · „Wiederherstellen“ malt das Original zurück · Mausrad + Strg = Pinselgröße · Speichern legt eine neue Bilddatei an, das Original bleibt erhalten.'
@@ -267,6 +270,25 @@
           if (pinned) { const [tx, ty] = M().ap(ms[p.id], ...Puppet.tip(p, pup)); ctx.fillStyle = '#4fb3c8'; ctx.fillRect(tx - 5, ty - 5, 10, 10); }
         }
       }
+      // Nähte (0.9.12): Stich-Linie auf dem Teil
+      if (ui().pupPins !== false || ui().pupSew) {
+        for (const p of pup.parts) {
+          if (!ms[p.id] || !(p.seams || []).length) continue;
+          for (const s of p.seams) {
+            if (!s.pts || s.pts.length < 2) continue;
+            const pts = s.pts.map(([u, v]) => M().ap(ms[p.id], u, v));
+            ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(0,0,0,0.55)'; ctx.setLineDash([]);
+            ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke();
+            ctx.lineWidth = 1.6; ctx.strokeStyle = sel === p ? '#ffd166' : '#f2f2f2'; ctx.setLineDash([5, 4]);
+            ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke(); ctx.setLineDash([]);
+          }
+        }
+      }
+      if (PupEd._sewLine && PupEd._sewLine.length > 1) {
+        const pts = PupEd._sewLine.map(([x, y]) => M().ap(base, x, y));
+        ctx.lineWidth = 2.5; ctx.strokeStyle = '#ffd166'; ctx.setLineDash([5, 4]);
+        ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke(); ctx.setLineDash([]);
+      }
       // Längen der Glieder (Lineal, 0.9.8)
       if (ui().pupRuler || ui().pupTest) {
         for (const p of pup.parts) {
@@ -300,6 +322,31 @@
       const [x, y] = toPup(e.clientX, e.clientY);
       if (ui().pupErase) { e.preventDefault(); PupEd.eraseDown(e, pup, canvas, toPup, view, mats, hitPart); return; }
       const testing = !!ui().pupTest;
+      // Nähen (0.9.12): Linie entlang der Kante ziehen
+      if (ui().pupSew && !testing) {
+        const own = selPart(pup) || hitPart(x, y);
+        if (!own) { VN.toast(VN.t('Erst ein Teil anklicken, das angenäht werden soll')); return; }
+        e.preventDefault();
+        ui().pupPart = own.id;
+        PupEd._sewLine = [[x, y]];
+        VN.drag(e, (dx, dy, ev) => {
+          const [qx, qy] = toPup(ev.clientX, ev.clientY), L = PupEd._sewLine[PupEd._sewLine.length - 1];
+          if (Math.hypot(qx - L[0], qy - L[1]) * view().k > 5) PupEd._sewLine.push([qx, qy]);
+        }, () => {
+          const line = PupEd._sewLine; PupEd._sewLine = null;
+          if (!line || line.length < 2) { VN.render(); return; }
+          const ms = mats();
+          const mid = line[Math.floor(line.length / 2)];
+          const skip = new Set([own.id, ...Puppet.descendants(pup, own.id)]);
+          const tgt = hitPart(mid[0], mid[1], skip) || (own.parent && Puppet.part(pup, own.parent));
+          if (!tgt) { VN.toast(VN.t('Unter der Linie liegt kein anderes Teil')); VN.render(); return; }
+          const inv = M().inv(ms[own.id]);
+          const pts = line.map(([px, py]) => M().ap(inv, px, py).map((n) => Math.round(n * 10) / 10));
+          VN.mutate(() => { own.seams = own.seams || []; own.seams.push({ id: VN.uid('sm'), to: tgt.id, pts, soft: 60 }); });
+          VN.toast(VN.tf('„{a}“ an „{b}“ angenäht', { a: own.name, b: tgt.name }));
+        });
+        return;
+      }
       // Lineal: auf einem Teil vom Gelenk zum Ende ziehen = Länge des Glieds
       if (ui().pupRuler && !testing) {
         const tgt = hitPart(x, y) || selPart(pup);
@@ -496,6 +543,17 @@
           field('Von °', num(lim.min, (v) => { p.lim = Object.assign({}, lim, { min: v }); })),
           field('Bis °', num(lim.max, (v) => { p.lim = Object.assign({}, lim, { max: v }); }))) : null,
         el('div', { class: 'muted small' }, 'Wie weit sich das Teil gegenüber der Ruhe-Lage drehen darf (positiv = Ende wandert nach links). So knicken Knie und Ellbogen beim Puppenspiel nur in eine Richtung.')));
+      // Nähte (0.9.12)
+      const seams = p.seams || [];
+      box.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Nähte'),
+        ...seams.map((s) => el('div', { class: 'opt-card', style: { margin: '4px 0' } },
+          el('div', { class: 'row gap8' }, el('span', null, '🧵'), el('span', { class: 'muted small' }, VN.t('angenäht an')),
+            sel(s.to, pup.parts.filter((x) => !notMine.has(x.id)).map((x) => [x.id, x.name]), (v) => { s.to = v; }),
+            el('div', { class: 'spacer' }),
+            el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { p.seams = p.seams.filter((x) => x !== s); if (!p.seams.length) delete p.seams; }) }, '×')),
+          field(VN.t('Weichheit') + ': ' + (s.soft != null ? s.soft : 60) + ' %', el('input', { type: 'range', min: 5, max: 100, value: s.soft != null ? s.soft : 60, onchange: (e) => VN.mutate(() => { s.soft = Number(e.target.value); }) })))),
+        el('button', { class: 'btn tiny' + (ui().pupSew ? ' primary' : ''), onclick: () => { ui().pupSew = !ui().pupSew; ui().pupTest = null; ui().pupRuler = false; ui().pupErase = null; VN.render(); } }, ui().pupSew ? '✓ Naht ziehen' : '🧵 Naht ziehen'),
+        el('div', { class: 'muted small' }, seams.length ? 'Weichheit: wie weit die Verformung ins Teil hineinreicht – wenig = knackige Naht, viel = weiche, gummiartige Biegung.' : 'Entlang der Kante eine Linie ziehen, wo dieses Teil auf einem anderen liegt. Die Naht bleibt dann exakt am anderen Teil, auch beim Idle und Animieren – keine Lücken oder Risse am Übergang.')));
       const id = p.idle || (p.idle = { type: 'none', amp: 4, speed: 3, phase: 0 });
       box.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Idle dieses Teils'),
         field('Bewegung', sel(id.type || 'none', Puppet.IDLE, (v) => { id.type = v; if (v === 'breathe' && !(Number(id.amp) > 0)) id.amp = 3; })),
