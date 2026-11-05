@@ -883,7 +883,7 @@
   // Mitgelieferte Plugins als Schalter
   Life.BUNDLED = [
     { file: 'jobs.js', id: 'jobs', icon: '💼', title: 'Jobs', desc: 'Arbeiten gehen: Zeit vergeht, Geld kommt. Mit Zufallsereignissen und Platz für ein Minispiel. Mitgeliefertes Plugin – zum Anpassen oder als Vorlage.' },
-    { file: 'minispiele.js', id: 'minispiele', icon: '🎲', title: 'Minispiele', desc: 'Klick-Reflex, Memory, Puzzle, Kochen & Brauen, Münzwurf, Blütenblätter zupfen. Jedes liefert ein Ergebnis für Lohn, Beziehung oder Pfad.' },
+    { file: 'minispiele.js', id: 'minispiele', icon: '🎲', title: 'Minispiele', desc: 'Klick-Reflex, Memory, Puzzle, Kochen & Brauen, Münzwurf, Blütenblätter zupfen, Quicktime-Kreis, Tresor, Rohre. Jedes liefert ein Ergebnis für Lohn, Beziehung oder Pfad.' },
     { file: 'spielhalle.js', id: 'spielhalle', icon: '🎱', title: 'Spielhalle', desc: 'Dart, Billard und Spielautomat – mit Computer-Gegnern, deren Können du einstellst, und eigenen Bildern für Scheibe, Tisch, Kugeln und Walzen.' }
   ];
   Life.pluginSwitches = (card) => {

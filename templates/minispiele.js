@@ -1,5 +1,5 @@
 // Mitgeliefertes Plugin: Minispiele
-// Klick-Reflex, Memory, Puzzle, Kochen & Brauen, Münzwurf, Blütenblätter zupfen, Quicktime-Kreis.
+// Klick-Reflex, Memory, Puzzle, Kochen & Brauen, Münzwurf, Blütenblätter zupfen, Quicktime-Kreis, Tresor, Rohre.
 // Jedes Minispiel liefert ein Ergebnis { score: 0…1, ok } – für Jobs (Lohn), Beziehungen oder Pfade.
 // Bilder sind überall austauschbar (leer = eingebaute Grafik). Du darfst die Datei frei ändern.
 (function () {
@@ -12,6 +12,8 @@
     return d;
   };
   const rnd = (a, b) => a + Math.random() * (b - a);
+  const T = (t) => (VN.t ? VN.t(t) : t);
+  const TF = (t, o) => (VN.tf ? VN.tf(t, o) : t.replace(/\{(\w+)\}/g, (m, k) => (o[k] != null ? o[k] : m)));
   const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   // Ergebnis in eine Variable schreiben (Zahl 0–100 oder Schalter)
   const store = (ctx, varId, res) => {
@@ -41,13 +43,75 @@
     });
     return { o, el, head, info, area, finish };
   };
+  // Kurzer Klick-Ton ohne Datei (Tresor, Rohre)
+  let actx = null;
+  const clack = (vol, freq) => {
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'square'; o.frequency.setValueAtTime(freq || 2000, t); o.frequency.exponentialRampToValueAtTime((freq || 2000) / 3, t + 0.035);
+      g.gain.setValueAtTime(Math.max(0.0001, (vol == null ? 0.5 : vol) * 0.22 * (VN.settings && VN.settings.sfx != null ? VN.settings.sfx / 100 : 1)), t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+      o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 0.06);
+    } catch (e) { /* kein Ton */ }
+  };
+  // Rohre: zufälliges, immer lösbares Feld (Weg von links nach rechts, Rest Füllteile, alles verdreht)
+  const pipeField = (n) => {
+    // N=1, O=2, S=4, W=8 – Drehen im Uhrzeigersinn schiebt die Bits weiter
+    const DIRS = [[0, -1, 1], [1, 0, 2], [0, 1, 4], [-1, 0, 8]];
+    const OPP = { 1: 4, 2: 8, 4: 1, 8: 2 };
+    const rot = (m, k) => { for (let i = 0; i < ((k % 4) + 4) % 4; i++) m = ((m << 1) | (m >> 3)) & 15; return m; };
+    const r0 = Math.floor(rnd(0, n)), r1 = Math.floor(rnd(0, n));
+    // Weg von links nach rechts (zufällige Tiefensuche, leicht nach rechts gezogen)
+    const seen = new Set(), path = [];
+    const dfs = (x, y) => {
+      seen.add(x + ',' + y); path.push([x, y]);
+      if (x === n - 1 && y === r1) return true;
+      const ds = shuffle(DIRS.slice()).sort((a, b) => (b[0] > 0 ? 0.6 : 0) - (a[0] > 0 ? 0.6 : 0) + rnd(-0.5, 0.5));
+      for (const [dx, dy] of ds) { const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= n || ny >= n || seen.has(nx + ',' + ny)) continue; if (dfs(nx, ny)) return true; }
+      path.pop(); return false;
+    };
+    dfs(0, r0);
+    const cells = [];
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) cells.push({ x, y, base: 0, r: 0, deg: 0, path: false });
+    const at = (x, y) => (x < 0 || y < 0 || x >= n || y >= n ? null : cells[y * n + x]);
+    const bitTo = (a, b) => DIRS.find(([dx, dy]) => a[0] + dx === b[0] && a[1] + dy === b[1])[2];
+    path.forEach((p, i) => {
+      const c = at(p[0], p[1]); c.path = true;
+      let m = i === 0 ? 8 : bitTo(p, path[i - 1]);
+      m |= i === path.length - 1 ? 2 : bitTo(p, path[i + 1]);
+      c.base = m;
+    });
+    const SHAPES = [5, 3, 7, 15]; // Gerade, Kurve, T, Kreuz (Grundform zeigt nach oben)
+    for (const c of cells) if (!c.path) { const k = Math.random(); c.base = k < 0.38 ? 5 : k < 0.75 ? 3 : k < 0.93 ? 7 : 15; c.base = rot(c.base, Math.floor(rnd(0, 4))); }
+    // Grundform und Drehung bestimmen, dann mischen
+    for (const c of cells) {
+      const shape = SHAPES.find((s) => [0, 1, 2, 3].some((k) => rot(s, k) === c.base));
+      c.shape = shape; c.r = [0, 1, 2, 3].find((k) => rot(shape, k) === c.base);
+      const mix = Math.floor(rnd(0, 4)); c.r = (c.r + mix) % 4; c.deg = c.r * 90;
+    }
+    const mask = (c) => rot(c.shape, c.r);
+    const flow = () => {
+      const vis = new Set(), q = [];
+      const s = at(0, r0);
+      if (mask(s) & 8) { vis.add(s); q.push(s); }
+      while (q.length) {
+        const c = q.shift(), m = mask(c);
+        for (const [dx, dy, b] of DIRS) { if (!(m & b)) continue; const d = at(c.x + dx, c.y + dy); if (d && !vis.has(d) && (mask(d) & OPP[b])) { vis.add(d); q.push(d); } }
+      }
+      const e = at(n - 1, r1);
+      return { vis, done: vis.has(e) && !!(mask(e) & 2) };
+    };
+    if (flow().done) { const c = at(0, r0); c.r = (c.r + 1) % 4; c.deg += 90; }
+    return { cells, path, r0, r1, at, flow, mask, rot };
+  };
   const SYMBOLS = ['🔑', '💎', '🍄', '🌙', '⭐', '🔥', '🍀', '🐉', '🎲', '🎭', '🦉', '🍎'];
 
   VNPlugin.register({
     id: ID,
     name: 'Minispiele',
-    version: '1.4',
-    description: 'Sieben Minispiele mit Ergebnis (0–100 % oder geschafft/nicht geschafft): Klick-Reflex, Memory, Puzzle, Kochen & Brauen, Münzwurf, Blütenblätter, Quicktime-Kreis.',
+    version: '1.5',
+    description: 'Neun Minispiele mit Ergebnis (0–100 % oder geschafft/nicht geschafft): Klick-Reflex, Memory, Puzzle, Kochen & Brauen, Münzwurf, Blütenblätter, Quicktime-Kreis, Tresor, Rohre.',
     // Aussehen je Minispiel (Design → Spielsysteme, oder Rechtsklick aufs Fenster im Probelauf)
     designs: {
       reflex: { label: 'Klick-Reflex', icon: '🎯', images: [['bildZiel', 'Ziel'], ['bildFalle', 'Falle']] },
@@ -56,12 +120,15 @@
       kochen: { label: 'Kochen & Brauen', icon: '🍲', images: [['bildTopf', 'Topf / Kessel']] },
       muenze: { label: 'Münzwurf', icon: '🪙', images: [['bildKopf', 'Kopf'], ['bildZahl', 'Zahl']] },
       bluete: { label: 'Blütenblätter', icon: '🌼', images: [['bildBlatt', 'Blütenblatt'], ['bildMitte', 'Mitte']] },
-      zeiger: { label: 'Quicktime-Kreis', icon: '⏱', images: [['bildScheibe', 'Scheibe'], ['bildZeiger', 'Zeiger']] }
+      zeiger: { label: 'Quicktime-Kreis', icon: '⏱', images: [['bildScheibe', 'Scheibe'], ['bildZeiger', 'Zeiger']] },
+      tresor: { label: 'Tresor / Zahlenschloss', icon: '🔐', images: [['bildTuer', 'Tresortür'], ['bildRad', 'Drehrad'], ['bildInnen', 'Im offenen Tresor']] },
+      rohre: { label: 'Rohre verbinden', icon: '🚰', images: [['bildHintergrund', 'Hintergrund'], ['bildGerade', 'Gerade (oben–unten)'], ['bildKurve', 'Kurve (oben–rechts)'], ['bildT', 'T-Stück (oben–rechts–unten)'], ['bildKreuz', 'Kreuzung']] }
     },
     // Perks für Skilltrees und Ausrüstung (Spielsysteme → Skilltrees / Gegenstand „Boni, solange getragen“)
     skillEffects: {
       zeigerZone: { cat: 'minigame', label: 'Quicktime-Kreis: größere Trefferfläche', params: [['pct', '+ %', 'number', 20]], key: () => 'minispiele.zeiger.zone', mode: 'pct', value: (e) => Number(e.pct) || 0, text: (e, l) => '+' + (Number(e.pct) || 0) * l + ' % Trefferfläche (Quicktime-Kreis)' },
       zeigerLangsam: { cat: 'minigame', label: 'Quicktime-Kreis: Zeiger langsamer', params: [['pct', '− %', 'number', 15]], key: () => 'minispiele.zeiger.tempo', mode: 'pct', value: (e) => -(Number(e.pct) || 0), text: (e, l) => '−' + (Number(e.pct) || 0) * l + ' % Zeiger-Tempo (Quicktime-Kreis)' },
+      rohreZeit: { cat: 'minigame', label: 'Rohre: mehr Zeit', params: [['pct', '+ %', 'number', 25]], key: () => 'minispiele.rohre.zeit', mode: 'pct', value: (e) => Number(e.pct) || 0, text: (e, l) => '+' + (Number(e.pct) || 0) * l + ' % Zeit (Rohre)' },
       zeigerFehler: { cat: 'minigame', label: 'Quicktime-Kreis: mehr Fehlversuche', params: [['amount', '+', 'number', 1]], key: () => 'minispiele.zeiger.fehler', mode: 'add', value: (e) => Number(e.amount) || 0, text: (e, l) => '+' + (Number(e.amount) || 0) * l + ' Fehlversuch(e) (Quicktime-Kreis)' }
     },
     actions: {
@@ -626,9 +693,353 @@
             F.info.textContent = 'Wie viele Blätter es sind, siehst du erst am Ende.';
           });
         }
+      },
+
+      // ---------- Tresor / Zahlenschloss (1.5) ----------
+      // Drehrad (zur richtigen Zahl drehen und einrasten), Tastenfeld oder Zahlenschloss mit Rädchen.
+      // Der Code kann fest sein, aus einer Variable kommen (damit man ihn in der Geschichte finden kann) oder zufällig.
+      tresor: {
+        label: 'Tresor / Zahlenschloss', minigame: true,
+        params: [
+          { key: 'art', label: 'Art', type: 'select', options: [['drehrad', 'Tresor mit Drehrad'], ['tasten', 'Tastenfeld'], ['raeder', 'Zahlenschloss mit Rädchen']], default: 'drehrad' },
+          { key: 'code', label: 'Code (Drehrad z. B. 12-34-7, sonst z. B. 4711; leer = Zufall)', type: 'text', default: '' },
+          { key: 'codeVar', label: 'Code aus Variable (ist sie leer, kommt der Zufallscode hinein)', type: 'var', default: '' },
+          { key: 'stellen', label: 'Zufallscode: Zahlen bzw. Ziffern', type: 'number', default: 3 },
+          { key: 'zahlen', label: 'Drehrad: Zahlen auf dem Rad', type: 'select', options: [['40', '0–39'], ['60', '0–59'], ['100', '0–99']], default: '40' },
+          { key: 'hinweis', label: 'Hilfe', type: 'select', options: [['klicken', 'Klicken bei der richtigen Zahl (abhören)'], ['farben', 'Nach falschem Versuch: Farben (richtig / falsche Stelle / falsch)'], ['beides', 'Beides'], ['keine', 'Keine']], default: 'klicken' },
+          { key: 'versuche', label: 'Versuche (0 = unbegrenzt)', type: 'number', default: 0 },
+          { key: 'zeitlimit', label: 'Zeitlimit s (0 = keins)', type: 'number', default: 0 },
+          { key: 'hilfe', label: 'Mit Gegenstand (z. B. Stethoskop): beide Hilfen an', type: 'item', default: '' },
+          { key: 'titel', label: 'Titel (leer = „Tresor knacken“ / „Code eingeben“)', type: 'text', default: '' },
+          { key: 'bildTuer', label: 'Bild Tresortür', type: 'image', default: '' },
+          { key: 'bildRad', label: 'Bild Drehrad', type: 'image', default: '' },
+          { key: 'bildInnen', label: 'Bild im offenen Tresor', type: 'image', default: '' },
+          { key: 'tonKlick', label: 'Ton Klicken', type: 'audio', default: '' },
+          { key: 'tonAuf', label: 'Ton beim Öffnen', type: 'audio', default: '' },
+          resultParam
+        ],
+        run(params, ctx) {
+          return new Promise((resolve) => {
+            const art = ['drehrad', 'tasten', 'raeder'].includes(params.art) ? params.art : 'drehrad';
+            const F = frame(ctx, params.titel || (art === 'drehrad' ? 'Tresor knacken' : 'Code eingeben'), '58%', 'tresor');
+            const el = F.el;
+            const N = Number(params.zahlen) || 40;
+            const helper = params.hilfe && ctx.items && ctx.items.count(params.hilfe) > 0;
+            const mode = helper ? 'beides' : (params.hinweis || 'klicken');
+            const listen = mode === 'klicken' || mode === 'beides', colors = mode === 'farben' || mode === 'beides';
+            const len = Math.max(1, Math.min(art === 'drehrad' ? 6 : 8, Math.round(Number(params.stellen) || 3)));
+            // Code: Variable > fester Code > Zufall
+            const parse = (v) => {
+              const s = String(v == null ? '' : v).trim();
+              if (!s || s === '0' || s === 'false') return null;
+              if (art === 'drehrad') {
+                const parts = /[^0-9]/.test(s) ? s.split(/[^0-9]+/).filter(Boolean) : (s.length % 2 ? '0' + s : s).match(/../g);
+                const out = (parts || []).map((x) => Number(x) % N);
+                return out.length ? out : null;
+              }
+              const d = s.replace(/\D/g, '').split('').map(Number);
+              return d.length ? d : null;
+            };
+            const vv = params.codeVar && ctx.vars.get ? ctx.vars.get(params.codeVar) : null;
+            let code = parse(vv) || parse(params.code);
+            if (!code) {
+              code = Array.from({ length: len }, (_, i) => (art === 'drehrad' ? Math.floor(rnd(i ? 0 : 10, N)) : Math.floor(rnd(i ? 0 : 1, 10))));
+              if (params.codeVar) {
+                const v = ctx.project.vars.find((x) => x.id === params.codeVar);
+                const txt = art === 'drehrad' ? code.join('-') : code.join('');
+                ctx.vars.set(params.codeVar, v && v.type === 'text' ? txt : Number(art === 'drehrad' ? code.map((n) => String(n).padStart(2, '0')).join('') : txt));
+              }
+            }
+            const maxTries = Math.max(0, Math.round(Number(params.versuche) || 0));
+            const limit = Math.max(0, Number(params.zeitlimit) || 0) * 1000;
+            let tries = 0, done = false, t0 = performance.now();
+            const click = (loud) => { if (params.tonKlick && ctx.sound) ctx.sound(params.tonKlick, loud ? 100 : 25); else clack(loud ? 1 : 0.3, loud ? 1300 : 2600); };
+            // Tresor mit Tür
+            F.area.classList.add('mg-safe');
+            const door = el('div', { class: 'mg-safe-door' + (art !== 'drehrad' ? ' small' : '') });
+            const tuer = pic(ctx, 'tresor', 'bildTuer', params);
+            if (tuer) { door.style.backgroundImage = `url("${tuer}")`; door.classList.add('img'); }
+            const inner = pic(ctx, 'tresor', 'bildInnen', params);
+            const box = el('div', { class: 'mg-safe-box' }, el('div', { class: 'mg-safe-in', style: inner ? { backgroundImage: `url("${inner}")` } : null }, inner ? '' : '💰'), door);
+            F.area.appendChild(box);
+            const lock = el('div', { class: 'mg-lock mg-lock-' + art });
+            door.appendChild(lock);
+            const side = el('div', { class: 'mg-safe-side' });
+            F.area.appendChild(side);
+            const slots = el('div', { class: 'mg-slots' });
+            const history = el('div', { class: 'mg-hist' });
+            side.append(slots, history);
+            const bar = limit ? el('div', { class: 'mg-timebar' }, el('span')) : null;
+            if (bar) F.o.el.insertBefore(bar, F.area);
+            const upd = () => { F.info.textContent = (maxTries ? TF('Versuche: {a} / {b}', { a: tries, b: maxTries }) : (tries ? TF('Versuche: {n}', { n: tries }) : '')) + (helper ? (maxTries || tries ? '   ·   ' : '') + '🔧 ' + T('Hilfe aktiv') : ''); };
+            // Rückmeldung wie bei Mastermind: grün = richtig, gelb = kommt vor, aber woanders, rot = falsch
+            const feedback = (entry) => {
+              const res = entry.map((x, i) => (x === code[i] ? 'ok' : null));
+              const rest = code.filter((x, i) => res[i] !== 'ok');
+              entry.forEach((x, i) => { if (res[i]) return; const k = rest.indexOf(x); if (k >= 0) { res[i] = 'near'; rest.splice(k, 1); } else res[i] = 'no'; });
+              return res;
+            };
+            const open = () => {
+              done = true; cleanup();
+              F.head.textContent = 'Offen!';
+              door.classList.add('open');
+              if (params.tonAuf && ctx.sound) ctx.sound(params.tonAuf, 90); else { clack(1, 900); setTimeout(() => clack(1, 500), 120); }
+              const t = (performance.now() - t0) / 1000;
+              const score = Math.max(0.6, Math.min(1, 1 - tries * 0.1 - Math.max(0, t - 20) / 300));
+              setTimeout(() => F.finish({ score, ok: true }, tries ? 'Geknackt!' : 'Beim ersten Versuch geknackt!', resolve, params.ergebnis), 1200);
+            };
+            const fail = (why) => { if (done) return; done = true; cleanup(); F.finish({ score: 0.2, ok: false }, why, resolve, params.ergebnis); };
+            const check = (entry) => {
+              if (done) return false;
+              if (entry.length === code.length && entry.every((x, i) => x === code[i])) { open(); return true; }
+              tries++;
+              door.classList.remove('shake'); void door.offsetWidth; door.classList.add('shake');
+              const row = el('div', { class: 'mg-hrow' });
+              const fb = colors ? feedback(entry) : null;
+              entry.forEach((x, i) => row.appendChild(el('span', { class: 'mg-hcell' + (fb ? ' ' + fb[i] : '') }, String(x))));
+              history.insertBefore(row, history.firstChild);
+              while (history.children.length > 5) history.lastChild.remove();
+              upd();
+              if (maxTries && tries >= maxTries) fail('Keine Versuche mehr …');
+              return false;
+            };
+            const showSlots = (entry, cur) => {
+              slots.innerHTML = '';
+              for (let i = 0; i < code.length; i++) slots.appendChild(el('span', { class: 'mg-slot' + (i === entry.length ? ' cur' : '') }, entry[i] != null ? String(entry[i]) : i === entry.length && cur != null ? String(cur) : '·'));
+            };
+            let cleanup = () => {};
+
+            if (art === 'drehrad') {
+              const NS = 'http://www.w3.org/2000/svg';
+              const sv = (tag, at) => { const n = document.createElementNS(NS, tag); for (const k in at) n.setAttribute(k, at[k]); return n; };
+              const svg = sv('svg', { viewBox: '-115 -125 230 240', class: 'mg-dial' });
+              const rad = pic(ctx, 'tresor', 'bildRad', params);
+              const g = sv('g', {});
+              if (rad) g.appendChild(sv('image', { href: rad, x: -100, y: -100, width: 200, height: 200 }));
+              else {
+                g.appendChild(sv('circle', { r: 100, class: 'mg-dial-face' }));
+                g.appendChild(sv('circle', { r: 78, class: 'mg-dial-ring' }));
+                const every = N <= 40 ? 5 : 10;
+                for (let i = 0; i < N; i++) {
+                  const a = i / N * Math.PI * 2, big = i % every === 0;
+                  g.appendChild(sv('line', { x1: Math.sin(a) * 96, y1: -Math.cos(a) * 96, x2: Math.sin(a) * (big ? 84 : 89), y2: -Math.cos(a) * (big ? 84 : 89), class: 'mg-dial-tick' }));
+                  if (big) { const tx = sv('text', { x: Math.sin(a) * 70, y: -Math.cos(a) * 70 + 5, class: 'mg-dial-num', transform: `rotate(${i / N * 360} ${Math.sin(a) * 70} ${-Math.cos(a) * 70})` }); tx.textContent = String(i); g.appendChild(tx); }
+                }
+              }
+              svg.appendChild(g);
+              svg.appendChild(sv('path', { d: 'M0 -104 L-7 -118 L7 -118 Z', class: 'mg-dial-mark' }));
+              const knob = sv('circle', { r: 30, class: 'mg-dial-knob' });
+              svg.appendChild(knob);
+              const kt = sv('text', { x: 0, y: 6, class: 'mg-dial-kt' }); kt.textContent = '✓'; svg.appendChild(kt);
+              lock.appendChild(svg);
+              let ang = 0, val = 0, entry = [], drag = null;
+              const valueOf = (a) => ((Math.round(-a / (360 / N)) % N) + N) % N;
+              const setAng = (a) => {
+                ang = a; g.setAttribute('transform', `rotate(${ang})`);
+                const v = valueOf(ang);
+                if (v !== val) {
+                  val = v;
+                  const right = listen && entry.length < code.length && v === code[entry.length];
+                  click(right);
+                  if (right) { svg.classList.remove('klick'); void svg.getBBox; svg.classList.add('klick'); setTimeout(() => svg.classList.remove('klick'), 160); }
+                  showSlots(entry, val);
+                }
+              };
+              const lockIn = () => {
+                if (done) return;
+                entry.push(val); clack(0.7, 700);
+                showSlots(entry, null);
+                if (entry.length === code.length) { const e2 = entry.slice(); setTimeout(() => { if (!check(e2)) { entry = []; showSlots(entry, val); } }, 350); }
+                else showSlots(entry, val);
+              };
+              const center = () => { const r = svg.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height * (125 / 240)]; };
+              svg.addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                if (done) return;
+                const [cx, cy] = center();
+                if (Math.hypot(e.clientX - cx, e.clientY - cy) < svg.getBoundingClientRect().width * 0.14) { lockIn(); return; }
+                drag = { a: Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI, start: ang };
+                svg.setPointerCapture(e.pointerId);
+              });
+              svg.addEventListener('pointermove', (e) => {
+                if (!drag || done) return;
+                const [cx, cy] = center();
+                const a = Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI;
+                let d = a - drag.a; d = ((d + 540) % 360) - 180;
+                drag.a = a; setAng(ang + d);
+              });
+              svg.addEventListener('pointerup', () => { drag = null; if (!done) setAng(Math.round(ang / (360 / N)) * (360 / N)); });
+              svg.addEventListener('wheel', (e) => { e.preventDefault(); e.stopPropagation(); if (!done) setAng(Math.round(ang / (360 / N)) * (360 / N) + (e.deltaY > 0 ? 1 : -1) * 360 / N); }, { passive: false });
+              const onKey = (e) => {
+                if (done) return;
+                if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); setAng(Math.round(ang / (360 / N)) * (360 / N) - 360 / N); }
+                else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); setAng(Math.round(ang / (360 / N)) * (360 / N) + 360 / N); }
+                else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); lockIn(); }
+                else if (e.key === 'Backspace') { e.preventDefault(); e.stopPropagation(); entry = []; showSlots(entry, val); }
+              };
+              window.addEventListener('keydown', onKey, true);
+              cleanup = () => window.removeEventListener('keydown', onKey, true);
+              side.appendChild(el('div', { class: 'row gap8 mg-safe-btns' },
+                el('button', { class: 'btn primary', onclick: (e) => { e.stopPropagation(); lockIn(); } }, 'Einrasten'),
+                el('button', { class: 'btn', onclick: (e) => { e.stopPropagation(); entry = []; showSlots(entry, val); } }, 'Von vorn')));
+              side.appendChild(el('div', { class: 'mg-safe-help' }, T('Rad mit der Maus drehen (oder Mausrad, Pfeiltasten). Bei der richtigen Zahl einrasten – Mitte anklicken oder Enter.') + (listen ? ' ' + T('Gut hinhören: Bei der richtigen Zahl klickt es lauter.') : '')));
+              setAng(rnd(0, 360)); showSlots(entry, val);
+            } else if (art === 'tasten') {
+              let entry = [];
+              const disp = el('div', { class: 'mg-keydisp' });
+              const show = () => { disp.textContent = entry.length ? entry.join('') : '—'; showSlots(entry, null); };
+              const press = (k) => {
+                if (done) return;
+                clack(0.5, 1800);
+                if (k === 'C') entry = [];
+                else if (k === 'OK') { if (entry.length) { const e2 = entry.slice(); entry = []; if (!check(e2)) { disp.classList.remove('bad'); void disp.offsetWidth; disp.classList.add('bad'); } } }
+                else if (entry.length < Math.max(code.length, 8)) entry.push(Number(k));
+                show();
+              };
+              const pad = el('div', { class: 'mg-keypad' }, ...['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', 'OK'].map((k) => el('button', { class: 'mg-key' + (k === 'OK' ? ' ok' : k === 'C' ? ' c' : ''), onclick: (e) => { e.stopPropagation(); press(k); } }, k)));
+              lock.append(disp, pad);
+              const onKey = (e) => {
+                if (done) return;
+                if (/^[0-9]$/.test(e.key)) { e.preventDefault(); e.stopPropagation(); press(e.key); }
+                else if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); press('OK'); }
+                else if (e.key === 'Backspace') { e.preventDefault(); e.stopPropagation(); entry.pop(); show(); }
+                else if (e.key === 'Escape' || e.key === 'Delete') { e.preventDefault(); e.stopPropagation(); press('C'); }
+              };
+              window.addEventListener('keydown', onKey, true);
+              cleanup = () => window.removeEventListener('keydown', onKey, true);
+              side.appendChild(el('div', { class: 'mg-safe-help' }, T('Code eintippen (auch mit der Tastatur) und OK.') + (colors ? ' ' + T('Nach einem falschen Versuch: grün = richtige Ziffer an richtiger Stelle, gelb = kommt vor, aber woanders.') : '')));
+              show();
+            } else {
+              const vals = code.map(() => Math.floor(rnd(0, 10)));
+              const wheels = vals.map((v, i) => {
+                const num = el('div', { class: 'mg-wnum' });
+                const set = (d) => {
+                  if (done) return;
+                  vals[i] = (vals[i] + d + 10) % 10;
+                  num.innerHTML = '';
+                  num.append(el('span', { class: 'dim' }, String((vals[i] + 1) % 10)), el('span', { class: 'cur' }, String(vals[i])), el('span', { class: 'dim' }, String((vals[i] + 9) % 10)));
+                  if (d) { const right = listen && vals[i] === code[i]; click(right); if (right) { w.classList.remove('klick'); void w.offsetWidth; w.classList.add('klick'); } }
+                };
+                const w = el('div', { class: 'mg-wheel' },
+                  el('button', { class: 'mg-warr', onclick: (e) => { e.stopPropagation(); set(1); } }, '▲'), num,
+                  el('button', { class: 'mg-warr', onclick: (e) => { e.stopPropagation(); set(-1); } }, '▼'));
+                w.addEventListener('wheel', (e) => { e.preventDefault(); e.stopPropagation(); set(e.deltaY > 0 ? -1 : 1); }, { passive: false });
+                set(0);
+                return w;
+              });
+              lock.append(el('div', { class: 'mg-wheels' }, ...wheels));
+              const tryOpen = () => { if (done) return; clack(0.8, 600); check(vals.slice()); };
+              side.appendChild(el('div', { class: 'row gap8 mg-safe-btns' }, el('button', { class: 'btn primary', onclick: (e) => { e.stopPropagation(); tryOpen(); } }, 'Öffnen')));
+              side.appendChild(el('div', { class: 'mg-safe-help' }, T('Rädchen mit den Pfeilen oder dem Mausrad drehen, dann „Öffnen“.') + (listen ? ' ' + T('Bei der richtigen Ziffer klickt ein Rädchen lauter.') : '')));
+              const onKey = (e) => { if (!done && e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); tryOpen(); } };
+              window.addEventListener('keydown', onKey, true);
+              cleanup = () => window.removeEventListener('keydown', onKey, true);
+              showSlots([], null); slots.style.display = 'none';
+            }
+            if (limit) {
+              const step = (now) => { if (done) return; const f = (now - t0) / limit; bar.firstChild.style.width = Math.max(0, 100 - f * 100) + '%'; if (f >= 1) return fail('Zeit abgelaufen …'); requestAnimationFrame(step); };
+              requestAnimationFrame(step);
+            }
+            const gone = setInterval(() => { if (!document.body.contains(box)) { clearInterval(gone); if (!done) { done = true; cleanup(); resolve({ score: 0, ok: false }); } } }, 500);
+            upd();
+          });
+        }
+      },
+
+      // ---------- Rohre verbinden (1.5) ----------
+      // Teile anklicken, bis eine Leitung von links nach rechts durchgeht. Das Feld ist immer lösbar.
+      rohre: {
+        label: 'Rohre verbinden', minigame: true,
+        params: [
+          { key: 'groesse', label: 'Größe', type: 'select', options: [['4', '4 × 4 (sehr leicht)'], ['5', '5 × 5 (leicht)'], ['6', '6 × 6'], ['7', '7 × 7'], ['8', '8 × 8 (schwer)']], default: '5' },
+          { key: 'aussehen', label: 'Aussehen', type: 'select', options: [['rohre', 'Rohre mit Wasser'], ['kabel', 'Kabel mit Strom'], ['magie', 'Magische Runen']], default: 'rohre' },
+          { key: 'zeitlimit', label: 'Wasser fließt nach … Sekunden (0 = kein Zeitdruck)', type: 'number', default: 0 },
+          { key: 'zuege', label: 'Drehungen höchstens (0 = unbegrenzt)', type: 'number', default: 0 },
+          { key: 'titel', label: 'Titel (leer = „Leitung verbinden“)', type: 'text', default: '' },
+          { key: 'bildHintergrund', label: 'Bild Hintergrund', type: 'image', default: '' },
+          { key: 'bildGerade', label: 'Bild Gerade (oben–unten)', type: 'image', default: '' },
+          { key: 'bildKurve', label: 'Bild Kurve (oben–rechts)', type: 'image', default: '' },
+          { key: 'bildT', label: 'Bild T-Stück (oben–rechts–unten)', type: 'image', default: '' },
+          { key: 'bildKreuz', label: 'Bild Kreuzung', type: 'image', default: '' },
+          { key: 'tonDreh', label: 'Ton beim Drehen', type: 'audio', default: '' },
+          resultParam
+        ],
+        run(params, ctx) {
+          return new Promise((resolve) => {
+            const look = ['rohre', 'kabel', 'magie'].includes(params.aussehen) ? params.aussehen : 'rohre';
+            const F = frame(ctx, params.titel || 'Leitung verbinden', '56%', 'rohre');
+            const el = F.el;
+            const n = Math.max(3, Math.min(9, Math.round(Number(params.groesse) || 5)));
+            const B = (k, base) => (ctx.bonus ? ctx.bonus(k, base) : base);
+            const limit = Math.max(0, B('minispiele.rohre.zeit', Number(params.zeitlimit) || 0)) * 1000;
+            const maxMoves = Math.max(0, Math.round(Number(params.zuege) || 0));
+            const { cells, path, r0, r1, at, flow } = pipeField(n);
+            // Darstellung
+            F.area.classList.add('mg-pipes', 'mg-pipes-' + look);
+            const bg = pic(ctx, 'rohre', 'bildHintergrund', params);
+            if (bg) F.area.style.background = `url("${bg}") center / cover`;
+            const imgs = { 5: pic(ctx, 'rohre', 'bildGerade', params), 3: pic(ctx, 'rohre', 'bildKurve', params), 7: pic(ctx, 'rohre', 'bildT', params), 15: pic(ctx, 'rohre', 'bildKreuz', params) };
+            const D = { 5: 'M50 0 L50 100', 3: 'M50 0 L50 38 Q50 50 62 50 L100 50', 7: 'M50 0 L50 100 M50 50 L100 50', 15: 'M50 0 L50 100 M0 50 L100 50' };
+            const grid = el('div', { class: 'mg-pgrid', style: { gridTemplateColumns: `repeat(${n + 2}, 1fr)`, gridTemplateRows: `repeat(${n}, 1fr)` } });
+            grid.style.setProperty('--ar', String((n + 2) / n));
+            const tile = (c) => {
+              const t = el('div', { class: 'mg-ptile', style: { gridColumn: String(c.x + 2), gridRow: String(c.y + 1) } });
+              const inner = el('div', { class: 'mg-pin' });
+              if (imgs[c.shape]) inner.appendChild(el('img', { src: imgs[c.shape], draggable: false }));
+              else inner.innerHTML = `<svg viewBox="0 0 100 100"><path class="o" d="${D[c.shape]}"/><path class="i" d="${D[c.shape]}"/><circle class="j" cx="50" cy="50" r="${c.shape === 5 ? 0 : 9}"/></svg>`;
+              inner.style.transform = `rotate(${c.deg}deg)`;
+              t.appendChild(inner);
+              c.el = t; c.inner = inner;
+              const turn = (d) => {
+                if (done) return;
+                c.r = (c.r + d + 4) % 4; c.deg += d * 90;
+                inner.style.transform = `rotate(${c.deg}deg)`;
+                moves++;
+                if (params.tonDreh && ctx.sound) ctx.sound(params.tonDreh, 60); else clack(0.35, 1500);
+                refresh();
+              };
+              t.addEventListener('mousedown', (e) => { e.stopPropagation(); turn(e.button === 2 ? -1 : 1); });
+              t.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); });
+              return t;
+            };
+            const src = el('div', { class: 'mg-pend src', style: { gridColumn: '1', gridRow: String(r0 + 1) } }, el('span'));
+            const dst = el('div', { class: 'mg-pend dst', style: { gridColumn: String(n + 2), gridRow: String(r1 + 1) } }, el('span'));
+            grid.append(src, ...cells.map(tile), dst);
+            F.area.appendChild(grid);
+            const bar = limit ? el('div', { class: 'mg-timebar' }, el('span')) : null;
+            if (bar) F.o.el.insertBefore(bar, F.area);
+            let moves = 0, done = false;
+            const t0 = performance.now();
+            const word = T({ rohre: 'Wasser', kabel: 'Strom', magie: 'Magie' }[look]);
+            const upd = () => { F.info.textContent = T('Klick = drehen (Rechtsklick andersherum)') + '   ·   ' + (maxMoves ? TF('Drehungen: {a} / {b}', { a: moves, b: maxMoves }) : TF('Drehungen: {n}', { n: moves })) + (limit ? '   ·   ' + TF('{w} fließt gleich!', { w: word }) : ''); };
+            const refresh = () => {
+              const f = flow();
+              for (const c of cells) c.el.classList.toggle('full', f.vis.has(c));
+              src.classList.add('full'); dst.classList.toggle('full', f.done);
+              upd();
+              if (f.done) win();
+              else if (maxMoves && moves >= maxMoves) lose('Keine Drehungen mehr …');
+            };
+            const win = () => {
+              if (done) return; done = true;
+              F.area.classList.add('solved');
+              const best = path.length * 1.6;
+              const score = Math.max(0.6, Math.min(1, 1 - Math.max(0, moves - best) / (n * n * 3)));
+              setTimeout(() => F.finish({ score, ok: true }, 'Verbunden!', resolve, params.ergebnis), 700);
+            };
+            const lose = (why) => { if (done) return; done = true; F.area.classList.add('failed'); const f = flow(); F.finish({ score: Math.min(0.45, f.vis.size / Math.max(1, path.length) * 0.45), ok: false }, why, resolve, params.ergebnis); };
+            if (limit) {
+              const step = (now) => { if (done) return; const f = (now - t0) / limit; bar.firstChild.style.width = Math.max(0, 100 - f * 100) + '%'; if (f >= 1) return lose(TF('{w} läuft aus …', { w: word })); requestAnimationFrame(step); };
+              requestAnimationFrame(step);
+            }
+            refresh();
+          });
+        }
       }
+
     },
     hooks: {},
+    _intern: { pipeField },
     // Reiter „Minispiele“: Rezepte für Kochen & Brauen
     // Für Probeläufe im Editor: sinnvolle Startwerte (Puzzle-Bild, Zutaten zum Kochen)
     tryPrepare(key, params, rs) {
@@ -651,9 +1062,11 @@
           ['kochen', '🍲', 'Zutaten aus dem Inventar in Topf oder Kessel, dann schneiden, rühren und Hitze halten. Mit Rezeptbuch.', 'Küche oder Alchemie, einfach oder mit Schritten, eigenes Topf-Bild · Rezepte unten'],
           ['muenze', '🪙', 'Kopf oder Zahl – fair, gewichtet oder vom Drehbuch festgelegt. Optional mit Geld-Einsatz.', 'Zufall, Chance, Einsatz und Währung, Bilder für beide Seiten'],
           ['bluete', '🌼', '„Liebt mich, liebt mich nicht“ – die Blattzahl sorgt für ein echtes 50:50.', 'Zufall, eigene Texte, Bilder für Blatt und Mitte'],
+          ['tresor', '🔐', 'Tresor mit Drehrad, Tastenfeld oder Zahlenschloss mit Rädchen. Der Code kann fest sein, aus einer Variable kommen (dann findet man ihn in der Geschichte) oder zufällig – auch zufällig in eine Variable, die du später im Text zeigst.', 'Art, Code, Zahlen auf dem Rad, Hilfe (Klicken abhören oder Farben), Versuche, Zeitlimit, Hilfs-Gegenstand, Bilder für Tür, Rad und Inhalt'],
+          ['rohre', '🚰', 'Teile drehen, bis die Leitung von links nach rechts durchgeht – als Rohre mit Wasser, Kabel mit Strom oder magische Runen. Jedes Feld ist zufällig und immer lösbar.', 'Größe, Aussehen, Zeitdruck, Drehungen, eigene Bilder für die Teile'],
           ['zeiger', '⏱', 'Ein Zeiger dreht sich – im richtigen Moment drücken, wenn er in der markierten Fläche steht. Die Fläche springt nach jedem Treffer weiter. Leichter durch Skilltree-Perks, Ausrüstung oder einen Hilfs-Gegenstand.', 'Schwierigkeit, Tempo, Größe der Fläche, Treffer, Fehlversuche, schneller werden, Richtungswechsel, Zeitlimit, Hilfs-Gegenstand, eigene Bilder']
         ];
-        body.appendChild(el('p', { class: 'muted' }, 'Sieben Minispiele. Du startest sie über „+ Aktion“ → „Minispiele: …“ – in einer Antwort, an einem Hub-Objekt, in einem Dialog oder als Minispiel eines Jobs. Einstellungen und Bilder wählst du direkt an der Aktion. Jedes Spiel liefert ein Ergebnis von 0–100 % (Feld „Ergebnis in“ → Variable).'));
+        body.appendChild(el('p', { class: 'muted' }, 'Neun Minispiele. Du startest sie über „+ Aktion“ → „Minispiele: …“ – in einer Antwort, an einem Hub-Objekt, in einem Dialog oder als Minispiel eines Jobs. Einstellungen und Bilder wählst du direkt an der Aktion. Jedes Spiel liefert ein Ergebnis von 0–100 % (Feld „Ergebnis in“ → Variable).'));
         const grid = el('div', { class: 'mg-cards' });
         for (const [key, icon, desc, opts] of GAMES) {
           const a = self && self.actions[key];

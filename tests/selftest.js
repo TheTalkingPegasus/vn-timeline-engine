@@ -967,6 +967,41 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Spielhalle: Dart zählt, Billard-Physik und -Gegner, Automat-Auszahlung');
   } catch (e) { general.push('Spielhalle: ' + e.message); }
 
+  // 16. Tresor, Rohre (Minispiele 1.5) und Blackjack
+  try {
+    await js(fs.readFileSync(path.join(__dirname, '..', 'templates', 'minispiele.js'), 'utf8') + '\n;1');
+    const r = JSON.parse(await js(`(() => {
+      const out = [], M = VNPlugin.plugins.minispiele, S = VNPlugin.plugins.spielhalle;
+      if (!M || !M._intern) return JSON.stringify(['Minispiele nicht geladen']);
+      ['tresor', 'rohre'].forEach((k) => { if (!VNPlugin.actionDef('minispiele.' + k)) out.push('Aktion ' + k + ' fehlt'); });
+      // Rohre: 200 Felder – gemischt nie schon gelöst, mit den richtigen Drehungen immer lösbar
+      for (let t = 0; t < 200; t++) {
+        const n = 4 + (t % 5), F = M._intern.pipeField(n);
+        if (F.flow().done) { out.push('Rohre schon gelöst'); break; }
+        for (const c of F.cells) c.r = [0, 1, 2, 3].find((k) => F.rot(c.shape, k) === c.base);
+        if (!F.flow().done) { out.push('Rohre nicht lösbar (' + n + ')'); break; }
+      }
+      // Blackjack: Werte und Grundstrategie
+      const B = S && S._intern;
+      if (!B || !B.handVal) out.push('Blackjack fehlt');
+      else {
+        const H = (...r) => r.map((x) => ({ r: x, s: '♠' }));
+        if (B.handVal(H('A', 'K')).total !== 21) out.push('Ass + König');
+        if (B.handVal(H('A', 'A', '9')).total !== 21) out.push('Ass + Ass + 9');
+        if (B.handVal(H('K', 'Q', '5')).total !== 25) out.push('über 21');
+        const v = B.handVal(H('A', '6')); if (v.total !== 17 || !v.soft) out.push('weiche 17');
+        if (B.bjTip(H('8', '8'), { r: '10' }, true, true) !== 'teilen') out.push('Tipp 8+8');
+        if (B.bjTip(H('6', '5'), { r: '6' }, true, false) !== 'verdoppeln') out.push('Tipp 11');
+        if (B.bjTip(H('10', '6'), { r: '10' }, false, false) !== 'ziehen') out.push('Tipp 16 gegen 10');
+        if (B.bjTip(H('10', '3'), { r: '4' }, false, false) !== 'stehen') out.push('Tipp 13 gegen 4');
+        if (!VNPlugin.actionDef('spielhalle.blackjack')) out.push('Aktion blackjack fehlt');
+      }
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Tresor/Rohre/Blackjack: ' + r.join(', '));
+    else log('✓ Tresor, Rohre (immer lösbar) und Blackjack (Werte, Tipps)');
+  } catch (e) { general.push('Tresor/Rohre/Blackjack: ' + e.message); }
+
   // 14. Neu in 0.9.16: GIF-Encoder, Formeln/Code, Ordner im Puppen-Modus
   try {
     const r = JSON.parse(await js(`(async () => {

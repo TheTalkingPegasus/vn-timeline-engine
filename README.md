@@ -71,10 +71,12 @@ Because the program isn’t code-signed, Windows may show “Windows protected y
   player picks, hidden messages, messages only for the phone or only for the computer, and messages that unlock
   locations, items or quests when read
 - Time of day, seasons and ambient sounds; game over screen with retry
-- Bundled plugins: Jobs and seven minigames (click reflex, memory, puzzle, cooking & brewing, coin toss, petals,
-  quicktime circle) – minigames can be won or lost and made easier with skill tree perks or equipment
-- **Arcade:** darts, pool and a slot machine – darts and pool against computer opponents whose accuracy, tactics and
-  thinking time you set; board, table, balls, reels and cabinet designable with your own images
+- Bundled plugins: Jobs and nine minigames (click reflex, memory, puzzle, cooking & brewing, coin toss, petals,
+  quicktime circle, safe, pipes) – minigames can be won or lost and made easier with skill tree perks or equipment
+- **Arcade:** darts, pool, blackjack and a slot machine – darts and pool against computer opponents whose accuracy,
+  tactics and thinking time you set; board, table, balls, cards, reels and cabinet designable with your own images
+- More minigames: **safe / combination lock** (dial, keypad or wheels, code from the story or random) and **connect
+  the pipes** (always solvable, water, cables or magic runes)
 
 **For players** (in every game automatically): history, auto mode, skip, save slots, quick save,
 reading & accessibility options, graphics quality, sound output, language switch.
@@ -206,9 +208,11 @@ Weil das Programm nicht signiert ist, zeigt Windows evtl. „Der Computer wurde 
   Beziehungen mit Stufen und Geschenken, Erfolge, Galerie, Werte, Glossar, Welt & Orte mit Weltkarte (Orte „wenn …“
   freischalten, zeitweise sperren oder für immer entfernen), Questlog, Skilltrees, rundenbasierter Kampf (Kämpfer mit Bones
   oder Gliederpuppe bekommen eigene Idle-, Angriffs-, Treffer-, K.O.- und Sieg-Animationen mit weicher Überblendung),
-  Aufbau (Idle), Ausrüstung, Game Over, Jobs und sieben Minispiele (auch verlierbar, mit Perks leichter)
-- **Spielhalle:** Dart, Billard und Spielautomat – Dart und Billard gegen Computer-Gegner mit einstellbarer
-  Treffsicherheit, Taktik und Bedenkzeit; Scheibe, Tisch, Kugeln, Walzen und Gehäuse mit eigenen Bildern
+  Aufbau (Idle), Ausrüstung, Game Over, Jobs und neun Minispiele (auch verlierbar, mit Perks leichter)
+- **Spielhalle:** Dart, Billard, Blackjack und Spielautomat – Dart und Billard gegen Computer-Gegner mit einstellbarer
+  Treffsicherheit, Taktik und Bedenkzeit; Scheibe, Tisch, Kugeln, Karten, Walzen und Gehäuse mit eigenen Bildern
+- Weitere Minispiele: **Tresor / Zahlenschloss** (Drehrad, Tastenfeld oder Rädchen, Code aus der Geschichte oder
+  zufällig) und **Rohre verbinden** (immer lösbar, als Wasser, Kabel oder magische Runen)
 - **Geräte:** Handy oder Computer im Spiel mit Apps (Nachrichten, Inventar, Beziehungen, Galerie, Quests, Karte … und eigene
   Apps), komplett gestaltbar, auf Wunsch mit PIN oder Passwort · **Nachrichten über Szenen hinweg** mit Kontakten,
   Routen-Varianten, Antworten zum Auswählen, versteckten Nachrichten, Nachrichten nur fürs Handy oder nur für den PC –

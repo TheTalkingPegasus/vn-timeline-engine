@@ -16,9 +16,10 @@ Without installing (ZIP):
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
 
-NEW IN 0.9.17 · Arcade: darts, pool and slot machine
-- New bundled plugin "Arcade": darts and pool against computer opponents whose skill you set, and a slot machine with
-  your own symbols, payouts and cabinet. Board, table, balls and reels can use your own images.
+NEW IN 0.9.17 · Arcade: darts, pool, blackjack and slot machine · safe and pipes
+- New bundled plugin "Arcade": darts and pool against computer opponents whose skill you set, blackjack against a
+  dealer, and a slot machine with your own symbols, payouts and cabinet. Everything can use your own images.
+- New minigames: safe / combination lock (dial, keypad or wheels; code from the story or random) and connect the pipes.
 
 NEW IN 0.9.16 · Pixel art, battle animations, code track, puppet folders
 - Pixel art editor (Design → Pixel art): draw and animate frame by frame; finished animations become pixel-sharp
@@ -83,7 +84,7 @@ Game systems (switch on what you need)
   offline or game time; time preview in the editor.
 - Equipment, seasons and ambient sounds, game over screen.
 - Devices: phone or computer with apps, lock code; messages across scenes with routes, replies and unlocks.
-- Bundled plugins: Jobs, seven minigames and the Arcade (darts, pool, slot machine with computer opponents).
+- Bundled plugins: Jobs, nine minigames (incl. safe and pipes) and the Arcade (darts, pool, blackjack, slot machine).
   Write your own plugins in JavaScript (see PLUGINS.en.md).
 For players (in every game automatically)
 - History, auto mode, skip, quick save, save slots, settings, reading & accessibility options,

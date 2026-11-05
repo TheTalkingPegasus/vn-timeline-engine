@@ -921,6 +921,221 @@
   });
 
   // =====================================================================
+  // BLACKJACK
+  // =====================================================================
+  const SUITS = ['♠', '♥', '♦', '♣'], RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+  const cardVal = (r) => (r === 'A' ? 11 : ['10', 'J', 'Q', 'K'].includes(r) ? 10 : Number(r));
+  const handVal = (cards) => { let t = 0, a = 0; for (const c of cards) { t += cardVal(c.r); if (c.r === 'A') a++; } while (t > 21 && a) { t -= 10; a--; } return { total: t, soft: a > 0 }; };
+  // Grundstrategie – was ein guter Spieler jetzt tun würde (für die Tipps)
+  const bjTip = (cards, up, canDouble, canSplit) => {
+    const d = cardVal(up.r), v = handVal(cards);
+    if (canSplit) {
+      const r = cardVal(cards[0].r);
+      if (r === 11 || r === 8) return 'teilen';
+      if (r === 9 && ![7, 10, 11].includes(d)) return 'teilen';
+      if ((r === 7 || r === 3 || r === 2) && d <= 7) return 'teilen';
+      if (r === 6 && d <= 6) return 'teilen';
+      if (r === 4 && (d === 5 || d === 6)) return 'teilen';
+    }
+    if (v.soft) {
+      const o = v.total - 11;
+      if (o >= 8) return 'stehen';
+      if (o === 7) return d >= 3 && d <= 6 && canDouble ? 'verdoppeln' : d <= 8 ? 'stehen' : 'ziehen';
+      if (o === 6) return d >= 3 && d <= 6 && canDouble ? 'verdoppeln' : 'ziehen';
+      if (o >= 4) return d >= 4 && d <= 6 && canDouble ? 'verdoppeln' : 'ziehen';
+      return d >= 5 && d <= 6 && canDouble ? 'verdoppeln' : 'ziehen';
+    }
+    const t = v.total;
+    if (t >= 17) return 'stehen';
+    if (t >= 13) return d <= 6 ? 'stehen' : 'ziehen';
+    if (t === 12) return d >= 4 && d <= 6 ? 'stehen' : 'ziehen';
+    if (t === 11) return canDouble ? 'verdoppeln' : 'ziehen';
+    if (t === 10) return d <= 9 && canDouble ? 'verdoppeln' : 'ziehen';
+    if (t === 9) return d >= 3 && d <= 6 && canDouble ? 'verdoppeln' : 'ziehen';
+    return 'ziehen';
+  };
+
+  const runBlackjack = (params, ctx) => new Promise((resolve) => {
+    const dealer = foeById(params.croupier);
+    const F = frame(ctx, params.titel || T('Blackjack'), '84%', 'blackjack');
+    F.area.classList.add('sh-bj');
+    const el = F.el;
+    const cur = params.waehrung ? ctx.project.currencies.find((c) => c.id === params.waehrung) : null;
+    const curName = cur ? (VN.tr ? VN.tr(cur.id + ':name', cur.name) : cur.name) : T('Chips');
+    let credits = cur ? ctx.money.get(cur.id) : Math.max(0, Math.round(num(params.guthaben, 100)));
+    const start = credits;
+    const minBet = Math.max(1, Math.round(num(params.einsatz, 5)));
+    const maxBet = Math.max(minBet, Math.round(num(params.maxEinsatz, minBet * 10)));
+    const maxRounds = Math.max(0, Math.round(num(params.runden, 0)));
+    const decks = clamp(Math.round(num(params.decks, 2)), 1, 8);
+    const h17 = params.soft17 === 'zieht';
+    const bjPay = params.auszahlung === '6:5' ? 1.2 : 1.5;
+    const allowDouble = params.verdoppeln !== 'nein', allowSplit = params.teilen !== 'nein';
+    const helper = params.hilfe && ctx.items && ctx.items.count(params.hilfe) > 0;
+    const tips = params.tipps === 'an' || helper || (ctx.bonus ? ctx.bonus('spielhalle.blackjack.tipps', 0) > 0 : false);
+    const imBack = pic(ctx, 'blackjack', 'bildRueckseite', params), imTable = pic(ctx, 'blackjack', 'bildTisch', params);
+    if (imTable) F.area.style.background = `url("${imTable}") center / cover`;
+    let shoe = [];
+    const shuffleShoe = () => { shoe = []; for (let d = 0; d < decks; d++) for (const s of SUITS) for (const r of RANKS) shoe.push({ r, s }); for (let i = shoe.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shoe[i], shoe[j]] = [shoe[j], shoe[i]]; } };
+    shuffleShoe();
+    const drawCard = () => { if (shoe.length < decks * 52 * 0.25) { shuffleShoe(); F.say(T('Neu gemischt'), 1000); } return shoe.pop(); };
+    const money = (d) => { credits += d; if (cur && d) ctx.money.add(cur.id, d); };
+    // Tisch
+    const dName = dealer ? foeName(dealer) : T('Croupier');
+    const dVal = el('span', { class: 'sh-bj-val' }), dCards = el('div', { class: 'sh-bj-cards' });
+    const dealerBox = el('div', { class: 'sh-bj-dealer' }, el('div', { class: 'sh-bj-who' }, avatar(ctx, dealer), el('span', { class: 'sh-bj-name' }, dName), dVal), dCards);
+    const msg = el('div', { class: 'sh-bj-msg' });
+    const handsBox = el('div', { class: 'sh-bj-hands' });
+    const ctrl = el('div', { class: 'sh-bj-ctrl' });
+    const credEl = el('div', { class: 'sh-bj-cred' });
+    F.area.append(dealerBox, msg, handsBox, el('div', { class: 'sh-bj-bar' }, credEl, ctrl));
+    const cardEl = (c, hidden) => {
+      if (hidden) return el('div', { class: 'sh-card back' + (imBack ? ' img' : ''), style: imBack ? { backgroundImage: `url("${imBack}")` } : null });
+      const red = c.s === '♥' || c.s === '♦';
+      return el('div', { class: 'sh-card' + (red ? ' red' : '') }, el('span', { class: 'sh-c-tl' }, c.r, el('br'), c.s), el('span', { class: 'sh-c-mid' }, c.s), el('span', { class: 'sh-c-br' }, c.r, el('br'), c.s));
+    };
+    const valText = (cards) => { const v = handVal(cards); return v.soft && v.total < 21 ? (v.total - 10) + ' / ' + v.total : String(v.total); };
+    let bet = Math.min(minBet, credits), hands = [], active = 0, dc = [], hole = true, phase = 'bet', rounds = 0, done = false;
+    const render = () => {
+      dCards.innerHTML = '';
+      dc.forEach((c, i) => dCards.appendChild(cardEl(c, i === 1 && hole)));
+      dVal.textContent = dc.length ? (hole ? valText([dc[0]]) : valText(dc)) : '';
+      handsBox.innerHTML = '';
+      hands.forEach((h, i) => {
+        const v = handVal(h.cards);
+        handsBox.appendChild(el('div', { class: 'sh-bj-hand' + (i === active && phase === 'play' ? ' on' : '') + (h.res ? ' ' + h.res : '') },
+          el('div', { class: 'sh-bj-cards' }, ...h.cards.map((c) => cardEl(c))),
+          el('div', { class: 'sh-bj-hinfo' }, el('span', { class: 'sh-bj-val' }, v.total > 21 ? T('Über 21!') : valText(h.cards)), el('span', { class: 'sh-bj-bet' }, '● ' + h.bet), h.label ? el('span', { class: 'sh-bj-res' }, h.label) : null)));
+      });
+      credEl.textContent = TF('{c}: {n}', { c: curName, n: credits });
+      ctrl.innerHTML = '';
+      const btn = (label, fn, cls, dis) => el('button', { class: 'sh-bj-btn' + (cls ? ' ' + cls : ''), disabled: !!dis, onclick: (e) => { e.stopPropagation(); fn(); } }, label);
+      if (phase === 'bet') {
+        const steps = [minBet, minBet * 5, minBet * 25].filter((x, i, a) => x <= maxBet && a.indexOf(x) === i);
+        ctrl.append(
+          btn('−', () => { bet = Math.max(minBet, bet - minBet); render(); }, 'quiet', bet <= minBet),
+          el('span', { class: 'sh-bj-betv' }, TF('Einsatz: {n}', { n: bet })),
+          ...steps.map((s) => btn('+' + s, () => { bet = Math.min(maxBet, credits, bet + s); render(); }, 'chip', bet >= Math.min(maxBet, credits))),
+          btn(T('Geben'), deal, 'main', credits < minBet || bet > credits),
+          btn(T('Aufhören'), end, 'quiet'));
+        F.info.textContent = (maxRounds ? TF('Runde {a} / {b}', { a: rounds + 1, b: maxRounds }) + '   ·   ' : '') + TF('Einsatz {a}–{b} · Blackjack zahlt {p} · Croupier {s}', { a: minBet, b: maxBet, p: bjPay === 1.5 ? '3:2' : '6:5', s: h17 ? T('zieht bei weicher 17') : T('steht ab 17') });
+      } else if (phase === 'play') {
+        const h = hands[active];
+        const two = h.cards.length === 2;
+        const canD = allowDouble && two && credits >= h.bet && !h.splitAce;
+        const canS = allowSplit && two && hands.length < 4 && credits >= h.bet && cardVal(h.cards[0].r) === cardVal(h.cards[1].r);
+        ctrl.append(btn(T('Ziehen'), hit, 'main'), btn(T('Stehen'), stand), canD ? btn(T('Verdoppeln'), dbl) : null, canS ? btn(T('Teilen'), split) : null);
+        const tip = tips ? bjTip(h.cards, dc[0], canD, canS) : null;
+        F.info.textContent = (hands.length > 1 ? TF('Hand {a} von {b}', { a: active + 1, b: hands.length }) + '   ·   ' : '') + (tip ? '💡 ' + TF('Tipp: {t}', { t: T({ ziehen: 'Ziehen', stehen: 'Stehen', verdoppeln: 'Verdoppeln', teilen: 'Teilen' }[tip]) }) : T('Ziehen = noch eine Karte · Stehen = genug'));
+      } else F.info.textContent = '';
+    };
+    const say = (t) => { msg.textContent = t; msg.classList.remove('show'); void msg.offsetWidth; msg.classList.add('show'); };
+    const deal = async () => {
+      if (phase !== 'bet' || done || credits < minBet) return;
+      bet = clamp(bet, minBet, Math.min(maxBet, credits));
+      money(-bet);
+      hands = [{ cards: [], bet }]; dc = []; hole = true; active = 0; phase = 'deal'; msg.classList.remove('show');
+      if (params.tonKarte) ctx.sound && ctx.sound(params.tonKarte, 60);
+      for (const who of ['p', 'd', 'p', 'd']) { (who === 'p' ? hands[0].cards : dc).push(drawCard()); render(); await wait(260); }
+      const pBJ = handVal(hands[0].cards).total === 21, dBJ = handVal(dc).total === 21;
+      if (dBJ || pBJ) { hole = false; render(); await wait(400); return settle(); }
+      phase = 'play'; render();
+    };
+    const next = async () => {
+      while (active < hands.length && hands[active].done) active++;
+      if (active < hands.length) { phase = 'play'; render(); return; }
+      await dealerTurn();
+    };
+    const finishHand = () => { hands[active].done = true; active++; next(); };
+    const hit = async () => {
+      if (phase !== 'play') return;
+      const h = hands[active];
+      h.cards.push(drawCard()); if (params.tonKarte) ctx.sound && ctx.sound(params.tonKarte, 50);
+      render();
+      const t = handVal(h.cards).total;
+      if (t > 21) { h.res = 'lose'; h.label = T('Über 21!'); phase = 'wait'; render(); await wait(500); finishHand(); }
+      else if (t === 21) { phase = 'wait'; await wait(350); finishHand(); }
+    };
+    const stand = () => { if (phase === 'play') finishHand(); };
+    const dbl = async () => {
+      if (phase !== 'play') return;
+      const h = hands[active];
+      money(-h.bet); h.bet *= 2; h.cards.push(drawCard());
+      if (handVal(h.cards).total > 21) { h.res = 'lose'; h.label = T('Über 21!'); }
+      phase = 'wait'; render(); await wait(500); finishHand();
+    };
+    const split = async () => {
+      if (phase !== 'play') return;
+      const h = hands[active];
+      money(-h.bet);
+      const ace = h.cards[0].r === 'A';
+      const h2 = { cards: [h.cards.pop()], bet: h.bet, split: true, splitAce: ace };
+      h.split = true; h.splitAce = ace;
+      hands.splice(active + 1, 0, h2);
+      h.cards.push(drawCard()); h2.cards.push(drawCard());
+      if (ace) { h.done = true; h2.done = true; }
+      phase = 'wait'; render(); await wait(400);
+      next();
+    };
+    const dealerTurn = async () => {
+      phase = 'dealer'; hole = false; render();
+      await wait(600);
+      if (hands.some((h) => handVal(h.cards).total <= 21)) {
+        for (;;) {
+          const v = handVal(dc);
+          if (v.total > 17 || (v.total === 17 && !(v.soft && h17))) break;
+          dc.push(drawCard()); if (params.tonKarte) ctx.sound && ctx.sound(params.tonKarte, 50);
+          render(); await wait(650);
+        }
+      }
+      settle();
+    };
+    const settle = async () => {
+      phase = 'settle';
+      const dv = handVal(dc).total, dBJ = dc.length === 2 && dv === 21;
+      let net = 0;
+      for (const h of hands) {
+        const pv = handVal(h.cards).total, pBJ = h.cards.length === 2 && pv === 21 && !h.split;
+        let back = 0;
+        if (pv > 21) { h.res = 'lose'; h.label = T('Über 21!'); }
+        else if (pBJ && !dBJ) { back = h.bet + Math.floor(h.bet * bjPay); h.res = 'win'; h.label = T('Blackjack!'); }
+        else if (dBJ && !pBJ) { h.res = 'lose'; h.label = T('Croupier hat Blackjack'); }
+        else if (pBJ && dBJ) { back = h.bet; h.res = 'push'; h.label = T('Unentschieden'); }
+        else if (dv > 21 || pv > dv) { back = h.bet * 2; h.res = 'win'; h.label = dv > 21 ? T('Croupier über 21 – gewonnen!') : T('Gewonnen!'); }
+        else if (pv === dv) { back = h.bet; h.res = 'push'; h.label = T('Unentschieden'); }
+        else { h.res = 'lose'; h.label = T('Verloren'); }
+        net += back - h.bet;
+        money(back);
+      }
+      rounds++;
+      render();
+      say(net > 0 ? '+' + net : net < 0 ? String(net) : '±0');
+      if (net > 0 && params.tonGewinn) ctx.sound && ctx.sound(params.tonGewinn, 80);
+      await wait(1700);
+      if (done) return;
+      if ((maxRounds && rounds >= maxRounds) || credits < minBet) return end();
+      phase = 'bet'; bet = clamp(bet, minBet, Math.min(maxBet, credits)); hands = []; dc = []; msg.classList.remove('show'); render();
+    };
+    const end = () => {
+      if (done) return;
+      done = true; phase = 'over'; render(); ctrl.innerHTML = '';
+      const net = credits - start, won = net > 0;
+      const score = won ? clamp(0.6 + net / (minBet * 20), 0.6, 1) : clamp(0.5 + net / Math.max(minBet * 10, start || 1) / 2, 0, 0.49);
+      const line = dealer ? foeLine(dealer, won ? 'niederlage' : 'sieg') : '';
+      if (line) F.say(dName + ': „' + line + '“', 2600);
+      F.finish({ score, ok: won, net }, net > 0 ? TF('Plus {n} {c}!', { n: net, c: curName }) : net < 0 ? TF('Minus {n} {c}', { n: -net, c: curName }) : T('Plus minus null'), resolve, params.ergebnis, dealer ? 2600 : 1800);
+    };
+    const onKey = (e) => {
+      if (done) return;
+      if (e.key === 'Enter' && phase === 'bet') { e.preventDefault(); e.stopPropagation(); deal(); }
+    };
+    window.addEventListener('keydown', onKey, true);
+    const off = setInterval(() => { if (!document.body.contains(handsBox)) { clearInterval(off); window.removeEventListener('keydown', onKey, true); if (!done) { done = true; resolve({ score: 0, ok: false }); } } }, 500);
+    if (dealer && foeLine(dealer, 'start')) F.say(dName + ': „' + foeLine(dealer, 'start') + '“');
+    render();
+  });
+
+  // =====================================================================
   // Aussehen (eingebaut, im Plugin, damit es überall gleich aussieht)
   // =====================================================================
   const CSS = `
@@ -985,7 +1200,45 @@
 .sh-pval { font-weight: 700; color: #ffe8a6; }
 .sh-pnote { font-size: 1.7cqh; opacity: 0.7; margin-top: 1cqh; max-width: 60cqh; }
 `;
-  const ensureCss = () => { if (document.getElementById('sh-css')) return; const s = document.createElement('style'); s.id = 'sh-css'; s.textContent = CSS; document.head.appendChild(s); };
+  const CSS_BJ = `
+.sh-bj { display: flex; flex-direction: column; justify-content: space-between; padding: 2cqh 3cqh; box-sizing: border-box; background: radial-gradient(ellipse at 50% 35%, #1f7a4d, #0f4a2d 70%, #0a3320); color: #f5f1e6; }
+.sh-bj-dealer, .sh-bj-hands { display: flex; flex-direction: column; align-items: center; gap: 1cqh; }
+.sh-bj-hands { flex-direction: row; justify-content: center; gap: 4cqh; }
+.sh-bj-who { display: flex; align-items: center; gap: 1.2cqh; font-size: 2.3cqh; }
+.sh-bj-name { font-weight: 700; }
+.sh-bj-val { background: rgba(0,0,0,0.45); padding: 0.3cqh 1.2cqh; border-radius: 2cqh; font-weight: 700; font-size: 2.2cqh; min-width: 3cqh; text-align: center; }
+.sh-bj-val:empty { display: none; }
+.sh-bj-cards { display: flex; min-height: 15cqh; }
+.sh-bj-cards .sh-card + .sh-card { margin-left: -4.5cqh; }
+.sh-card { position: relative; width: 10.4cqh; height: 15cqh; border-radius: 1cqh; background: #fdfbf6; color: #1b1b1b; box-shadow: 0 0.6cqh 1.4cqh rgba(0,0,0,0.45); font: 700 2.3cqh system-ui, sans-serif; animation: sh-deal .28s ease-out; flex: 0 0 auto; }
+.sh-card.red { color: #c4232f; }
+.sh-c-tl, .sh-c-br { position: absolute; line-height: 1; text-align: center; }
+.sh-c-tl { left: 0.8cqh; top: 0.7cqh; } .sh-c-br { right: 0.8cqh; bottom: 0.7cqh; transform: rotate(180deg); }
+.sh-c-mid { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 6cqh; }
+.sh-card.back { background: repeating-linear-gradient(45deg, #8e1d2c 0 0.8cqh, #a52a3a 0.8cqh 1.6cqh); box-shadow: inset 0 0 0 0.7cqh #fdfbf6, 0 0.6cqh 1.4cqh rgba(0,0,0,0.45); }
+.sh-card.back.img { background: center / cover no-repeat; box-shadow: 0 0.6cqh 1.4cqh rgba(0,0,0,0.45); }
+@keyframes sh-deal { from { transform: translate(6cqh, -12cqh) rotate(-8deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.sh-bj-hand { display: flex; flex-direction: column; align-items: center; gap: 1cqh; padding: 1cqh 1.4cqh; border-radius: 1.6cqh; border: 0.3cqh solid transparent; }
+.sh-bj-hand.on { border-color: #e8c86a; background: rgba(0,0,0,0.18); }
+.sh-bj-hand.win .sh-bj-res { color: #9dffa8; } .sh-bj-hand.lose .sh-bj-res { color: #ff9a8a; } .sh-bj-hand.push .sh-bj-res { color: #ffe08a; }
+.sh-bj-hand.lose .sh-bj-cards { opacity: 0.6; }
+.sh-bj-hinfo { display: flex; gap: 1cqh; align-items: center; font-size: 2.1cqh; }
+.sh-bj-bet { color: #ffd77a; font-weight: 700; }
+.sh-bj-res { font-weight: 700; }
+.sh-bj-msg { align-self: center; font: 800 4.6cqh system-ui, sans-serif; color: #ffe8a6; text-shadow: 0 0.4cqh 1cqh rgba(0,0,0,0.6); opacity: 0; min-height: 5cqh; }
+.sh-bj-msg.show { animation: sh-pop .5s ease-out forwards; }
+@keyframes sh-pop { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: none; } }
+.sh-bj-bar { display: flex; align-items: center; justify-content: space-between; gap: 2cqh; }
+.sh-bj-cred { font: 700 2.4cqh ui-monospace, monospace; color: #ffe8a6; background: rgba(0,0,0,0.45); padding: 0.8cqh 1.4cqh; border-radius: 1cqh; }
+.sh-bj-ctrl { display: flex; gap: 1cqh; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.sh-bj-btn { font: 700 2.3cqh system-ui, sans-serif; padding: 1cqh 2cqh; border-radius: 1cqh; border: none; cursor: pointer; background: #f1ead7; color: #222; box-shadow: 0 0.5cqh 0 #9c9177; }
+.sh-bj-btn.main { background: #e8c86a; box-shadow: 0 0.5cqh 0 #9a7a22; }
+.sh-bj-btn.chip { border-radius: 50%; width: 7.4cqh; height: 7.4cqh; padding: 0; background: radial-gradient(circle, #fdfbf6 0 52%, #c4232f 53% 70%, #fdfbf6 71% 75%, #c4232f 76%); color: #6b0f17; font-size: 2.1cqh; box-shadow: 0 0.4cqh 0 #611; }
+.sh-bj-btn.quiet { background: rgba(0,0,0,0.4); color: #eee; box-shadow: none; }
+.sh-bj-btn:disabled { opacity: 0.4; cursor: default; }
+.sh-bj-betv { font-weight: 700; font-size: 2.3cqh; min-width: 14cqh; text-align: center; }
+`;
+  const ensureCss = () => { if (document.getElementById('sh-css')) return; const s = document.createElement('style'); s.id = 'sh-css'; s.textContent = CSS + CSS_BJ; document.head.appendChild(s); };
 
   // =====================================================================
   // Anmeldung
@@ -995,14 +1248,16 @@
     id: ID,
     name: 'Spielhalle',
     version: '1.0',
-    description: 'Dart, Billard und Spielautomat. Computer-Gegner mit einstellbarem Können, eigene Bilder für Scheibe, Tisch, Kugeln, Walzen und Gehäuse. Einstellungen unter Spielsysteme → Spielhalle.',
+    description: 'Dart, Billard, Blackjack und Spielautomat. Computer-Gegner mit einstellbarem Können, eigene Bilder für Scheibe, Tisch, Kugeln, Walzen und Gehäuse. Einstellungen unter Spielsysteme → Spielhalle.',
     designs: {
       dart: { label: 'Dart', icon: '🎯', images: [['bildBoard', 'Dartscheibe'], ['bildPfeil', 'Pfeil'], ['bildKreuz', 'Fadenkreuz'], ['bildHintergrund', 'Hintergrund']] },
       billard: { label: 'Billard', icon: '🎱', images: [['bildTisch', 'Ganzer Tisch (mit Banden)'], ['bildTuch', 'Tuch (Muster)'], ['bildQueue', 'Queue (Spitze rechts)'], ['bildWeiss', 'Weiße Kugel'], ...Array.from({ length: 15 }, (_, i) => ['kugel' + (i + 1), 'Kugel ' + (i + 1)])] },
-      automat: { label: 'Spielautomat', icon: '🎰', images: [] }
+      automat: { label: 'Spielautomat', icon: '🎰', images: [] },
+      blackjack: { label: 'Blackjack', icon: '🃏', images: [['bildTisch', 'Tisch (Hintergrund)'], ['bildRueckseite', 'Kartenrückseite']] }
     },
     skillEffects: {
       dartRuhe: { cat: 'minigame', label: 'Dart: Fadenkreuz ruhiger', params: [['pct', '− %', 'number', 15]], key: () => 'spielhalle.dart.tempo', mode: 'pct', value: (e) => -(Number(e.pct) || 0), text: (e, l) => '−' + (Number(e.pct) || 0) * l + ' % Fadenkreuz-Tempo (Dart)' },
+      blackjackTipps: { cat: 'minigame', label: 'Blackjack: Tipps vom Profi', params: [], key: () => 'spielhalle.blackjack.tipps', mode: 'add', value: () => 1, text: () => 'Blackjack: zeigt den besten Zug' },
       billardLinie: { cat: 'minigame', label: 'Billard: längere Hilfslinie', params: [['pct', '+ %', 'number', 50]], key: () => 'spielhalle.billard.linie', mode: 'pct', value: (e) => Number(e.pct) || 0, text: (e, l) => '+' + (Number(e.pct) || 0) * l + ' % Hilfslinie (Billard)' }
     },
     actions: {
@@ -1047,6 +1302,31 @@
         ],
         run: runBillard
       },
+      blackjack: {
+        label: 'Blackjack', minigame: true,
+        params: [
+          { key: 'croupier', label: 'Croupier (Name, Bild und Sprüche aus den Gegnern)', type: 'select', get options() { return [['', '— Croupier —'], ...data().gegner.map((g) => [g.id, g.name])]; }, default: '' },
+          { key: 'waehrung', label: 'Währung (leer = Spielgeld)', type: 'currency', default: '' },
+          { key: 'guthaben', label: 'Spielgeld zu Beginn', type: 'number', default: 100 },
+          { key: 'einsatz', label: 'Mindesteinsatz', type: 'number', default: 5 },
+          { key: 'maxEinsatz', label: 'Höchsteinsatz', type: 'number', default: 50 },
+          { key: 'runden', label: 'Runden höchstens (0 = bis „Aufhören“)', type: 'number', default: 0 },
+          { key: 'decks', label: 'Kartenspiele im Schlitten', type: 'select', options: [['1', '1'], ['2', '2'], ['6', '6']], default: '2' },
+          { key: 'soft17', label: 'Croupier bei weicher 17 (Ass + 6)', type: 'select', options: [['steht', 'steht'], ['zieht', 'zieht']], default: 'steht' },
+          { key: 'auszahlung', label: 'Blackjack zahlt', type: 'select', options: [['3:2', '3:2'], ['6:5', '6:5']], default: '3:2' },
+          { key: 'verdoppeln', label: 'Verdoppeln erlaubt', type: 'select', options: [['ja', 'Ja'], ['nein', 'Nein']], default: 'ja' },
+          { key: 'teilen', label: 'Teilen erlaubt (gleiche Karten)', type: 'select', options: [['ja', 'Ja'], ['nein', 'Nein']], default: 'ja' },
+          { key: 'tipps', label: 'Tipps zeigen (bester Zug)', type: 'select', options: [['aus', 'Aus'], ['an', 'An']], default: 'aus' },
+          { key: 'hilfe', label: 'Mit Gegenstand Tipps', type: 'item', default: '' },
+          { key: 'titel', label: 'Titel (leer = „Blackjack“)', type: 'text', default: '' },
+          { key: 'bildTisch', label: 'Bild Tisch', type: 'image', default: '' },
+          { key: 'bildRueckseite', label: 'Bild Kartenrückseite', type: 'image', default: '' },
+          { key: 'tonKarte', label: 'Ton beim Austeilen', type: 'audio', default: '' },
+          { key: 'tonGewinn', label: 'Ton bei Gewinn', type: 'audio', default: '' },
+          resultParam
+        ],
+        run: runBlackjack
+      },
       automat: {
         label: 'Spielautomat', minigame: true,
         params: [
@@ -1062,7 +1342,7 @@
     },
     editorTab: { label: 'Spielhalle', render: (body) => editor(body) },
     // Für Tests und eigene Erweiterungen
-    _intern: { dartScore, dartTarget, aiDartAim, physStep, rack, aiShot, strips, lines, evalSpin, rtp, consts: { BL, BW, BR, DEC, VMAX, POCKETS } }
+    _intern: { handVal, bjTip, dartScore, dartTarget, aiDartAim, physStep, rack, aiShot, strips, lines, evalSpin, rtp, consts: { BL, BW, BR, DEC, VMAX, POCKETS } }
   });
 
   // =====================================================================
@@ -1082,9 +1362,9 @@
         hint ? el('div', { class: 'muted small' }, hint) : null);
     };
     const tryIt = (ref, prm) => VNPlugin.tryAction(ID + '.' + ref, prm);
-    body.appendChild(el('p', { class: 'muted' }, 'Die Spiele startest du mit den Aktionen „Spielhalle: Dart“, „Spielhalle: Billard“ und „Spielhalle: Spielautomat“ – z. B. an einem Hub-Objekt (Dartscheibe in der Taverne) oder in einer Antwort. Wie bei allen Minispielen kannst du dort eine Szene für Sieg und Niederlage wählen.'));
+    body.appendChild(el('p', { class: 'muted' }, 'Die Spiele startest du mit den Aktionen „Spielhalle: Dart“, „Spielhalle: Billard“, „Spielhalle: Blackjack“ und „Spielhalle: Spielautomat“ – z. B. an einem Hub-Objekt (Dartscheibe in der Taverne) oder in einer Antwort. Wie bei allen Minispielen kannst du dort eine Szene für Sieg und Niederlage wählen.'));
     const tabs = el('div', { class: 'seg', style: { marginBottom: '10px' } },
-      ...[['gegner', '🤖 Gegner'], ['automaten', '🎰 Spielautomaten'], ['spiele', '🎯 Dart & Billard']].map(([k, l]) => el('button', { class: 'btn tiny' + (tab === k ? ' primary' : ''), onclick: () => { ui.shTab = k; VN.render(); } }, l)));
+      ...[['gegner', '🤖 Gegner'], ['automaten', '🎰 Spielautomaten'], ['spiele', '🎲 Dart, Billard, Blackjack']].map(([k, l]) => el('button', { class: 'btn tiny' + (tab === k ? ' primary' : ''), onclick: () => { ui.shTab = k; VN.render(); } }, l)));
     body.appendChild(tabs);
     const wrap = el('div', { class: 'loot-wrap' }), list = el('div', { class: 'loot-list' }), ed = el('div', { class: 'loot-ed' });
     wrap.append(list, ed);
@@ -1099,6 +1379,11 @@
         el('div', { class: 'muted small' }, 'Mit der Maus zielen, Maustaste drücken = anlegen, zurückziehen und nach vorn schwingen = stoßen. Je schneller der Schwung, desto härter der Stoß (Loslassen stößt mit der Kraft des Zurückziehens). Spielarten: 8-Ball (Volle/Halbe, zum Schluss die 8) oder „wer mehr Kugeln versenkt“. Tisch, Tuch, Queue und jede Kugel lassen sich gestalten – Kugeln 1–15 als Standard unter Design → Spielsysteme → Billard.'),
         el('div', { class: 'row gap8', style: { marginTop: '6px' } }, el('button', { class: 'btn tiny primary', onclick: () => tryIt('billard', {}) }, '▶ ' + T('Billard allein ausprobieren')),
           window.UiDesign ? el('button', { class: 'btn tiny', onclick: () => UiDesign.edit(ID + '.billard') }, '🎨 ' + T('Kugeln und Tisch gestalten')) : null)));
+      body.appendChild(el('div', { class: 'opt-card' },
+        el('div', { class: 'sec-title' }, '🃏 Blackjack'),
+        el('div', { class: 'muted small' }, 'Näher an 21 als der Croupier, ohne drüber zu kommen. Ziehen, Stehen, Verdoppeln und Teilen; Blackjack zahlt 3:2 (oder 6:5). Einsatz in einer Währung deines Spiels oder mit Spielgeld. Als Croupier kannst du einen Gegner wählen – dann erscheinen sein Name, Bild und seine Sprüche. Mit „Tipps“ (oder einem Gegenstand bzw. Perk) zeigt das Spiel den besten Zug nach der Grundstrategie.'),
+        el('div', { class: 'row gap8', style: { marginTop: '6px' } }, el('button', { class: 'btn tiny primary', onclick: () => tryIt('blackjack', {}) }, '▶ ' + T('Blackjack ausprobieren')),
+          window.UiDesign ? el('button', { class: 'btn tiny', onclick: () => UiDesign.edit(ID + '.blackjack') }, '🎨 ' + T('Tisch und Karten gestalten')) : null)));
       return;
     }
 
@@ -1131,7 +1416,8 @@
           field('Wenn er/sie verliert', txt(g.niederlage, (v) => { g.niederlage = v; }, 'Revanche! Sofort!'))),
         el('div', { class: 'row gap8' },
           g.spiel !== 'billard' ? el('button', { class: 'btn primary', onclick: () => tryIt('dart', { gegner: g.id }) }, '▶ ' + TF('Dart gegen {name}', { name: g.name })) : null,
-          g.spiel !== 'dart' ? el('button', { class: 'btn primary', onclick: () => tryIt('billard', { gegner: g.id }) }, '▶ ' + TF('Billard gegen {name}', { name: g.name })) : null));
+          g.spiel !== 'dart' ? el('button', { class: 'btn primary', onclick: () => tryIt('billard', { gegner: g.id }) }, '▶ ' + TF('Billard gegen {name}', { name: g.name })) : null,
+          el('button', { class: 'btn', onclick: () => tryIt('blackjack', { croupier: g.id }) }, '▶ ' + TF('Blackjack mit {name} als Croupier', { name: g.name }))));
       return;
     }
 
