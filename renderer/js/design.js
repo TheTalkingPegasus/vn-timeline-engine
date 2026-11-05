@@ -493,7 +493,7 @@
     open(sec, speaker) { VN.ui.view = 'design'; VN.ui.designSec = sec || VN.ui.designSec || 'bubble'; if (speaker) VN.ui.designSpeaker = speaker; VN.render(); },
 
     // ---------- Design-Ansicht (oben „Design“) ----------
-    SECTIONS: [['bubble', 'Sprechblase'], ['speaker', 'Sprecher'], ['choice', 'Auswahl-Buttons'], ['sys', 'Systemfenster'], ['games', 'Spielsysteme'], ['gain', 'Fundmeldung'], ['fonts', 'Schriften'], ['sounds', 'Ton & Sounds'], ['cursor', 'Mauszeiger'], ['logo', 'Start-Logo']],
+    SECTIONS: [['bubble', 'Sprechblase'], ['speaker', 'Sprecher'], ['choice', 'Auswahl-Buttons'], ['sys', 'Systemfenster'], ['games', 'Spielsysteme'], ['gain', 'Fundmeldung'], ['fonts', 'Schriften'], ['sounds', 'Ton & Sounds'], ['cursor', 'Mauszeiger'], ['logo', 'Start-Logo'], ['pixel', '🎨 Pixel-Art']],
     render(center) {
       const secId = VN.ui.designSec || 'bubble';
       if (Design._ro) Design._ro.disconnect();
@@ -501,6 +501,9 @@
       center.appendChild(el('div', { class: 'view-head' },
         el('strong', { style: { fontSize: '15px' } }, 'Design'),
         el('div', { class: 'seg d-seg' }, ...Design.SECTIONS.map(([id, label]) => el('button', { class: id === secId ? 'active' : '', onclick: () => { VN.ui.designSec = id; VN.render(); } }, label)))));
+      // Pixel-Art-Editor (0.9.16): eigene Fläche statt der Live-Vorschau
+      if (secId === 'pixel' && window.PixelEd) { center.classList.add('px-center'); PixelEd.render(center); return; }
+      center.classList.remove('px-center');
       const wrap = el('div', { class: 'stage-wrap' });
       const stage = el('div', { class: 'stage' });
       wrap.appendChild(stage);
@@ -514,6 +517,7 @@
       const secId = VN.ui.designSec || 'bubble';
       const title = (Design.SECTIONS.find((x) => x[0] === secId) || [0, ''])[1];
       const head = el('div', null, el('h3', null, 'Projekt-Design'), el('div', { class: 'insp-title' }, title));
+      if (secId === 'pixel' && window.PixelEd) return el('div', { class: 'insp' }, el('div', null, el('h3', null, 'Pixel-Art'), el('div', { class: 'insp-title' }, VN.t('Zeichnen und animieren'))), PixelEd.inspector());
       const body = secId === 'bubble' ? Design.bubbleEditor('theme')
         : secId === 'speaker' ? Design.speakersEditor()
           : secId === 'choice' ? Design.choiceEditor(Theme.t().choice, false)

@@ -2142,3 +2142,20 @@ body.cbsim-tritan #center .stage, body.cbsim-tritan #player { filter: url(#vn-cb
 .pup-layer.pup-folder .btn.tiny { padding: 1px 4px; min-width: 0; }
 .pup-layer.pup-folder .btn.tiny:not(.primary):not(.danger) { opacity: 0.55; }
 .pup-layer.pup-folder:hover .btn.tiny { opacity: 1; }
+
+/* ---------- Pixel-Art (0.9.16) ---------- */
+.px-center { display: flex; flex-direction: column; min-height: 0; }
+.px-bar { flex-wrap: wrap; gap: 8px; }
+.px-wrap { flex: 1; min-height: 260px; display: flex; align-items: center; justify-content: center; overflow: auto; padding: 16px; background: var(--bg1, #15161b); }
+.px-canvas { image-rendering: pixelated; box-shadow: 0 0 0 1px rgba(255,255,255,0.12), 0 8px 30px rgba(0,0,0,0.5); cursor: crosshair; }
+.px-frames { border-top: 1px solid var(--line, #2b2d36); padding: 8px 12px; display: flex; flex-direction: column; gap: 6px; }
+.px-strip { display: flex; gap: 6px; overflow-x: auto; flex: 1; padding-bottom: 4px; }
+.px-cell { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10px; color: var(--muted, #999); }
+.px-thumb { width: 56px; height: 56px; object-fit: contain; image-rendering: pixelated; background: repeating-conic-gradient(#2a2c35 0 25%, #32343e 0 50%) 0 0 / 8px 8px; border-radius: 4px; cursor: pointer; outline: 1px solid rgba(255,255,255,0.08); }
+.px-thumb.on { outline: 2px solid var(--accent, #e8a43a); }
+.px-preview { height: 48px; image-rendering: pixelated; background: repeating-conic-gradient(#2a2c35 0 25%, #32343e 0 50%) 0 0 / 8px 8px; border-radius: 4px; }
+.px-pal { display: grid; grid-template-columns: repeat(auto-fill, minmax(22px, 1fr)); gap: 4px; margin: 4px 0 8px; }
+.px-sw { width: 100%; aspect-ratio: 1; border-radius: 4px; border: 1px solid rgba(0,0,0,0.5); cursor: pointer; padding: 0; }
+.px-sw.on { outline: 2px solid #fff; outline-offset: 1px; }
+.px-sw.clear { background: repeating-conic-gradient(#888 0 25%, #ddd 0 50%) 0 0 / 8px 8px; }
+img[src*="px_"] { image-rendering: pixelated; }
