@@ -3897,6 +3897,7 @@ window.VN_I18N_JA = {
 "⬇ Als ZIP herunterladen": "⬇ ZIPでダウンロード",
 "Sicherung, Desktop-Version": "バックアップ、デスクトップ版",
 "Bildrate der Figur": "キャラクターのフレームレート",
+"Ziehen (Stretch)": "引き伸ばし",
 "Design": "デザイン",
 "Animation": "アニメーション",
 "Story": "ストーリー",
@@ -4072,7 +4073,19 @@ window.VN_I18N_JA = {
 "Diese Animation": "このアニメーション",
 "Grundeinstellung fürs ganze Projekt": "プロジェクト全体の既定値",
 "Weniger Bilder pro Sekunde wirken gezeichnet wie im Anime oder Cartoon: jedes Bild bleibt kurz stehen. Gilt für Animationen, Idle, Gesten, Bones und Gliederpuppen. Dialoge, Menüs und Kamerafahrten bleiben flüssig.": "1秒あたりのコマ数を減らすと、アニメやカートゥーンのような手描き感が出ます。各コマが少しの間止まります。アニメーション、待機、ジェスチャー、ボーン、関節人形に適用されます。セリフ、メニュー、カメラ移動はなめらかなままです。",
-"Wie im Projekt bzw. der Idle-Animation": "プロジェクトまたは待機アニメと同じ"
+"Wie im Projekt bzw. der Idle-Animation": "プロジェクトまたは待機アニメと同じ",
+"Smear-Bilder": "スミア(残像)",
+"Smear-Bilder bei schnellen Bewegungen": "速い動きのスミア",
+"Eigene Einstellung": "個別設定",
+"Mehrfachbilder": "多重残像",
+"Speedlines": "スピード線",
+"Ab welchem Tempo": "どの速さから",
+"Mehr Prozent = schon bei mittlerem Tempo, weniger = nur bei sehr schnellen Bewegungen.": "%が高いほど中くらいの速さでも、低いほど非常に速い動きのときだけ。",
+"Bei sehr schnellen Bewegungen (Faustschlag, Ausholen, Sprung) zeichnet die Engine ein Smear-Bild: Mehrfachbilder, ein lang gezogenes Körperteil oder Speedlines. Passt besonders gut zu 12 oder 8 Bildern pro Sekunde.": "とても速い動き(パンチ、振りかぶり、ジャンプ)では、エンジンがスミアのコマを描きます。多重残像、引き伸ばされた体の部分、スピード線のいずれか。12や8fpsと特に相性が良いです。",
+"Erzwingt an dieser Stelle ein Smear-Bild, auch wenn die Bewegung nicht schnell genug ist": "動きが十分に速くなくても、ここでスミアのコマを強制します",
+"Smear-Bild entfernen": "スミアのコマを削除",
+"Smear-Bild hier": "ここにスミアのコマ",
+"Hinspringen": "そこへ移動"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

@@ -34,6 +34,10 @@ NEU IN 0.9.9 · Lichtquellen, TV-Filter (Röhrenfernseher, LCD, RGB-Split)
   Sekunde. Einstellbar pro Animation, pro Figur oder als Grundeinstellung fürs Projekt (Animations-Editor). Gilt für
   Idle-Animationen, Gesten, Bones, Gliederpuppen und Zwischensequenzen aus dem Animations-Editor, auch in dessen
   Vorschau und beim Video-Export. Dialoge, Menüs und Kamerafahrten bleiben flüssig.
+- Smear-Bilder bei sehr schnellen Bewegungen wie im Zeichentrick: Mehrfachbilder (das schnelle Körperteil erscheint
+  zwei-, dreimal), Ziehen (das Teil wird zum Streifen lang gezogen) und Speedlines. Wird über Bones und Puppenteile
+  automatisch erkannt, ab einstellbarem Tempo; pro Animation, pro Figur oder als Grundeinstellung fürs Projekt. Im
+  Animations-Editor lässt sich ein Smear-Bild auch an einer bestimmten Stelle erzwingen.
 - Neuer Filter „Röhren-Fernseher“ auf Effekt-Spuren: gewölbtes Bild mit runden, dunklen Rändern, Bildzeilen,
   Flimmern und ein heller Streifen, der von oben nach unten gleitet. Wölbung, Bildzeilen, Flimmern, Ränder,
   Streifen an/aus und seine Geschwindigkeit sind einstellbar. Dialoge und Menüs bleiben scharf darüber.

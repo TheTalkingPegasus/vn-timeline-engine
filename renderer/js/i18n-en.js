@@ -4011,7 +4011,20 @@ window.VN_I18N_EN = {
 "Grundeinstellung fürs ganze Projekt": "Default for the whole project",
 "Weniger Bilder pro Sekunde wirken gezeichnet wie im Anime oder Cartoon: jedes Bild bleibt kurz stehen. Gilt für Animationen, Idle, Gesten, Bones und Gliederpuppen. Dialoge, Menüs und Kamerafahrten bleiben flüssig.": "Fewer frames per second look hand-drawn like anime or cartoons: each frame holds for a moment. Applies to animations, idle, gestures, bones and jointed puppets. Dialogue, menus and camera moves stay smooth.",
 "Bildrate der Figur": "Character frame rate",
-"Wie im Projekt bzw. der Idle-Animation": "As in the project or the idle animation"
+"Wie im Projekt bzw. der Idle-Animation": "As in the project or the idle animation",
+"Smear-Bilder": "Smear frames",
+"Smear-Bilder bei schnellen Bewegungen": "Smear frames on fast movements",
+"Eigene Einstellung": "Own setting",
+"Mehrfachbilder": "Multiples",
+"Ziehen (Stretch)": "Stretch",
+"Speedlines": "Speed lines",
+"Ab welchem Tempo": "From which speed",
+"Mehr Prozent = schon bei mittlerem Tempo, weniger = nur bei sehr schnellen Bewegungen.": "More percent = already at medium speed, less = only on very fast movements.",
+"Bei sehr schnellen Bewegungen (Faustschlag, Ausholen, Sprung) zeichnet die Engine ein Smear-Bild: Mehrfachbilder, ein lang gezogenes Körperteil oder Speedlines. Passt besonders gut zu 12 oder 8 Bildern pro Sekunde.": "On very fast movements (punch, wind-up, jump) the engine draws a smear frame: multiples, a stretched body part or speed lines. Works especially well with 12 or 8 frames per second.",
+"Erzwingt an dieser Stelle ein Smear-Bild, auch wenn die Bewegung nicht schnell genug ist": "Forces a smear frame here, even if the movement isn't fast enough",
+"Smear-Bild entfernen": "Remove smear frame",
+"Smear-Bild hier": "Smear frame here",
+"Hinspringen": "Jump there"
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",

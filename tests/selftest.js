@@ -723,15 +723,25 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
       if (/url\\(/.test(inner.style.filter)) out.push('Filter bleibt');
       // Bildrate (0.9.9): bei 12 Bildern/s nur 12 neue Bilder pro Sekunde, Figur erbt vom Projekt
       const keepFps = VN.project.animFps; VN.project.animFps = 12;
-      const o = {}; let n = 0; for (let t = 0; t < 1; t += 1 / 60) if (VN.fpsStep(o, t, VN.clipFps({}))) n++;
-      if (n !== 12) out.push('Bildrate: ' + n + ' statt 12 Bilder');
+      const o = {}; let nf = 0; for (let t = 0; t < 1; t += 1 / 60) if (VN.fpsStep(o, t, VN.clipFps({}))) nf++;
+      if (nf !== 12) out.push('Bildrate: ' + nf + ' statt 12 Bilder');
       if (VN.clipFps({ fps: 0 }) !== 0 || VN.clipFps({ fps: 8 }) !== 8) out.push('Bildrate der Figur');
       if (keepFps) VN.project.animFps = keepFps; else delete VN.project.animFps;
+      // Smear-Bilder (0.9.9): schneller Punkt wird erkannt, langsamer nicht; Bild landet hinter der Figur
+      const cfg = Smear.cfgFor({ on: true, multi: true, stretch: true, lines: true, sens: 50 }), st = {};
+      Smear.fast(st, [['a', 100, 100, 20], ['b', 50, 300, 20]], 0, 400, cfg, false);
+      const f = Smear.fast(st, [['a', 300, 100, 20], ['b', 51, 300, 20]], 0.1, 400, cfg, false);
+      if (f.length !== 1 || f[0].x !== 300) out.push('Smear erkennt ' + f.length + ' Punkte');
+      const scv = document.createElement('canvas'); scv.width = 400; scv.height = 400;
+      const sg = scv.getContext('2d'); sg.fillStyle = '#f00'; sg.fillRect(290, 90, 20, 20);
+      const st2 = {}; Smear.inPlace(scv, st2, [['a', 100, 100, 20]], 0, 400, cfg, false); Smear.inPlace(scv, st2, [['a', 300, 100, 20]], 0.1, 400, cfg, false);
+      if (!(sg.getImageData(200, 100, 1, 1).data[3] > 0)) out.push('Smear-Bild fehlt');
+      if (!Smear.marked({ dur: 2, smearAt: [0.5] }, 0.45, 0.55) || Smear.marked({ dur: 2, smearAt: [0.5] }, 0.6, 0.7)) out.push('Smear von Hand');
       host.remove();
       return JSON.stringify(out);
     })()`));
     if (r.length) general.push('Licht: ' + r.join(', '));
-    else log('✓ Licht: Scheinwerfer, Neon, Gegenlicht, Reihenfolge der Ebenen, Kantenlicht auf Figuren, Bildrate');
+    else log('✓ Licht: Scheinwerfer, Neon, Gegenlicht, Reihenfolge der Ebenen, Kantenlicht auf Figuren, Bildrate, Smear-Bilder');
   } catch (e) { general.push('Licht: ' + e.message); }
 
   const failed = results.filter((r) => r.errors.length);

@@ -246,6 +246,7 @@
       const box = el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, isPup ? 'Animation (Gliederpuppe)' : 'Animation (Bones)'),
         field('Idle-Animation (Dauer-Schleife)', sel(c.idleAnim || '', [['', '— nur Atmen/Schwanken —'], ...idles.map((a) => [a.id, '∞ ' + a.name])], (v) => VN.mutate(() => { if (v) c.idleAnim = v; else delete c.idleAnim; }))),
         field('Geste bei Schritt ' + (beat + 1), sel((c.gestures || {})[beat] || '', [['', '— keine —'], ...gests.map((a) => [a.id, '✋ ' + a.name])], (v) => VN.mutate(() => { c.gestures = c.gestures || {}; if (v) c.gestures[beat] = v; else delete c.gestures[beat]; }))));
+      if (window.Smear) box.appendChild(Smear.fields(c, 'smear', VN.t('Wie im Projekt bzw. der Idle-Animation')));
       box.appendChild(field('Bildrate der Figur', sel(c.fps != null ? c.fps : '', [['', VN.t('Wie im Projekt bzw. der Idle-Animation')], ...VN.FPS_LIST], (v) => VN.mutate(() => { if (v === '') delete c.fps; else c.fps = Number(v); }))));
       if (!all.length) box.appendChild(el('div', { class: 'muted small' }, 'Bewegungen baust du oben im Reiter „Animation“.'));
       box.appendChild(el('button', { class: 'btn tiny', onclick: () => { VN.ui.view = 'anim'; VN.render(); } }, 'Animations-Editor öffnen'));

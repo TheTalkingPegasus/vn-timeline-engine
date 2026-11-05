@@ -371,6 +371,11 @@
       const dt = Math.min(fps ? 1 / 5 : 1 / 20, (now - it.last) / 1000);
       it.last = now;
       drawEl(it, now / 1000 - it.t0, dt);
+      // Smear-Bilder (0.9.9)
+      if (window.Smear && !it.static) {
+        const cfg = Smear.figCfg(it.clip);
+        if (cfg || (it.cv._sm && it.cv._sm.under)) Smear.dom(it.cv, cfg ? Smear.pupPts(it.pup, it.mats) : [], now / 1000, it.bb.h * it.k, cfg, (dtF) => Smear.figMarked(it.clip, it.holder, now / 1000, dtF));
+      }
     }
     if (live.size) requestAnimationFrame(loop); else rafOn = false;
   };
@@ -395,7 +400,7 @@
       if (!ga || lt > d + 0.3) it.holder._gesture = null;
       else pose = P.addPose(pose, P.poseAt(ga, Math.min(lt, d)), Math.max(0, Math.min(1, lt / 0.2, (d + 0.3 - lt) / 0.3)));
     }
-    P.draw(ctx, pup, it.res, base, it.static ? 0 : t, it.static ? 0 : dt, pose, it.st);
+    it.mats = P.draw(ctx, pup, it.res, base, it.static ? 0 : t, it.static ? 0 : dt, pose, it.st);
   };
   const now = () => performance.now() / 1000;
   // Canvas für einen Figuren-Clip (holder = Element der Figur, für Gesten)

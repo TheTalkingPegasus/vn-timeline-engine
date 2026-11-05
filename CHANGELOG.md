@@ -20,6 +20,10 @@ All notable changes. German details: `LIES MICH.txt`.
   Set per animation, per character or as the project default (animation editor). Applies to idle animations, gestures,
   bones, jointed puppets and cutscenes from the animation editor, also in its preview and the video export.
   Dialogue, menus and camera moves stay smooth.
+- Smear frames on very fast movements, like in cartoons: multiples (the fast body part appears two or three times),
+  stretch (the part is pulled into a streak) and speed lines. Detected automatically via bones and puppet parts, with
+  an adjustable speed threshold; per animation, per character or as the project default. In the animation editor you
+  can also force a smear frame at a specific point in time.
 - New filter “CRT TV” on effect tracks: curved picture with round, dark edges, scanlines, flicker and a bright band
   that rolls from top to bottom. Curvature, scanlines, flicker, edges, band on/off and its speed are adjustable.
   Dialogue and menus stay sharp on top.

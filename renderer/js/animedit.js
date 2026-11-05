@@ -50,7 +50,24 @@
       return el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Bildrate'),
         a ? el('div', { class: 'field' }, el('div', { class: 'lbl' }, 'Diese Animation'), mk(a.fps != null ? a.fps : '', [['', VN.t('Wie im Projekt') + ' (' + VN.t(projName) + ')'], ...VN.FPS_LIST], (v) => VN.mutate(() => { if (v === '') delete a.fps; else a.fps = Number(v); }))) : null,
         el('div', { class: 'field' }, el('div', { class: 'lbl' }, 'Grundeinstellung fürs ganze Projekt'), mk(p.animFps || 0, VN.FPS_LIST, (v) => VN.mutate(() => { if (Number(v)) p.animFps = Number(v); else delete p.animFps; }))),
-        el('div', { class: 'muted small' }, 'Weniger Bilder pro Sekunde wirken gezeichnet wie im Anime oder Cartoon: jedes Bild bleibt kurz stehen. Gilt für Animationen, Idle, Gesten, Bones und Gliederpuppen. Dialoge, Menüs und Kamerafahrten bleiben flüssig.'));
+        el('div', { class: 'muted small' }, 'Weniger Bilder pro Sekunde wirken gezeichnet wie im Anime oder Cartoon: jedes Bild bleibt kurz stehen. Gilt für Animationen, Idle, Gesten, Bones und Gliederpuppen. Dialoge, Menüs und Kamerafahrten bleiben flüssig.'),
+        // Smear-Bilder (0.9.9)
+        window.Smear ? el('div', { class: 'sec-title', style: { marginTop: '8px' } }, 'Smear-Bilder') : null,
+        window.Smear && a ? el('div', { class: 'muted small' }, 'Diese Animation') : null,
+        window.Smear && a ? Smear.fields(a, 'smear', VN.t('Wie im Projekt')) : null,
+        window.Smear && a ? AnimEd.smearMarks(a) : null,
+        window.Smear ? el('div', { class: 'muted small' }, 'Grundeinstellung fürs ganze Projekt') : null,
+        window.Smear ? Smear.fields(p, 'smear', null) : null,
+        window.Smear ? el('div', { class: 'muted small' }, 'Bei sehr schnellen Bewegungen (Faustschlag, Ausholen, Sprung) zeichnet die Engine ein Smear-Bild: Mehrfachbilder, ein lang gezogenes Körperteil oder Speedlines. Passt besonders gut zu 12 oder 8 Bildern pro Sekunde.') : null);
+    },
+    // Smear-Bilder von Hand an der Stelle des Abspielkopfs
+    smearMarks(a) {
+      const t = Math.round((VN.ui.animT || 0) * 100) / 100;
+      const L = (a.smearAt || []).slice().sort((x, y) => x - y);
+      const has = L.some((x) => Math.abs(x - t) < 0.005);
+      return el('div', { class: 'field' },
+        el('button', { class: 'btn tiny' + (has ? ' primary' : ''), title: VN.t('Erzwingt an dieser Stelle ein Smear-Bild, auch wenn die Bewegung nicht schnell genug ist'), onclick: () => VN.mutate(() => { a.smearAt = (a.smearAt || []).filter((x) => Math.abs(x - t) >= 0.005); if (!has) a.smearAt.push(t); if (!a.smearAt.length) delete a.smearAt; }) }, (has ? '✦ ' + VN.t('Smear-Bild entfernen') : '✦ ' + VN.t('Smear-Bild hier')) + ' · ' + t.toFixed(2) + ' s'),
+        L.length ? el('div', { class: 'row gap4', style: { flexWrap: 'wrap', marginTop: '4px' } }, ...L.map((x) => el('span', { class: 'chip', style: { cursor: 'pointer' }, title: VN.t('Hinspringen'), onclick: () => { VN.ui.animT = x; VN.render(); } }, '✦ ' + x.toFixed(2) + ' s'))) : null);
     },
     create(type) {
       const p = VN.project;

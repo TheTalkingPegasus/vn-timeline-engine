@@ -3897,6 +3897,7 @@ window.VN_I18N_ES = {
 "⬇ Als ZIP herunterladen": "⬇ Descargar como ZIP",
 "Sicherung, Desktop-Version": "copia de seguridad, versión de escritorio",
 "Bildrate der Figur": "Fotogramas del personaje",
+"Ziehen (Stretch)": "Estirar (stretch)",
 "Design": "Diseño",
 "Animation": "Animación",
 "Story": "Historia",
@@ -4072,7 +4073,19 @@ window.VN_I18N_ES = {
 "Diese Animation": "Esta animación",
 "Grundeinstellung fürs ganze Projekt": "Predeterminado para todo el proyecto",
 "Weniger Bilder pro Sekunde wirken gezeichnet wie im Anime oder Cartoon: jedes Bild bleibt kurz stehen. Gilt für Animationen, Idle, Gesten, Bones und Gliederpuppen. Dialoge, Menüs und Kamerafahrten bleiben flüssig.": "Menos fotogramas por segundo parecen dibujados como en el anime o los dibujos animados: cada imagen se mantiene un instante. Se aplica a animaciones, idle, gestos, huesos y marionetas articuladas. Diálogos, menús y movimientos de cámara siguen fluidos.",
-"Wie im Projekt bzw. der Idle-Animation": "Como en el proyecto o la animación idle"
+"Wie im Projekt bzw. der Idle-Animation": "Como en el proyecto o la animación idle",
+"Smear-Bilder": "Fotogramas smear",
+"Smear-Bilder bei schnellen Bewegungen": "Fotogramas smear en movimientos rápidos",
+"Eigene Einstellung": "Ajuste propio",
+"Mehrfachbilder": "Imágenes múltiples",
+"Speedlines": "Líneas de velocidad",
+"Ab welchem Tempo": "A partir de qué velocidad",
+"Mehr Prozent = schon bei mittlerem Tempo, weniger = nur bei sehr schnellen Bewegungen.": "Más porcentaje = ya a velocidad media, menos = solo en movimientos muy rápidos.",
+"Bei sehr schnellen Bewegungen (Faustschlag, Ausholen, Sprung) zeichnet die Engine ein Smear-Bild: Mehrfachbilder, ein lang gezogenes Körperteil oder Speedlines. Passt besonders gut zu 12 oder 8 Bildern pro Sekunde.": "En movimientos muy rápidos (puñetazo, impulso, salto) el motor dibuja un fotograma smear: imágenes múltiples, una parte del cuerpo estirada o líneas de velocidad. Queda especialmente bien con 12 u 8 fotogramas por segundo.",
+"Erzwingt an dieser Stelle ein Smear-Bild, auch wenn die Bewegung nicht schnell genug ist": "Fuerza aquí un fotograma smear aunque el movimiento no sea lo bastante rápido",
+"Smear-Bild entfernen": "Quitar fotograma smear",
+"Smear-Bild hier": "Fotograma smear aquí",
+"Hinspringen": "Ir allí"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",
