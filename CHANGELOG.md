@@ -2,6 +2,28 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.16 – Pixel art, battle animations, code track, puppet folders
+- Design → “🎨 Pixel art”: a pixel editor for drawing and animating frame by frame. Pen, eraser, fill, line,
+  rectangle, circle, eyedropper and move layer; mirror drawing, onion skin, grid, Ctrl + wheel zoom, right click erases.
+  Palettes (presets or your own colours – changing a colour changes it in every frame), layers, several animations per
+  sprite with a frame strip (duplicate, empty frame, reorder, duration per frame) and a live preview. “Add to project”
+  saves each animation as an animated GIF (or all of them as a sprite sheet) in your images, pixel-sharp and scalable
+  ×1–×8, usable as a character, background, hub object or fighter. Updating replaces the file, so every place that
+  uses it shows the new version. Sprite sheets from other pixel programs can be imported.
+- Battles: fighters can use a rigged character or a jointed puppet with their own idle and their own animations for
+  attack, spell, hit, defend, item, K.O. (holds the last pose) and victory. Every skill can have its own attacker
+  animation and target reaction. Animations blend smoothly out of the idle and back (adjustable per fighter or skill).
+  In the animation editor, “💥 Hit here” marks the moment where effect, damage and sound appear in battle.
+- Story timeline: new “Code” track. A code clip runs once when its step begins, before the text appears, so {variables}
+  already show the new value. One statement per line: `gold += 5`, `if courage > 3 and not fled: points += 1`,
+  `[Door open] = true`, `give("Key")`, `take("Potion", 2)`, `earn("Gold", 10)`, `spend("Gold", 3)`, `goto("Market")`,
+  `roll = random(1, 6)`, `# comments`. Errors are shown with their line number while typing; missing variables can be
+  created with one click. The same is available as the action “🧮 Math / code” (dialogues, answers, hub objects), and
+  formulas work as a condition “🧮 Formula”, e.g. `gold >= 10 and item("Key") > 0`.
+- Puppet editor: folders for parts. Drag & drop parts and folders, nest folders, collapse, rename by double-click,
+  hide or lock a folder in the editor (the game always shows everything), move blocks up and down, search parts.
+  Folders only sort and set the drawing order – movement is still set by “Attached to”.
+
 ## 0.9.15 – Inpaint brush for jointed puppets
 - Puppet editor: new “🖌 Inpaint brush”. Mask a gap on a part with the lasso, ruler or brush and fill it – no AI model
   needed. Colors come from the edge of the mask, from one chosen color or as a gradient between two points (A → B), also

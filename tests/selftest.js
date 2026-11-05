@@ -926,6 +926,73 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Inpaint-Stift: mehr Platz am Rand');
   } catch (e) { general.push('Inpaint: ' + e.message); }
 
+  // 14. Neu in 0.9.16: GIF-Encoder, Formeln/Code, Ordner im Puppen-Modus
+  try {
+    const r = JSON.parse(await js(`(async () => {
+      const out = [];
+      // GIF: 2 Bilder 5×4, Palette mit Durchsichtig – erstes Bild zurücklesen
+      const w = 5, h = 4, pal = [[0, 0, 0], [255, 0, 0], [0, 0, 255]];
+      const f1 = new Uint8Array(w * h).fill(1); f1[0] = 0; f1[w * h - 1] = 2;
+      const f2 = new Uint8Array(w * h).fill(2);
+      const bytes = GifEnc.encode([{ px: f1, delay: 10 }, { px: f2, delay: 10 }], w, h, pal);
+      if (String.fromCharCode(...bytes.slice(0, 6)) !== 'GIF89a') out.push('GIF-Kopf');
+      const url = URL.createObjectURL(new Blob([bytes], { type: 'image/gif' }));
+      const im = await new Promise((res) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = url; });
+      if (!im) out.push('GIF lädt nicht');
+      else {
+        const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.drawImage(im, 0, 0);
+        const d = x.getImageData(0, 0, w, h).data, px = (i) => [d[i * 4], d[i * 4 + 1], d[i * 4 + 2], d[i * 4 + 3]].join(',');
+        if (px(0).split(',')[3] !== '0') out.push('GIF durchsichtig ' + px(0));
+        if (px(1) !== '255,0,0,255') out.push('GIF rot ' + px(1));
+        if (px(w * h - 1) !== '0,0,255,255') out.push('GIF blau ' + px(w * h - 1));
+      }
+      // Große Fläche mit Rauschen (LZW-Wörterbuch läuft über 4096)
+      const W = 120, H = 90, big = new Uint8Array(W * H); let seed = 7; for (let i = 0; i < big.length; i++) { seed = (seed * 1103515245 + 12345) & 0x7fffffff; big[i] = seed % 16; }
+      const pal16 = Array.from({ length: 16 }, (_, i) => [i * 16, 255 - i * 16, (i * 37) & 255]);
+      const im2 = await new Promise((res) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = URL.createObjectURL(new Blob([GifEnc.encode([{ px: big, delay: 5 }], W, H, pal16)], { type: 'image/gif' })); });
+      if (!im2) out.push('großes GIF lädt nicht');
+      else {
+        const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d'); x.drawImage(im2, 0, 0);
+        const d = x.getImageData(0, 0, W, H).data; let bad = 0;
+        for (let i = 1; i < big.length; i++) { const p = pal16[big[i]]; if (big[i] && (d[i * 4] !== p[0] || d[i * 4 + 1] !== p[1] || d[i * 4 + 2] !== p[2])) bad++; }
+        if (bad) out.push('großes GIF: ' + bad + ' falsche Pixel');
+      }
+      // Formeln und Code
+      const F = VN.Formula, P = VN.project;
+      const saved = JSON.stringify({ vars: P.vars, items: P.items, cur: P.currencies });
+      P.vars.push({ id: 'vt_gold', name: 'gold', type: 'number', start: 0, max: 50 }, { id: 'vt_reich', name: 'Ganz reich', type: 'flag', start: false });
+      P.items = P.items || []; P.items.push({ id: 'it_tst', name: 'Testschlüssel' });
+      const rs = { vars: { vt_gold: 8, vt_reich: false }, inv: {}, money: {}, seen: {} };
+      const g = F.run('# Kommentar\\ngold += 5 * 2\\nif gold > 15 and not [Ganz reich]: [Ganz reich] = wahr\\ngive("Testschlüssel", 2)\\ngold = gold * 10', rs);
+      if (rs.vars.vt_gold !== 50) out.push('Code gold ' + rs.vars.vt_gold + ' (max 50 erwartet)');
+      if (rs.vars.vt_reich !== true) out.push('Code Wenn-Dann');
+      if (rs.inv.it_tst !== 2 || !g.some((x) => x.kind === 'item' && x.count === 2)) out.push('Code give');
+      if (!F.check('gold >= 50 und item("Testschlüssel") == 2', rs)) out.push('Formel und/item');
+      if (F.check('gold < 10 oder nicht [Ganz reich]', rs)) out.push('Formel oder/nicht');
+      if (F.check('kaputt ((', rs)) out.push('kaputte Formel gilt als erfüllt');
+      if (!F.problem('gold >', false)) out.push('Fehler nicht erkannt');
+      if (!/Zeile 2/.test(F.problem('gold += 1\\nunbekannt = 3', true) || '')) out.push('Zeilennummer im Fehler');
+      if (F.missingVars('gold + mut').join() !== 'mut') out.push('fehlende Variablen');
+      if (!VN.checkConds([{ type: 'formula', expr: 'gold == 50' }], rs)) out.push('Bedingung „Formel“');
+      const rs2 = { vars: { vt_gold: 1 }, inv: {}, money: {}, seen: {} };
+      VN.applyActions([{ type: 'code', code: 'gold += 2' }], rs2, 'x');
+      if (rs2.vars.vt_gold !== 3) out.push('Aktion „Code“');
+      if (!VN.tracksOf({ type: 'story' }).some((t) => t.key === 'code')) out.push('Code-Spur fehlt');
+      const sv = JSON.parse(saved); P.vars = sv.vars; P.items = sv.items; P.currencies = sv.cur;
+      // Ordner: Teile eines Ordners liegen zusammen, ausgeblendet/gesperrt erbt sich
+      const mk = (id, folder) => ({ id, folder });
+      const pup = { parts: [mk('a'), mk('b', 'f1'), mk('c'), mk('d', 'f2'), mk('e', 'f1')], folders: [{ id: 'f1', name: 'Arm' }, { id: 'f2', name: 'Hand', parent: 'f1', hidden: true }] };
+      PupEd.normalize(pup);
+      if (pup.parts.map((p) => p.id).join('') !== 'abdec') out.push('Ordner-Reihenfolge ' + pup.parts.map((p) => p.id).join(''));
+      if ([...PupEd.fFlag(pup, 'hidden')].join() !== 'd') out.push('Ordner ausgeblendet');
+      pup.folders[0].locked = true;
+      if ([...PupEd.fFlag(pup, 'locked')].sort().join() !== 'b,d,e') out.push('Ordner gesperrt erbt nicht');
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('0.9.16: ' + r.join(', '));
+    else log('✓ GIF-Encoder, Formeln & Code-Spur, Ordner im Puppen-Modus');
+  } catch (e) { general.push('0.9.16: ' + e.message); }
+
   const failed = results.filter((r) => r.errors.length);
   for (const g of general) log('✗ ' + g);
   log(`\n${failed.length || general.length ? 'FEHLGESCHLAGEN' : 'ALLES BESTANDEN'}: ${results.length - failed.length}/${results.length} Projekte ok${general.length ? ', ' + general.length + ' allgemeine Fehler' : ''} · ${((Date.now() - t0) / 1000).toFixed(0)} s`);

@@ -120,7 +120,7 @@
     if (ui().pupPart === p.id) ui().pupPart = null;
   });
   // Pin verschieben, ohne dass das Bild springt (auch bei gedrehten Teilen)
-  // ---------- Ordner (0.9.15) ----------
+  // ---------- Ordner (0.9.16) ----------
   // pup.folders: [{ id, name, parent, open, hidden, locked }] · p.folder = Ordner-ID. Nur Ordnung und Zeichenreihenfolge –
   // die Bewegung bestimmt weiterhin das Gelenk („Hängt an“).
   PupEd.folder = (pup, id) => (pup.folders || []).find((f) => f.id === id) || null;
@@ -608,7 +608,7 @@
     const field = (label, ...kids) => el('div', { class: 'field' }, el('div', { class: 'lbl' }, label), ...kids);
     const num = (v, fn, step) => el('input', { type: 'number', step: step || 1, value: Math.round((v || 0) * 100) / 100, onchange: (e) => VN.mutate(() => fn(Number(String(e.target.value).replace(',', '.')) || 0)) });
     const sel = (v, opts, fn) => { const s = el('select', { onchange: (e) => VN.mutate(() => fn(e.target.value)) }); for (const [k, l] of opts) s.appendChild(el('option', { value: k, selected: String(k) === String(v == null ? '' : v) }, l)); return s; };
-    // Ebenen-Liste (oben = vorne), mit Ordnern (0.9.15)
+    // Ebenen-Liste (oben = vorne), mit Ordnern (0.9.16)
     PupEd.normalize(pup);
     const q = (ui().pupFind || '').trim().toLowerCase();
     const addFolder = () => VN.mutate(() => { pup.folders = pup.folders || []; const f = { id: VN.uid('pf'), name: VN.t('Ordner') + ' ' + (pup.folders.length + 1), parent: null, open: true }; pup.folders.push(f); const sp = selPart(pup); if (sp) { sp.folder = f.id; PupEd.normalize(pup); } ui().pupRename = f.id; });

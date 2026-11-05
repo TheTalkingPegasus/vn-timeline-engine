@@ -2132,7 +2132,7 @@ body.cbsim-tritan #center .stage, body.cbsim-tritan #player { filter: url(#vn-cb
 .light-h:hover { transform: scale(1.12); }
 .light-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 6px currentColor; }
 
-/* ---------- Ordner im Puppen-Modus (0.9.15) ---------- */
+/* ---------- Ordner im Puppen-Modus (0.9.16) ---------- */
 .pup-layer.pup-folder { background: rgba(255,255,255,0.03); font-weight: 600; }
 .pup-layer.pup-folder.hid { opacity: 0.55; }
 .pup-layer.locked .name { opacity: 0.6; }
