@@ -2,6 +2,13 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.13 – The seam becomes the joint
+- When you sew a part onto another one, the part now hangs on that part and turns around the middle of the seam –
+  the old pin, which could lie anywhere in the image, no longer shifts it. The part moves with the image it is sewn
+  to. For seams drawn earlier there is a button “📍 Put the joint on the seam”.
+- Double-clicking a body part in the puppet editor now also works while building: it switches “Try out” on and pins
+  the part right away.
+
 ## 0.9.12 – Seams for jointed puppets, fix for pinning limbs
 - Seams: sew two overlapping parts of a jointed puppet together along a line (“🧵 Sew” in the puppet editor), e.g.
   thigh to hip or upper arm to shoulder. The seam points stick exactly to the other part, the rest follows its own

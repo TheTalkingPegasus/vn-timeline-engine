@@ -120,6 +120,22 @@
     if (ui().pupPart === p.id) ui().pupPart = null;
   });
   // Pin verschieben, ohne dass das Bild springt (auch bei gedrehten Teilen)
+  // Mitte einer Naht (halbe Länge der Linie), im Bild des Teils
+  PupEd.seamMid = (pts) => {
+    let L = 0; for (let i = 1; i < pts.length; i++) L += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+    let h = L / 2;
+    for (let i = 1; i < pts.length; i++) { const d = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); if (h <= d) { const k = d ? h / d : 0; return [pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * k, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * k]; } h -= d; }
+    return pts[0];
+  };
+  // Naht als Gelenk (0.9.13): Das Teil hängt am angenähten Teil und dreht sich um die Mitte der Naht –
+  // so bewegt es sich mit dem Bild des anderen Teils, egal wo der alte Pin lag
+  PupEd.seamJoint = (pup, p, s) => {
+    if (!s || !s.to || s.to === p.id || Puppet.descendants(pup, p.id).has(s.to)) return false;
+    const [u, v] = PupEd.seamMid(s.pts);
+    p.parent = s.to;
+    PupEd.setPin(p, Math.round(u * 10) / 10, Math.round(v * 10) / 10);
+    return true;
+  };
   PupEd.setPin = (p, ax, ay) => {
     const r = (p.rot || 0) * Math.PI / 180, c = Math.cos(r), s = Math.sin(r);
     const ra = (x, y) => [x - (c * x - s * y), y - (s * x + c * y)];
@@ -342,8 +358,9 @@
           if (!tgt) { VN.toast(VN.t('Unter der Linie liegt kein anderes Teil')); VN.render(); return; }
           const inv = M().inv(ms[own.id]);
           const pts = line.map(([px, py]) => M().ap(inv, px, py).map((n) => Math.round(n * 10) / 10));
-          VN.mutate(() => { own.seams = own.seams || []; own.seams.push({ id: VN.uid('sm'), to: tgt.id, pts, soft: 60 }); });
-          VN.toast(VN.tf('„{a}“ an „{b}“ angenäht', { a: own.name, b: tgt.name }));
+          let joint = false;
+          VN.mutate(() => { own.seams = own.seams || []; const s = { id: VN.uid('sm'), to: tgt.id, pts, soft: 60 }; own.seams.push(s); joint = PupEd.seamJoint(pup, own, s); });
+          VN.toast(VN.tf(joint ? '„{a}“ an „{b}“ angenäht – das Gelenk liegt jetzt auf der Naht' : '„{a}“ an „{b}“ angenäht', { a: own.name, b: tgt.name }));
         });
         return;
       }
@@ -401,6 +418,8 @@
       ui().pupPart = hit.id;
       // Ausprobieren: Doppelklick auf ein angehängtes Teil = festpinnen / lösen
       if (testing && hit.parent && VN.isDouble(e, 'pup:' + hit.id)) { PupEd.togglePin(hit); VN.render(); return; }
+      // Beim Bauen (0.9.13): Doppelklick schaltet „Ausprobieren“ ein und pinnt das Teil gleich fest
+      if (!testing && hit.parent && VN.isDouble(e, 'pupb:' + hit.id)) { ui().pupTest = {}; ui().pupPinned = {}; PupEd.togglePin(hit); VN.toast(VN.t('Ausprobieren eingeschaltet – jetzt den Torso ziehen, das Festgepinnte bleibt stehen')); VN.render(); return; }
       if (testing) {
         // Puppenspiel: Teil um seinen Pin drehen, Umschalt = IK, Wurzel = verschieben
         const pose = ui().pupTest;
@@ -548,9 +567,11 @@
       box.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Nähte'),
         ...seams.map((s) => el('div', { class: 'opt-card', style: { margin: '4px 0' } },
           el('div', { class: 'row gap8' }, el('span', null, '🧵'), el('span', { class: 'muted small' }, VN.t('angenäht an')),
-            sel(s.to, pup.parts.filter((x) => !notMine.has(x.id)).map((x) => [x.id, x.name]), (v) => { s.to = v; }),
+            sel(s.to, pup.parts.filter((x) => !notMine.has(x.id)).map((x) => [x.id, x.name]), (v) => { s.to = v; PupEd.seamJoint(pup, p, s); }),
             el('div', { class: 'spacer' }),
             el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { p.seams = p.seams.filter((x) => x !== s); if (!p.seams.length) delete p.seams; }) }, '×')),
+          (() => { const [mu, mv] = PupEd.seamMid(s.pts), on = p.parent === s.to && Math.hypot(p.ax - mu, p.ay - mv) < 2;
+            return el('div', { class: 'row gap8' }, on ? el('span', { class: 'muted small' }, '📍 ' + VN.t('Gelenk liegt auf der Naht')) : el('button', { class: 'btn tiny', title: VN.t('Das Teil hängt dann an diesem Teil und dreht sich um die Mitte der Naht'), onclick: () => VN.mutate(() => { PupEd.seamJoint(pup, p, s); }) }, '📍 ' + VN.t('Gelenk auf die Naht legen'))); })(),
           field(VN.t('Weichheit') + ': ' + (s.soft != null ? s.soft : 60) + ' %', el('input', { type: 'range', min: 5, max: 100, value: s.soft != null ? s.soft : 60, onchange: (e) => VN.mutate(() => { s.soft = Number(e.target.value); }) })))),
         el('button', { class: 'btn tiny' + (ui().pupSew ? ' primary' : ''), onclick: () => { ui().pupSew = !ui().pupSew; ui().pupTest = null; ui().pupRuler = false; ui().pupErase = null; VN.render(); } }, ui().pupSew ? '✓ Naht ziehen' : '🧵 Naht ziehen'),
         el('div', { class: 'muted small' }, seams.length ? 'Weichheit: wie weit die Verformung ins Teil hineinreicht – wenig = knackige Naht, viel = weiche, gummiartige Biegung.' : 'Entlang der Kante eine Linie ziehen, wo dieses Teil auf einem anderen liegt. Die Naht bleibt dann exakt am anderen Teil, auch beim Idle und Animieren – keine Lücken oder Risse am Übergang.')));

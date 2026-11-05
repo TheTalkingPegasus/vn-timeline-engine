@@ -4118,7 +4118,12 @@ window.VN_I18N_JA = {
 "Unter der Linie liegt kein Teil einer anderen Figur": "線の下に他のキャラクターのパーツがありません",
 "Nähte an andere Figuren": "他のキャラクターへの縫い目",
 "Die Naht bleibt in der Lage, in der sie gezogen wurde. Wer die Puppen danach anders stellen will: Naht löschen und neu ziehen.": "縫い目は引いたときの位置関係を保ちます。後で人形の配置を変えたい場合は、縫い目を削除して引き直してください。",
-"Mit „🧵 Annähen“ oben eine Linie über ein Teil dieser Figur ziehen, das auf einer anderen Figur liegt (z. B. Hand auf der Schulter). Es bewegt sich dann mit der anderen Figur mit.": "上の「🧵 縫い付け」で、別のキャラクターに重なっているこのキャラクターのパーツ(例:肩に置いた手)の上に線を引きます。そのキャラクターと一緒に動くようになります。"
+"Mit „🧵 Annähen“ oben eine Linie über ein Teil dieser Figur ziehen, das auf einer anderen Figur liegt (z. B. Hand auf der Schulter). Es bewegt sich dann mit der anderen Figur mit.": "上の「🧵 縫い付け」で、別のキャラクターに重なっているこのキャラクターのパーツ(例:肩に置いた手)の上に線を引きます。そのキャラクターと一緒に動くようになります。",
+"„{a}“ an „{b}“ angenäht – das Gelenk liegt jetzt auf der Naht": "「{a}」を「{b}」に縫い付けました。関節は縫い目の上にあります",
+"Gelenk liegt auf der Naht": "関節は縫い目の上",
+"Das Teil hängt dann an diesem Teil und dreht sich um die Mitte der Naht": "パーツはこのパーツにつながり、縫い目の中心を軸に回転します",
+"Gelenk auf die Naht legen": "関節を縫い目に置く",
+"Ausprobieren eingeschaltet – jetzt den Torso ziehen, das Festgepinnte bleibt stehen": "お試しモードをオンにしました。胴体をドラッグすると、固定した部分はその場に残ります"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

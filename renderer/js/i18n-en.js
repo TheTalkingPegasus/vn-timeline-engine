@@ -4057,7 +4057,12 @@ window.VN_I18N_EN = {
 "Unter der Linie liegt kein Teil einer anderen Figur": "There is no part of another character under the line",
 "Nähte an andere Figuren": "Seams to other characters",
 "Die Naht bleibt in der Lage, in der sie gezogen wurde. Wer die Puppen danach anders stellen will: Naht löschen und neu ziehen.": "The seam keeps the position in which it was drawn. To arrange the puppets differently afterwards: delete the seam and draw it again.",
-"Mit „🧵 Annähen“ oben eine Linie über ein Teil dieser Figur ziehen, das auf einer anderen Figur liegt (z. B. Hand auf der Schulter). Es bewegt sich dann mit der anderen Figur mit.": "With “🧵 Sew on” at the top, draw a line over a part of this character that lies on another character (e.g. a hand on a shoulder). It then moves along with the other character."
+"Mit „🧵 Annähen“ oben eine Linie über ein Teil dieser Figur ziehen, das auf einer anderen Figur liegt (z. B. Hand auf der Schulter). Es bewegt sich dann mit der anderen Figur mit.": "With “🧵 Sew on” at the top, draw a line over a part of this character that lies on another character (e.g. a hand on a shoulder). It then moves along with the other character.",
+"„{a}“ an „{b}“ angenäht – das Gelenk liegt jetzt auf der Naht": "“{a}” sewn to “{b}” – the joint now sits on the seam",
+"Gelenk liegt auf der Naht": "Joint sits on the seam",
+"Das Teil hängt dann an diesem Teil und dreht sich um die Mitte der Naht": "The part then hangs on this part and turns around the middle of the seam",
+"Gelenk auf die Naht legen": "Put the joint on the seam",
+"Ausprobieren eingeschaltet – jetzt den Torso ziehen, das Festgepinnte bleibt stehen": "Try-out switched on – now drag the torso, the pinned part stays in place"
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",

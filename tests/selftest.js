@@ -815,6 +815,14 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
       P.draw(c2, pup2, res, [1, 0, 0, 1, 100, 100], null, 0, {}, {}, { extSeams: [{ id: 'x1', part: 'tB', pts: [[0, 30], [90, 30]], soft: 60, rel }], ext: { x1: [1, 0, 0, 1, 250, 100] } });
       const q = c2.getImageData(250 + 45, 100 + 5, 1, 1).data;
       if (!(q[2] > 200 && q[3] > 200)) out.push('Naht an andere Figur folgt nicht');
+      // Naht als Gelenk (0.9.13): Teil ohne Eltern hängt danach am Ziel, Pin auf der Mitte der Naht, Bild bleibt an seinem Platz
+      const L2 = Object.assign(P.newPart(null, 90, 240, 30, 220), { id: 'tL', ax: 45, ay: 150 });
+      const pup3 = { id: 't3', parts: [Object.assign({}, A), L2] };
+      const before = P.rest(L2).slice();
+      const s3 = { id: 's3', to: 'tA', pts: [[0, 30], [90, 30]], soft: 60 };
+      if (!PupEd.seamJoint(pup3, L2, s3)) out.push('Naht-Gelenk nicht gesetzt');
+      if (L2.parent !== 'tA' || Math.abs(L2.ax - 45) > 0.2 || Math.abs(L2.ay - 30) > 0.2) out.push('Gelenk nicht auf der Naht: ' + L2.ax + '/' + L2.ay);
+      if (P.rest(L2).some((n, i) => Math.abs(n - before[i]) > 0.01)) out.push('Teil verrutscht beim Gelenk-Setzen');
       return JSON.stringify(out);
     })()`));
     if (r.length) general.push('Nähte: ' + r.join(', '));

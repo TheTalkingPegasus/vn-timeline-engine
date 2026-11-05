@@ -4118,7 +4118,12 @@ window.VN_I18N_ES = {
 "Unter der Linie liegt kein Teil einer anderen Figur": "No hay ninguna parte de otro personaje debajo de la línea",
 "Nähte an andere Figuren": "Costuras a otros personajes",
 "Die Naht bleibt in der Lage, in der sie gezogen wurde. Wer die Puppen danach anders stellen will: Naht löschen und neu ziehen.": "La costura conserva la posición en la que se trazó. Para colocar las marionetas de otra forma después: borra la costura y vuelve a trazarla.",
-"Mit „🧵 Annähen“ oben eine Linie über ein Teil dieser Figur ziehen, das auf einer anderen Figur liegt (z. B. Hand auf der Schulter). Es bewegt sich dann mit der anderen Figur mit.": "Con «🧵 Coser a otro» arriba, traza una línea sobre una parte de este personaje que se apoya en otro (p. ej. una mano en el hombro). Se moverá junto con el otro personaje."
+"Mit „🧵 Annähen“ oben eine Linie über ein Teil dieser Figur ziehen, das auf einer anderen Figur liegt (z. B. Hand auf der Schulter). Es bewegt sich dann mit der anderen Figur mit.": "Con «🧵 Coser a otro» arriba, traza una línea sobre una parte de este personaje que se apoya en otro (p. ej. una mano en el hombro). Se moverá junto con el otro personaje.",
+"„{a}“ an „{b}“ angenäht – das Gelenk liegt jetzt auf der Naht": "«{a}» cosido a «{b}»: la articulación está ahora en la costura",
+"Gelenk liegt auf der Naht": "La articulación está en la costura",
+"Das Teil hängt dann an diesem Teil und dreht sich um die Mitte der Naht": "La parte cuelga de esta parte y gira alrededor del centro de la costura",
+"Gelenk auf die Naht legen": "Poner la articulación en la costura",
+"Ausprobieren eingeschaltet – jetzt den Torso ziehen, das Festgepinnte bleibt stehen": "Probar activado: ahora arrastra el torso, lo fijado se queda en su sitio"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",
