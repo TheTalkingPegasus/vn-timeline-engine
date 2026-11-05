@@ -657,6 +657,17 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
         const elbow = Puppet.m.ap(m[oa.id], oa.ax + (ua.x + ua.ax - oa.x - oa.ax), oa.ay + (ua.y + ua.ay - oa.y - oa.ay));
         const pin = Puppet.m.ap(m[ua.id], ua.ax, ua.ay);
         if (Math.hypot(elbow[0] - pin[0], elbow[1] - pin[1]) > 0.5) out.push('Gelenk nicht fest');
+        // Puppenspiel: Füße festgepinnt, Körper runter = Knie beugen, Füße bleiben; Körper hoch = bleibt stehen
+        const P = (n) => pup.parts.find((x) => x.slot === n);
+        const pins = [P('Fuß L').id, P('Fuß R').id], fixed = {};
+        for (const id of pins) fixed[id] = Puppet.tipWorld(pup, {}, id);
+        const down = Puppet.moveBody(pup, {}, P('Torso').id, { x: 0, y: 200 }, pins, fixed);
+        const err = Math.max(...pins.map((id) => { const t = Puppet.tipWorld(pup, down, id); return Math.hypot(t[0] - fixed[id][0], t[1] - fixed[id][1]); }));
+        if (Math.abs(down[P('Torso').id].y - 200) > 2 || err > 1) out.push('Puppenspiel runter: ' + Math.round(down[P('Torso').id].y) + '/' + Math.round(err));
+        const kl = (down[P('Unterschenkel L').id] || {}).r || 0, lim = Puppet.lim(P('Unterschenkel L'));
+        if (!lim || kl < lim[0] - 0.1 || kl > lim[1] + 0.1 || Math.abs(kl) < 20) out.push('Knie: ' + Math.round(kl));
+        const up = Puppet.moveBody(pup, {}, P('Torso').id, { x: 0, y: -250 }, pins, fixed);
+        if (Math.abs(up[P('Torso').id].y) > 3) out.push('Puppenspiel hoch: ' + Math.round(up[P('Torso').id].y));
       }
       p.puppets = keepP;
       // Ebenen-Figur: Bones des untersten Bildes mit Bones
@@ -676,7 +687,7 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
       return JSON.stringify(out);
     })()`));
     if (r.length) general.push('Figuren: ' + r.join(', '));
-    else log('✓ Figuren: Puppen-Vorlage, feste Gelenke, Ebenen-Figur mit Bones');
+    else log('✓ Figuren: Puppen-Vorlage, feste Gelenke, Puppenspiel mit Pins, Ebenen-Figur mit Bones');
   } catch (e) { general.push('Figuren: ' + e.message); }
 
   const failed = results.filter((r) => r.errors.length);

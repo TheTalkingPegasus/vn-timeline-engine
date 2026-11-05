@@ -3934,7 +3934,21 @@ window.VN_I18N_EN = {
 "Vorlage: Mensch": "Template: human",
 "Leere Gliederpuppe": "Empty jointed puppet",
 "Die Vorlage legt Plätze für Kopf, Torso, Arme, Hände, Beine und Füße an – schon mit Gelenken verbunden. Zieh deine Bilder einfach auf die grauen Plätze und pass danach Größe und Gelenke an.": "The template creates slots for head, torso, arms, hands, legs and feet – already connected with joints. Just drag your images onto the grey slots, then adjust size and joints.",
-"Leerer Platz: Bild aus der Dateiliste auf den grauen Platz ziehen oder hier wählen. Es wird eingepasst, das Gelenk bleibt.": "Empty slot: drag an image from the file list onto the grey slot or choose it here. It is fitted in, the joint stays."
+"Leerer Platz: Bild aus der Dateiliste auf den grauen Platz ziehen oder hier wählen. Es wird eingepasst, das Gelenk bleibt.": "Empty slot: drag an image from the file list onto the grey slot or choose it here. It is fitted in, the joint stays.",
+"Puppenspiel: Teil oder Endpunkt ziehen = um sein Gelenk drehen · Umschalt + ziehen = IK (Kette folgt der Maus) · Doppelklick auf ein Teil = festpinnen (z. B. Füße am Boden) · Körper oder Pfeile ziehen = Körper bewegen: Festgepinntes bleibt, der Rest beugt sich mit (Körper nach unten = in die Knie) · Umschalt + Körper ziehen = neigen.": "Puppeteering: drag a part or its end point = rotate around its joint · Shift + drag = IK (the chain follows the mouse) · double-click a part = pin it (e.g. feet on the ground) · drag the body or the arrows = move the body: pinned parts stay, the rest bends along (body down = kneel) · Shift + drag the body = lean.",
+"Puppenspiel: Doppelklick auf ein Teil = festpinnen (z. B. beide Füße) · Körper ziehen = Festgepinntes bleibt, der Rest beugt sich mit (nach unten = in die Knie), nur so weit die Glieder reichen · Umschalt + Körper = neigen · Teil ziehen = um sein Gelenk drehen · Umschalt + Teil = IK. Nichts davon wird gespeichert – Keyframes setzt du im Animations-Editor.": "Puppeteering: double-click a part = pin it (e.g. both feet) · drag the body = pinned parts stay, the rest bends along (down = kneel), only as far as the limbs reach · Shift + body = lean · drag a part = rotate around its joint · Shift + part = IK. Nothing here is saved – set keyframes in the animation editor.",
+"Längen: Auf einem Teil vom Gelenk zum Ende ziehen (z. B. Oberschenkel bis zum Knie) – die gelbe Linie ist die Länge des Glieds. Ohne eigene Länge gilt: bis zum Gelenk des angehängten Teils.": "Lengths: on a part, drag from the joint to the end (e.g. thigh to the knee) – the yellow line is the length of the limb. Without its own length: up to the joint of the attached part.",
+"Länge jedes Glieds markieren: vom Gelenk bis zum nächsten Gelenk (z. B. Oberschenkel bis Knie). Bestimmt, wie weit sich die Figur beim Puppenspiel strecken kann.": "Mark the length of each limb: from the joint to the next joint (e.g. thigh to knee). Determines how far the figure can stretch when puppeteering.",
+"Längen": "Lengths",
+"Länge: {n} px": "Length: {n} px",
+"automatisch": "automatic",
+"Automatisch": "Automatic",
+"Markieren": "Mark",
+"Gelenk & Länge": "Joint & length",
+"Gelenk begrenzen": "Limit the joint",
+"Von °": "From °",
+"Bis °": "To °",
+"Wie weit sich das Teil gegenüber der Ruhe-Lage drehen darf (positiv = Ende wandert nach links). So knicken Knie und Ellbogen beim Puppenspiel nur in eine Richtung.": "How far the part may rotate from its rest position (positive = the end moves to the left). This way knees and elbows only bend one way when puppeteering."
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",

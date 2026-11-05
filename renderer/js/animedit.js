@@ -337,7 +337,7 @@
       for (const p of pup.parts) {
         const M = ms[p.id];
         if (!M) continue;
-        const [px, py] = ap(M, p.ax, p.ay), [tx, ty] = ap(M, ...Puppet.tip(p));
+        const [px, py] = ap(M, p.ax, p.ay), [tx, ty] = ap(M, ...Puppet.tip(p, pup));
         const par = p.parent && ms[p.parent] && Puppet.part(pup, p.parent);
         if (par) { const [qx, qy] = ap(ms[par.id], par.ax, par.ay); mk('line', { x1: qx, y1: qy, x2: px, y2: py, stroke: 'rgba(255,110,110,0.45)', 'stroke-width': 2 }); }
         const sel = ui().animPart === p.id;
@@ -420,12 +420,17 @@
         const [qx, qy] = toPup((ev.clientX - r.left) * kx, (ev.clientY - r.top) * kx);
         const pose = JSON.parse(JSON.stringify(pose0));
         const ps = pose[part.id] || (pose[part.id] = { r: 0, x: 0, y: 0 });
-        if (hit.kind === 'move' || (!part.parent && !ev.shiftKey && hit.grab === 'body')) {
-          // Koordinatenpfeile: ganze Figur bewegen (nur X, nur Y oder frei)
-          if (hit.axis !== 'y') ps.x = (ps.x || 0) + qx - p0[0];
-          if (hit.axis !== 'x') ps.y = (ps.y || 0) + qy - p0[1];
+        if (hit.kind === 'move' || (!part.parent && hit.grab === 'body')) {
+          // Körper / Koordinatenpfeile (0.9.8): festgepinnte Glieder bleiben, alles dazwischen beugt sich mit –
+          // nur so weit die Glieder reichen. Umschalt am Körper = neigen.
+          if (!hit.kind || hit.kind !== 'move') {
+            if (ev.shiftKey) { let d = (Math.atan2(qy - piv[1], qx - piv[0]) - a0) * 180 / Math.PI; if (d > 180) d -= 360; if (d < -180) d += 360; Puppet.moveBody(pup, pose, part.id, { x: ps.x || 0, y: ps.y || 0, r: (ps.r || 0) + d }, pins, fixed); }
+            else Puppet.moveBody(pup, pose, part.id, { x: (ps.x || 0) + qx - p0[0], y: (ps.y || 0) + qy - p0[1] }, pins, fixed);
+          } else Puppet.moveBody(pup, pose, part.id, { x: (ps.x || 0) + (hit.axis !== 'y' ? qx - p0[0] : 0), y: (ps.y || 0) + (hit.axis !== 'x' ? qy - p0[1] : 0) }, pins, fixed);
+          write(pose);
+          return;
         } else if (ev.shiftKey) Puppet.ik(pup, pose, part.id, local, [qx, qy], { links: 3 });
-        else { let d = (Math.atan2(qy - piv[1], qx - piv[0]) - a0) * 180 / Math.PI; if (d > 180) d -= 360; if (d < -180) d += 360; ps.r = (ps.r || 0) + d; }
+        else { let d = (Math.atan2(qy - piv[1], qx - piv[0]) - a0) * 180 / Math.PI; if (d > 180) d -= 360; if (d < -180) d += 360; ps.r = Puppet.clampR(part, (ps.r || 0) + d); }
         Puppet.keepPins(pup, pose, pins, fixed);
         write(pose);
       }, (dx, dy, moved) => {
@@ -454,7 +459,7 @@
       const pup = Puppet.get(actor.puppet);
       const pins = Object.keys(actor.pins || {}).filter((k) => actor.pins[k] && Puppet.part(pup, k));
       return el('div', { class: 'pup-anim-help' },
-        el('div', { class: 'muted small' }, 'Puppenspiel: Teil oder Endpunkt ziehen = um den Pin drehen · Umschalt + ziehen = IK (Kette folgt der Maus) · Pfeile (rot X, grün Y, gelb frei) = ganze Figur verschieben · Doppelklick auf ein Teil = festpinnen (bleibt an Ort und Stelle, wenn sich der Körper bewegt).'),
+        el('div', { class: 'muted small' }, 'Puppenspiel: Teil oder Endpunkt ziehen = um sein Gelenk drehen · Umschalt + ziehen = IK (Kette folgt der Maus) · Doppelklick auf ein Teil = festpinnen (z. B. Füße am Boden) · Körper oder Pfeile ziehen = Körper bewegen: Festgepinntes bleibt, der Rest beugt sich mit (Körper nach unten = in die Knie) · Umschalt + Körper ziehen = neigen.'),
         pins.length ? el('div', { class: 'row gap4', style: { flexWrap: 'wrap' } }, el('span', { class: 'muted small' }, '📌'), ...pins.map((pid) => el('button', { class: 'btn tiny', title: VN.t('Lösen'), onclick: () => VN.mutate(() => { delete actor.pins[pid]; }) }, Puppet.part(pup, pid).name + ' ×'))) : null,
         el('div', { class: 'row gap8', style: { flexWrap: 'wrap' } },
           el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { actor.parts = actor.parts || {}; for (const p of pup.parts) AnimEd.setKey(actor.parts[p.id] = actor.parts[p.id] || [], t, { r: 0, x: 0, y: 0 }); }) }, '↺ Grundpose bei ' + t.toFixed(2) + ' s'),

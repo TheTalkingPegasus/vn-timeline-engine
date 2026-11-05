@@ -35,18 +35,20 @@
   // [Name, Breite, Höhe, Pin X/Y im Teil, Pin-Position in der Figur, Eltern-Name]
   const HUMAN = () => {
     const out = [];
-    const add = (name, w, h, ax, ay, px, py, parent) => out.push({ name, w, h, ax, ay, px, py, parent });
-    for (const [s, side] of [[-1, 'L'], [1, 'R']]) {
-      add('Oberschenkel ' + side, 90, 230, 45, 20, s * 60, 510, 'Torso');
-      add('Unterschenkel ' + side, 76, 230, 38, 15, s * 60, 720, 'Oberschenkel ' + side);
-      add('Fuß ' + side, 110, 60, 55, 12, s * 60, 935, 'Unterschenkel ' + side);
+    // lim: Gelenk-Grenzen in Grad (positiv = Ende wandert nach links). Knie und Ellbogen knicken nur in eine Richtung.
+    const add = (name, w, h, ax, ay, px, py, parent, lim) => out.push({ name, w, h, ax, ay, px, py, parent, lim });
+    const side = (s, a, b) => (s < 0 ? [a, b] : [-b, -a]);
+    for (const [s, sd] of [[-1, 'L'], [1, 'R']]) {
+      add('Oberschenkel ' + sd, 90, 230, 45, 20, s * 60, 510, 'Torso', side(s, -30, 100));
+      add('Unterschenkel ' + sd, 76, 230, 38, 15, s * 60, 720, 'Oberschenkel ' + sd, side(s, -160, 0));
+      add('Fuß ' + sd, 110, 60, 55, 12, s * 60, 935, 'Unterschenkel ' + sd, [-90, 90]);
     }
-    add('Torso', 240, 320, 120, 300, 0, 500, null);
-    add('Kopf', 180, 220, 90, 205, 0, 215, 'Torso');
-    for (const [s, side] of [[-1, 'L'], [1, 'R']]) {
-      add('Oberarm ' + side, 70, 200, 35, 20, s * 128, 232, 'Torso');
-      add('Unterarm ' + side, 60, 190, 30, 15, s * 128, 412, 'Oberarm ' + side);
-      add('Hand ' + side, 70, 90, 35, 10, s * 128, 587, 'Unterarm ' + side);
+    add('Torso', 240, 320, 120, 300, 0, 500, null, [-90, 90]);
+    add('Kopf', 180, 220, 90, 205, 0, 215, 'Torso', [-45, 45]);
+    for (const [s, sd] of [[-1, 'L'], [1, 'R']]) {
+      add('Oberarm ' + sd, 70, 200, 35, 20, s * 128, 232, 'Torso', null);
+      add('Unterarm ' + sd, 60, 190, 30, 15, s * 128, 412, 'Oberarm ' + sd, side(s, -160, 5));
+      add('Hand ' + sd, 70, 90, 35, 10, s * 128, 587, 'Unterarm ' + sd, [-80, 80]);
     }
     return out;
   };
@@ -55,6 +57,7 @@
     const ids = {};
     for (const d of HUMAN()) {
       const p = { id: VN.uid('pp'), name: VN.t(d.name), slot: d.name, asset: null, parent: null, x: d.px - d.ax, y: d.py - d.ay, w: d.w, h: d.h, ax: d.ax, ay: d.ay, rot: 0, idle: { type: 'none', amp: 4, speed: 3, phase: 0 }, bones: true };
+      if (d.lim) p.lim = { on: true, min: d.lim[0], max: d.lim[1] };
       ids[d.name] = p.id;
       pup.parts.push(Object.assign(p, { _par: d.parent }));
     }
@@ -69,9 +72,10 @@
     const go = (nw, nh) => VN.mutate(() => {
       const k = Math.min(p.w / nw, p.h / nh);
       const w = Math.max(4, Math.round(nw * k)), h = Math.max(4, Math.round(nh * k));
-      const pinX = p.x + p.ax, pinY = p.y + p.ay;
-      const ax = Math.round(p.ax / p.w * w), ay = Math.round(p.ay / p.h * h);
+      const pinX = p.x + p.ax, pinY = p.y + p.ay, w0 = p.w, h0 = p.h;
+      const ax = Math.round(p.ax / w0 * w), ay = Math.round(p.ay / h0 * h);
       Object.assign(p, { asset: assetId, w, h, ax, ay, x: pinX - ax, y: pinY - ay });
+      if (p.tx != null) { p.tx = Math.round(p.tx / w0 * w); p.ty = Math.round(p.ty / h0 * h); }
       ui().pupPart = p.id;
     });
     im.onload = () => go(im.naturalWidth || p.w, im.naturalHeight || p.h);
@@ -150,16 +154,19 @@
       el('button', { class: 'btn' + (testing ? ' primary' : ''), title: VN.t('Teile um ihre Pins drehen (Umschalt = IK), ohne zu speichern'), onclick: () => { ui().pupTest = testing ? null : {}; VN.render(); } }, testing ? '✓ Ausprobieren' : '🤸 Ausprobieren'),
       testing ? el('button', { class: 'btn', onclick: () => { ui().pupTest = {}; VN.render(); } }, VN.t('Zurücksetzen')) : null,
       el('button', { class: 'btn' + (ui().pupErase ? ' primary' : ''), title: VN.t('Kanten und harte Übergänge an einem Teil wegradieren – Größe und Weichheit einstellbar'), onclick: () => PupEd.toggleErase(pup) }, ui().pupErase ? '✓ Radierer' : '🧽 Radierer'),
+      testing ? null : el('button', { class: 'btn' + (ui().pupRuler ? ' primary' : ''), title: VN.t('Länge jedes Glieds markieren: vom Gelenk bis zum nächsten Gelenk (z. B. Oberschenkel bis Knie). Bestimmt, wie weit sich die Figur beim Puppenspiel strecken kann.'), onclick: () => { ui().pupRuler = !ui().pupRuler; ui().pupErase = null; VN.render(); } }, ui().pupRuler ? '✓ Längen' : '📏 Längen'),
       el('label', { class: 'check btn' }, el('input', { type: 'checkbox', checked: !!ui().pupIdle, onchange: (e) => { ui().pupIdle = e.target.checked; } }), 'Idle abspielen'),
       el('label', { class: 'check btn' }, el('input', { type: 'checkbox', checked: ui().pupPins !== false, onchange: (e) => { ui().pupPins = e.target.checked; } }), 'Pins')));
     const wrap = el('div', { class: 'pup-stage-wrap' });
     const canvas = el('canvas', { class: 'pup-ed-canvas', tabindex: '0' });
     wrap.appendChild(canvas);
     main.appendChild(wrap);
-    main.appendChild(el('div', { class: 'muted small pup-help' }, ui().pupErase
+    main.appendChild(el('div', { class: 'muted small pup-help' }, ui().pupRuler && !testing
+      ? 'Längen: Auf einem Teil vom Gelenk zum Ende ziehen (z. B. Oberschenkel bis zum Knie) – die gelbe Linie ist die Länge des Glieds. Ohne eigene Länge gilt: bis zum Gelenk des angehängten Teils.'
+      : ui().pupErase
       ? 'Radierer: Teil wählen und über die Kante malen · Größe und Kantenweichheit rechts · „Wiederherstellen“ malt das Original zurück · Mausrad + Strg = Pinselgröße · Speichern legt eine neue Bilddatei an, das Original bleibt erhalten.'
       : testing
-      ? 'Ausprobieren: Teil ziehen = um den Pin drehen · Umschalt + ziehen = IK (die Kette folgt der Maus) · Wurzel-Teil ziehen = ganze Figur verschieben. Nichts davon wird gespeichert.'
+      ? 'Puppenspiel: Doppelklick auf ein Teil = festpinnen (z. B. beide Füße) · Körper ziehen = Festgepinntes bleibt, der Rest beugt sich mit (nach unten = in die Knie), nur so weit die Glieder reichen · Umschalt + Körper = neigen · Teil ziehen = um sein Gelenk drehen · Umschalt + Teil = IK. Nichts davon wird gespeichert – Keyframes setzt du im Animations-Editor.'
       : Puppet.fixed(pup)
       ? 'Bilder aus der Dateiliste hierher ziehen = neues Teil (auf einen grauen Platz = Platz füllen) · Wurzel-Teil ziehen = ganze Figur verschieben · angehängtes Teil ziehen = um sein Gelenk drehen (Umschalt: 15°-Schritte, Alt = frei verschieben) · roten Pin ziehen = Gelenk setzen; auf einem anderen Teil loslassen = daran anhängen · Entf = Teil löschen'
       : 'Bilder aus der Dateiliste hierher ziehen = neues Teil · Teil ziehen = verschieben (Kinder wandern mit, Alt = nur dieses Teil) · roten Pin ziehen = Gelenk setzen; auf einem anderen Teil loslassen = daran anhängen · Entf = Teil löschen'));
@@ -250,7 +257,20 @@
           ctx.fillStyle = on ? '#ff5a5a' : par ? 'rgba(255,90,90,0.85)' : '#e8a43a';
           ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
           ctx.beginPath(); ctx.arc(px, py, on ? 7 : 5.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-          if (pinned) { const [tx, ty] = M().ap(ms[p.id], ...Puppet.tip(p)); ctx.fillStyle = '#4fb3c8'; ctx.fillRect(tx - 5, ty - 5, 10, 10); }
+          if (pinned) { const [tx, ty] = M().ap(ms[p.id], ...Puppet.tip(p, pup)); ctx.fillStyle = '#4fb3c8'; ctx.fillRect(tx - 5, ty - 5, 10, 10); }
+        }
+      }
+      // Längen der Glieder (Lineal, 0.9.8)
+      if (ui().pupRuler || ui().pupTest) {
+        for (const p of pup.parts) {
+          if (!ms[p.id] || !p.parent && !ui().pupRuler) continue;
+          const [px, py] = M().ap(ms[p.id], p.ax, p.ay), [tx, ty] = M().ap(ms[p.id], ...Puppet.tip(p, pup));
+          ctx.strokeStyle = p.tx != null ? '#f0c040' : 'rgba(240,192,64,0.55)'; ctx.lineWidth = ui().pupRuler ? 3 : 1.5; ctx.setLineDash(p.tx != null ? [] : [6, 4]);
+          ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(tx, ty); ctx.stroke(); ctx.setLineDash([]);
+          if (ui().pupRuler) {
+            ctx.fillStyle = '#f0c040'; ctx.beginPath(); ctx.arc(tx, ty, 5, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#fff'; ctx.font = '11px Segoe UI, sans-serif'; ctx.textAlign = 'left'; ctx.fillText(Math.round(Puppet.length(p, pup)) + ' px', (px + tx) / 2 + 6, (py + ty) / 2);
+          }
         }
       }
       // Pinsel-Vorschau des Radierers
@@ -273,6 +293,26 @@
       const [x, y] = toPup(e.clientX, e.clientY);
       if (ui().pupErase) { e.preventDefault(); PupEd.eraseDown(e, pup, canvas, toPup, view, mats, hitPart); return; }
       const testing = !!ui().pupTest;
+      // Lineal: auf einem Teil vom Gelenk zum Ende ziehen = Länge des Glieds
+      if (ui().pupRuler && !testing) {
+        const tgt = hitPart(x, y) || selPart(pup);
+        if (!tgt) return;
+        e.preventDefault();
+        ui().pupPart = tgt.id;
+        const before = JSON.stringify(pup.parts);
+        const m0 = Puppet.rest(tgt);
+        VN.drag(e, (dx, dy, ev) => {
+          const [qx, qy] = toPup(ev.clientX, ev.clientY);
+          const [u, v] = M().ap(M().inv(m0), qx, qy);
+          tgt.tx = Math.round(u); tgt.ty = Math.round(v);
+        }, (dx, dy, moved) => {
+          if (!moved) { VN.render(); return; }
+          const after = JSON.stringify(pup.parts);
+          pup.parts = JSON.parse(before);
+          VN.mutate(() => { pup.parts = JSON.parse(after); });
+        });
+        return;
+      }
       // Pin ziehen (nur beim Bauen)
       const pin = !testing && pinAt(x, y);
       if (pin) {
@@ -315,11 +355,21 @@
         const a0 = Math.atan2(y - piv[1], x - piv[0]);
         const pins = Object.keys(ui().pupPinned || {}).filter((k) => ui().pupPinned[k] && k !== hit.id);
         const fixed = {}; for (const pid of pins) fixed[pid] = Puppet.tipWorld(pup, pose, pid);
+        const pose0 = JSON.parse(JSON.stringify(pose));
         VN.drag(e, (dx, dy, ev) => {
           const [qx, qy] = toPup(ev.clientX, ev.clientY);
-          if (!hit.parent && !ev.shiftKey) { pose[hit.id] = Object.assign({}, ps0, { x: ps0.x + qx - x, y: ps0.y + qy - y }); }
-          else if (ev.shiftKey) Puppet.ik(pup, pose, hit.id, local, [qx, qy], { links: 3 });
-          else { let d = (Math.atan2(qy - piv[1], qx - piv[0]) - a0) * 180 / Math.PI; pose[hit.id] = Object.assign({}, ps0, { r: ps0.r + d }); }
+          // Puppenspiel (0.9.8): Körper (Wurzel) bewegen = festgepinnte Glieder bleiben, der Rest beugt sich mit;
+          // Umschalt am Körper = neigen
+          if (!hit.parent) {
+            for (const k of Object.keys(pose)) delete pose[k];
+            Object.assign(pose, JSON.parse(JSON.stringify(pose0)));
+            let d = 0;
+            if (ev.shiftKey) { d = (Math.atan2(qy - piv[1], qx - piv[0]) - a0) * 180 / Math.PI; if (d > 180) d -= 360; if (d < -180) d += 360; }
+            Puppet.moveBody(pup, pose, hit.id, ev.shiftKey ? { x: ps0.x, y: ps0.y, r: ps0.r + d } : { x: ps0.x + qx - x, y: ps0.y + qy - y }, pins, fixed);
+            return;
+          }
+          if (ev.shiftKey) Puppet.ik(pup, pose, hit.id, local, [qx, qy], { links: 3 });
+          else { let d = (Math.atan2(qy - piv[1], qx - piv[0]) - a0) * 180 / Math.PI; if (d > 180) d -= 360; if (d < -180) d += 360; pose[hit.id] = Object.assign({}, ps0, { r: Puppet.clampR(hit, ps0.r + d) }); }
           Puppet.keepPins(pup, pose, pins, fixed);
         }, () => VN.render());
         return;
@@ -436,6 +486,17 @@
           field('Drehung in Ruhe °', num(p.rot, (v) => { p.rot = v; })),
           field('Pin X (im Bild)', num(p.ax, (v) => PupEd.setPin(p, v, p.ay))), field('Pin Y (im Bild)', num(p.ay, (v) => PupEd.setPin(p, p.ax, v)))),
         el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!p.hidden, onchange: (e) => VN.mutate(() => { p.hidden = e.target.checked; }) }), 'Ausblenden')));
+      // Puppenspiel (0.9.8): Länge des Glieds und Gelenk-Grenzen
+      const lim = p.lim || { on: false, min: -90, max: 90 };
+      box.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Gelenk & Länge'),
+        el('div', { class: 'row gap8' }, el('span', { class: 'muted small', style: { flex: '1' } }, VN.tf('Länge: {n} px', { n: Math.round(Puppet.length(p, pup)) }) + (p.tx != null ? '' : ' · ' + VN.t('automatisch'))),
+          p.tx != null ? el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { delete p.tx; delete p.ty; }) }, 'Automatisch') : null,
+          el('button', { class: 'btn tiny', onclick: () => { ui().pupRuler = true; ui().pupTest = null; VN.render(); } }, '📏 Markieren')),
+        el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!(p.lim && p.lim.on !== false), onchange: (e) => VN.mutate(() => { p.lim = Object.assign({}, lim, { on: e.target.checked }); }) }), 'Gelenk begrenzen'),
+        p.lim && p.lim.on !== false ? el('div', { class: 'grid2' },
+          field('Von °', num(lim.min, (v) => { p.lim = Object.assign({}, lim, { min: v }); })),
+          field('Bis °', num(lim.max, (v) => { p.lim = Object.assign({}, lim, { max: v }); }))) : null,
+        el('div', { class: 'muted small' }, 'Wie weit sich das Teil gegenüber der Ruhe-Lage drehen darf (positiv = Ende wandert nach links). So knicken Knie und Ellbogen beim Puppenspiel nur in eine Richtung.')));
       const id = p.idle || (p.idle = { type: 'none', amp: 4, speed: 3, phase: 0 });
       box.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Idle dieses Teils'),
         field('Bewegung', sel(id.type || 'none', Puppet.IDLE, (v) => { id.type = v; if (v === 'breathe' && !(Number(id.amp) > 0)) id.amp = 3; })),
@@ -473,7 +534,7 @@
     if (ui().pupErase) {
       if (PupEd._edit && PupEd._edit.dirty && !window.confirm(VN.t('Ungespeicherte Radierer-Änderungen verwerfen?'))) return;
       ui().pupErase = null; PupEd._edit = null;
-    } else { ui().pupErase = { size: 40, soft: 60, mode: 'erase' }; ui().pupTest = null; }
+    } else { ui().pupErase = { size: 40, soft: 60, mode: 'erase' }; ui().pupTest = null; ui().pupRuler = false; }
     VN.render();
   };
   const loadImg = (url) => new Promise((res) => { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => res(im); im.onerror = () => res(null); im.src = url; });

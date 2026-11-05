@@ -3995,7 +3995,21 @@ window.VN_I18N_JA = {
 "Vorlage: Mensch": "テンプレート: 人間",
 "Leere Gliederpuppe": "空の関節人形",
 "Die Vorlage legt Plätze für Kopf, Torso, Arme, Hände, Beine und Füße an – schon mit Gelenken verbunden. Zieh deine Bilder einfach auf die grauen Plätze und pass danach Größe und Gelenke an.": "テンプレートは頭、胴体、腕、手、脚、足の枠を作成し、関節でつなげます。灰色の枠に画像をドラッグし、その後サイズと関節を調整してください。",
-"Leerer Platz: Bild aus der Dateiliste auf den grauen Platz ziehen oder hier wählen. Es wird eingepasst, das Gelenk bleibt.": "空の枠: ファイル一覧から灰色の枠に画像をドラッグするか、ここで選びます。枠に合わせて配置され、関節はそのままです。"
+"Leerer Platz: Bild aus der Dateiliste auf den grauen Platz ziehen oder hier wählen. Es wird eingepasst, das Gelenk bleibt.": "空の枠: ファイル一覧から灰色の枠に画像をドラッグするか、ここで選びます。枠に合わせて配置され、関節はそのままです。",
+"Puppenspiel: Teil oder Endpunkt ziehen = um sein Gelenk drehen · Umschalt + ziehen = IK (Kette folgt der Maus) · Doppelklick auf ein Teil = festpinnen (z. B. Füße am Boden) · Körper oder Pfeile ziehen = Körper bewegen: Festgepinntes bleibt, der Rest beugt sich mit (Körper nach unten = in die Knie) · Umschalt + Körper ziehen = neigen.": "人形操作: パーツか先端をドラッグ = 関節を中心に回転 · Shift + ドラッグ = IK(チェーンがマウスに追従)· パーツをダブルクリック = 固定(例: 足を地面に)· 体か矢印をドラッグ = 体を動かす: 固定したものはそのままで、残りが曲がります(体を下へ = ひざまずく)· Shift + 体をドラッグ = 傾ける。",
+"Puppenspiel: Doppelklick auf ein Teil = festpinnen (z. B. beide Füße) · Körper ziehen = Festgepinntes bleibt, der Rest beugt sich mit (nach unten = in die Knie), nur so weit die Glieder reichen · Umschalt + Körper = neigen · Teil ziehen = um sein Gelenk drehen · Umschalt + Teil = IK. Nichts davon wird gespeichert – Keyframes setzt du im Animations-Editor.": "人形操作: パーツをダブルクリック = 固定(例: 両足)· 体をドラッグ = 固定したものはそのままで、残りが曲がります(下へ = ひざまずく)。手足が届く範囲まで · Shift + 体 = 傾ける · パーツをドラッグ = 関節を中心に回転 · Shift + パーツ = IK。ここでは何も保存されません — キーフレームはアニメーションエディターで設定します。",
+"Längen: Auf einem Teil vom Gelenk zum Ende ziehen (z. B. Oberschenkel bis zum Knie) – die gelbe Linie ist die Länge des Glieds. Ohne eigene Länge gilt: bis zum Gelenk des angehängten Teils.": "長さ: パーツ上で関節から端までドラッグします(例: 太ももからひざまで)— 黄色の線が手足の長さです。独自の長さがない場合: 接続されたパーツの関節まで。",
+"Länge jedes Glieds markieren: vom Gelenk bis zum nächsten Gelenk (z. B. Oberschenkel bis Knie). Bestimmt, wie weit sich die Figur beim Puppenspiel strecken kann.": "各手足の長さをマーク: 関節から次の関節まで(例: 太ももからひざ)。人形操作でどこまで伸ばせるかが決まります。",
+"Längen": "長さ",
+"Länge: {n} px": "長さ: {n} px",
+"automatisch": "自動",
+"Automatisch": "自動",
+"Markieren": "マーク",
+"Gelenk & Länge": "関節と長さ",
+"Gelenk begrenzen": "関節を制限",
+"Von °": "最小 °",
+"Bis °": "最大 °",
+"Wie weit sich das Teil gegenüber der Ruhe-Lage drehen darf (positiv = Ende wandert nach links). So knicken Knie und Ellbogen beim Puppenspiel nur in eine Richtung.": "基本姿勢からどこまで回転できるか(正 = 端が左へ動く)。これで人形操作中、ひざやひじは一方向にしか曲がりません。"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

@@ -3995,7 +3995,21 @@ window.VN_I18N_ES = {
 "Vorlage: Mensch": "Plantilla: humano",
 "Leere Gliederpuppe": "Marioneta articulada vacía",
 "Die Vorlage legt Plätze für Kopf, Torso, Arme, Hände, Beine und Füße an – schon mit Gelenken verbunden. Zieh deine Bilder einfach auf die grauen Plätze und pass danach Größe und Gelenke an.": "La plantilla crea huecos para cabeza, torso, brazos, manos, piernas y pies, ya unidos con articulaciones. Arrastra tus imágenes a los huecos grises y luego ajusta tamaño y articulaciones.",
-"Leerer Platz: Bild aus der Dateiliste auf den grauen Platz ziehen oder hier wählen. Es wird eingepasst, das Gelenk bleibt.": "Hueco vacío: arrastra una imagen de la lista de archivos al hueco gris o elígela aquí. Se ajusta y la articulación se mantiene."
+"Leerer Platz: Bild aus der Dateiliste auf den grauen Platz ziehen oder hier wählen. Es wird eingepasst, das Gelenk bleibt.": "Hueco vacío: arrastra una imagen de la lista de archivos al hueco gris o elígela aquí. Se ajusta y la articulación se mantiene.",
+"Puppenspiel: Teil oder Endpunkt ziehen = um sein Gelenk drehen · Umschalt + ziehen = IK (Kette folgt der Maus) · Doppelklick auf ein Teil = festpinnen (z. B. Füße am Boden) · Körper oder Pfeile ziehen = Körper bewegen: Festgepinntes bleibt, der Rest beugt sich mit (Körper nach unten = in die Knie) · Umschalt + Körper ziehen = neigen.": "Manejo de la marioneta: arrastrar una parte o su extremo = girar alrededor de su articulación · Mayús + arrastrar = IK (la cadena sigue al ratón) · doble clic en una parte = fijarla (p. ej. pies en el suelo) · arrastrar el cuerpo o las flechas = mover el cuerpo: lo fijado se queda y el resto se dobla (cuerpo hacia abajo = de rodillas) · Mayús + arrastrar el cuerpo = inclinar.",
+"Puppenspiel: Doppelklick auf ein Teil = festpinnen (z. B. beide Füße) · Körper ziehen = Festgepinntes bleibt, der Rest beugt sich mit (nach unten = in die Knie), nur so weit die Glieder reichen · Umschalt + Körper = neigen · Teil ziehen = um sein Gelenk drehen · Umschalt + Teil = IK. Nichts davon wird gespeichert – Keyframes setzt du im Animations-Editor.": "Manejo de la marioneta: doble clic en una parte = fijarla (p. ej. ambos pies) · arrastrar el cuerpo = lo fijado se queda y el resto se dobla (hacia abajo = de rodillas), solo hasta donde lleguen las extremidades · Mayús + cuerpo = inclinar · arrastrar una parte = girar alrededor de su articulación · Mayús + parte = IK. Nada de esto se guarda: los fotogramas clave se ponen en el editor de animación.",
+"Längen: Auf einem Teil vom Gelenk zum Ende ziehen (z. B. Oberschenkel bis zum Knie) – die gelbe Linie ist die Länge des Glieds. Ohne eigene Länge gilt: bis zum Gelenk des angehängten Teils.": "Longitudes: en una parte, arrastra desde la articulación hasta el extremo (p. ej. muslo hasta la rodilla): la línea amarilla es la longitud de la extremidad. Sin longitud propia: hasta la articulación de la parte unida.",
+"Länge jedes Glieds markieren: vom Gelenk bis zum nächsten Gelenk (z. B. Oberschenkel bis Knie). Bestimmt, wie weit sich die Figur beim Puppenspiel strecken kann.": "Marca la longitud de cada extremidad: de una articulación a la siguiente (p. ej. muslo hasta la rodilla). Determina cuánto puede estirarse la figura al manejarla.",
+"Längen": "Longitudes",
+"Länge: {n} px": "Longitud: {n} px",
+"automatisch": "automática",
+"Automatisch": "Automática",
+"Markieren": "Marcar",
+"Gelenk & Länge": "Articulación y longitud",
+"Gelenk begrenzen": "Limitar la articulación",
+"Von °": "Desde °",
+"Bis °": "Hasta °",
+"Wie weit sich das Teil gegenüber der Ruhe-Lage drehen darf (positiv = Ende wandert nach links). So knicken Knie und Ellbogen beim Puppenspiel nur in eine Richtung.": "Cuánto puede girar la parte respecto a su posición de reposo (positivo = el extremo va a la izquierda). Así rodillas y codos solo se doblan en un sentido al manejar la marioneta."
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",
