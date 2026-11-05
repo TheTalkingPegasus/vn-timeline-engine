@@ -586,7 +586,7 @@ ipcMain.handle('plugins:addExample', () => {
 });
 
 // Mitgelieferte Plugins (Jobs, Minispiele) ins Projekt kopieren
-const BUNDLED = ['jobs.js', 'minispiele.js'];
+const BUNDLED = ['jobs.js', 'minispiele.js', 'spielhalle.js'];
 ipcMain.handle('plugins:bundledText', (_e, name) => {
   const file = path.basename(name);
   if (!BUNDLED.includes(file)) return null;

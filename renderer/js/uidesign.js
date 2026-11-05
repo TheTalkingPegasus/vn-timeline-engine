@@ -40,14 +40,14 @@
     kinds() {
       const out = BUILTIN.slice();
       if (window.VNPlugin) for (const d of Object.values(VNPlugin.plugins)) {
-        for (const [k, x] of Object.entries(d.designs || {})) out.push({ key: d.id + '.' + k, label: x.label || k, icon: x.icon || '🧩', parent: x.parent || '', images: x.images || [], plugin: d.id, pluginName: d.name || d.id });
+        for (const [k, x] of Object.entries(d.designs || {})) out.push({ key: d.id + '.' + k, label: x.label || k, icon: x.icon || '🧩', parent: x.parent || '', images: x.images || [], colors: x.colors || [], plugin: d.id, pluginName: d.name || d.id });
       }
       return out;
     },
     find(key) { return UiDesign.kinds().find((k) => k.key === key) || null; },
     store() { const p = VN.project; return p ? (p.uiDesign = p.uiDesign || {}) : {}; },
     raw(key) { return (VN.project && VN.project.uiDesign && VN.project.uiDesign[key]) || null; },
-    has(key) { const r = UiDesign.raw(key); return !!(r && Object.keys(r).some((k) => k === 'images' ? Object.values(r.images || {}).some(Boolean) : r[k] !== '' && r[k] != null)); },
+    has(key) { const r = UiDesign.raw(key); return !!(r && Object.keys(r).some((k) => k === 'images' || k === 'colors' ? Object.values(r[k] || {}).some(Boolean) : r[k] !== '' && r[k] != null)); },
     parentOf(key) {
       const k = UiDesign.find(key);
       if (k && k.parent) return k.parent;
@@ -59,16 +59,26 @@
       const base = window.Theme ? Object.assign({}, Theme.sys()) : {};
       const chain = [];
       for (let k = key, guard = 0; k && guard < 5; k = UiDesign.parentOf(k), guard++) chain.unshift(k);
-      const out = Object.assign({}, base, { panelBg: '', images: {} });
+      const out = Object.assign({}, base, { panelBg: '', images: {}, colors: {} });
       for (const k of chain) {
         const r = UiDesign.raw(k);
         if (!r) continue;
         for (const f of FIELDS) if (r[f] !== '' && r[f] != null) out[f] = r[f];
         for (const [ik, iv] of Object.entries(r.images || {})) if (iv) out.images[ik] = iv;
+        for (const [ck, cv] of Object.entries(r.colors || {})) if (cv) out.colors[ck] = cv;
       }
       return out;
     },
     // Bild-Vorrang: Bild an der Aktion > Standard-Bild im Design > nichts (eingebaute Grafik)
+    // Farben eines Minispiels (0.9.17): eigene Farbe > Standard aus dem Plugin
+    color(key, slot, override) {
+      if (override) return override;
+      const c = UiDesign.resolve(key).colors[slot];
+      if (c) return c;
+      const k = UiDesign.find(key);
+      const d = k && (k.colors || []).find((x) => x[0] === slot);
+      return d ? d[2] || '' : '';
+    },
     imageId(key, slot, override) { return override || UiDesign.resolve(key).images[slot] || ''; },
     image(key, slot, override) { const id = UiDesign.imageId(key, slot, override); return id ? (window.Theme ? Theme.src(id) : VN.assetUrl(id)) : ''; },
 
@@ -78,6 +88,9 @@
       const D = UiDesign.resolve(key);
       panel.dataset.design = key;
       panel.classList.add('ui-d');
+      // Farben des Spiels als CSS-Variablen (--g-…), damit auch Teile im Inneren sie benutzen
+      const kd = UiDesign.find(key);
+      if (kd && kd.colors) for (const [ck] of kd.colors) { const cv = D.colors[ck]; if (cv) panel.style.setProperty('--g-' + ck, cv); else panel.style.removeProperty('--g-' + ck); }
       const v = (k, val) => panel.style.setProperty(k, val);
       v('--sys-bg', VN.hexA(D.bg, D.alpha / 100));
       v('--sys-border', VN.hexA(D.border, 0.55));
@@ -131,6 +144,7 @@
         apply: (panel, overlay) => UiDesign.apply(key, panel, overlay),
         image: (slot, override) => UiDesign.image(key, slot, override),
         imageId: (slot, override) => UiDesign.imageId(key, slot, override),
+        color: (slot, override) => UiDesign.color(key, slot, override),
         values: () => UiDesign.resolve(key)
       };
     },
@@ -235,6 +249,21 @@
         const so = sec('Töne', el('div', { class: 'muted small' }, 'Gelten fürs ganze Projekt. Bei einer Figur oder einem einzelnen Meilenstein kannst du eigene Töne wählen – die haben Vorrang.'));
         for (const [sk, sl] of kind.sounds) so.appendChild(fld(sl, el('div', { class: 'row gap4' }, VN.assetSelect('audio', own[sk] || '', (v) => set(sk, v || '')), D[sk] ? el('button', { class: 'btn tiny', onclick: () => { try { const a = new Audio(VN.assetUrl(D[sk])); a.play().catch(() => {}); } catch (e) { /* egal */ } } }, '▶') : null)));
         box.appendChild(so);
+      }
+      if (kind && kind.colors && kind.colors.length) {
+        const setCol = (k, val) => VN.mutate(() => { const s = UiDesign.store(); s[key] = s[key] || {}; s[key].colors = s[key].colors || {}; if (val) s[key].colors[k] = val; else delete s[key].colors[k]; });
+        const co = sec('Farben im Spiel', el('div', { class: 'muted small' }, 'Farben der eingebauten Grafik. Mit eigenen Bildern (unten) ersetzt du sie ganz.'));
+        const grid = el('div', { class: 'ud-gcols' });
+        for (const [ck, cl, cd] of kind.colors) {
+          const mine = (own.colors || {})[ck];
+          const cur = UiDesign.color(key, ck) || cd || '#000000';
+          grid.appendChild(el('label', { class: 'd-color' + (mine ? ' own' : '') },
+            el('input', { type: 'color', value: /^#[0-9a-f]{6}$/i.test(cur) ? cur : '#000000', onchange: (e) => setCol(ck, e.target.value) }),
+            el('span', null, cl),
+            mine ? el('button', { class: 'btn tiny', title: VN.t('Zurück zur Standardfarbe'), onclick: (e) => { e.preventDefault(); setCol(ck, ''); } }, '↺') : null));
+        }
+        co.appendChild(grid);
+        box.appendChild(co);
       }
       if (kind && kind.images.length) {
         const im = sec('Standard-Bilder', el('div', { class: 'muted small' }, 'Gelten überall, wo an der Aktion selbst kein Bild gewählt ist. Ein Bild direkt an der Aktion hat immer Vorrang.'));

@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.16
+VN Timeline Engine · Prototyp 0.9.17
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,48 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.17 · Spielhalle: Dart, Billard, Blackjack und Spielautomat · Tresor und Rohre
+- Neues mitgeliefertes Plugin „Spielhalle“ (einschalten unter Spielsysteme → Übersicht). Drei Minispiele, die wie die
+  anderen mit Sieg oder Niederlage enden (Szene danach, Ergebnis in einer Variable):
+  - Dart: Das Fadenkreuz schwebt über die Scheibe, im richtigen Moment klicken. 301 oder 501 (auf Wunsch mit einem
+    Doppel zum Schluss) oder höchste Punktzahl nach X Runden; gegen einen Gegner oder allein gegen eine Punktzahl.
+    Gezählt wird nach den echten Maßen einer Dartscheibe. Scheibe, Pfeil, Fadenkreuz und Hintergrund lassen sich durch
+    eigene Bilder ersetzen.
+  - Billard: Mit der Maus zielen, drücken, zurückziehen und nach vorn schwingen – je schneller der Schwung, desto
+    härter der Stoß. Echte Physik mit Banden und Taschen, Hilfslinie (lang, kurz, aus). 8-Ball (Volle/Halbe, zum
+    Schluss die 8, Fouls, Weiße hinlegen) oder „wer mehr Kugeln versenkt“; allein: alle Kugeln in höchstens X Stößen.
+    Tisch, Tuch, Queue und jede Kugel 1–15 lassen sich gestalten.
+  - Spielautomat: 3–5 Walzen, 1 oder 3 Reihen, 1, 3 oder 5 Gewinnlinien; Symbole als Emoji oder eigene Bilder mit
+    Häufigkeit, Gewinntabelle, Joker. Einsatz in einer Währung deines Spiels oder mit Spielgeld. Farben des Gehäuses,
+    Lichter, Hebel und Hintergrund – oder ein eigenes Gehäuse-Bild, in dem du das Fenster für die Walzen platzierst.
+    Der Editor zeigt, wie viel der Automat im Schnitt auszahlt und wie oft ein Dreh gewinnt.
+  - Blackjack: Ziehen, Stehen, Verdoppeln und Teilen gegen den Croupier; Blackjack zahlt 3:2 oder 6:5, der Croupier
+    steht oder zieht bei weicher 17, 1–6 Kartenspiele. Einsatz in einer Währung deines Spiels oder mit Spielgeld. Jeder
+    Gegner kann Croupier sein (Name, Porträt, Sprüche). Auf Wunsch Tipps mit dem besten Zug nach der Grundstrategie
+    (auch per Gegenstand oder Skilltree-Perk). Tisch und Kartenrückseite als eigene Bilder.
+- Neue Minispiele im Plugin „Minispiele“:
+  - Tresor / Zahlenschloss: Tresor mit Drehrad (zur richtigen Zahl drehen und einrasten), Tastenfeld oder Schloss mit
+    Zahlenrädchen. Der Code ist fest, kommt aus einer Variable (dann findet man ihn in der Geschichte) oder ist
+    zufällig – der Zufallscode kann in eine Variable geschrieben und im Text gezeigt werden. Hilfen: das lautere
+    Klicken bei der richtigen Zahl abhören und/oder Farben nach einem falschen Versuch (richtig / falsche Stelle /
+    falsch). Versuche, Zeitlimit, Hilfs-Gegenstand (Stethoskop), Bilder für Tür, Rad und Inhalt.
+  - Rohre verbinden: Teile drehen, bis die Leitung von links nach rechts durchgeht – Rohre mit Wasser, Kabel mit Strom
+    oder magische Runen. Jedes Feld ist zufällig und immer lösbar; 4 × 4 bis 8 × 8, auf Wunsch mit Zeitdruck und
+    begrenzten Drehungen, eigene Bilder für die Teile.
+- Computer-Gegner für Dart und Billard (Spielsysteme → Spielhalle → Gegner): Name, Porträt, Treffsicherheit, Gefühl
+  für die Stoßkraft, Taktik (rechnet beim Dart den Rest aus, wählt beim Billard den leichtesten Stoß), Bedenkzeit,
+  Lieblingsziel und Sprüche zu Beginn, bei Sieg und Niederlage. Vorlagen „Anfänger“, „Kneipenprofi“ und „Meister“;
+  jeder Gegner lässt sich direkt im Editor ausprobieren.
+- Alles gestaltbar: Jedes neue Spiel hat ein eigenes Design (Design → Spielsysteme oder Rechtsklick aufs Fenster beim
+  Ausprobieren): Farben, Rahmen, Hintergrund und Schrift des Fensters, Standard-Bilder – und neu „Farben im Spiel“ für
+  die eingebaute Grafik (Felder und Ringe der Dartscheibe, Tuch, Taschen und Hilfslinie beim Billard, Kartenseiten,
+  Chips und Knöpfe, Walzen und Anzeigen, Gehäuse, Tür, Drehrad, Tasten und Anzeige des Tresors, Farben der Rohre).
+  Neue Bild-Plätze: alle 52 Karten in einem Bild (Raster 13 × 4), Chip, Knöpfe, Anzeigetafel, Tastenfeld, einzelne
+  Taste, Zahlenschloss, Anfang und Ende der Leitung. Plugins können solche Farben selbst anmelden (colors neben images).
+- Perks für Skilltrees: ruhigeres Fadenkreuz (Dart), längere Hilfslinie (Billard), Blackjack-Tipps, mehr Zeit (Rohre).
+- Formeln und Code: Fehlermeldungen sind übersetzt, Namen dürfen alle Buchstaben enthalten (ñ, é, Japanisch), die
+  Code-Beispiele in der Hilfe folgen der Sprache der Oberfläche. Die Anleitung für KI beschreibt alles Neue seit 0.9.5.
 
 NEU IN 0.9.16 · Pixel-Art, Kampf-Animationen, Code-Spur, Ordner für Puppen
 - Design → „🎨 Pixel-Art“: Pixel-Editor zum Zeichnen und Animieren Bild für Bild. Stift, Radierer, Füllen, Linie,

@@ -130,7 +130,9 @@ Minispiel-Plugins erben von „Minispiele (alle)“.
 VNPlugin.register({
   id: 'angeln',
   designs: {
-    teich: { label: 'Angeln', icon: '🎣', images: [['bildFisch', 'Fisch'], ['bildRute', 'Angelrute']] }
+    teich: { label: 'Angeln', icon: '🎣', images: [['bildFisch', 'Fisch'], ['bildRute', 'Angelrute']],
+      // optional: Farben der eingebauten Grafik (erscheinen als „Farben im Spiel“)
+      colors: [['wasser', 'Wasser', '#2b6cb0'], ['schwimmer', 'Schwimmer', '#e53e3e']] }
   },
   actions: {
     spielen: {
@@ -140,6 +142,8 @@ VNPlugin.register({
         const o = ctx.overlay({ width: '50%', design: 'angeln.teich' });
         const fisch = ctx.design('angeln.teich').image('bildFisch', params.bildFisch);
         // fisch ist eine Bild-URL oder '' → dann eigene Grafik zeichnen
+        const wasser = ctx.design('angeln.teich').color('wasser'); // gewählte Farbe oder '#2b6cb0'
+        // im Fenster gibt es die Farben auch als CSS-Variablen: var(--g-wasser, #2b6cb0)
       }
     }
   },

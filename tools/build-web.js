@@ -47,7 +47,7 @@ const web = JSON.parse(main.match(/\n {4}(\['game-data\.js'[^\]]*\])/)[1].replac
 fs.writeFileSync(path.join(out, 'engine-files.json'), JSON.stringify({ engine, web }));
 
 // 3. Mitgelieferte Plugins, Anleitungen, Lizenz, JSZip
-for (const f of ['jobs.js', 'minispiele.js', 'schlossknacken.js', 'PLUGINS.md', 'PLUGINS.en.md']) copy(path.join(root, 'templates', f), path.join(out, 'templates', f));
+for (const f of ['jobs.js', 'minispiele.js', 'spielhalle.js', 'schlossknacken.js', 'PLUGINS.md', 'PLUGINS.en.md']) copy(path.join(root, 'templates', f), path.join(out, 'templates', f));
 copy(path.join(root, 'LICENSE'), path.join(out, 'LICENSE.txt'));
 copy(path.join(root, 'node_modules', 'jszip', 'dist', 'jszip.min.js'), path.join(out, 'vendor', 'jszip.min.js'));
 copy(path.join(root, 'node_modules', 'jszip', 'LICENSE.markdown'), path.join(out, 'vendor', 'jszip-LICENSE.md'));

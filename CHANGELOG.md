@@ -2,6 +2,47 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.17 – Arcade: darts, pool, blackjack and slot machine · safe and pipes
+- New bundled plugin **Arcade** (switch it on under Game systems → Overview). Three minigames that, like the others,
+  end in a win or a loss (scene afterwards, result in a variable):
+  - **Darts:** the crosshair floats over the board, click at the right moment. 301 or 501 (optionally finishing on a
+    double) or highest score after X rounds; against an opponent or alone against a target score. Real board geometry
+    for scoring. Board, dart, crosshair and background can be replaced with your own images.
+  - **Pool:** aim with the mouse, press, pull back and swing forward – the faster the swing, the harder the shot.
+    Real physics with cushions and pockets, guide line (long, short, off). 8-ball (solids/stripes, the 8 last, fouls,
+    ball in hand) or “whoever pots more balls”; alone: pot all balls within a number of shots. Table, cloth, cue and
+    each ball 1–15 can be designed.
+  - **Slot machine:** 3–5 reels, 1 or 3 rows, 1, 3 or 5 paylines; symbols as emoji or your own images with a
+    frequency each, payout table, wild symbol. Bets in a currency of your game or with play money. Cabinet colours,
+    lights, lever and background – or your own cabinet image with the reel window placed where you want it. The
+    editor shows the average payout and how often a spin wins.
+  - **Blackjack:** hit, stand, double and split against the dealer; blackjack pays 3:2 or 6:5, dealer stands or hits
+    on soft 17, 1–6 decks. Bets in a currency of your game or with play money. Any opponent can be the dealer (name,
+    portrait, lines). Optional tips with the best move by basic strategy (also via item or skill-tree perk). Table and
+    card back can be your own images.
+- New minigames in **Minigames**:
+  - **Safe / combination lock:** a safe with a dial (turn to the right number and lock it in), a keypad or a lock with
+    number wheels. The code is fixed, comes from a variable (so it can be found in the story) or is random – the random
+    code can be written into a variable and shown in the text. Help: listen for the louder click at the right number,
+    and/or colours after a wrong try (right / wrong place / wrong). Attempts, time limit, helper item (stethoscope),
+    images for door, dial and contents.
+  - **Connect the pipes:** turn pieces until the line runs from left to right – water pipes, power cables or magic runes.
+    Every board is random and always solvable; 4 × 4 to 8 × 8, optional time pressure and limited turns, your own images
+    for the pieces.
+- **Computer opponents** for darts and pool (Game systems → Arcade → Opponents): name, portrait, accuracy, feel for
+  shot strength, tactics (works out darts checkouts, picks the easiest pool shot), thinking time, favourite target and
+  lines at the start, on winning and on losing. Templates “Beginner”, “Pub pro” and “Master”; try every opponent
+  right from the editor.
+- **Everything designable:** every new game has its own design (Design → Game systems, or right click on the window
+  while trying it): window colours, frame, background and font, default images – and new **colours in the game** for
+  the built-in graphics (dartboard segments and rings, pool cloth, pockets and guide line, card faces, chips and
+  buttons, reels and displays, safe body, door, dial, keys and display, pipe, empty and filled colour). New image
+  slots: all 52 cards in one image (13 × 4 grid), chip, buttons, scoreboard, keypad, single key, combination lock,
+  start and end of the pipe line. Plugins can declare such colours themselves (`colors` next to `images`).
+- Skill-tree perks: steadier crosshair (darts), longer guide line (pool), blackjack tips, more time (pipes).
+- Formulas and code: error messages are translated, names may contain any letters (ñ, é, Japanese), the code examples
+  in the help follow the interface language. The AI guide describes everything new since 0.9.5.
+
 ## 0.9.16 – Pixel art, battle animations, code track, puppet folders
 - Design → “🎨 Pixel art”: a pixel editor for drawing and animating frame by frame. Pen, eraser, fill, line,
   rectangle, circle, eyedropper and move layer; mirror drawing, onion skin, grid, Ctrl + wheel zoom, right click erases.

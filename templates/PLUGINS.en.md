@@ -130,7 +130,9 @@ minigame plugins inherit from “Minigames (all)”.
 VNPlugin.register({
   id: 'fishing',
   designs: {
-    pond: { label: 'Fishing', icon: '🎣', images: [['imgFish', 'Fish'], ['imgRod', 'Fishing rod']] }
+    pond: { label: 'Fishing', icon: '🎣', images: [['imgFish', 'Fish'], ['imgRod', 'Fishing rod']],
+      // optional: colours of the built-in graphics (shown as “Colours in the game”)
+      colors: [['water', 'Water', '#2b6cb0'], ['bobber', 'Bobber', '#e53e3e']] }
   },
   actions: {
     play: {

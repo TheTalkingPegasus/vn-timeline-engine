@@ -377,10 +377,10 @@
       async read(name) { const b = cur.fs && (await cur.fs.read('plugins/' + String(name).split('/').pop())); return b ? b.text() : ''; },
       async write(name, text) { if (!cur.fs || !/\.js$/i.test(String(name || ''))) return false; const rel = 'plugins/' + String(name).split('/').pop(); const blob = toBlob(text, rel); await cur.fs.write(rel, blob); urlFor(rel, blob); return true; },
       async addExample() { for (const f of ['schlossknacken.js', 'PLUGINS.md']) { const rel = 'plugins/' + f; if (await cur.fs.exists(rel)) continue; const r = await fetch('templates/' + (f === 'PLUGINS.md' && docLang() === 'en' ? 'PLUGINS.en.md' : f)); if (r.ok) { const b = typed(await r.blob(), f); await cur.fs.write(rel, b); urlFor(rel, b); } } return true; },
-      async bundledText(name) { const f = String(name).split('/').pop(); if (!['jobs.js', 'minispiele.js'].includes(f)) return null; const r = await fetch('templates/' + f); return r.ok ? r.text() : null; },
+      async bundledText(name) { const f = String(name).split('/').pop(); if (!['jobs.js', 'minispiele.js', 'spielhalle.js'].includes(f)) return null; const r = await fetch('templates/' + f); return r.ok ? r.text() : null; },
       async addBundled(name, force) {
         const f = String(name).split('/').pop();
-        if (!['jobs.js', 'minispiele.js'].includes(f) || !cur.fs) return false;
+        if (!['jobs.js', 'minispiele.js', 'spielhalle.js'].includes(f) || !cur.fs) return false;
         const rel = 'plugins/' + f;
         if (force || !(await cur.fs.exists(rel))) { const r = await fetch('templates/' + f); if (!r.ok) return false; const b = typed(await r.blob(), f); await cur.fs.write(rel, b); urlFor(rel, b); }
         if (!(await cur.fs.exists('plugins/PLUGINS.md'))) { const r = await fetch('templates/' + (docLang() === 'en' ? 'PLUGINS.en.md' : 'PLUGINS.md')); if (r.ok) await cur.fs.write('plugins/PLUGINS.md', await r.blob()); }
