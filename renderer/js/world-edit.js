@@ -6,6 +6,8 @@
   const txt = (v, fn, style, ph) => el('input', { type: 'text', value: v || '', placeholder: ph || '', style: style || null, onchange: (e) => VN.mutate(() => fn(e.target.value)) });
   const num = (v, fn, w) => el('input', { type: 'number', value: v != null ? v : '', style: { width: w || '64px' }, onchange: (e) => VN.mutate(() => fn(e.target.value === '' ? null : Number(e.target.value))) });
   const chk = (v, fn) => el('input', { type: 'checkbox', checked: !!v, onchange: (e) => VN.mutate(() => fn(e.target.checked)) });
+  // Bedingungen eines Ortes bearbeiten (🔒 mit Anzahl)
+  const condBtn = (L, key, title) => el('button', { class: 'btn tiny' + ((L[key] || []).length ? ' primary' : ' warn'), title, onclick: () => { L[key] = L[key] || []; Inspector.condModal(L[key], title); } }, '🔒 ' + ((L[key] || []).length || '!'));
   const sel = (v, opts, fn, style) => {
     const s = el('select', { style: style || null, onchange: (e) => VN.mutate(() => fn(e.target.value)) });
     for (const [k, l] of opts) { const o = el('option', { value: k }, l); if (String(k) === String(v == null ? '' : v)) o.selected = true; s.appendChild(o); }
@@ -35,15 +37,19 @@
     // ---------- Orte ----------
     const hubs = p.scenes.filter((s) => s.type === 'hub');
     const locs = el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Orte'),
-      el('div', { class: 'muted small' }, 'Jede Hub-Szene kann ein Ort sein. „Per Aktion“ heißt: erst nach der Aktion „📍 Ort freischalten“ (z. B. am Ende von Kapitel 1).'));
-    locs.appendChild(el('div', { class: 'loc-row head' }, el('span', null, 'Ort'), el('span', null, 'Hub-Szene'), el('span', null, 'Name auf der Karte'), el('span', null, 'Zugang'), el('span', null, 'Wenn gesperrt'), el('span', null, 'Grund (sichtbar gesperrt)'), el('span', null, timeOn() ? 'Offen zu' : ''), el('span', null, 'Symbol')));
+      el('div', { class: 'muted small' }, 'Jede Hub-Szene kann ein Ort sein. „Per Aktion“ heißt: erst nach der Aktion „📍 Ort freischalten“ (z. B. am Ende von Kapitel 1). „Wenn …“ heißt: frei, sobald die Bedingung stimmt (z. B. Szene gesehen, Gegenstand im Inventar).'),
+      el('div', { class: 'muted small' }, '„Gesperrt, wenn …“ sperrt den Ort, solange die Bedingung stimmt (z. B. nachts). „Gesperrt und weg“ entfernt ihn für immer von der Karte, sobald die Bedingung einmal gestimmt hat (z. B. abgebranntes Haus). Beides geht auch mit der Aktion „📍 Ort freischalten / sperren / entfernen“.'));
+    locs.appendChild(el('div', { class: 'loc-row head' }, el('span', null, 'Ort'), el('span', null, 'Hub-Szene'), el('span', null, 'Name auf der Karte'), el('span', null, 'Zugang'), el('span', null, 'Später sperren'), el('span', null, 'Wenn gesperrt'), el('span', null, 'Grund (sichtbar gesperrt)'), el('span', null, timeOn() ? 'Offen zu' : ''), el('span', null, 'Symbol')));
     for (const s of hubs) {
       const L = s.loc;
       locs.appendChild(el('div', { class: 'loc-row' + (L ? '' : ' off') },
         chk(!!L, (v) => { if (v) s.loc = { unlock: 'start', whenLocked: 'hidden' }; else delete s.loc; }),
         el('strong', null, (c.home === s.id ? '🏠 ' : '') + s.name),
         L ? txt(L.label, (v) => { L.label = v.trim(); }, null, s.name) : el('span'),
-        L ? sel(L.unlock || 'start', [['start', 'von Anfang an'], ['action', 'per Aktion']], (v) => { L.unlock = v; }) : el('span'),
+        L ? el('span', { class: 'row gap4' }, sel(L.unlock || 'start', [['start', 'von Anfang an'], ['action', 'per Aktion'], ['cond', 'wenn …']], (v) => { L.unlock = v; if (v === 'cond') L.unlockConds = L.unlockConds || []; }),
+          L.unlock === 'cond' ? condBtn(L, 'unlockConds', VN.t('Ort freigeschaltet, wenn …')) : null) : el('span'),
+        L ? el('span', { class: 'row gap4' }, sel(L.lockMode || '', [['', '— nie —'], ['lock', 'gesperrt, wenn …'], ['gone', 'gesperrt + weg, wenn …']], (v) => { if (v) { L.lockMode = v; L.lockConds = L.lockConds || []; } else { delete L.lockMode; delete L.lockConds; } }),
+          L.lockMode ? condBtn(L, 'lockConds', L.lockMode === 'gone' ? VN.t('Ort gesperrt und weg, sobald …') : VN.t('Ort gesperrt, solange …')) : null) : el('span'),
         L ? sel(L.whenLocked || 'hidden', [['hidden', 'unsichtbar'], ['unknown', 'als „???“'], ['visible', 'sichtbar, mit Grund']], (v) => { L.whenLocked = v; }) : el('span'),
         L && L.whenLocked === 'visible' ? txt(L.lockText, (v) => { L.lockText = v; }, null, 'z. B. „Erst nach Kapitel 2“') : el('span'),
         L && timeOn() ? el('span', { class: 'row gap4', style: { flexWrap: 'wrap' } }, ...p.time.slots.map((nm, i) => el('label', { class: 'hour-chip' + (!L.hours || L.hours.includes(i) ? ' on' : '') },

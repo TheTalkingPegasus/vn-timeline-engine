@@ -4085,7 +4085,18 @@ window.VN_I18N_ES = {
 "Erzwingt an dieser Stelle ein Smear-Bild, auch wenn die Bewegung nicht schnell genug ist": "Fuerza aquí un fotograma smear aunque el movimiento no sea lo bastante rápido",
 "Smear-Bild entfernen": "Quitar fotograma smear",
 "Smear-Bild hier": "Fotograma smear aquí",
-"Hinspringen": "Ir allí"
+"Hinspringen": "Ir allí",
+"wenn …": "si …",
+"Später sperren": "Bloquear después",
+"gesperrt, wenn …": "bloqueado mientras …",
+"gesperrt + weg, wenn …": "bloqueado + fuera cuando …",
+"Ort freigeschaltet, wenn …": "Lugar desbloqueado cuando …",
+"Ort gesperrt und weg, sobald …": "Lugar bloqueado y fuera en cuanto …",
+"Ort gesperrt, solange …": "Lugar bloqueado mientras …",
+"Jede Hub-Szene kann ein Ort sein. „Per Aktion“ heißt: erst nach der Aktion „📍 Ort freischalten“ (z. B. am Ende von Kapitel 1). „Wenn …“ heißt: frei, sobald die Bedingung stimmt (z. B. Szene gesehen, Gegenstand im Inventar).": "Cada escena hub puede ser un lugar. «Por acción» significa: solo tras la acción «📍 Desbloquear lugar» (p. ej. al final del capítulo 1). «Si …» significa: libre en cuanto se cumple la condición (p. ej. escena vista, objeto en el inventario).",
+"„Gesperrt, wenn …“ sperrt den Ort, solange die Bedingung stimmt (z. B. nachts). „Gesperrt und weg“ entfernt ihn für immer von der Karte, sobald die Bedingung einmal gestimmt hat (z. B. abgebranntes Haus). Beides geht auch mit der Aktion „📍 Ort freischalten / sperren / entfernen“.": "«Bloqueado mientras …» bloquea el lugar mientras se cumpla la condición (p. ej. de noche). «Bloqueado + fuera» lo quita del mapa para siempre en cuanto la condición se ha cumplido una vez (p. ej. una casa quemada). Ambas cosas también funcionan con la acción «📍 Desbloquear / bloquear / quitar lugar».",
+"📍 Ort freischalten / sperren / entfernen": "📍 Desbloquear / bloquear / quitar lugar",
+"sperren und von der Karte entfernen": "bloquear y quitar del mapa"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

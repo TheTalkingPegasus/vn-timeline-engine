@@ -744,6 +744,41 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Licht: Scheinwerfer, Neon, Gegenlicht, Reihenfolge der Ebenen, Kantenlicht auf Figuren, Bildrate, Smear-Bilder');
   } catch (e) { general.push('Licht: ' + e.message); }
 
+  // 11. Orte (0.9.10): frei per Bedingung, gesperrt solange …, gesperrt und weg
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const p = VN.project, W = VN.World, out = [];
+      const keep = { scenes: p.scenes.slice(), vars: p.vars.slice(), world: JSON.parse(JSON.stringify(p.world || {})) };
+      p.vars.push({ id: '__f', name: 'Test', type: 'flag', start: false }, { id: '__n', name: 'Nacht', type: 'flag', start: false });
+      const mk = (name, loc) => { const s = VN.newHubScene(name); s.loc = loc; return s; };
+      const A = mk('A', { unlock: 'cond', unlockConds: [{ type: 'var', var: '__f', value: true }], whenLocked: 'hidden' });
+      const B = mk('B', { unlock: 'start', whenLocked: 'visible', lockMode: 'lock', lockConds: [{ type: 'var', var: '__n', value: true }] });
+      const C = mk('C', { unlock: 'start', whenLocked: 'visible', lockMode: 'gone', lockConds: [{ type: 'var', var: '__f', value: true }] });
+      const D = mk('D', { unlock: 'start', whenLocked: 'visible' });
+      const rs = { vars: { __f: false, __n: false }, seen: {}, items: {}, money: {} };
+      if (W.status(rs, A.id) !== 'hidden') out.push('A sollte versteckt sein');
+      rs.vars.__f = true;
+      if (W.status(rs, A.id) !== 'open') out.push('A sollte frei sein');
+      rs.vars.__f = false;
+      if (W.status(rs, A.id) !== 'open') out.push('A sollte frei bleiben');
+      rs.vars.__n = true;
+      if (W.status(rs, B.id) !== 'locked') out.push('B sollte nachts gesperrt sein');
+      rs.vars.__n = false;
+      if (W.status(rs, B.id) !== 'open') out.push('B sollte wieder frei sein');
+      rs.vars.__f = true;
+      if (W.status(rs, C.id) !== 'hidden') out.push('C sollte weg sein');
+      rs.vars.__f = false;
+      VN.ext.actions.unlockLoc.apply({ scene: C.id, value: true }, rs);
+      if (W.status(rs, C.id) !== 'hidden') out.push('C kommt zurück');
+      VN.ext.actions.unlockLoc.apply({ scene: D.id, value: 'gone' }, rs);
+      if (W.status(rs, D.id) !== 'hidden' || W.unlocked(rs, D.id)) out.push('D per Aktion nicht weg');
+      p.scenes = keep.scenes; p.vars = keep.vars; p.world = keep.world;
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Orte: ' + r.join(', '));
+    else log('✓ Orte: frei per Bedingung, gesperrt solange …, gesperrt und weg (auch per Aktion)');
+  } catch (e) { general.push('Orte: ' + e.message); }
+
   const failed = results.filter((r) => r.errors.length);
   for (const g of general) log('✗ ' + g);
   log(`\n${failed.length || general.length ? 'FEHLGESCHLAGEN' : 'ALLES BESTANDEN'}: ${results.length - failed.length}/${results.length} Projekte ok${general.length ? ', ' + general.length + ' allgemeine Fehler' : ''} · ${((Date.now() - t0) / 1000).toFixed(0)} s`);

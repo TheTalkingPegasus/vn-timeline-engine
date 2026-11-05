@@ -2,6 +2,14 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.11 – Places: unlock by condition, lock while …, locked and gone
+- World & places: a place can now be unlocked “if …” a condition is met (e.g. scene seen, item in inventory) and
+  stays open afterwards.
+- New column “Lock later”: “locked while …” locks a place as long as a condition is met (e.g. at night), “locked + gone”
+  removes it from the map for good once the condition has been met (e.g. a burned-down house).
+- The action “📍 Unlock / lock / remove place” has a third option “lock and remove from the map”. A removed place
+  can't be unlocked again.
+
 ## 0.9.10 – Frame rate and smear frames for animations
 - Frame rate for animations: smooth, 24, 12 (“on twos”, anime look), 8 (“on threes”, cartoon) or 6 frames per second.
   Set per animation, per character or as the project default (animation editor). Applies to idle animations, gestures,

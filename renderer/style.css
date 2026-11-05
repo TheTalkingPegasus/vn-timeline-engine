@@ -1132,7 +1132,7 @@ code { font-family: Consolas, "JetBrains Mono", monospace; background: var(--bg3
 .wm-ed-pin .wm-ico { width: 34px; height: 34px; }
 .wm-ed-pin.bad .wm-lbl { background: #8a2c2c; }
 .wm-ed-pin.sub .wm-dot { background: #7ec8ff; border-radius: 4px; }
-.loc-row { display: grid; grid-template-columns: 34px 1fr 1fr 120px 150px 1.1fr 2fr 1fr; gap: 8px; align-items: center; padding: 4px 0; font-size: 13px; border-bottom: 1px solid var(--line2); }
+.loc-row { display: grid; grid-template-columns: 24px minmax(80px, 1fr) minmax(80px, 0.9fr) 140px 185px 120px minmax(70px, 0.9fr) auto minmax(60px, 0.6fr); gap: 8px; align-items: center; padding: 4px 0; font-size: 13px; border-bottom: 1px solid var(--line2); }
 .loc-row.head { color: var(--muted); font-size: 11.5px; }
 .loc-row.head > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0; }
 .loc-row.head > span:first-child::before { content: "✓"; font-size: 11.5px; }
