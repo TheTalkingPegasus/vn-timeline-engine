@@ -121,8 +121,10 @@
       muenze: { label: 'Münzwurf', icon: '🪙', images: [['bildKopf', 'Kopf'], ['bildZahl', 'Zahl']] },
       bluete: { label: 'Blütenblätter', icon: '🌼', images: [['bildBlatt', 'Blütenblatt'], ['bildMitte', 'Mitte']] },
       zeiger: { label: 'Quicktime-Kreis', icon: '⏱', images: [['bildScheibe', 'Scheibe'], ['bildZeiger', 'Zeiger']] },
-      tresor: { label: 'Tresor / Zahlenschloss', icon: '🔐', images: [['bildTuer', 'Tresortür'], ['bildRad', 'Drehrad'], ['bildInnen', 'Im offenen Tresor']] },
-      rohre: { label: 'Rohre verbinden', icon: '🚰', images: [['bildHintergrund', 'Hintergrund'], ['bildGerade', 'Gerade (oben–unten)'], ['bildKurve', 'Kurve (oben–rechts)'], ['bildT', 'T-Stück (oben–rechts–unten)'], ['bildKreuz', 'Kreuzung']] }
+      tresor: { label: 'Tresor / Zahlenschloss', icon: '🔐', images: [['bildTuer', 'Tresortür'], ['bildRad', 'Drehrad'], ['bildInnen', 'Im offenen Tresor'], ['bildTastenfeld', 'Tastenfeld (Hintergrund)'], ['bildTaste', 'Taste'], ['bildSchloss', 'Zahlenschloss (Hintergrund)']],
+        colors: [['gehaeuse', 'Gehäuse', '#4a4f57'], ['tuer', 'Tür', '#6b727c'], ['rad', 'Drehrad', '#1c1e22'], ['zahlen', 'Zahlen auf dem Rad', '#e9edf2'], ['marke', 'Markierung', '#e8a43a'], ['anzeige', 'Ziffern der Anzeige', '#7dff8a'], ['anzeigeBg', 'Hintergrund der Anzeige', '#0b0c0e'], ['taste', 'Tasten', '#4a4f57'], ['tasteText', 'Schrift auf Tasten', '#f0f0f0'], ['schloss', 'Zahlenschloss', '#c9a24a']] },
+      rohre: { label: 'Rohre verbinden', icon: '🚰', images: [['bildHintergrund', 'Hintergrund'], ['bildGerade', 'Gerade (oben–unten)'], ['bildKurve', 'Kurve (oben–rechts)'], ['bildT', 'T-Stück (oben–rechts–unten)'], ['bildKreuz', 'Kreuzung'], ['bildQuelle', 'Anfang der Leitung'], ['bildZiel', 'Ende der Leitung']],
+        colors: [['rohr', 'Rohr / Kabel', '#8b97a3'], ['leer', 'Innen (leer)', '#1b2229'], ['fluss', 'Gefüllt (Wasser, Strom …)', '#3fa9ff'], ['feld', 'Felder', '#ffffff']] }
     },
     // Perks für Skilltrees und Ausrüstung (Spielsysteme → Skilltrees / Gegenstand „Boni, solange getragen“)
     skillEffects: {
@@ -896,7 +898,9 @@
                 else if (entry.length < Math.max(code.length, 8)) entry.push(Number(k));
                 show();
               };
-              const pad = el('div', { class: 'mg-keypad' }, ...['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', 'OK'].map((k) => el('button', { class: 'mg-key' + (k === 'OK' ? ' ok' : k === 'C' ? ' c' : ''), onclick: (e) => { e.stopPropagation(); press(k); } }, k)));
+              const imKey = pic(ctx, 'tresor', 'bildTaste', params), imPad = pic(ctx, 'tresor', 'bildTastenfeld', params);
+              if (imPad) { lock.style.backgroundImage = `url("${imPad}")`; lock.classList.add('img'); }
+              const pad = el('div', { class: 'mg-keypad' }, ...['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', 'OK'].map((k) => el('button', { class: 'mg-key' + (k === 'OK' ? ' ok' : k === 'C' ? ' c' : '') + (imKey ? ' img' : ''), style: imKey ? { backgroundImage: `url("${imKey}")` } : null, onclick: (e) => { e.stopPropagation(); press(k); } }, k)));
               lock.append(disp, pad);
               const onKey = (e) => {
                 if (done) return;
@@ -927,7 +931,8 @@
                 set(0);
                 return w;
               });
-              lock.append(el('div', { class: 'mg-wheels' }, ...wheels));
+              const imLock = pic(ctx, 'tresor', 'bildSchloss', params);
+              lock.append(el('div', { class: 'mg-wheels' + (imLock ? ' img' : ''), style: imLock ? { backgroundImage: `url("${imLock}")` } : null }, ...wheels));
               const tryOpen = () => { if (done) return; clack(0.8, 600); check(vals.slice()); };
               side.appendChild(el('div', { class: 'row gap8 mg-safe-btns' }, el('button', { class: 'btn primary', onclick: (e) => { e.stopPropagation(); tryOpen(); } }, 'Öffnen')));
               side.appendChild(el('div', { class: 'mg-safe-help' }, T('Rädchen mit den Pfeilen oder dem Mausrad drehen, dann „Öffnen“.') + (listen ? ' ' + T('Bei der richtigen Ziffer klickt ein Rädchen lauter.') : '')));
@@ -1002,8 +1007,9 @@
               t.addEventListener('contextmenu', (e) => { e.preventDefault(); e.stopPropagation(); });
               return t;
             };
-            const src = el('div', { class: 'mg-pend src', style: { gridColumn: '1', gridRow: String(r0 + 1) } }, el('span'));
-            const dst = el('div', { class: 'mg-pend dst', style: { gridColumn: String(n + 2), gridRow: String(r1 + 1) } }, el('span'));
+            const imSrc = pic(ctx, 'rohre', 'bildQuelle', params), imDst = pic(ctx, 'rohre', 'bildZiel', params);
+            const src = el('div', { class: 'mg-pend src', style: { gridColumn: '1', gridRow: String(r0 + 1) } }, imSrc ? el('img', { src: imSrc, draggable: false }) : el('span'));
+            const dst = el('div', { class: 'mg-pend dst', style: { gridColumn: String(n + 2), gridRow: String(r1 + 1) } }, imDst ? el('img', { src: imDst, draggable: false }) : el('span'));
             grid.append(src, ...cells.map(tile), dst);
             F.area.appendChild(grid);
             const bar = limit ? el('div', { class: 'mg-timebar' }, el('span')) : null;

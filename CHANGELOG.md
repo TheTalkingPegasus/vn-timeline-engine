@@ -33,7 +33,13 @@ All notable changes. German details: `LIES MICH.txt`.
   shot strength, tactics (works out darts checkouts, picks the easiest pool shot), thinking time, favourite target and
   lines at the start, on winning and on losing. Templates “Beginner”, “Pub pro” and “Master”; try every opponent
   right from the editor.
-- Skill-tree perks: steadier crosshair (darts) and longer guide line (pool).
+- **Everything designable:** every new game has its own design (Design → Game systems, or right click on the window
+  while trying it): window colours, frame, background and font, default images – and new **colours in the game** for
+  the built-in graphics (dartboard segments and rings, pool cloth, pockets and guide line, card faces, chips and
+  buttons, reels and displays, safe body, door, dial, keys and display, pipe, empty and filled colour). New image
+  slots: all 52 cards in one image (13 × 4 grid), chip, buttons, scoreboard, keypad, single key, combination lock,
+  start and end of the pipe line. Plugins can declare such colours themselves (`colors` next to `images`).
+- Skill-tree perks: steadier crosshair (darts), longer guide line (pool), blackjack tips, more time (pipes).
 - Formulas and code: error messages are translated, names may contain any letters (ñ, é, Japanese), the code examples
   in the help follow the interface language. The AI guide describes everything new since 0.9.5.
 

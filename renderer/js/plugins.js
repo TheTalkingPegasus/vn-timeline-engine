@@ -287,7 +287,7 @@
           return { el: panel, root: box, close: () => box.remove() };
         },
         // Design eines Systems/Minispiels: .apply(fenster), .image('slot', bildAnDerAktion)
-        design: (key) => (window.UiDesign ? UiDesign.api(key) : { apply() {}, image: (s, o) => (o ? VN.assetUrl(o) : ''), imageId: (s, o) => o || '', values: () => ({}) }),
+        design: (key) => (window.UiDesign ? UiDesign.api(key) : { apply() {}, image: (s, o) => (o ? VN.assetUrl(o) : ''), imageId: (s, o) => o || '', color: (s, o) => o || '', values: () => ({}) }),
         message(text) {
           return new Promise((resolve) => {
             const o = this.overlay({});

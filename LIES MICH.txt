@@ -46,7 +46,13 @@ NEU IN 0.9.17 · Spielhalle: Dart, Billard, Blackjack und Spielautomat · Tresor
   für die Stoßkraft, Taktik (rechnet beim Dart den Rest aus, wählt beim Billard den leichtesten Stoß), Bedenkzeit,
   Lieblingsziel und Sprüche zu Beginn, bei Sieg und Niederlage. Vorlagen „Anfänger“, „Kneipenprofi“ und „Meister“;
   jeder Gegner lässt sich direkt im Editor ausprobieren.
-- Perks für Skilltrees: ruhigeres Fadenkreuz (Dart) und längere Hilfslinie (Billard).
+- Alles gestaltbar: Jedes neue Spiel hat ein eigenes Design (Design → Spielsysteme oder Rechtsklick aufs Fenster beim
+  Ausprobieren): Farben, Rahmen, Hintergrund und Schrift des Fensters, Standard-Bilder – und neu „Farben im Spiel“ für
+  die eingebaute Grafik (Felder und Ringe der Dartscheibe, Tuch, Taschen und Hilfslinie beim Billard, Kartenseiten,
+  Chips und Knöpfe, Walzen und Anzeigen, Gehäuse, Tür, Drehrad, Tasten und Anzeige des Tresors, Farben der Rohre).
+  Neue Bild-Plätze: alle 52 Karten in einem Bild (Raster 13 × 4), Chip, Knöpfe, Anzeigetafel, Tastenfeld, einzelne
+  Taste, Zahlenschloss, Anfang und Ende der Leitung. Plugins können solche Farben selbst anmelden (colors neben images).
+- Perks für Skilltrees: ruhigeres Fadenkreuz (Dart), längere Hilfslinie (Billard), Blackjack-Tipps, mehr Zeit (Rohre).
 - Formeln und Code: Fehlermeldungen sind übersetzt, Namen dürfen alle Buchstaben enthalten (ñ, é, Japanisch), die
   Code-Beispiele in der Hilfe folgen der Sprache der Oberfläche. Die Anleitung für KI beschreibt alles Neue seit 0.9.5.
 

@@ -66,6 +66,8 @@
   };
   const resultParam = { key: 'ergebnis', label: 'Ergebnis in', type: 'var', default: '' };
   const pic = (ctx, game, k, params) => (ctx.design ? ctx.design(ID + '.' + game).image(k, params[k]) : (params[k] ? ctx.asset(params[k]) : ''));
+  // Farbe aus dem Design (Design → Spielsysteme → Spiel → Farben im Spiel), sonst Standard
+  const gcol = (ctx, game, k, def) => { try { const d = ctx.design && ctx.design(ID + '.' + game); return (d && d.color && d.color(k)) || def; } catch (e) { return def; } };
   const loadImg = (url) => { if (!url) return null; const i = new Image(); i.src = url; return i; };
   const ok = (im) => !!(im && im.complete && im.naturalWidth);
 
@@ -172,20 +174,21 @@
   };
 
   // Scheibe zeichnen (eingebaut)
-  const drawBoard = (g, cx, cy, s) => {
+  const drawBoard = (g, cx, cy, s, C) => {
+    C = C || {};
     const ann = (r0, r1, a0, a1, col) => { g.beginPath(); g.arc(cx, cy, r1 * s, a0, a1); g.arc(cx, cy, r0 * s, a1, a0, true); g.closePath(); g.fillStyle = col; g.fill(); };
-    g.beginPath(); g.arc(cx, cy, DR.rim * s, 0, Math.PI * 2); g.fillStyle = '#141414'; g.fill();
+    g.beginPath(); g.arc(cx, cy, DR.rim * s, 0, Math.PI * 2); g.fillStyle = C.rand || '#141414'; g.fill();
     for (let i = 0; i < 20; i++) {
       const a0 = (i * 18 - 9 - 90) * Math.PI / 180, a1 = a0 + Math.PI / 10;
-      const single = i % 2 ? '#efe3c4' : '#1b1b1b', ring = i % 2 ? '#2f8f48' : '#d23a2e';
+      const single = i % 2 ? C.brett2 || '#efe3c4' : C.brett1 || '#1b1b1b', ring = i % 2 ? C.ring2 || '#2f8f48' : C.ring1 || '#d23a2e';
       ann(DR.outer, DR.tIn, a0, a1, single); ann(DR.tIn, DR.tOut, a0, a1, ring); ann(DR.tOut, DR.dIn, a0, a1, single); ann(DR.dIn, DR.dOut, a0, a1, ring);
     }
-    g.beginPath(); g.arc(cx, cy, DR.outer * s, 0, Math.PI * 2); g.fillStyle = '#2f8f48'; g.fill();
-    g.beginPath(); g.arc(cx, cy, DR.bull * s, 0, Math.PI * 2); g.fillStyle = '#d23a2e'; g.fill();
+    g.beginPath(); g.arc(cx, cy, DR.outer * s, 0, Math.PI * 2); g.fillStyle = C.ring2 || '#2f8f48'; g.fill();
+    g.beginPath(); g.arc(cx, cy, DR.bull * s, 0, Math.PI * 2); g.fillStyle = C.ring1 || '#d23a2e'; g.fill();
     g.strokeStyle = 'rgba(200,200,200,0.55)'; g.lineWidth = Math.max(0.6, s * 0.8);
     for (const r of [DR.outer, DR.tIn, DR.tOut, DR.dIn, DR.dOut]) { g.beginPath(); g.arc(cx, cy, r * s, 0, Math.PI * 2); g.stroke(); }
     for (let i = 0; i < 20; i++) { const a = (i * 18 - 9 - 90) * Math.PI / 180; g.beginPath(); g.moveTo(cx + Math.cos(a) * DR.outer * s, cy + Math.sin(a) * DR.outer * s); g.lineTo(cx + Math.cos(a) * DR.dOut * s, cy + Math.sin(a) * DR.dOut * s); g.stroke(); }
-    g.fillStyle = '#f4f0e6'; g.font = `700 ${Math.round(17 * s)}px system-ui, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillStyle = C.zahlen || '#f4f0e6'; g.font = `700 ${Math.round(17 * s)}px ${C.font || 'system-ui, sans-serif'}`; g.textAlign = 'center'; g.textBaseline = 'middle';
     for (let i = 0; i < 20; i++) { const a = (i * 18 - 90) * Math.PI / 180; g.fillText(String(D_ORDER[i]), cx + Math.cos(a) * 188 * s, cy + Math.sin(a) * 188 * s); }
   };
   const drawDart = (g, x, y, s, col, img, k) => {
@@ -221,10 +224,13 @@
     const imBoard = loadImg(pic(ctx, 'dart', 'bildBoard', params)), imDart = loadImg(pic(ctx, 'dart', 'bildPfeil', params));
     const imCross = loadImg(pic(ctx, 'dart', 'bildKreuz', params)), imBg = loadImg(pic(ctx, 'dart', 'bildHintergrund', params));
     const boardPct = clamp(num(params.boardGroesse, 80), 20, 100) / 100;
-    const P = [{ name: T('Du'), rem: x01, total: 0, last: [], foe: null, col: '#e8a43a' }];
-    if (foe) P.push({ name: foeName(foe), rem: x01, total: 0, last: [], foe, col: '#6cc4ff' });
+    const C = {}; for (const [k, , d] of DESIGNS.dart.colors) C[k] = gcol(ctx, 'dart', k, d);
+    C.font = getComputedStyle(F.o.el).getPropertyValue('--sys-font') || '';
+    const P = [{ name: T('Du'), rem: x01, total: 0, last: [], foe: null, col: C.pfeil }];
+    if (foe) P.push({ name: foeName(foe), rem: x01, total: 0, last: [], foe, col: C.pfeilGegner });
+    const imTafel = pic(ctx, 'dart', 'bildTafel', params);
     // Anzeigetafel
-    const board = F.el('div', { class: 'sh-score' });
+    const board = F.el('div', { class: 'sh-score' + (imTafel ? ' img' : ''), style: imTafel ? { backgroundImage: `url("${imTafel}")` } : null });
     F.area.appendChild(board);
     const rows = P.map((pl) => { const r = F.el('div', { class: 'sh-srow' }, avatar(ctx, pl.foe), F.el('div', { class: 'sh-sname' }, pl.name), F.el('div', { class: 'sh-sval' }), F.el('div', { class: 'sh-slast' })); board.appendChild(r); return r; });
     const roundEl = F.el('div', { class: 'sh-sround' });
@@ -253,9 +259,9 @@
       const G = geom();
       g.clearRect(0, 0, G.W, G.H);
       if (ok(imBg)) { const k = Math.max(G.W / imBg.naturalWidth, G.H / imBg.naturalHeight); g.drawImage(imBg, (G.W - imBg.naturalWidth * k) / 2, (G.H - imBg.naturalHeight * k) / 2, imBg.naturalWidth * k, imBg.naturalHeight * k); }
-      else { const gr = g.createRadialGradient(G.cx, G.cy, 10, G.cx, G.cy, G.W * 0.7); gr.addColorStop(0, '#3a2d22'); gr.addColorStop(1, '#120d0a'); g.fillStyle = gr; g.fillRect(0, 0, G.W, G.H); }
+      else { const gr = g.createRadialGradient(G.cx, G.cy, 10, G.cx, G.cy, G.W * 0.7); gr.addColorStop(0, C.wand); gr.addColorStop(1, 'rgba(0,0,0,0.85)'); g.fillStyle = '#000'; g.fillRect(0, 0, G.W, G.H); g.fillStyle = gr; g.fillRect(0, 0, G.W, G.H); }
       if (ok(imBoard)) { const w = DR.dOut * G.s * 2 / boardPct, h = w * imBoard.naturalHeight / imBoard.naturalWidth; g.drawImage(imBoard, G.cx - w / 2, G.cy - h / 2, w, h); }
-      else { g.save(); g.shadowColor = 'rgba(0,0,0,0.6)'; g.shadowBlur = 24; drawBoard(g, G.cx, G.cy, G.s); g.restore(); }
+      else { g.save(); g.shadowColor = 'rgba(0,0,0,0.6)'; g.shadowBlur = 24; drawBoard(g, G.cx, G.cy, G.s, C); g.restore(); }
       for (const d of stuck) { const k = d.t ? clamp(1 + (1 - (now - d.t) / 160), 1, 2) : 1; drawDart(g, G.cx + d.x * G.s, G.cy + d.y * G.s, G.s, d.col, imDart, k); }
       if (state === 'aim' || state === 'ai') {
         if (state === 'aim') ch = hover(now);
@@ -263,7 +269,7 @@
         const x = G.cx + ch[0] * G.s, y = G.cy + ch[1] * G.s, r = 16 * G.s * 1.6;
         if (ok(imCross)) g.drawImage(imCross, x - r * 1.3, y - r * 1.3, r * 2.6, r * 2.6);
         else {
-          g.save(); g.strokeStyle = state === 'ai' ? '#6cc4ff' : '#ffe066'; g.shadowColor = 'rgba(0,0,0,0.8)'; g.shadowBlur = 6; g.lineWidth = 2;
+          g.save(); g.strokeStyle = state === 'ai' ? C.kreuzGegner : C.kreuz; g.shadowColor = 'rgba(0,0,0,0.8)'; g.shadowBlur = 6; g.lineWidth = 2;
           g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.stroke();
           g.beginPath(); g.moveTo(x - r * 1.5, y); g.lineTo(x - r * 0.4, y); g.moveTo(x + r * 0.4, y); g.lineTo(x + r * 1.5, y); g.moveTo(x, y - r * 1.5); g.lineTo(x, y - r * 0.4); g.moveTo(x, y + r * 0.4); g.lineTo(x, y + r * 1.5); g.stroke();
           g.restore();
@@ -458,8 +464,9 @@
     const B = (k, base) => (ctx.bonus ? ctx.bonus(k, base) : base);
     const guideLen = { lang: 260, kurz: 90, aus: 0 }[params.hilfslinie] != null ? { lang: 260, kurz: 90, aus: 0 }[params.hilfslinie] : 90;
     const guide = B('spielhalle.billard.linie', guideLen);
-    const felt = /^#[0-9a-f]{3,8}$/i.test(params.tuchfarbe || '') ? params.tuchfarbe : '#1f6e43';
-    const wood = /^#[0-9a-f]{3,8}$/i.test(params.randfarbe || '') ? params.randfarbe : '#5b3a22';
+    const BC = {}; for (const [k, , d] of DESIGNS.billard.colors) BC[k] = gcol(ctx, 'billard', k, d);
+    const felt = /^#[0-9a-f]{3,8}$/i.test(params.tuchfarbe || '') ? params.tuchfarbe : BC.tuch;
+    const wood = /^#[0-9a-f]{3,8}$/i.test(params.randfarbe || '') ? params.randfarbe : BC.rand;
     const imTable = loadImg(pic(ctx, 'billard', 'bildTisch', params)), imFelt = loadImg(pic(ctx, 'billard', 'bildTuch', params));
     const imCue = loadImg(pic(ctx, 'billard', 'bildQueue', params)), imWhite = loadImg(pic(ctx, 'billard', 'bildWeiss', params));
     const imBall = {};
@@ -523,10 +530,10 @@
         g.fillRect(X(-8), Y(-8), (BL + 16) * G.s, (BW + 16) * G.s);
         const sh = g.createRadialGradient(X(BL / 2), Y(BW / 2), BW * 0.2 * G.s, X(BL / 2), Y(BW / 2), BL * 0.65 * G.s); sh.addColorStop(0, 'rgba(255,255,255,0.06)'); sh.addColorStop(1, 'rgba(0,0,0,0.28)');
         g.fillStyle = sh; g.fillRect(X(-8), Y(-8), (BL + 16) * G.s, (BW + 16) * G.s);
-        g.fillStyle = '#e9dcc0';
+        g.fillStyle = BC.punkte;
         for (let i = 1; i < 8; i++) if (i !== 4) for (const yy of [-RAIL / 2, BW + RAIL / 2]) { g.beginPath(); g.arc(X(BL * i / 8), Y(yy), 3 * G.s, 0, 6.3); g.fill(); }
         for (let i = 1; i < 4; i++) for (const xx of [-RAIL / 2, BL + RAIL / 2]) { g.beginPath(); g.arc(X(xx), Y(BW * i / 4), 3 * G.s, 0, 6.3); g.fill(); }
-        for (const [px, py, pr] of POCKETS) { g.fillStyle = '#0b0b0b'; g.beginPath(); g.arc(X(px), Y(py), pr * G.s, 0, 6.3); g.fill(); }
+        for (const [px, py, pr] of POCKETS) { g.fillStyle = BC.taschen; g.beginPath(); g.arc(X(px), Y(py), pr * G.s, 0, 6.3); g.fill(); }
         g.strokeStyle = 'rgba(255,255,255,0.12)'; g.lineWidth = 1; g.beginPath(); g.moveTo(X(BL * 0.25), Y(0)); g.lineTo(X(BL * 0.25), Y(BW)); g.stroke();
       }
       for (const b of balls) if (!b.in) drawBall(G, b);
@@ -536,10 +543,10 @@
         const dx = Math.cos(aim), dy = Math.sin(aim);
         if (guide > 0 && cur === 0) {
           const h = rayHit(balls, cue, dx, dy), gx = cue.x + dx * h.t, gy = cue.y + dy * h.t;
-          g.save(); g.strokeStyle = 'rgba(255,255,255,0.55)'; g.setLineDash([6, 6]); g.lineWidth = 1.5;
+          g.save(); g.strokeStyle = BC.linie; g.globalAlpha = 0.6; g.setLineDash([6, 6]); g.lineWidth = 1.5;
           g.beginPath(); g.moveTo(X(cue.x), Y(cue.y)); g.lineTo(X(gx), Y(gy)); g.stroke(); g.setLineDash([]);
           g.beginPath(); g.arc(X(gx), Y(gy), BR * G.s, 0, 6.3); g.stroke();
-          if (h.ball) { let ox = h.ball.x - gx, oy = h.ball.y - gy; const ol = Math.hypot(ox, oy) || 1; ox /= ol; oy /= ol; g.strokeStyle = 'rgba(255,230,120,0.75)'; g.beginPath(); g.moveTo(X(h.ball.x), Y(h.ball.y)); g.lineTo(X(h.ball.x + ox * guide), Y(h.ball.y + oy * guide)); g.stroke(); }
+          if (h.ball) { let ox = h.ball.x - gx, oy = h.ball.y - gy; const ol = Math.hypot(ox, oy) || 1; ox /= ol; oy /= ol; g.strokeStyle = BC.linie2; g.globalAlpha = 0.8; g.beginPath(); g.moveTo(X(h.ball.x), Y(h.ball.y)); g.lineTo(X(h.ball.x + ox * guide), Y(h.ball.y + oy * guide)); g.stroke(); }
           g.restore();
         }
         const back = BR + 6 + pull * 0.6, len = 560;
@@ -547,13 +554,13 @@
         g.save(); g.translate(X(tx), Y(ty)); g.rotate(aim + Math.PI);
         if (ok(imCue)) { const h = 16 * G.s, w = len * G.s; g.scale(-1, 1); g.drawImage(imCue, -w, -h / 2, w, h); }
         else {
-          const w = len * G.s, gr = g.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, '#f1e3c2'); gr.addColorStop(0.62, '#c9a06a'); gr.addColorStop(0.64, '#2a1b12'); gr.addColorStop(1, '#5a3a22');
+          const w = len * G.s, gr = g.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, '#f1e3c2'); gr.addColorStop(0.62, BC.queue); gr.addColorStop(0.64, '#2a1b12'); gr.addColorStop(1, BC.rand);
           g.fillStyle = 'rgba(0,0,0,0.3)'; g.beginPath(); g.moveTo(4 * G.s, 6 * G.s); g.lineTo(w + 4 * G.s, 10 * G.s); g.lineTo(w + 4 * G.s, -2 * G.s); g.closePath(); g.fill();
           g.fillStyle = gr; g.beginPath(); g.moveTo(0, -2.6 * G.s); g.lineTo(w, -6 * G.s); g.lineTo(w, 6 * G.s); g.lineTo(0, 2.6 * G.s); g.closePath(); g.fill();
           g.fillStyle = '#5a87c9'; g.fillRect(-1.5 * G.s, -2.6 * G.s, 3 * G.s, 5.2 * G.s);
         }
         g.restore();
-        if (lock && cur === 0) { const pw = clamp(pull / 230, 0, 1); g.fillStyle = 'rgba(0,0,0,0.5)'; g.fillRect(X(BL + RAIL + 6), Y(0), 10 * G.s, BW * G.s); g.fillStyle = pw > 0.8 ? '#ff6b4a' : '#e8c86a'; g.fillRect(X(BL + RAIL + 6), Y(BW - BW * pw), 10 * G.s, BW * pw * G.s); }
+        if (lock && cur === 0) { const pw = clamp(pull / 230, 0, 1); g.fillStyle = 'rgba(0,0,0,0.5)'; g.fillRect(X(BL + RAIL + 6), Y(0), 10 * G.s, BW * G.s); g.fillStyle = pw > 0.8 ? BC.kraftVoll : BC.kraft; g.fillRect(X(BL + RAIL + 6), Y(BW - BW * pw), 10 * G.s, BW * pw * G.s); }
       }
     };
     let last = performance.now();
@@ -835,6 +842,9 @@
     fillTable();
     F.area.appendChild(table);
     payBtn.onclick = (e) => { e.stopPropagation(); table.classList.toggle('show'); };
+    const imSpin = pic(ctx, 'automat', 'bildDrehen', {}), imKnopf = pic(ctx, 'automat', 'bildKnopf', {});
+    if (imSpin) { spinBtn.classList.add('img'); spinBtn.style.backgroundImage = `url("${imSpin}")`; }
+    if (imKnopf) for (const b of [stopBtn, payBtn]) { b.classList.add('img'); b.style.backgroundImage = `url("${imKnopf}")`; }
     const setCell = (c, id) => { if (c._id === id) return; c._id = id; c.innerHTML = ''; const s = sym(id); if (s.bild) c.appendChild(el('img', { src: ctx.asset(s.bild), draggable: false })); else c.textContent = s.emoji || '?'; };
     const drawReel = (rl) => {
       const st = S[reels.indexOf(rl)], n = st.length, base = Math.floor(rl.pos), frac = rl.pos - base;
@@ -974,6 +984,7 @@
     const helper = params.hilfe && ctx.items && ctx.items.count(params.hilfe) > 0;
     const tips = params.tipps === 'an' || helper || (ctx.bonus ? ctx.bonus('spielhalle.blackjack.tipps', 0) > 0 : false);
     const imBack = pic(ctx, 'blackjack', 'bildRueckseite', params), imTable = pic(ctx, 'blackjack', 'bildTisch', params);
+    const imSheet = pic(ctx, 'blackjack', 'bildKarten', params), imChip = pic(ctx, 'blackjack', 'bildChip', params), imBtn = pic(ctx, 'blackjack', 'bildKnopf', params);
     if (imTable) F.area.style.background = `url("${imTable}") center / cover`;
     let shoe = [];
     const shuffleShoe = () => { shoe = []; for (let d = 0; d < decks; d++) for (const s of SUITS) for (const r of RANKS) shoe.push({ r, s }); for (let i = shoe.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [shoe[i], shoe[j]] = [shoe[j], shoe[i]]; } };
@@ -992,6 +1003,7 @@
     const cardEl = (c, hidden) => {
       if (hidden) return el('div', { class: 'sh-card back' + (imBack ? ' img' : ''), style: imBack ? { backgroundImage: `url("${imBack}")` } : null });
       const red = c.s === '♥' || c.s === '♦';
+      if (imSheet) return el('div', { class: 'sh-card sheet', title: c.r + c.s, style: { backgroundImage: `url("${imSheet}")`, backgroundPosition: `${RANKS.indexOf(c.r) / 12 * 100}% ${SUITS.indexOf(c.s) / 3 * 100}%` } });
       return el('div', { class: 'sh-card' + (red ? ' red' : '') }, el('span', { class: 'sh-c-tl' }, c.r, el('br'), c.s), el('span', { class: 'sh-c-mid' }, c.s), el('span', { class: 'sh-c-br' }, c.r, el('br'), c.s));
     };
     const valText = (cards) => { const v = handVal(cards); return v.soft && v.total < 21 ? (v.total - 10) + ' / ' + v.total : String(v.total); };
@@ -1009,7 +1021,10 @@
       });
       credEl.textContent = TF('{c}: {n}', { c: curName, n: credits });
       ctrl.innerHTML = '';
-      const btn = (label, fn, cls, dis) => el('button', { class: 'sh-bj-btn' + (cls ? ' ' + cls : ''), disabled: !!dis, onclick: (e) => { e.stopPropagation(); fn(); } }, label);
+      const btn = (label, fn, cls, dis) => {
+        const im = cls === 'chip' ? imChip : imBtn;
+        return el('button', { class: 'sh-bj-btn' + (cls ? ' ' + cls : '') + (im ? ' img' : ''), style: im ? { backgroundImage: `url("${im}")` } : null, disabled: !!dis, onclick: (e) => { e.stopPropagation(); fn(); } }, label);
+      };
       if (phase === 'bet') {
         const steps = [minBet, minBet * 5, minBet * 25].filter((x, i, a) => x <= maxBet && a.indexOf(x) === i);
         ctrl.append(
@@ -1147,11 +1162,12 @@
 .sh-bubble { position: absolute; left: 50%; top: 6%; transform: translate(-50%, -10px); background: rgba(14,14,20,0.88); color: #fff; padding: 1.2cqh 2.4cqh; border-radius: 1.6cqh; font-size: 2.4cqh; font-weight: 600; opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; z-index: 5; max-width: 80%; text-align: center; box-shadow: 0 1cqh 3cqh rgba(0,0,0,0.5); }
 .sh-bubble.show { opacity: 1; transform: translate(-50%, 0); }
 .sh-score { position: absolute; right: 2.5%; top: 50%; transform: translateY(-50%); width: 30%; display: flex; flex-direction: column; gap: 1.2cqh; z-index: 3; }
-.sh-srow { display: grid; grid-template-columns: 5.5cqh 1fr auto; grid-template-rows: auto auto; column-gap: 1.2cqh; align-items: center; padding: 1.2cqh 1.6cqh; border-radius: 1.4cqh; background: rgba(0,0,0,0.55); border: 0.25cqh solid transparent; color: #eee; }
-.sh-srow.on { border-color: #e8c86a; background: rgba(40,30,10,0.75); }
+.sh-srow { display: grid; grid-template-columns: 5.5cqh 1fr auto; grid-template-rows: auto auto; column-gap: 1.2cqh; align-items: center; padding: 1.2cqh 1.6cqh; border-radius: 1.4cqh; background: color-mix(in srgb, var(--g-tafel, #000) 60%, transparent); border: 0.25cqh solid transparent; color: #eee; font-family: var(--sys-font, inherit); }
+.sh-score.img { background: center / 100% 100% no-repeat; padding: 3cqh 2cqh; border-radius: 1.4cqh; }
+.sh-srow.on { border-color: var(--sys-accent, #e8c86a); background: color-mix(in srgb, var(--g-tafel, #000) 75%, var(--sys-accent, #e8c86a) 15%); }
 .sh-srow .sh-ava { grid-row: 1 / 3; }
 .sh-sname { font-size: 2.2cqh; font-weight: 600; }
-.sh-sval { font-size: 4.4cqh; font-weight: 800; grid-row: 1 / 3; grid-column: 3; color: #ffe8a6; font-variant-numeric: tabular-nums; }
+.sh-sval { font-size: 4.4cqh; font-weight: 800; grid-row: 1 / 3; grid-column: 3; color: var(--sys-accent, #ffe8a6); font-variant-numeric: tabular-nums; }
 .sh-slast { font-size: 1.8cqh; opacity: 0.75; min-height: 2.2cqh; }
 .sh-sround { text-align: center; font-size: 1.9cqh; color: #ddd; opacity: 0.85; }
 .sh-ava { width: 5.5cqh; height: 5.5cqh; border-radius: 50%; background: #2a2a33 center / cover no-repeat; display: inline-flex; align-items: center; justify-content: center; font-size: 3cqh; }
@@ -1168,20 +1184,21 @@
 .sh-lights span:nth-child(2n) { animation-delay: .6s; }
 @keyframes sh-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
 .sh-window { position: relative; width: 100%; flex: 1; margin: 2cqh 0; display: flex; gap: 0.6cqh; padding: 0.8cqh; border-radius: 1.6cqh; background: #111; box-shadow: inset 0 0 2cqh rgba(0,0,0,0.9), 0 0 0 0.5cqh var(--sh-a); box-sizing: border-box; }
-.sh-reel { position: relative; flex: 1; overflow: hidden; border-radius: 1cqh; background: linear-gradient(#cfc8b8, #fffdf6 30%, #fffdf6 70%, #cfc8b8); }
+.sh-reel { position: relative; flex: 1; overflow: hidden; border-radius: 1cqh; background: linear-gradient(color-mix(in srgb, var(--g-walze, #fffdf6) 78%, #000), var(--g-walze, #fffdf6) 30%, var(--g-walze, #fffdf6) 70%, color-mix(in srgb, var(--g-walze, #fffdf6) 78%, #000)); }
 .sh-reel.land { animation: sh-land .22s ease-out; }
 @keyframes sh-land { 0% { transform: translateY(-3%); } 60% { transform: translateY(1.5%); } 100% { transform: none; } }
 .sh-cell { position: absolute; left: 0; right: 0; top: 0; height: calc(100% / var(--sh-rows, 3)); display: flex; align-items: center; justify-content: center; font-size: calc(min(9cqh, 26cqh / var(--sh-rows, 3))); line-height: 1; }
 .sh-cell img { max-width: 82%; max-height: 82%; object-fit: contain; pointer-events: none; }
 .sh-cell.hit { background: rgba(255,214,90,0.45); box-shadow: inset 0 0 0 0.4cqh #f0b52a; }
 .sh-lines { position: absolute; inset: 0.8cqh; width: calc(100% - 1.6cqh); height: calc(100% - 1.6cqh); pointer-events: none; }
-.sh-lines polyline { fill: none; stroke: #ff3b6b; stroke-width: 1.4; vector-effect: non-scaling-stroke; stroke-linejoin: round; filter: drop-shadow(0 0 3px #ff3b6b); }
+.sh-lines polyline { fill: none; stroke: var(--g-linie, #ff3b6b); stroke-width: 1.4; vector-effect: non-scaling-stroke; stroke-linejoin: round; filter: drop-shadow(0 0 3px var(--g-linie, #ff3b6b)); }
 .sh-mpanel { width: 100%; display: flex; flex-direction: column; gap: 1.2cqh; }
 .sh-leds { display: flex; gap: 1cqh; }
-.sh-led { flex: 1; background: #0b0b0b; color: #ff5a3a; font: 700 2.6cqh ui-monospace, monospace; padding: 0.8cqh 1.2cqh; border-radius: 0.8cqh; text-shadow: 0 0 1cqh #ff5a3a; min-height: 3cqh; }
-.sh-led.win { color: #7dff8a; text-shadow: 0 0 1cqh #7dff8a; text-align: right; }
+.sh-led { flex: 1; background: #0b0b0b; color: var(--g-led, #ff5a3a); font: 700 2.6cqh var(--sys-font, ui-monospace), ui-monospace, monospace; padding: 0.8cqh 1.2cqh; border-radius: 0.8cqh; text-shadow: 0 0 1cqh var(--g-led, #ff5a3a); min-height: 3cqh; }
+.sh-led.win { color: var(--g-ledGewinn, #7dff8a); text-shadow: 0 0 1cqh var(--g-ledGewinn, #7dff8a); text-align: right; }
 .sh-btns { display: flex; gap: 1cqh; }
-.sh-btns button { flex: 1; font: 700 2.3cqh system-ui, sans-serif; padding: 1.2cqh; border-radius: 1cqh; border: none; cursor: pointer; background: #2a2a30; color: #eee; }
+.sh-btns button { flex: 1; font: 700 2.3cqh var(--sys-font, system-ui), sans-serif; padding: 1.2cqh; border-radius: 1cqh; border: none; cursor: pointer; background: var(--g-knopf, #2a2a30); color: var(--g-knopfText, #eee); }
+.sh-btns button.img, .sh-bj-btn.img { background: center / 100% 100% no-repeat !important; box-shadow: none !important; }
 .sh-btns .sh-spin { flex: 2; background: var(--sh-a); color: #2a1a05; box-shadow: 0 0.6cqh 0 color-mix(in srgb, var(--sh-a) 55%, #000); }
 .sh-btns .sh-spin:active { transform: translateY(0.4cqh); box-shadow: 0 0.2cqh 0 color-mix(in srgb, var(--sh-a) 55%, #000); }
 .sh-btns button:disabled { opacity: 0.45; cursor: default; }
@@ -1201,21 +1218,22 @@
 .sh-pnote { font-size: 1.7cqh; opacity: 0.7; margin-top: 1cqh; max-width: 60cqh; }
 `;
   const CSS_BJ = `
-.sh-bj { display: flex; flex-direction: column; justify-content: space-between; padding: 2cqh 3cqh; box-sizing: border-box; background: radial-gradient(ellipse at 50% 35%, #1f7a4d, #0f4a2d 70%, #0a3320); color: #f5f1e6; }
+.sh-bj { display: flex; flex-direction: column; justify-content: space-between; padding: 2cqh 3cqh; box-sizing: border-box; background: radial-gradient(ellipse at 50% 35%, var(--g-tisch, #1f7a4d), color-mix(in srgb, var(--g-tisch, #1f7a4d) 55%, #000) 70%, color-mix(in srgb, var(--g-tisch, #1f7a4d) 35%, #000)); color: #f5f1e6; font-family: var(--sys-font, inherit); }
 .sh-bj-dealer, .sh-bj-hands { display: flex; flex-direction: column; align-items: center; gap: 1cqh; }
 .sh-bj-hands { flex-direction: row; justify-content: center; gap: 4cqh; }
 .sh-bj-who { display: flex; align-items: center; gap: 1.2cqh; font-size: 2.3cqh; }
 .sh-bj-name { font-weight: 700; }
-.sh-bj-val { background: rgba(0,0,0,0.45); padding: 0.3cqh 1.2cqh; border-radius: 2cqh; font-weight: 700; font-size: 2.2cqh; min-width: 3cqh; text-align: center; }
+.sh-bj-val { background: color-mix(in srgb, var(--g-wert, #000) 50%, transparent); padding: 0.3cqh 1.2cqh; border-radius: 2cqh; font-weight: 700; font-size: 2.2cqh; min-width: 3cqh; text-align: center; }
 .sh-bj-val:empty { display: none; }
 .sh-bj-cards { display: flex; min-height: 15cqh; }
 .sh-bj-cards .sh-card + .sh-card { margin-left: -4.5cqh; }
-.sh-card { position: relative; width: 10.4cqh; height: 15cqh; border-radius: 1cqh; background: #fdfbf6; color: #1b1b1b; box-shadow: 0 0.6cqh 1.4cqh rgba(0,0,0,0.45); font: 700 2.3cqh system-ui, sans-serif; animation: sh-deal .28s ease-out; flex: 0 0 auto; }
-.sh-card.red { color: #c4232f; }
+.sh-card { position: relative; width: 10.4cqh; height: 15cqh; border-radius: 1cqh; background: var(--g-karte, #fdfbf6); color: var(--g-schwarz, #1b1b1b); box-shadow: 0 0.6cqh 1.4cqh rgba(0,0,0,0.45); font: 700 2.3cqh var(--sys-font, system-ui), sans-serif; animation: sh-deal .28s ease-out; flex: 0 0 auto; }
+.sh-card.sheet { background-repeat: no-repeat; background-size: 1300% 400%; }
+.sh-card.red { color: var(--g-rot, #c4232f); }
 .sh-c-tl, .sh-c-br { position: absolute; line-height: 1; text-align: center; }
 .sh-c-tl { left: 0.8cqh; top: 0.7cqh; } .sh-c-br { right: 0.8cqh; bottom: 0.7cqh; transform: rotate(180deg); }
 .sh-c-mid { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 6cqh; }
-.sh-card.back { background: repeating-linear-gradient(45deg, #8e1d2c 0 0.8cqh, #a52a3a 0.8cqh 1.6cqh); box-shadow: inset 0 0 0 0.7cqh #fdfbf6, 0 0.6cqh 1.4cqh rgba(0,0,0,0.45); }
+.sh-card.back { background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--g-rueckseite, #a52a3a) 80%, #000) 0 0.8cqh, var(--g-rueckseite, #a52a3a) 0.8cqh 1.6cqh); box-shadow: inset 0 0 0 0.7cqh var(--g-karte, #fdfbf6), 0 0.6cqh 1.4cqh rgba(0,0,0,0.45); }
 .sh-card.back.img { background: center / cover no-repeat; box-shadow: 0 0.6cqh 1.4cqh rgba(0,0,0,0.45); }
 @keyframes sh-deal { from { transform: translate(6cqh, -12cqh) rotate(-8deg); opacity: 0; } to { transform: none; opacity: 1; } }
 .sh-bj-hand { display: flex; flex-direction: column; align-items: center; gap: 1cqh; padding: 1cqh 1.4cqh; border-radius: 1.6cqh; border: 0.3cqh solid transparent; }
@@ -1231,9 +1249,10 @@
 .sh-bj-bar { display: flex; align-items: center; justify-content: space-between; gap: 2cqh; }
 .sh-bj-cred { font: 700 2.4cqh ui-monospace, monospace; color: #ffe8a6; background: rgba(0,0,0,0.45); padding: 0.8cqh 1.4cqh; border-radius: 1cqh; }
 .sh-bj-ctrl { display: flex; gap: 1cqh; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
-.sh-bj-btn { font: 700 2.3cqh system-ui, sans-serif; padding: 1cqh 2cqh; border-radius: 1cqh; border: none; cursor: pointer; background: #f1ead7; color: #222; box-shadow: 0 0.5cqh 0 #9c9177; }
-.sh-bj-btn.main { background: #e8c86a; box-shadow: 0 0.5cqh 0 #9a7a22; }
-.sh-bj-btn.chip { border-radius: 50%; width: 7.4cqh; height: 7.4cqh; padding: 0; background: radial-gradient(circle, #fdfbf6 0 52%, #c4232f 53% 70%, #fdfbf6 71% 75%, #c4232f 76%); color: #6b0f17; font-size: 2.1cqh; box-shadow: 0 0.4cqh 0 #611; }
+.sh-bj-btn { font: 700 2.3cqh var(--sys-font, system-ui), sans-serif; padding: 1cqh 2cqh; border-radius: 1cqh; border: none; cursor: pointer; background: var(--g-knopf, #f1ead7); color: var(--g-knopfText, #222); box-shadow: 0 0.5cqh 0 color-mix(in srgb, var(--g-knopf, #f1ead7) 60%, #000); }
+.sh-bj-btn.main { background: var(--g-haupt, #e8c86a); box-shadow: 0 0.5cqh 0 color-mix(in srgb, var(--g-haupt, #e8c86a) 60%, #000); }
+.sh-bj-btn.chip { border-radius: 50%; width: 7.4cqh; height: 7.4cqh; padding: 0; background: radial-gradient(circle, #fdfbf6 0 52%, var(--g-chip, #c4232f) 53% 70%, #fdfbf6 71% 75%, var(--g-chip, #c4232f) 76%); color: color-mix(in srgb, var(--g-chip, #c4232f) 55%, #000); font-size: 2.1cqh; box-shadow: 0 0.4cqh 0 color-mix(in srgb, var(--g-chip, #c4232f) 45%, #000); }
+.sh-bj-btn.chip.img { background: center / contain no-repeat !important; color: #111; text-shadow: 0 0 0.4cqh #fff; }
 .sh-bj-btn.quiet { background: rgba(0,0,0,0.4); color: #eee; box-shadow: none; }
 .sh-bj-btn:disabled { opacity: 0.4; cursor: default; }
 .sh-bj-betv { font-weight: 700; font-size: 2.3cqh; min-width: 14cqh; text-align: center; }
@@ -1243,18 +1262,24 @@
   // =====================================================================
   // Anmeldung
   // =====================================================================
+  // Aussehen je Spiel: Standard-Bilder und Farben (Design → Spielsysteme → Plugin: Spielhalle)
+  const DESIGNS = {
+    dart: { label: 'Dart', icon: '🎯', images: [['bildBoard', 'Dartscheibe'], ['bildPfeil', 'Pfeil'], ['bildKreuz', 'Fadenkreuz'], ['bildHintergrund', 'Hintergrund'], ['bildTafel', 'Anzeigetafel (Hintergrund)']],
+      colors: [['brett1', 'Felder dunkel', '#1b1b1b'], ['brett2', 'Felder hell', '#efe3c4'], ['ring1', 'Ringe rot', '#d23a2e'], ['ring2', 'Ringe grün', '#2f8f48'], ['zahlen', 'Zahlen', '#f4f0e6'], ['rand', 'Rand der Scheibe', '#141414'], ['kreuz', 'Fadenkreuz', '#ffe066'], ['kreuzGegner', 'Fadenkreuz des Gegners', '#6cc4ff'], ['pfeil', 'Deine Pfeile', '#e8a43a'], ['pfeilGegner', 'Pfeile des Gegners', '#6cc4ff'], ['wand', 'Wand dahinter', '#3a2d22'], ['tafel', 'Anzeigetafel', '#000000']] },
+    billard: { label: 'Billard', icon: '🎱', images: [['bildTisch', 'Ganzer Tisch (mit Banden)'], ['bildTuch', 'Tuch (Muster)'], ['bildQueue', 'Queue (Spitze rechts)'], ['bildWeiss', 'Weiße Kugel'], ...Array.from({ length: 15 }, (_, i) => ['kugel' + (i + 1), 'Kugel ' + (i + 1)])],
+      colors: [['tuch', 'Tuch', '#1f6e43'], ['rand', 'Holzrand', '#5b3a22'], ['taschen', 'Taschen', '#0b0b0b'], ['punkte', 'Markierungen am Rand', '#e9dcc0'], ['linie', 'Hilfslinie', '#ffffff'], ['linie2', 'Laufweg der getroffenen Kugel', '#ffe678'], ['queue', 'Queue', '#c9a06a'], ['kraft', 'Kraftanzeige', '#e8c86a'], ['kraftVoll', 'Kraftanzeige voll', '#ff6b4a']] },
+    blackjack: { label: 'Blackjack', icon: '🃏', images: [['bildTisch', 'Tisch (Hintergrund)'], ['bildRueckseite', 'Kartenrückseite'], ['bildKarten', 'Alle Karten in einem Bild (13 Spalten A, 2–10, B, D, K · 4 Reihen ♠ ♥ ♦ ♣)'], ['bildChip', 'Chip'], ['bildKnopf', 'Knöpfe']],
+      colors: [['tisch', 'Tisch', '#1f7a4d'], ['karte', 'Kartenvorderseite', '#fdfbf6'], ['rot', 'Rote Karten', '#c4232f'], ['schwarz', 'Schwarze Karten', '#1b1b1b'], ['rueckseite', 'Kartenrückseite', '#a52a3a'], ['chip', 'Chips', '#c4232f'], ['knopf', 'Knöpfe', '#f1ead7'], ['knopfText', 'Schrift auf Knöpfen', '#222222'], ['haupt', 'Knopf „Geben“ / „Ziehen“', '#e8c86a'], ['wert', 'Punkte-Anzeige', '#000000']] },
+    automat: { label: 'Spielautomat', icon: '🎰', images: [['bildDrehen', 'Knopf „Drehen“'], ['bildKnopf', 'Andere Knöpfe']],
+      colors: [['led', 'Anzeige', '#ff5a3a'], ['ledGewinn', 'Anzeige Gewinn', '#7dff8a'], ['walze', 'Walzen', '#fffdf6'], ['linie', 'Gewinnlinie', '#ff3b6b'], ['knopf', 'Knöpfe', '#2a2a30'], ['knopfText', 'Schrift auf Knöpfen', '#eeeeee']] }
+  };
   const foeOpts = (game) => [['', '— allein —'], ...data().gegner.filter((g) => !g.spiel || g.spiel === 'beide' || g.spiel === game).map((g) => [g.id, g.name])];
   VNPlugin.register({
     id: ID,
     name: 'Spielhalle',
     version: '1.0',
     description: 'Dart, Billard, Blackjack und Spielautomat. Computer-Gegner mit einstellbarem Können, eigene Bilder für Scheibe, Tisch, Kugeln, Walzen und Gehäuse. Einstellungen unter Spielsysteme → Spielhalle.',
-    designs: {
-      dart: { label: 'Dart', icon: '🎯', images: [['bildBoard', 'Dartscheibe'], ['bildPfeil', 'Pfeil'], ['bildKreuz', 'Fadenkreuz'], ['bildHintergrund', 'Hintergrund']] },
-      billard: { label: 'Billard', icon: '🎱', images: [['bildTisch', 'Ganzer Tisch (mit Banden)'], ['bildTuch', 'Tuch (Muster)'], ['bildQueue', 'Queue (Spitze rechts)'], ['bildWeiss', 'Weiße Kugel'], ...Array.from({ length: 15 }, (_, i) => ['kugel' + (i + 1), 'Kugel ' + (i + 1)])] },
-      automat: { label: 'Spielautomat', icon: '🎰', images: [] },
-      blackjack: { label: 'Blackjack', icon: '🃏', images: [['bildTisch', 'Tisch (Hintergrund)'], ['bildRueckseite', 'Kartenrückseite']] }
-    },
+    designs: DESIGNS,
     skillEffects: {
       dartRuhe: { cat: 'minigame', label: 'Dart: Fadenkreuz ruhiger', params: [['pct', '− %', 'number', 15]], key: () => 'spielhalle.dart.tempo', mode: 'pct', value: (e) => -(Number(e.pct) || 0), text: (e, l) => '−' + (Number(e.pct) || 0) * l + ' % Fadenkreuz-Tempo (Dart)' },
       blackjackTipps: { cat: 'minigame', label: 'Blackjack: Tipps vom Profi', params: [], key: () => 'spielhalle.blackjack.tipps', mode: 'add', value: () => 1, text: () => 'Blackjack: zeigt den besten Zug' },
