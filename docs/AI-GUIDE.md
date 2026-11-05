@@ -1,6 +1,6 @@
 # VN Timeline Engine – guide for AI assistants
 
-Engine 0.9.5 · project format 1 · generated 2026-11-04
+Engine 0.9.16 · project format 1 · generated 2026-11-05
 
 This file explains a VN Timeline Engine project so that any AI can read and change it **without the engine source code**. 
 The engine is a free visual novel editor that works like a video editor: every scene is a timeline, every column ("step") is one click of the player.
@@ -21,7 +21,7 @@ The engine is a free visual novel editor that works like a video editor: every s
 ## Story scenes (timelines)
 
 ```json
-{"id":"s_ai1","type":"story","name":"Chapter 1 · The cellar","beats":4,"next":"<scene id> | \"@return\" | null","tracks":{"bg":[],"char1":[],"char2":[],"dialog":[],"choice":[],"music":[],"voice":[],"sfx":[],"fx":[],"cam":[],"video":[]}}
+{"id":"s_ai1","type":"story","name":"Chapter 1 · The cellar","beats":4,"next":"<scene id> | \"@return\" | null","tracks":{"bg":[],"char1":[],"char2":[],"dialog":[],"choice":[],"code":[],"music":[],"voice":[],"sfx":[],"fx":[],"cam":[],"video":[]}}
 ```
 
 - `beats` = number of steps. A clip covers steps `start` … `start + len − 1` (0-based).
@@ -29,7 +29,9 @@ The engine is a free visual novel editor that works like a video editor: every s
 - `overHub: true` = the scene plays on top of the hub it was started from (hub background and objects stay visible behind the characters).
 - Dialogue: one clip per step in `dialog` (`len: 1`). `speaker` empty = narrator. `chat: true` shows the line as a phone chat. `actions` run when the line appears. `waitFor: { conds, hint }` stops until the condition is met.
 - Choice: in `choice` at the step where it appears; each option has `text`, `target` (scene id or null = continue), `conds` (shown only if true), `actions`, optional `afterPick: "grey"|"hide"|"none"` (what happens once picked). The choice clip may have `chX` (horizontal centre in %, default 50), `chY` (vertical centre in %, default from the design) and `chW` (width in %), `afterPick` (default for all options) and `allDone` (scene when every option is hidden).
-- Characters: `x` 0–100 (% from left, centre of the figure), `y` height offset in %, `scale` %, `rot` degrees, `flip`. `keys: [{ beat, x, y, scale, rot, opacity }]` animate over steps.
+- Characters: `x` 0–100 (% from left, centre of the figure), `y` height offset in %, `scale` %, `rot` degrees, `flip`. `keys: [{ beat, x, y, scale, rot, opacity }]` animate over steps. Animation: `idleAnim: "<anim id>"`, `gestures: { "<step>": "<anim id>" }`, `fps` (own frame rate, see Animations) and `smear: { on, multi, stretch, lines, sens }`. Instead of `asset` a character can use `puppet: "<puppet id>"` (jointed puppet) or `set: "<layered character id>"` (from `figures`).
+- Code track `code`: `{ start, len: 1, code: "gold += 5" }` runs once when its step begins, before the dialogue line appears (so `{gold}` in the text already shows the new value). Language: see **Formulas and code** below.
+- Effect track `fx` (and extra effect tracks): a clip is a colour/image layer (`color`, `asset`, `blend`, `opacity`) or one of: `particles: "rain"|"snow"|…`, `filter: "flashback"|"bw"|"dream"|"cold"|"warm"|"crt"|"lcd"|"rgb"` (CRT/LCD/RGB split TV filters have their own sliders), `eyes` (eyes closing/opening), or `light: "spot"|"lamp"|"neon"|"back"` with `lx`, `ly` (position in %), `lSize`, `lAngle`, `lLen`, `lSpread`, `lColor`, `lPower`, `lSoft`, `lDim` (darkens the rest), `lFog`, `lRim` (rim light on characters), `lTint`, `lFlicker`, `lSweep`, `lDust`, `lSil` (backlight silhouette). Hubs have the same lights in `fx` with `conds`. Easiest: place lights with the mouse in the editor.
 
 ### Clip fields per track (defaults of the editor)
 
@@ -39,8 +41,9 @@ The engine is a free visual novel editor that works like a video editor: every s
 - `fx` – Effect layer / Effekt-Ebene (fx): `{"id":"<unique id>","start":0,"len":3,"asset":null,"color":"#3c4a8c","blend":"multiply","opacity":85,"styles":{}}`
 - `cam` – Camera / Kamera (cam): `{"id":"<unique id>","start":0,"len":3,"zoom":130,"panX":0,"panY":-8,"rot":0,"shake":0,"dur":1.2,"ease":"ease-in-out","keys":[]}`
 - `video` – Video (video): `{"id":"<unique id>","start":0,"len":1,"asset":null,"layer":"front","loop":false,"muted":false,"vol":90,"fit":"cover","waitEnd":true,"skippable":true}`
-- `dialog` – Dialogue / Dialog (dialog): `{"id":"<unique id>","start":0,"len":1,"speaker":"","color":"#ffffff","text":"New text …","speed":40,"actions":[]}`
-- `choice` – Choice / Auswahl (choice): `{"id":"<unique id>","start":0,"len":1,"options":[{"id":"opt_1omup","text":"Answer A","target":null,"conds":[],"actions":[]},{"id":"opt_1p2d8","text":"Answer B","target":null,"conds":[],"actions":[]}]}`
+- `dialog` – Dialogue / Dialog (dialog): `{"id":"<unique id>","start":0,"len":1,"speaker":"","color":"#ffffff","text":"Neuer Text …","speed":40,"actions":[]}`
+- `choice` – Choice / Auswahl (choice): `{"id":"<unique id>","start":0,"len":1,"options":[{"id":"opt_1ohxb","text":"Antwort A","target":null,"conds":[],"actions":[]},{"id":"opt_1p8qa","text":"Antwort B","target":null,"conds":[],"actions":[]}]}`
+- `code` – Code (code): `{"id":"<unique id>","start":0,"len":1,"code":""}`
 - `music` – Music / Musik (music): `{"id":"<unique id>","start":0,"len":3,"asset":null,"vol":70,"loop":true,"carry":false,"fade":1}`
 - `voice` – Voices (voice): `{"id":"<unique id>","start":0,"len":1,"asset":null,"vol":90,"delay":0}`
 - `sfx` – Sound effects / Soundeffekte (sfx): `{"id":"<unique id>","start":0,"len":1,"asset":null,"vol":90,"delay":0}`
@@ -57,9 +60,42 @@ The engine is a free visual novel editor that works like a video editor: every s
 
 ## Jointed puppets (characters made of body parts)
 
-`puppets: [{ id, name, parts: [...] }]`. Each part: `{ id, name, asset, parent: "<part id>"|null, x, y, w, h, ax, ay, rot, idle: { type: "none"|"sway"|"breathe"|"bob"|"jiggle", amp, speed, phase }, bones: true|false, flipX, hidden }`.
-- `x`, `y` = top-left of the image in puppet pixels (rest pose), `w`, `h` = drawn size, `ax`, `ay` = joint pin inside the image. A part rotates around its pin; children follow their parent. Array order = drawing order (last = front).
-- Use on the timeline: a character clip with `puppet: "<puppet id>"` (instead of `asset`). Idle/gesture animations: an actor with `puppet: "<puppet id>"` and `parts: { "<part id>": [{ t, r, x, y, e }] }` (r = rotation in degrees, x/y = offset in pixels); optional `pins: { "<part id>": true }` keeps limbs in place in the editor.
+`puppets: [{ id, name, parts: [...], folders: [...], freeJoints }]`. Each part: `{ id, name, asset, parent: "<part id>"|null, x, y, w, h, ax, ay, rot, idle: { type: "none"|"sway"|"breathe"|"bob"|"jiggle", amp, speed, phase }, bones: true|false, flipX, hidden, folder, lim, tx, ty, seams, holdPts }`.
+- `x`, `y` = top-left of the image in puppet pixels (rest pose), `w`, `h` = drawn size, `ax`, `ay` = joint pin inside the image. A part rotates around its pin; children follow their parent. Array order = drawing order (last = front). Joints are anchored firmly unless `freeJoints: true`.
+- `lim: { on, min, max }` = joint limit in degrees (knees/elbows bend one way). `tx`, `ty` = end point of the limb (ruler tool “Lengths”; without it the limb reaches to its child joint).
+- `seams: [{ id, to: "<part id>", pts: [[u, v], …], soft }]` sew this part onto another one along a line (image pixels of this part) – the image bends smoothly, no cracks at joints. `holdPts: [{ id, u, v, soft }]` = hold points (palm, heel …) that can be held in place in the animation editor.
+- Folders: `folders: [{ id, name, parent: "<folder id>"|null, open, hidden, locked }]`, part `folder: "<folder id>"`. Only for sorting and drawing order (parts of one folder are kept together); `hidden`/`locked` only apply in the editor. Movement is always set by `parent`.
+- Use on the timeline: a character clip with `puppet: "<puppet id>"` (instead of `asset`). Idle/gesture animations: an actor with `puppet: "<puppet id>"` and `parts: { "<part id>": [{ t, r, x, y, e }] }` (r = rotation in degrees, x/y = offset in pixels); optional `pins: { "<part id>": true }` keeps limbs in place in the editor, `holds: { "<hold point id>": { x, y } }` holds a hold point at a spot on screen (0–1), `seams: [{ id, part, pts, toActor, toPart, soft }]` sews a part to a part of another actor (e.g. a hand on a shoulder).
+- Puppets are easiest to build in the editor (**Characters → Jointed puppets**: template “Human”, inpaint brush for gaps, sew, hold points, folders).
+
+## Bones (one image that bends)
+
+`rigs: { "<image asset id>": { … } }` – skeleton and mesh of an image, set up under **Characters → Bones & blinking**. Don’t write rigs by hand; keep them unchanged. `cellEdit: { nx, ny, add: [cell index …], del: [cell index …] }` stores manual mesh edits for one mesh density. Layered characters (`figures`) use the bones of their lowest layer for all layers.
+
+## Animations (idle, gestures, cutscenes, battle moves)
+
+`anims: [{ id, name, type: "idle"|"gesture"|"cutscene", dur (seconds), loop, fps, smear, hitAt, actors: [...], cam: [...], audio: [...] }]`.
+- Actor: `{ id, asset: "<image with bones>" | puppet: "<puppet id>", bones: { "<bone name>": [{ t, a, e }] } }` (a = angle, e = easing) or `parts` for puppets (see above).
+- `fps`: `0`/empty = smooth, `24`, `12` (on twos, anime), `8` (on threes, cartoon), `6`. Project default: `animFps`. `smear: { on, multi, stretch, lines, sens }` = smear frames on fast motion; project default: `smear`.
+- `hitAt` (seconds) = the moment where effect, damage and sound appear when the animation is used in battle (default: halfway).
+
+## Formulas and code
+
+Used by the code track, the action `code` (`{ "type": "code", "code": "…" }`) and the condition `formula` (`{ "type": "formula", "expr": "…" }`). Variables, items, currencies and scenes are referred to **by name**, not id; names with spaces go in square brackets.
+```
+gold += 5                      # also -= *= /= and =
+[Door open] = true             # true/false, wahr/falsch, ja/nein
+if courage > 3 and not fled: points += 1
+give("Key")   take("Potion", 2)   earn("Gold", 10)   spend("Gold", 3)
+goto("Market")                 # jump to a scene or hub
+roll = random(1, 6)
+```
+One statement per line, `#` = comment. Operators: `+ - * / % **`, `== != < <= > >=`, `and`/`und`, `or`/`oder`, `not`/`nicht`. Functions: `min`, `max`, `round`, `floor`, `ceil`, `abs`, `random(a, b)`, `chance(percent)`, `item("name")` (count), `money("currency")`, `seen("scene")`. A formula condition with an error counts as not met. Number variables respect their `min`/`max`.
+
+## Pixel art
+
+`sprites: [{ id, name, w, h, palette: [null, "#rrggbb", …] (index 0 = transparent), layers: [{ id, name, hidden }], anims: [{ id, name, frames: [{ id, dur (ms), px: { "<layer id>": "<base64 of palette indices, w × h bytes>" } }] }], scale, "asset_<anim id>": "<image asset id>", sheetAsset }]`.
+- Drawn in **Design → 🎨 Pixel art**. “Add to project” writes each animation as an animated GIF (`assets/px_….gif`) and an image asset with `pixel: true`; that asset is used like any other image (character, background, hub object, fighter). Change sprites in the editor, not in `px`.
 
 ## Conditions (`conds` arrays – all must be true)
 
@@ -67,6 +103,7 @@ The engine is a free visual novel editor that works like a video editor: every s
 - `item`: `{ "type": "item", "item": "<item id>", "op": ">=", "count": 1 }`
 - `money`: `{ "type": "money", "currency": "<currency id>", "op": ">=", "amount": 50 }`
 - `seen`: `{ "type": "seen", "scene": "<scene id>", "value": true }`
+- `formula`: `{"type":"formula","expr":""}  – 🧮 Formula / 🧮 Formel`
 - `know`: `{"type":"know","key":"","value":true}  – 🧠 Knowledge (across playthroughs) / 🧠 Wissen (über Durchläufe)`
 - `seenEver`: `{"type":"seenEver","scene":""}  – 🧠 Scene ever seen (any playthrough) / 🧠 Szene je gesehen (irgendein Durchlauf)`
 - `ach`: `{"type":"ach","ach":""}  – 🏆 Achievement unlocked / 🏆 Erfolg freigeschaltet  (only when that game system is switched on)`
@@ -104,6 +141,7 @@ Operators: `>=`, `>`, `<=`, `<`, `==`, `!=`.
 - `time`: `{ "type": "time", "mode": "advance", "amount": 1 }  (needs Time & Calendar on)`
 - `shop`: `{ "type": "shop", "shop": "<shop id>" }`
 - `goto`: `{"type":"goto","scene":""}  – ➜ Go to scene or hub / ➜ Zu Szene oder Hub wechseln`
+- `code`: `{"type":"code","code":""}  – 🧮 Math / code / 🧮 Rechnen / Code`
 - `know`: `{"type":"know","key":"","value":true}  – 🧠 Remember knowledge (across playthroughs) / 🧠 Wissen merken (über Durchläufe)`
 - `ach`: `{"type":"ach","ach":""}  – 🏆 Unlock achievement / 🏆 Erfolg freischalten  (only when that game system is switched on)`
 - `screen`: `{"type":"screen","screen":"stats"}  – 📋 Open screen / 📋 Bildschirm öffnen`
@@ -111,7 +149,7 @@ Operators: `>=`, `>`, `<=`, `<`, `==`, `!=`.
 - `wear`: `{"type":"wear","item":"","give":true}  – 👕 Put on item / 👕 Gegenstand anlegen  (only when that game system is switched on)`
 - `unwear`: `{"type":"unwear","slot":""}  – 👕 Take off slot / 👕 Platz ablegen  (only when that game system is switched on)`
 - `equipScreen`: `{"type":"equipScreen"}  – 👕 Open equipment (inventory) / 👕 Ausrüstung öffnen (Inventar)  (only when that game system is switched on)`
-- `unlockLoc`: `{"type":"unlockLoc","scene":"","value":true}  – 📍 Unlock / lock location / 📍 Ort freischalten / sperren  (only when that game system is switched on)`
+- `unlockLoc`: `{"type":"unlockLoc","scene":"","value":true}  – 📍 Unlock / lock / remove place / 📍 Ort freischalten / sperren / entfernen  (only when that game system is switched on)`
 - `freeTime`: `{"type":"freeTime","value":true}  – 📍 Free time begins / ends / 📍 Freie Zeit beginnt / endet  (only when that game system is switched on)`
 - `openMap`: `{"type":"openMap"}  – 🗺 Open map / 🗺 Karte öffnen  (only when that game system is switched on)`
 - `travel`: `{"type":"travel","scene":""}  – 📍 Go to location / 📍 Zu Ort gehen  (only when that game system is switched on)`
@@ -150,6 +188,9 @@ Operators: `>=`, `>`, `<=`, `<`, `==`, `!=`.
 - `equip` – Equipment
 - `devices` – Devices: in-game phone / computer with apps; chats live in `chats`
 
+- World (`world`): locations can have `unlock: "cond"` + `unlockConds` (unlocked for good once true), `lockMode: "lock"` + `lockConds` (locked while true) or `lockMode: "gone"` + `lockConds` (removed from the map for good once true).
+- Combat (`combat`: `heroes`, `enemies`, `skills`, `battles`, `party` …): a fighter may have `puppet`, `idleAnim`, `anims: { attack, cast, hit, defend, item, ko, victory }` (gesture anim ids), `blend` (seconds of blending out of the idle), `fps`, `smear`. A skill may have `anim` (attacker), `hitAnim` (target reaction) and `blend`. Animations need an image with bones or a puppet.
+
 Each system has `enabled: true|false` plus its own data. The safest way to set up a system is inside the engine (tab **Game systems / Spielsysteme**, every system has a one-click example). Idle/building (`idle`): `tick: "sec"|"min"|"hour"` (amounts per tick), `startWhen: "always"|"firstOpen"|"cond"|"action"` (+ `startConds`), `mode: "realtime"|"offline"|"gametime"`.
 
 ## Devices and chats (phone / computer)
@@ -164,7 +205,9 @@ Each system has `enabled: true|false` plus its own data. The safest way to set u
 
 Top bar: project name · **Project ▾ / Projekt ▾** (save, open, import text, accessibility, language, this guide) · undo/redo · **Export / Exportieren** · ✓ problem list · ? help · tabs · **▶ Test scene / Szene testen** · **▶ Test game / Spiel testen**.
 
-Tabs: **Scene / Szene** (timeline or hub editor) · **Paths / Pfade** (graph of all scenes) · **Game systems / Spielsysteme** · **Transcript / Transkript** (all texts, translations) · **Storyboard** (planning board) · **Characters / Figuren** (bones, layered figures) · **Main menu / Hauptmenü** · **Design** · **Animation**.
+Tabs: **Scene / Szene** (timeline or hub editor) · **Paths / Pfade** (graph of all scenes) · **Game systems / Spielsysteme** · **Transcript / Transkript** (all texts, translations) · **Storyboard** (planning board) · **Characters / Figuren** (Bones & blinking, Layers & outfits, Jointed puppets, Lip sync) · **Main menu / Hauptmenü** · **Design** (speech bubbles, buttons, windows, fonts, sounds, cursor, start logo, 🎨 Pixel art) · **Animation** (idle, gestures, cutscenes, frame rate, smear frames, “💥 Hit here”).
+
+Export: `export.pack` = `"open"` (normal files), `"pack"` (everything encrypted in data.vnpak) or `"packmods"` (packed, files in a `mods` folder override). The editor also runs in the browser: https://thetalkingpegasus.github.io/vn-timeline-engine/
 
 Left: scene list (+ Story, + Hub, + 📁 chapter) and files (drag images/audio onto the stage or timeline). Right: properties of whatever is selected. 
 Timeline: double-click an empty track cell = new clip; drag clips to move, right edge = length; right-click = more (keyframes, copy/paste format of a character, alternative path for a choice). Keys: Ctrl+S save, Ctrl+Z / Ctrl+Y undo/redo, ←/→ step, Del delete, Esc deselect.

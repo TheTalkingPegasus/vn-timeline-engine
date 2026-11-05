@@ -16,6 +16,17 @@ Without installing (ZIP):
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
 
+NEW IN 0.9.16 · Pixel art, battle animations, code track, puppet folders
+- Pixel art editor (Design → Pixel art): draw and animate frame by frame; finished animations become pixel-sharp
+  animated GIFs for characters, backgrounds, hub objects and fighters.
+- Battles: fighters with bones or jointed puppets get their own idle, attack, spell, hit, K.O. and victory animations
+  that blend smoothly; every skill can have its own animation.
+- Code track and formulas: gold += 5, if courage > 3: points += 1, give("Key") … also as action and condition.
+- Folders for the parts of jointed puppets.
+Earlier in 0.9: lights and TV filters, frame rate and smear frames, place rules (unlock if …, lock while …, gone),
+seams and hold points for puppets, inpaint brush, editable bones mesh, packed game files, web version, Spanish and
+Japanese. Details: CHANGELOG.md.
+
 NEW IN 0.9 · Phone & computer, messages, puppets and more
 - Devices: an in-game phone or computer with apps (messages, inventory, gallery, quests, map … and own apps),
   fully designable, optional PIN or password.
@@ -32,18 +43,23 @@ Menus inside a game follow the game's language (German, English, Spanish or Japa
 
 WHAT'S INSIDE
 Editor
-- Timeline with tracks for background, characters, effects, camera, video, dialogue, choices,
+- Timeline with tracks for background, characters, effects, camera, video, dialogue, choices, code,
   music, voices and sound effects. Extra tracks for group scenes, track templates.
 - Paths view: all scenes as bubbles with branches, chapters, search, path check.
 - Hub scenes: places to click around with objects (also invisible hitboxes), backgrounds per time of day,
   particles, events (when / how often) and hub dialogues (timeline scenes over the hub).
 - Choices: grey out or hide what was already asked, place them anywhere, reorder answers.
 - If → Then everywhere: variables, items, money, loot tables, conditions and actions.
-- Characters: Bones (skeleton animation from a single image), blinking, lip sync,
-  layer characters with expressions and outfits, jointed puppets from body parts (pins, bones, idle, eraser).
+- Characters: Bones (skeleton animation from a single image, editable mesh), blinking, lip sync,
+  layer characters with expressions and outfits (with bones), jointed puppets from body parts (pins, bones, idle,
+  "Human" template, joint limits, seams, hold points, inpaint brush, eraser, folders).
+- Effects: particles, colour layers, lights (spotlight, lamp, neon, backlight with rim light and dust),
+  filters (flashback, black & white, dream, CRT TV, LCD TV, RGB split).
+- Code track and formulas: commands at a step, as an action or as a condition, with live error check.
 - Storyboard, asset folders, copy & paste clips between scenes, copy format, free transform, spell-check suggestions.
-- Animation editor: idle loops, gestures, cutscenes (live or rendered as video).
-- Design: speech bubbles, buttons, windows, fonts, sounds, mouse cursor, studio logo.
+- Animation editor: idle loops, gestures, cutscenes (live or rendered as video), frame rate (on twos/threes),
+  smear frames, hit point for battles.
+- Design: speech bubbles, buttons, windows, fonts, sounds, mouse cursor, studio logo, pixel art editor.
 - Transcript: every text with an ID, translations, CSV export/import, speaker script, subtitles (SRT).
 - Text import: paste finished dialogue as "Name: Text" or a Ren'Py script; speakers, choices and
   scenes are recognized (button "⤓ Text" above the timeline).
@@ -51,13 +67,14 @@ Editor
 Game systems (switch on what you need)
 - Inventory, currencies and shops, time & calendar, relationships with stages and gifts,
   achievements, gallery, stats, glossary.
-- World & locations: world map with pins and submaps, home, events at locations, free time.
+- World & locations: world map with pins and submaps, home, events at locations, free time;
+  places unlock if …, lock while … or disappear for good.
 - Quest log: quest series → quests → sections for the main story and each character,
   freely designable notifications.
 - Skill trees: skills paid with money, level-up points or own points; effects on money, shops,
   relationships, jobs, travel, minigames and stats; key T in the game.
 - Combat: classic turn-based battles in side view, party of up to four heroes, levels, abilities,
-  loot, story mode; test battle and 100× simulation in the editor.
+  loot, story mode; test battle and 100× simulation in the editor; animated fighters with smooth blending.
 - Building (idle): buildings produce resources, get upgraded, goals move the story forward; real time,
   offline or game time; time preview in the editor.
 - Equipment, seasons and ambient sounds, game over screen.
@@ -68,6 +85,7 @@ For players (in every game automatically)
   graphics quality, sound output.
 Export
 - Windows game with its own .exe and icon, or web game (e.g. for itch.io).
+- Game files open (for modding), packed into one encrypted file, or packed with a mods folder.
 
 KEYS
 Editor: Ctrl+S · Ctrl+Z / Ctrl+Y · Del · Arrow left/right · Bones: Enter finishes a chain
