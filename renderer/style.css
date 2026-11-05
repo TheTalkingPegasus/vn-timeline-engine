@@ -2159,3 +2159,13 @@ body.cbsim-tritan #center .stage, body.cbsim-tritan #player { filter: url(#vn-cb
 .px-sw.on { outline: 2px solid #fff; outline-offset: 1px; }
 .px-sw.clear { background: repeating-conic-gradient(#888 0 25%, #ddd 0 50%) 0 0 / 8px 8px; }
 img[src*="px_"] { image-rendering: pixelated; }
+
+/* Code-Spur und Formeln (0.9.16) */
+.code-input { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.5; tab-size: 2; }
+.fx-msg { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 3px; }
+.fx-msg.ok { color: #8fd6a6; }
+.fx-msg.bad { color: #f0a46a; }
+.code-help { width: 100%; border-collapse: collapse; margin: 8px 0; }
+.code-help td { padding: 3px 4px; vertical-align: top; border-top: 1px solid #ffffff10; }
+.code-help td:first-child { width: 58%; }
+.code-help code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; color: #c9e9a8; white-space: pre-wrap; word-break: break-word; }

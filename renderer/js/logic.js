@@ -6,6 +6,8 @@
   VN.TRACKS.splice(3, 0, { key: 'fx', label: 'Effekt-Ebene', kind: 'overlay', color: '#e88aa6', fg: '#2a0f18' },
     { key: 'cam', label: 'Kamera', kind: 'camera', color: '#8fc3f0', fg: '#0b1a28' },
     { key: 'video', label: 'Video', kind: 'video', color: '#d08ad8', fg: '#22102a' });
+  // Code-Spur (0.9.16): kleine Rechen-Befehle, die an einem Schritt laufen (gold += 5, give("Schlüssel") …)
+  VN.TRACKS.splice(VN.TRACKS.findIndex((t) => t.key === 'choice') + 1, 0, { key: 'code', label: 'Code', kind: 'code', color: '#9be15d', fg: '#132007' });
 
   VN.BLENDS = [
     ['normal', 'Normal'],
