@@ -4136,7 +4136,11 @@ window.VN_I18N_JA = {
 "Regler = Reichweite: wie viel vom Teil sich mitdehnt, wenn die Stelle festgehalten wird. Festhalten: im Animations-Editor Doppelklick auf den Punkt.": "スライダー=範囲:その場所を固定したとき、パーツのどこまでが伸びるか。固定するには、アニメーションエディターで点をダブルクリック。",
 "Punkte wie Pins bei den Bones, z. B. Handfläche, Ferse oder Knie. Im Animations-Editor hält ein Doppelklick die Stelle fest – der Rest der Figur bewegt sich weiter und dehnt sich.": "ボーンのピンのような点(例:手のひら、かかと、ひざ)。アニメーションエディターでダブルクリックするとその場所が固定され、残りは動き続けて伸びます。",
 "Haftpunkt hält hier fest – die Figur dehnt sich, wenn sie sich wegbewegt": "固定点はここに留まります。キャラクターが離れると伸びます",
-"Haftpunkt gelöst": "固定点を解除しました"
+"Haftpunkt gelöst": "固定点を解除しました",
+"Gitter bearbeiten": "メッシュ編集",
+"Pinsel": "ブラシ",
+"1 Kästchen": "1マス",
+"Klick auf ein leeres Kästchen = hinzufügen (grün), auf ein volles = entfernen (rot) · ziehen = mehrere · Gilt für die eingestellte Gitter-Feinheit": "空のマスをクリック=追加(緑)、埋まったマス=削除(赤)・ドラッグ=複数・現在のメッシュの細かさに適用"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

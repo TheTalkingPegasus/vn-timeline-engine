@@ -2,6 +2,11 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.14 – Edit the bones mesh
+- Bones & blinking: new tool “Edit mesh”. Every mesh cell is shown; click or drag over empty cells to add them
+  (e.g. thin hair strands or tips that weren't detected) and over filled cells to remove them (e.g. excess border).
+  Brush 1 cell or 3 × 3, “Reset” restores the automatic mesh. Edits apply to the current mesh density.
+
 ## 0.9.13 – Hold points, the seam becomes the joint
 - Hold points for jointed puppets (“📌 Hold points” in the puppet editor): set points on body parts like pins on
   bones – palm, heel, knee. In the animation editor, double-clicking a point holds that spot in place: when you move

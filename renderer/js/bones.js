@@ -38,7 +38,7 @@
       const head = el('div', { class: 'view-head' }, el('strong', { style: { fontSize: '15px' } }, 'Bones'), assetSel, el('div', { class: 'spacer' }));
       if (rig || blinkOnly) {
         const tools = el('div', { class: 'seg' });
-        const toolList = rig ? [['select', 'Auswählen & ziehen'], ['chain', 'Kette zeichnen'], ['pin', 'Pin setzen'], ['paint', 'Gewichte malen'], ['eyes', 'Augen markieren']] : [['eyes', 'Augen markieren']];
+        const toolList = rig ? [['select', 'Auswählen & ziehen'], ['chain', 'Kette zeichnen'], ['pin', 'Pin setzen'], ['paint', 'Gewichte malen'], ['cells', 'Gitter bearbeiten'], ['eyes', 'Augen markieren']] : [['eyes', 'Augen markieren']];
         for (const [k, l] of toolList) {
           tools.appendChild(el('button', { class: ui.boneTool === k ? 'active' : '', onclick: () => { ui.boneTool = k; ui.chain = k === 'chain' ? [] : null; VN.render(); } }, l));
         }
@@ -48,6 +48,7 @@
       }
       root.appendChild(head);
       if (rig && ui.boneTool === 'paint') root.appendChild(Bones.paintBar(assetId, rig));
+      if (rig && ui.boneTool === 'cells') root.appendChild(Bones.cellBar(assetId, rig));
 
       const wrap = el('div', { class: 'stage-wrap bone-wrap' });
       root.appendChild(wrap);
@@ -129,11 +130,26 @@
       ov.innerHTML = '';
       const s = Math.max(info.w, info.h);
       const ui = VN.ui;
-      if (ui.boneMesh || ui.boneWeights || (ui.boneTool === 'paint' && ui.boneSel)) {
+      if (ui.boneMesh || ui.boneWeights || ui.boneTool === 'cells' || (ui.boneTool === 'paint' && ui.boneSel)) {
         Rig.mesh(assetId).then(({ mesh }) => {
           if (!ov.isConnected) return;
           const g = svg('g', { class: 'mesh-layer' });
-          if (ui.boneMesh) {
+          // Gitter bearbeiten (0.9.14): jedes Kästchen sichtbar – an = türkis, aus = gestrichelt
+          if (ui.boneTool === 'cells' && mesh.cells) {
+            const C = mesh.cells, on = Bones._cellLive && Bones._cellLive.asset === assetId ? Bones._cellLive.on : C.on;
+            Bones._cells = { asset: assetId, C };
+            let dOn = '', dOff = '', dAdd = '', dDel = '';
+            for (let cy = 0; cy < C.ny; cy++) for (let cx = 0; cx < C.nx; cx++) {
+              const i = cy * C.nx + cx, x = cx * C.cell, y = cy * C.cell, r = `M${x} ${y}h${C.cell}v${C.cell}h${-C.cell}Z`;
+              if (on[i] && !C.auto[i]) dAdd += r; else if (!on[i] && C.auto[i]) dDel += r; else if (on[i]) dOn += r; else dOff += r;
+            }
+            const sw = s * 0.0012;
+            g.appendChild(svg('path', { d: dOff, fill: 'none', stroke: 'rgba(230,230,234,0.12)', 'stroke-width': sw }));
+            g.appendChild(svg('path', { d: dOn, fill: 'rgba(79,179,200,0.16)', stroke: 'rgba(79,179,200,0.75)', 'stroke-width': sw }));
+            g.appendChild(svg('path', { d: dAdd, fill: 'rgba(108,196,138,0.35)', stroke: '#6cc48a', 'stroke-width': sw * 1.5 }));
+            g.appendChild(svg('path', { d: dDel, fill: 'rgba(232,90,90,0.25)', stroke: '#e85a5a', 'stroke-width': sw * 1.5, 'stroke-dasharray': `${s * 0.004} ${s * 0.003}` }));
+          }
+          if (ui.boneMesh && ui.boneTool !== 'cells') {
             let d = '';
             const P = mesh.pos;
             for (let i = 0; i < mesh.idx.length; i += 3) {
@@ -256,6 +272,33 @@
           });
           return;
         }
+        if (ui.boneTool === 'cells') {
+          const K = Bones._cells;
+          if (!K || K.asset !== assetId) return;
+          e.preventDefault();
+          const C = K.C, on = C.on.slice();
+          const idxAt = (q) => { const cx = Math.floor(q.x * info.w / C.cell), cy = Math.floor(q.y * info.h / C.cell); return cx >= 0 && cy >= 0 && cx < C.nx && cy < C.ny ? [cx, cy] : null; };
+          const first = idxAt(pt);
+          if (!first) return;
+          const val = on[first[1] * C.nx + first[0]] ? 0 : 1; // erster Klick bestimmt: hinzufügen oder entfernen
+          const big = Bones.cellCfg().size;
+          Bones._cellLive = { asset: assetId, on };
+          let pending = false;
+          const dab = (q) => {
+            const c = idxAt(q); if (!c) return;
+            const r = big === 3 ? 1 : 0;
+            for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { const x = c[0] + dx, y = c[1] + dy; if (x >= 0 && y >= 0 && x < C.nx && y < C.ny) on[y * C.nx + x] = val; }
+            if (!pending) { pending = true; requestAnimationFrame(() => { pending = false; if (ov.isConnected) Bones.drawOverlay(ov, info, assetId); }); }
+          };
+          dab(pt);
+          VN.drag(e, (dx, dy, ev) => dab(toImg(ev)), () => {
+            Bones._cellLive = null;
+            const add = [], del = [];
+            for (let i = 0; i < on.length; i++) { if (on[i] && !C.auto[i]) add.push(i); else if (!on[i] && C.auto[i]) del.push(i); }
+            VN.mutate(() => { if (add.length || del.length) rig.cellEdit = { nx: C.nx, ny: C.ny, add, del }; else delete rig.cellEdit; });
+          });
+          return;
+        }
         if (ui.boneTool === 'pin') {
           if (t.classList.contains('bone-pin')) VN.mutate(() => { rig.pins.splice(Number(t.dataset.pin), 1); });
           else VN.mutate(() => { rig.pins = rig.pins || []; rig.pins.push({ x: pt.x, y: pt.y }); });
@@ -318,6 +361,18 @@
       const ui = VN.ui;
       ui.bonePaint = ui.bonePaint || { mode: 'add', size: 8, strength: 50 };
       return ui.bonePaint;
+    },
+    // Gitter bearbeiten (0.9.14)
+    cellCfg() { VN.ui.cellCfg = VN.ui.cellCfg || { size: 1 }; return VN.ui.cellCfg; },
+    cellBar(assetId, rig) {
+      const P = Bones.cellCfg();
+      const ed = rig.cellEdit;
+      return el('div', { class: 'view-head paint-bar' },
+        el('span', { class: 'small' }, VN.t('Pinsel')),
+        el('div', { class: 'seg' }, ...[[1, '1 Kästchen'], [3, '3 × 3']].map(([v, l]) => el('button', { class: P.size === v ? 'active' : '', onclick: () => { P.size = v; VN.render(); } }, l))),
+        el('span', { class: 'muted small', style: { flex: '1' } }, 'Klick auf ein leeres Kästchen = hinzufügen (grün), auf ein volles = entfernen (rot) · ziehen = mehrere · Gilt für die eingestellte Gitter-Feinheit'),
+        ed ? el('span', { class: 'chip' }, '+' + ed.add.length + ' / −' + ed.del.length) : null,
+        el('button', { class: 'btn tiny', disabled: !ed, onclick: () => VN.mutate(() => { delete rig.cellEdit; }) }, VN.t('Zurücksetzen')));
     },
     paintBar(assetId, rig) {
       const P = Bones.paintCfg();

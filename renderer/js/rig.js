@@ -85,11 +85,15 @@
       const info = layers && layers.length ? await Rig.composite(assetId, layers) : await Rig.analyze(assetId);
       const rig = Rig.get(assetId);
       const res = rig && rig.grid ? rig.grid : 40;
-      const key = (info.key || assetId) + '|' + res + '|' + info.w;
+      // Von Hand bearbeitete Kästchen (0.9.14): { nx, ny, add: [Index], del: [Index] } – gilt nur für die passende Gitter-Feinheit
+      const { w: w0, h: h0 } = info;
+      const cell0 = Math.max(w0, h0) / res, nx0 = Math.ceil(w0 / cell0), ny0 = Math.ceil(h0 / cell0);
+      const ed = rig && rig.cellEdit && rig.cellEdit.nx === nx0 && rig.cellEdit.ny === ny0 ? rig.cellEdit : null;
+      const key = (info.key || assetId) + '|' + res + '|' + info.w + (ed ? '|' + ed.add.join(',') + '/' + ed.del.join(',') : '');
       if (!meshCache[key]) {
         const { w, h, alpha } = info;
-        const cell = Math.max(w, h) / res;
-        const nx = Math.ceil(w / cell), ny = Math.ceil(h / cell);
+        const cell = cell0;
+        const nx = nx0, ny = ny0;
         const filled = new Uint8Array(nx * ny);
         for (let cy = 0; cy < ny; cy++) for (let cx = 0; cx < nx; cx++) {
           let hit = false;
@@ -108,6 +112,8 @@
             if (x >= 0 && y >= 0 && x < nx && y < ny && filled[y * nx + x]) grow[cy * nx + cx] = 1;
           }
         }
+        const auto = grow.slice();
+        if (ed) { for (const i of ed.add || []) if (i >= 0 && i < grow.length) grow[i] = 1; for (const i of ed.del || []) if (i >= 0 && i < grow.length) grow[i] = 0; }
         const vmap = new Map();
         const pos = [], uv = [], idx = [];
         const vert = (gx, gy) => {
@@ -125,7 +131,7 @@
           const a = vert(cx, cy), b = vert(cx + 1, cy), c = vert(cx + 1, cy + 1), d = vert(cx, cy + 1);
           idx.push(a, b, c, a, c, d);
         }
-        meshCache[key] = { w, h, pos: new Float32Array(pos), uv: new Float32Array(uv), idx: new Uint16Array(idx), count: pos.length / 2 };
+        meshCache[key] = { w, h, pos: new Float32Array(pos), uv: new Float32Array(uv), idx: new Uint16Array(idx), count: pos.length / 2, cells: { nx, ny, cell, auto, on: grow } };
       }
       return { info, mesh: meshCache[key] };
     },

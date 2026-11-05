@@ -4075,7 +4075,11 @@ window.VN_I18N_EN = {
 "Regler = Reichweite: wie viel vom Teil sich mitdehnt, wenn die Stelle festgehalten wird. Festhalten: im Animations-Editor Doppelklick auf den Punkt.": "Slider = reach: how much of the part stretches along when the spot is held. To hold: double-click the point in the animation editor.",
 "Punkte wie Pins bei den Bones, z. B. Handfläche, Ferse oder Knie. Im Animations-Editor hält ein Doppelklick die Stelle fest – der Rest der Figur bewegt sich weiter und dehnt sich.": "Points like pins on bones, e.g. palm, heel or knee. In the animation editor a double-click holds the spot – the rest of the character keeps moving and stretches.",
 "Haftpunkt hält hier fest – die Figur dehnt sich, wenn sie sich wegbewegt": "Hold point stays here – the character stretches when it moves away",
-"Haftpunkt gelöst": "Hold point released"
+"Haftpunkt gelöst": "Hold point released",
+"Gitter bearbeiten": "Edit mesh",
+"Pinsel": "Brush",
+"1 Kästchen": "1 cell",
+"Klick auf ein leeres Kästchen = hinzufügen (grün), auf ein volles = entfernen (rot) · ziehen = mehrere · Gilt für die eingestellte Gitter-Feinheit": "Click an empty cell = add (green), a filled one = remove (red) · drag = several · Applies to the current mesh density"
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",
