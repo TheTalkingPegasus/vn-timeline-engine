@@ -4136,7 +4136,11 @@ window.VN_I18N_ES = {
 "Regler = Reichweite: wie viel vom Teil sich mitdehnt, wenn die Stelle festgehalten wird. Festhalten: im Animations-Editor Doppelklick auf den Punkt.": "Control = alcance: cuánto de la parte se estira cuando el punto está fijado. Para fijar: doble clic en el punto en el editor de animación.",
 "Punkte wie Pins bei den Bones, z. B. Handfläche, Ferse oder Knie. Im Animations-Editor hält ein Doppelklick die Stelle fest – der Rest der Figur bewegt sich weiter und dehnt sich.": "Puntos como los pines de los huesos, p. ej. palma, talón o rodilla. En el editor de animación, un doble clic fija el punto: el resto del personaje sigue moviéndose y se estira.",
 "Haftpunkt hält hier fest – die Figur dehnt sich, wenn sie sich wegbewegt": "El punto de anclaje se queda aquí: el personaje se estira al alejarse",
-"Haftpunkt gelöst": "Punto de anclaje soltado"
+"Haftpunkt gelöst": "Punto de anclaje soltado",
+"Gitter bearbeiten": "Editar malla",
+"Pinsel": "Pincel",
+"1 Kästchen": "1 celda",
+"Klick auf ein leeres Kästchen = hinzufügen (grün), auf ein volles = entfernen (rot) · ziehen = mehrere · Gilt für die eingestellte Gitter-Feinheit": "Clic en una celda vacía = añadir (verde), en una llena = quitar (rojo) · arrastrar = varias · Vale para la densidad de malla actual"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

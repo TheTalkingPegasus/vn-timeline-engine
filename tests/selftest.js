@@ -836,6 +836,39 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Nähte: Gewichte, verformtes Zeichnen, Naht an eine andere Figur');
   } catch (e) { general.push('Nähte: ' + e.message); }
 
+  // 13. Gitter bearbeiten (0.9.14): Kästchen hinzufügen/entfernen ändert das Bones-Gitter
+  try {
+    // Testbild mit Bones anlegen (Rechteck in der Mitte, Rand durchsichtig)
+    const png = await js(`(() => { const c = document.createElement('canvas'); c.width = 120; c.height = 200; const g = c.getContext('2d'); g.fillStyle = '#c47'; g.fillRect(30, 20, 60, 160); return c.toDataURL('image/png').split(',')[1]; })()`);
+    const pd = JSON.parse(await js('JSON.stringify(VN.dir)'));
+    fs.writeFileSync(path.join(pd, 'assets', 'gittertest.png'), Buffer.from(png, 'base64'));
+    await js(`(() => { const a = VN.registerAssets([{ name: 'gittertest', kind: 'image', file: 'assets/gittertest.png' }])[0]; VN.project.rigs[a.id] = { bones: [{ id: 'b1', name: 'x', parent: null, hx: 0.5, hy: 0.9, tx: 0.5, ty: 0.1 }], pins: [], global: {}, grid: 20 }; return 1; })()`);
+    const r = JSON.parse(await js(`(async () => {
+      const out = [], p = VN.project;
+      let id = null, m0 = null;
+      for (const k of Object.keys(p.rigs)) { if (!p.assets.some((x) => x.id === k)) continue; const keep0 = p.rigs[k].cellEdit; delete p.rigs[k].cellEdit; try { m0 = (await Rig.mesh(k)).mesh; id = k; } catch (e) { m0 = null; } if (keep0) p.rigs[k].cellEdit = keep0; if (m0) break; }
+      if (!id || !m0) return JSON.stringify(['SKIP']);
+      const rig = p.rigs[id], keep = rig.cellEdit;
+      delete rig.cellEdit;
+      const C = m0.cells;
+      const free = C.auto.findIndex((x) => !x), full = C.auto.findIndex((x) => x);
+      rig.cellEdit = { nx: C.nx, ny: C.ny, add: [free], del: [] };
+      const m1 = (await Rig.mesh(id)).mesh;
+      if (m1.idx.length !== m0.idx.length + 6) out.push('Hinzufügen: ' + (m1.idx.length - m0.idx.length));
+      rig.cellEdit = { nx: C.nx, ny: C.ny, add: [], del: [full] };
+      const m2 = (await Rig.mesh(id)).mesh;
+      if (m2.idx.length !== m0.idx.length - 6) out.push('Entfernen: ' + (m2.idx.length - m0.idx.length));
+      rig.cellEdit = { nx: C.nx + 1, ny: C.ny, add: [free], del: [] };
+      const m3 = (await Rig.mesh(id)).mesh;
+      if (m3.idx.length !== m0.idx.length) out.push('Falsche Gitter-Feinheit nicht ignoriert');
+      if (keep) rig.cellEdit = keep; else delete rig.cellEdit;
+      return JSON.stringify(out);
+    })()`));
+    if (r[0] === 'SKIP') log('– Gitter bearbeiten: kein Bild mit Bones im Testprojekt, übersprungen');
+    else if (r.length) general.push('Gitter: ' + r.join(', '));
+    else log('✓ Gitter bearbeiten: Kästchen hinzufügen und entfernen');
+  } catch (e) { general.push('Gitter: ' + e.message); }
+
   const failed = results.filter((r) => r.errors.length);
   for (const g of general) log('✗ ' + g);
   log(`\n${failed.length || general.length ? 'FEHLGESCHLAGEN' : 'ALLES BESTANDEN'}: ${results.length - failed.length}/${results.length} Projekte ok${general.length ? ', ' + general.length + ' allgemeine Fehler' : ''} · ${((Date.now() - t0) / 1000).toFixed(0)} s`);
