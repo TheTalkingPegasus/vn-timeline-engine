@@ -145,7 +145,7 @@
       return el('div', { class: 'hint-box' },
         el('strong', null, 'So schreibst du Code'), el('br'),
         el('span', { class: 'muted small' }, 'Eine Anweisung pro Zeile. Variablen legst du unter „Variablen“ an – oder mit dem +-Knopf, wenn ein Name noch fehlt.'),
-        el('table', { class: 'code-help' }, ...ex.map(([c, d]) => el('tr', null, el('td', null, el('code', null, c)), el('td', { class: 'muted small' }, d)))),
+        el('table', { class: 'code-help' }, ...ex.map(([c, d]) => el('tr', null, el('td', null, el('code', null, VN.t(c))), el('td', { class: 'muted small' }, d)))),
         el('div', { class: 'muted small' }, 'Funktionen: min, max, round, floor, ceil, abs, random, chance(30), item("Name"), money("Gold"), seen("Szene"). Vergleiche: == != < <= > >=, verknüpfen mit and/und, or/oder, not/nicht.'),
         el('div', { class: 'muted small' }, 'Dieselben Formeln gehen auch als Bedingung: „🧮 Formel“, z. B. gold >= 10 and item("Schlüssel") > 0.'));
     },

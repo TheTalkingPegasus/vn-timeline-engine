@@ -971,7 +971,7 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
       if (F.check('gold < 10 oder nicht [Ganz reich]', rs)) out.push('Formel oder/nicht');
       if (F.check('kaputt ((', rs)) out.push('kaputte Formel gilt als erfüllt');
       if (!F.problem('gold >', false)) out.push('Fehler nicht erkannt');
-      if (!/Zeile 2/.test(F.problem('gold += 1\\nunbekannt = 3', true) || '')) out.push('Zeilennummer im Fehler');
+      if (!/(Zeile|Line|Línea|行) 2/.test(F.problem('gold += 1\\nunbekannt = 3', true) || '')) out.push('Zeilennummer im Fehler');
       if (F.missingVars('gold + mut').join() !== 'mut') out.push('fehlende Variablen');
       if (!VN.checkConds([{ type: 'formula', expr: 'gold == 50' }], rs)) out.push('Bedingung „Formel“');
       const rs2 = { vars: { vt_gold: 1 }, inv: {}, money: {}, seen: {} };

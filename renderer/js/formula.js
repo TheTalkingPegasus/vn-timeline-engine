@@ -5,7 +5,9 @@
 // Variablen über ihren Namen (Groß/klein egal, Leerzeichen = _) oder in eckigen Klammern: [Name mit Leerzeichen].
 // Kein JavaScript – nur Zahlen, Text, wahr/falsch, Rechnen, Vergleichen und die Funktionen unten.
 (function () {
-  const ID0 = /[A-Za-zÄÖÜäöüß_]/, IDN = /[A-Za-zÄÖÜäöüß_0-9]/;
+  // Fehlermeldung in der Sprache der Oberfläche
+  const Er = (msg, x) => new Error(VN.tf ? VN.tf(msg, { x: x == null ? '' : String(x) }) : msg.replace('{x}', x));
+  const ID0 = /[\p{L}_]/u, IDN = /[\p{L}\p{N}_]/u; // alle Buchstaben (auch ñ, é, 日本語)
   const norm = (s) => String(s || '').trim().toLowerCase().replace(/\s+/g, '_');
 
   function lex(src) {
@@ -21,10 +23,10 @@
       if (c === '"' || c === "'" || c === '„' || c === '“') {
         const close = c === '„' ? '“' : c; let j = i + 1, v = '';
         while (j < s.length && s[j] !== close && !(c === '“' && s[j] === '”')) { v += s[j]; j++; }
-        if (j >= s.length) throw new Error('Text ohne schließendes Anführungszeichen');
+        if (j >= s.length) throw Er('Text ohne schließendes Anführungszeichen');
         out.push({ t: 'str', v }); i = j + 1; continue;
       }
-      if (c === '[') { const j = s.indexOf(']', i); if (j < 0) throw new Error('„[“ ohne „]“'); out.push({ t: 'id', v: s.slice(i + 1, j), br: true }); i = j + 1; continue; }
+      if (c === '[') { const j = s.indexOf(']', i); if (j < 0) throw Er('„[“ ohne „]“'); out.push({ t: 'id', v: s.slice(i + 1, j), br: true }); i = j + 1; continue; }
       if (ID0.test(c)) { let j = i; while (j < s.length && IDN.test(s[j])) j++; const w = s.slice(i, j); const lw = w.toLowerCase(); i = j;
         if (lw === 'and' || lw === 'und') out.push({ t: 'op', v: '&&' }); else if (lw === 'or' || lw === 'oder') out.push({ t: 'op', v: '||' }); else if (lw === 'not' || lw === 'nicht') out.push({ t: 'op', v: '!' });
         else if (lw === 'if' || lw === 'wenn') out.push({ t: 'if' });
@@ -35,7 +37,7 @@
       if (['==', '!=', '<=', '>=', '&&', '||', '+=', '-=', '*=', '/=', '%=', '**'].includes(two)) { out.push({ t: 'op', v: two }); i += 2; continue; }
       if ('+-*/%<>!=(),:'.includes(c)) { out.push({ t: 'op', v: c }); i++; continue; }
       if (c === '$') { i++; continue; } // Ren'Py-Gewohnheit: „$ gold += 5“
-      throw new Error('Unbekanntes Zeichen „' + c + '“');
+      throw Er('Unbekanntes Zeichen „{x}“', c);
     }
     out.push({ t: 'end' });
     return out;
@@ -46,10 +48,10 @@
   function parser(toks) {
     let p = 0;
     const peek = () => toks[p], next = () => toks[p++];
-    const expect = (v) => { const t = next(); if (!t || t.v !== v) throw new Error('„' + v + '“ erwartet'); };
+    const expect = (v) => { const t = next(); if (!t || t.v !== v) throw Er('„{x}“ erwartet', v); };
     const primary = () => {
       const t = next();
-      if (!t || t.t === 'end') throw new Error('Ausdruck unvollständig');
+      if (!t || t.t === 'end') throw Er('Ausdruck unvollständig');
       if (t.t === 'num') return { k: 'lit', v: t.v };
       if (t.t === 'str') return { k: 'lit', v: t.v };
       if (t.t === 'op' && t.v === '(') { const e = expr(0); expect(')'); return e; }
@@ -67,7 +69,7 @@
         }
         return { k: 'var', name: t.v };
       }
-      throw new Error('Unerwartet: „' + (t.v != null ? t.v : t.t) + '“');
+      throw Er('Unerwartet: „{x}“', t.v != null ? t.v : t.t);
     };
     const unary = () => primary();
     const expr = (min) => {
@@ -102,9 +104,9 @@
     round: (a) => Math.round(num(a)), floor: (a) => Math.floor(num(a)), ceil: (a) => Math.ceil(num(a)), abs: (a) => Math.abs(num(a)),
     random: (a, b) => { const lo = Math.ceil(num(a)), hi = Math.floor(num(b)); return lo + Math.floor(Math.random() * (hi - lo + 1)); },
     chance: (pct) => Math.random() * 100 < num(pct),
-    item: (name, rs) => { const it = byName(P().items, name); if (!it) throw new Error('Gegenstand „' + name + '“ gibt es nicht'); return (rs.inv || {})[it.id] || 0; },
-    money: (name, rs) => { const c = name ? byName(P().currencies, name) : (P().currencies || [])[0]; if (!c) throw new Error('Währung „' + (name || '') + '“ gibt es nicht'); return (rs.money || {})[c.id] || 0; },
-    seen: (name, rs) => { const s = byName(P().scenes, name); if (!s) throw new Error('Szene „' + name + '“ gibt es nicht'); return !!(rs.seen || {})[s.id]; }
+    item: (name, rs) => { const it = byName(P().items, name); if (!it) throw Er('Gegenstand „{x}“ gibt es nicht', name); return (rs.inv || {})[it.id] || 0; },
+    money: (name, rs) => { const c = name ? byName(P().currencies, name) : (P().currencies || [])[0]; if (!c) throw Er('Währung „{x}“ gibt es nicht', name || ''); return (rs.money || {})[c.id] || 0; },
+    seen: (name, rs) => { const s = byName(P().scenes, name); if (!s) throw Er('Szene „{x}“ gibt es nicht', name); return !!(rs.seen || {})[s.id]; }
   };
   const ACTS = ['give', 'take', 'earn', 'spend', 'goto'];
   function ev(n, rs, ctx) {
@@ -112,7 +114,7 @@
       case 'lit': return n.v;
       case 'var': {
         const v = findVar(n.name);
-        if (!v) throw new Error('Variable „' + n.name + '“ gibt es nicht');
+        if (!v) throw Er('Variable „{x}“ gibt es nicht', n.name);
         const cur = (rs.vars || {})[v.id];
         return v.type === 'flag' ? !!cur : cur == null ? (v.start != null ? v.start : 0) : cur;
       }
@@ -130,16 +132,16 @@
           case '!=': return !ev({ k: 'bin', op: '==', a: { k: 'lit', v: a }, b: { k: 'lit', v: b } }, rs, ctx);
           case '<': return num(a) < num(b); case '<=': return num(a) <= num(b); case '>': return num(a) > num(b); case '>=': return num(a) >= num(b);
         }
-        throw new Error('Unbekannter Operator ' + n.op);
+        throw Er('Unbekannter Operator {x}', n.op);
       }
       case 'call': {
         const args = n.args.map((x) => ev(x, rs, ctx));
         if (FUNCS[n.f]) return ['item', 'money', 'seen'].includes(n.f) ? FUNCS[n.f](args[0], rs) : FUNCS[n.f](...args);
-        if (ACTS.includes(n.f)) { if (!ctx || !ctx.act) throw new Error('„' + n.f + '“ geht nur im Code, nicht in einer Bedingung'); return ctx.act(n.f, args); }
-        throw new Error('Unbekannte Funktion „' + n.f + '()“');
+        if (ACTS.includes(n.f)) { if (!ctx || !ctx.act) throw Er('„{x}“ geht nur im Code, nicht in einer Bedingung', n.f); return ctx.act(n.f, args); }
+        throw Er('Unbekannte Funktion „{x}()“', n.f);
       }
     }
-    throw new Error('Kaputter Ausdruck');
+    throw Er('Kaputter Ausdruck');
   }
 
   const F = (VN.Formula = {
@@ -150,7 +152,7 @@
       const toks = lex(src), ps = parser(toks);
       const e = ps.expr(0);
       while (ps.peek() && ps.peek().t === 'end' && ps.at() < toks.length - 1) ps.next();
-      if (ps.peek() && ps.peek().t !== 'end') throw new Error('Unerwartet: „' + ps.peek().v + '“');
+      if (ps.peek() && ps.peek().t !== 'end') throw Er('Unerwartet: „{x}“', ps.peek().v);
       return ev(e, rs || {}, null);
     },
     // Was an einer Formel kaputt ist (Syntax, unbekannte Variablen …) – mit einem Probe-Spielstand
@@ -172,9 +174,9 @@
       const lines = String(src || '').split('\n');
       const gains = [];
       const act = (f, args) => {
-        if (f === 'goto') { const s = byName(P().scenes, args[0]); if (!s) throw new Error('Szene „' + args[0] + '“ gibt es nicht'); if (!o.dry && VN.ext.actions.goto) VN.ext.actions.goto.apply({ scene: s.id }, rs); return true; }
-        if (f === 'give' || f === 'take') { const it = byName(P().items, args[0]); if (!it) throw new Error('Gegenstand „' + args[0] + '“ gibt es nicht'); const n = args.length > 1 ? Math.round(num(args[1])) : 1; rs.inv = rs.inv || {}; if (f === 'give' && VN.giveItem && !o.dry) VN.giveItem(rs, it.id, n); else { rs.inv[it.id] = Math.max(0, (rs.inv[it.id] || 0) + (f === 'give' ? n : -n)); if (!rs.inv[it.id]) delete rs.inv[it.id]; } if (f === 'give' && n > 0) gains.push({ kind: 'item', id: it.id, count: n }); return true; }
-        if (f === 'earn' || f === 'spend') { const c = byName(P().currencies, args[0]); if (!c) throw new Error('Währung „' + args[0] + '“ gibt es nicht'); const n = Math.round(num(args[1])); rs.money = rs.money || {}; rs.money[c.id] = Math.max(0, (rs.money[c.id] || 0) + (f === 'earn' ? n : -n)); if (f === 'earn' && n > 0) gains.push({ kind: 'money', id: c.id, count: n }); return true; }
+        if (f === 'goto') { const s = byName(P().scenes, args[0]); if (!s) throw Er('Szene „{x}“ gibt es nicht', args[0]); if (!o.dry && VN.ext.actions.goto) VN.ext.actions.goto.apply({ scene: s.id }, rs); return true; }
+        if (f === 'give' || f === 'take') { const it = byName(P().items, args[0]); if (!it) throw Er('Gegenstand „{x}“ gibt es nicht', args[0]); const n = args.length > 1 ? Math.round(num(args[1])) : 1; rs.inv = rs.inv || {}; if (f === 'give' && VN.giveItem && !o.dry) VN.giveItem(rs, it.id, n); else { rs.inv[it.id] = Math.max(0, (rs.inv[it.id] || 0) + (f === 'give' ? n : -n)); if (!rs.inv[it.id]) delete rs.inv[it.id]; } if (f === 'give' && n > 0) gains.push({ kind: 'item', id: it.id, count: n }); return true; }
+        if (f === 'earn' || f === 'spend') { const c = byName(P().currencies, args[0]); if (!c) throw Er('Währung „{x}“ gibt es nicht', args[0]); const n = Math.round(num(args[1])); rs.money = rs.money || {}; rs.money[c.id] = Math.max(0, (rs.money[c.id] || 0) + (f === 'earn' ? n : -n)); if (f === 'earn' && n > 0) gains.push({ kind: 'money', id: c.id, count: n }); return true; }
         return false;
       };
       lines.forEach((line, li) => {
@@ -185,7 +187,7 @@
             if (st.k === 'if') { if (ev(st.c, rs, { act })) exec(st.s); return; }
             if (st.k === 'do') { ev(st.e, rs, { act }); return; }
             const v = findVar(st.name);
-            if (!v) throw new Error('Variable „' + st.name + '“ gibt es nicht');
+            if (!v) throw Er('Variable „{x}“ gibt es nicht', st.name);
             rs.vars = rs.vars || {};
             const cur = v.type === 'flag' ? !!rs.vars[v.id] : rs.vars[v.id] == null ? 0 : rs.vars[v.id];
             let val = ev(st.e, rs, { act });
@@ -196,9 +198,9 @@
           };
           while (ps.peek() && ps.peek().t !== 'end') {
             exec(ps.stmt());
-            if (ps.peek() && ps.peek().t !== 'end') throw new Error('Nach der Anweisung steht noch etwas: „' + ps.peek().v + '“');
+            if (ps.peek() && ps.peek().t !== 'end') throw Er('Nach der Anweisung steht noch etwas: „{x}“', ps.peek().v);
           }
-        } catch (e) { const er = new Error('Zeile ' + (li + 1) + ': ' + e.message); er.line = li + 1; throw er; }
+        } catch (e) { const er = new Error(VN.tf('Zeile {n}', { n: li + 1 }) + ': ' + e.message); er.line = li + 1; throw er; }
       });
       return gains;
     },
@@ -221,7 +223,7 @@
       msg.querySelectorAll('button').forEach((b) => b.remove());
       for (const name of F.missingVars(v)) msg.appendChild(el('button', { class: 'btn tiny', title: VN.t('Als Zahl-Variable anlegen (Start 0)'), onclick: () => VN.mutate(() => { P().vars.push({ id: VN.uid('v'), name: name.replace(/_/g, ' '), type: 'number', start: 0, note: '' }); }) }, '+ ' + name));
     };
-    const ta = el(rows > 1 ? 'textarea' : 'input', Object.assign({ class: 'small-input code-input', spellcheck: false, value: o[key] || '', placeholder: code ? 'gold += 5\nif gold > 100: [Reich] = wahr\ngive("Schlüssel")' : 'gold >= 10 and not tür_offen', oninput: (e) => upd(e.target.value), onchange: (e) => VN.mutate(() => { o[key] = e.target.value; }) }, rows > 1 ? { rows } : { type: 'text' }));
+    const ta = el(rows > 1 ? 'textarea' : 'input', Object.assign({ class: 'small-input code-input', spellcheck: false, value: o[key] || '', placeholder: VN.t(code ? 'gold += 5\nif gold > 100: [Reich] = wahr\ngive("Schlüssel")' : 'gold >= 10 and not tür_offen'), oninput: (e) => upd(e.target.value), onchange: (e) => VN.mutate(() => { o[key] = e.target.value; }) }, rows > 1 ? { rows } : { type: 'text' }));
     if (rows > 1) ta.value = o[key] || '';
     upd(o[key] || '');
     return [ta, msg];
