@@ -172,6 +172,7 @@
         if (ui().animPlay && fps && !VN.fpsStep(AnimEd, ui().animT || 0, fps) && AnimEd._maps) { AnimEd._raf = requestAnimationFrame(frame); return; }
         const t = ui().animPlay && fps ? Math.floor((ui().animT || 0) * fps + 1e-6) / fps : ui().animT || 0;
         const bgOpts = { bgFill: true, bgColor: '#15161b' };
+        AnimEd._cvW = canvas.width; AnimEd._cvH = canvas.height;
         const dd = fps ? 1 / fps : dt;
         if (ui().animOnion && !ui().animPlay) {
           Anim.draw(ctx, sc, Math.max(0, t - 0.25), 0, Object.assign({ alpha: 0.2 }, bgOpts));
@@ -291,7 +292,7 @@
       tl.appendChild(el('div', { class: 'tl-tools' },
         el('strong', null, 'Keyframes'),
         el('span', { class: 'muted small' }, (t.toFixed(2)) + ' s / ' + a.dur.toFixed(1) + ' s'),
-        el('span', { class: 'muted small' }, '· Knochen-Griff ziehen = Keyframe an der Abspielposition · Raute ziehen = verschieben · Rechtsklick = löschen'),
+        el('span', { class: 'muted small' }, actorOf(a) && actorOf(a).puppet ? '· Teil ziehen = drehen · gelbes Quadrat / Pfeile oder Alt + Ziehen = ganze Figur verschieben · Doppelklick = festpinnen' : '· Knochen-Griff ziehen = Keyframe an der Abspielposition · Raute ziehen = verschieben · Rechtsklick = löschen'),
         el('div', { style: { flex: '1' } }),
         actorOf(a) ? AnimEd.actorSelect(a) : null));
       const scroll = el('div', { class: 'tl-scroll' });
@@ -370,6 +371,17 @@
         if (pinned) mk('rect', { x: tx - 6, y: ty - 6, width: 12, height: 12, fill: '#4fb3c8', stroke: '#fff', 'stroke-width': 2 });
         else mk('circle', { cx: tx, cy: ty, r: sel ? 7.5 : 6, fill: sel ? '#e8a43a' : keyed ? '#e86aa0' : '#2b2e38', stroke: '#fff', 'stroke-width': 2, class: 'an-handle' });
         H.parts.push({ pid: p.id, px, py, tx, ty });
+      }
+      // Haftpunkte (0.9.13): Doppelklick = an dieser Stelle festhalten / lösen
+      H.holds = [];
+      const cam = (AnimEd._maps || {}).cam, W = AnimEd._cvW || 1, Hh = AnimEd._cvH || 1;
+      for (const p of pup.parts) for (const hp of p.holdPts || []) {
+        if (!ms[p.id]) continue;
+        const [hx, hy] = ap(ms[p.id], hp.u, hp.v);
+        const held = actor.holds && actor.holds[hp.id];
+        if (held && cam) { const [sx, sy] = ap(cam, held.x * W, held.y * Hh); mk('line', { x1: hx, y1: hy, x2: sx, y2: sy, stroke: '#ffb84d', 'stroke-width': 1.5, 'stroke-dasharray': '3 2' }); mk('path', { d: `M${sx - 7},${sy + 7} L${sx},${sy - 5} L${sx + 7},${sy + 7} Z`, fill: '#ffb84d', stroke: '#fff', 'stroke-width': 1.5 }); }
+        mk('circle', { cx: hx, cy: hy, r: held ? 6.5 : 5, fill: held ? '#ffb84d' : 'rgba(255,184,77,0.25)', stroke: '#ffb84d', 'stroke-width': 2 });
+        H.holds.push({ id: hp.id, pid: p.id, x: hx, y: hy });
       }
       // Koordinatenpfeile am ersten Wurzel-Teil: ganze Figur verschieben (X, Y oder frei)
       const root = Puppet.roots(pup)[0];
@@ -469,9 +481,24 @@
         el('div', { class: 'muted small' }, L.length ? 'Die Naht bleibt in der Lage, in der sie gezogen wurde. Wer die Puppen danach anders stellen will: Naht löschen und neu ziehen.' : 'Mit „🧵 Annähen“ oben eine Linie über ein Teil dieser Figur ziehen, das auf einer anderen Figur liegt (z. B. Hand auf der Schulter). Es bewegt sich dann mit der anderen Figur mit.'));
     },
     pupDown(e, px, py, r, kx, a, actor) {
+      const pup = Puppet.get(actor.puppet);
+      // Haftpunkt: Doppelklick = hier festhalten / lösen (0.9.13)
+      const H0 = AnimEd._pupH;
+      const hh = H0 && H0.actor === actor.id && (H0.holds || []).find((h) => Math.hypot(h.x - px, h.y - py) < 10);
+      if (hh) {
+        e.preventDefault();
+        if (VN.isDouble(e, 'hold:' + actor.id + ':' + hh.id)) {
+          const cam = (AnimEd._maps || {}).cam;
+          if (!cam) return true;
+          const [sx, sy] = Puppet.m.ap(Puppet.m.inv(cam), hh.x, hh.y);
+          const on = !(actor.holds && actor.holds[hh.id]);
+          VN.mutate(() => { actor.holds = actor.holds || {}; if (on) actor.holds[hh.id] = { x: Math.round(sx / (AnimEd._cvW || 1) * 1e4) / 1e4, y: Math.round(sy / (AnimEd._cvH || 1) * 1e4) / 1e4 }; else delete actor.holds[hh.id]; if (!Object.keys(actor.holds).length) delete actor.holds; });
+          VN.toast(on ? VN.t('Haftpunkt hält hier fest – die Figur dehnt sich, wenn sie sich wegbewegt') : VN.t('Haftpunkt gelöst'));
+        }
+        return true;
+      }
       const hit = AnimEd.pupHit(actor, px, py);
       if (!hit) return false;
-      const pup = Puppet.get(actor.puppet);
       // Doppelklick auf ein angehängtes Teil = festpinnen / lösen (selbst erkannt, weil die Bühne nach dem Klick neu gezeichnet wird)
       if (hit.kind === 'part' && pup) {
         const pp = Puppet.part(pup, hit.pid);
@@ -497,6 +524,15 @@
       const a0 = Math.atan2(p0[1] - piv[1], p0[0] - piv[0]);
       const pins = Object.keys(actor.pins || {}).filter((k) => actor.pins[k] && k !== part.id && Puppet.part(pup, k));
       const fixed = {}; for (const pid of pins) fixed[pid] = Puppet.tipWorld(pup, pose0, pid);
+      // Festgehaltene Haftpunkte: Glieder dorthin beugen (der Rest wird beim Zeichnen gedehnt)
+      const holdT = [];
+      const cam = (AnimEd._maps || {}).cam;
+      if (cam && actor.holds) for (const pp of pup.parts) for (const hp of pp.holdPts || []) {
+        const h = actor.holds[hp.id]; if (!h || !pp.parent) continue;
+        const [cx, cy] = Puppet.m.ap(cam, h.x * (AnimEd._cvW || 1), h.y * (AnimEd._cvH || 1));
+        holdT.push({ pid: pp.id, pt: [hp.u, hp.v], target: toPup(cx, cy) });
+      }
+      const keepHolds = (pose) => { const lock = new Set(Puppet.roots(pup).map((x) => x.id)); for (const h of holdT) if (h.pid !== part.id) Puppet.ik(pup, pose, h.pid, h.pt, h.target, { links: 3, lock }); };
       const before = JSON.stringify(actor.parts || {});
       actor.parts = actor.parts || {};
       const write = (pose) => {
@@ -511,6 +547,13 @@
         const [qx, qy] = toPup((ev.clientX - r.left) * kx, (ev.clientY - r.top) * kx);
         const pose = JSON.parse(JSON.stringify(pose0));
         const ps = pose[part.id] || (pose[part.id] = { r: 0, x: 0, y: 0 });
+        // Alt + ziehen an einem beliebigen Teil = ganze Figur verschieben (0.9.13)
+        if (ev.altKey && hit.kind !== 'move') {
+          const root = Puppet.rootOf(pup, part.id);
+          const pr = pose[root.id] || (pose[root.id] = { r: 0, x: 0, y: 0 });
+          Puppet.moveBody(pup, pose, root.id, { x: (pr.x || 0) + qx - p0[0], y: (pr.y || 0) + qy - p0[1] }, pins.filter((k) => k !== root.id), fixed);
+          keepHolds(pose); write(pose); return;
+        }
         if (hit.kind === 'move' || (!part.parent && hit.grab === 'body')) {
           // Körper / Koordinatenpfeile (0.9.8): festgepinnte Glieder bleiben, alles dazwischen beugt sich mit –
           // nur so weit die Glieder reichen. Umschalt am Körper = neigen.
@@ -518,11 +561,13 @@
             if (ev.shiftKey) { let d = (Math.atan2(qy - piv[1], qx - piv[0]) - a0) * 180 / Math.PI; if (d > 180) d -= 360; if (d < -180) d += 360; Puppet.moveBody(pup, pose, part.id, { x: ps.x || 0, y: ps.y || 0, r: (ps.r || 0) + d }, pins, fixed); }
             else Puppet.moveBody(pup, pose, part.id, { x: (ps.x || 0) + qx - p0[0], y: (ps.y || 0) + qy - p0[1] }, pins, fixed);
           } else Puppet.moveBody(pup, pose, part.id, { x: (ps.x || 0) + (hit.axis !== 'y' ? qx - p0[0] : 0), y: (ps.y || 0) + (hit.axis !== 'x' ? qy - p0[1] : 0) }, pins, fixed);
+          keepHolds(pose);
           write(pose);
           return;
         } else if (ev.shiftKey) Puppet.ik(pup, pose, part.id, local, [qx, qy], { links: 3 });
         else { let d = (Math.atan2(qy - piv[1], qx - piv[0]) - a0) * 180 / Math.PI; if (d > 180) d -= 360; if (d < -180) d += 360; ps.r = Puppet.clampR(part, (ps.r || 0) + d); }
         Puppet.keepPins(pup, pose, pins, fixed);
+        keepHolds(pose);
         write(pose);
       }, (dx, dy, moved) => {
         if (!moved) { VN.render(); return; }

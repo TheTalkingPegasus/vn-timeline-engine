@@ -4118,7 +4118,25 @@ window.VN_I18N_ES = {
 "Unter der Linie liegt kein Teil einer anderen Figur": "No hay ninguna parte de otro personaje debajo de la línea",
 "Nähte an andere Figuren": "Costuras a otros personajes",
 "Die Naht bleibt in der Lage, in der sie gezogen wurde. Wer die Puppen danach anders stellen will: Naht löschen und neu ziehen.": "La costura conserva la posición en la que se trazó. Para colocar las marionetas de otra forma después: borra la costura y vuelve a trazarla.",
-"Mit „🧵 Annähen“ oben eine Linie über ein Teil dieser Figur ziehen, das auf einer anderen Figur liegt (z. B. Hand auf der Schulter). Es bewegt sich dann mit der anderen Figur mit.": "Con «🧵 Coser a otro» arriba, traza una línea sobre una parte de este personaje que se apoya en otro (p. ej. una mano en el hombro). Se moverá junto con el otro personaje."
+"Mit „🧵 Annähen“ oben eine Linie über ein Teil dieser Figur ziehen, das auf einer anderen Figur liegt (z. B. Hand auf der Schulter). Es bewegt sich dann mit der anderen Figur mit.": "Con «🧵 Coser a otro» arriba, traza una línea sobre una parte de este personaje que se apoya en otro (p. ej. una mano en el hombro). Se moverá junto con el otro personaje.",
+"„{a}“ an „{b}“ angenäht – das Gelenk liegt jetzt auf der Naht": "«{a}» cosido a «{b}»: la articulación está ahora en la costura",
+"Gelenk liegt auf der Naht": "La articulación está en la costura",
+"Das Teil hängt dann an diesem Teil und dreht sich um die Mitte der Naht": "La parte cuelga de esta parte y gira alrededor del centro de la costura",
+"Gelenk auf die Naht legen": "Poner la articulación en la costura",
+"Ausprobieren eingeschaltet – jetzt den Torso ziehen, das Festgepinnte bleibt stehen": "Probar activado: ahora arrastra el torso, lo fijado se queda en su sitio",
+"Haftpunkte setzen wie Pins bei den Bones – im Animations-Editor hält ein Doppelklick die Stelle fest, der Rest der Figur bewegt und dehnt sich weiter": "Coloca puntos de anclaje como los pines de los huesos: en el editor de animación, un doble clic fija ese punto y el resto del personaje se sigue moviendo y estirando",
+"📌 Haftpunkte": "📌 Puntos de anclaje",
+"✓ Haftpunkte": "✓ Puntos de anclaje",
+"Haftpunkte": "Puntos de anclaje",
+"Haftpunkte: auf ein Teil klicken = Punkt setzen (z. B. Handfläche, Ferse, Knie) · Punkt ziehen = verschieben · rechts unter „Haftpunkte“ Reichweite und Löschen. Im Animations-Editor hält ein Doppelklick auf den Punkt diese Stelle fest: Bewegst du die Figur, bleibt sie kleben, die Glieder beugen sich und das Bild dehnt sich, wo sie nicht reichen.": "Puntos de anclaje: clic en una parte = poner un punto (p. ej. palma, talón, rodilla) · arrastrar un punto = moverlo · alcance y borrar a la derecha en «Puntos de anclaje». En el editor de animación, un doble clic en el punto lo fija: al mover el personaje se queda pegado, las extremidades se doblan y la imagen se estira donde no llegan.",
+"Haftpunkt auf „{name}“ gesetzt": "Punto de anclaje puesto en «{name}»",
+"Reichweite: wie viel vom Teil sich mitdehnt": "Alcance: cuánto de la parte se estira",
+"✓ Haftpunkte setzen": "✓ Poner puntos de anclaje",
+"📌 Haftpunkte setzen": "📌 Poner puntos de anclaje",
+"Regler = Reichweite: wie viel vom Teil sich mitdehnt, wenn die Stelle festgehalten wird. Festhalten: im Animations-Editor Doppelklick auf den Punkt.": "Control = alcance: cuánto de la parte se estira cuando el punto está fijado. Para fijar: doble clic en el punto en el editor de animación.",
+"Punkte wie Pins bei den Bones, z. B. Handfläche, Ferse oder Knie. Im Animations-Editor hält ein Doppelklick die Stelle fest – der Rest der Figur bewegt sich weiter und dehnt sich.": "Puntos como los pines de los huesos, p. ej. palma, talón o rodilla. En el editor de animación, un doble clic fija el punto: el resto del personaje sigue moviéndose y se estira.",
+"Haftpunkt hält hier fest – die Figur dehnt sich, wenn sie sich wegbewegt": "El punto de anclaje se queda aquí: el personaje se estira al alejarse",
+"Haftpunkt gelöst": "Punto de anclaje soltado"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

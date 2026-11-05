@@ -2,6 +2,20 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.13 – Hold points, the seam becomes the joint
+- Hold points for jointed puppets (“📌 Hold points” in the puppet editor): set points on body parts like pins on
+  bones – palm, heel, knee. In the animation editor, double-clicking a point holds that spot in place: when you move
+  the character, the spot stays stuck, the limbs bend towards it and where they don't reach, the image stretches.
+  The reach of the stretch is adjustable per point.
+- When you sew a part onto another one, the part now hangs on that part and turns around the middle of the seam –
+  the old pin, which could lie anywhere in the image, no longer shifts it. The part moves with the image it is sewn
+  to. For seams drawn earlier there is a button “📍 Put the joint on the seam”.
+- Animation editor: Alt + drag on any part of a jointed puppet moves the whole character (like the yellow square and
+  arrows); the help line now explains this. Sewing the main body part onto another part no longer hangs the whole
+  character on it.
+- Double-clicking a body part in the puppet editor now also works while building: it switches “Try out” on and pins
+  the part right away.
+
 ## 0.9.12 – Seams for jointed puppets, fix for pinning limbs
 - Seams: sew two overlapping parts of a jointed puppet together along a line (“🧵 Sew” in the puppet editor), e.g.
   thigh to hip or upper arm to shoulder. The seam points stick exactly to the other part, the rest follows its own

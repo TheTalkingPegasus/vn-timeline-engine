@@ -815,6 +815,21 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
       P.draw(c2, pup2, res, [1, 0, 0, 1, 100, 100], null, 0, {}, {}, { extSeams: [{ id: 'x1', part: 'tB', pts: [[0, 30], [90, 30]], soft: 60, rel }], ext: { x1: [1, 0, 0, 1, 250, 100] } });
       const q = c2.getImageData(250 + 45, 100 + 5, 1, 1).data;
       if (!(q[2] > 200 && q[3] > 200)) out.push('Naht an andere Figur folgt nicht');
+      // Haftpunkt (0.9.13): Stelle wird an einen festen Punkt gezogen (Dehnen), weit weg bleibt das Bild, wo es war
+      const pup4 = { id: 't4', parts: [Object.assign({}, B, { seams: [], holdPts: [{ id: 'hp1', u: 45, v: 220, soft: 40 }] })] };
+      const cv4 = document.createElement('canvas'); cv4.width = 600; cv4.height = 600; const c4 = cv4.getContext('2d');
+      const M4 = P.solve(pup4, null, null, null, 0).tB, h0 = P.m.ap(M4, 45, 220);
+      P.draw(c4, pup4, res, [1, 0, 0, 1, 100, 100], null, 0, {}, {}, { holds: [{ id: 'hp1', part: 'tB', u: 45, v: 220, soft: 40, x: h0[0] + 100 + 80, y: h0[1] + 100 }] });
+      const hpx = c4.getImageData(Math.round(h0[0] + 100 + 80), Math.round(h0[1] + 100), 1, 1).data;
+      if (!(hpx[2] > 200 && hpx[3] > 200)) out.push('Haftpunkt zieht nicht');
+      // Naht als Gelenk (0.9.13): Teil ohne Eltern hängt danach am Ziel, Pin auf der Mitte der Naht, Bild bleibt an seinem Platz
+      const L2 = Object.assign(P.newPart(null, 90, 240, 30, 220), { id: 'tL', ax: 45, ay: 150 });
+      const pup3 = { id: 't3', parts: [Object.assign({}, A), L2] };
+      const before = P.rest(L2).slice();
+      const s3 = { id: 's3', to: 'tA', pts: [[0, 30], [90, 30]], soft: 60 };
+      if (!PupEd.seamJoint(pup3, L2, s3)) out.push('Naht-Gelenk nicht gesetzt');
+      if (L2.parent !== 'tA' || Math.abs(L2.ax - 45) > 0.2 || Math.abs(L2.ay - 30) > 0.2) out.push('Gelenk nicht auf der Naht: ' + L2.ax + '/' + L2.ay);
+      if (P.rest(L2).some((n, i) => Math.abs(n - before[i]) > 0.01)) out.push('Teil verrutscht beim Gelenk-Setzen');
       return JSON.stringify(out);
     })()`));
     if (r.length) general.push('Nähte: ' + r.join(', '));

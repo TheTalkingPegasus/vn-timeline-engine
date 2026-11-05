@@ -4118,7 +4118,25 @@ window.VN_I18N_JA = {
 "Unter der Linie liegt kein Teil einer anderen Figur": "線の下に他のキャラクターのパーツがありません",
 "Nähte an andere Figuren": "他のキャラクターへの縫い目",
 "Die Naht bleibt in der Lage, in der sie gezogen wurde. Wer die Puppen danach anders stellen will: Naht löschen und neu ziehen.": "縫い目は引いたときの位置関係を保ちます。後で人形の配置を変えたい場合は、縫い目を削除して引き直してください。",
-"Mit „🧵 Annähen“ oben eine Linie über ein Teil dieser Figur ziehen, das auf einer anderen Figur liegt (z. B. Hand auf der Schulter). Es bewegt sich dann mit der anderen Figur mit.": "上の「🧵 縫い付け」で、別のキャラクターに重なっているこのキャラクターのパーツ(例:肩に置いた手)の上に線を引きます。そのキャラクターと一緒に動くようになります。"
+"Mit „🧵 Annähen“ oben eine Linie über ein Teil dieser Figur ziehen, das auf einer anderen Figur liegt (z. B. Hand auf der Schulter). Es bewegt sich dann mit der anderen Figur mit.": "上の「🧵 縫い付け」で、別のキャラクターに重なっているこのキャラクターのパーツ(例:肩に置いた手)の上に線を引きます。そのキャラクターと一緒に動くようになります。",
+"„{a}“ an „{b}“ angenäht – das Gelenk liegt jetzt auf der Naht": "「{a}」を「{b}」に縫い付けました。関節は縫い目の上にあります",
+"Gelenk liegt auf der Naht": "関節は縫い目の上",
+"Das Teil hängt dann an diesem Teil und dreht sich um die Mitte der Naht": "パーツはこのパーツにつながり、縫い目の中心を軸に回転します",
+"Gelenk auf die Naht legen": "関節を縫い目に置く",
+"Ausprobieren eingeschaltet – jetzt den Torso ziehen, das Festgepinnte bleibt stehen": "お試しモードをオンにしました。胴体をドラッグすると、固定した部分はその場に残ります",
+"Haftpunkte setzen wie Pins bei den Bones – im Animations-Editor hält ein Doppelklick die Stelle fest, der Rest der Figur bewegt und dehnt sich weiter": "ボーンのピンのように固定点を置きます。アニメーションエディターでダブルクリックするとその場所が固定され、残りの部分は動いたり伸びたりします",
+"📌 Haftpunkte": "📌 固定点",
+"✓ Haftpunkte": "✓ 固定点",
+"Haftpunkte": "固定点",
+"Haftpunkte: auf ein Teil klicken = Punkt setzen (z. B. Handfläche, Ferse, Knie) · Punkt ziehen = verschieben · rechts unter „Haftpunkte“ Reichweite und Löschen. Im Animations-Editor hält ein Doppelklick auf den Punkt diese Stelle fest: Bewegst du die Figur, bleibt sie kleben, die Glieder beugen sich und das Bild dehnt sich, wo sie nicht reichen.": "固定点:パーツをクリック=点を置く(例:手のひら、かかと、ひざ)・点をドラッグ=移動・右の「固定点」で範囲と削除。アニメーションエディターで点をダブルクリックするとその場所が固定され、キャラクターを動かしてもくっついたまま、手足が曲がり、届かないところは画像が伸びます。",
+"Haftpunkt auf „{name}“ gesetzt": "「{name}」に固定点を置きました",
+"Reichweite: wie viel vom Teil sich mitdehnt": "範囲:パーツのどこまでが一緒に伸びるか",
+"✓ Haftpunkte setzen": "✓ 固定点を置く",
+"📌 Haftpunkte setzen": "📌 固定点を置く",
+"Regler = Reichweite: wie viel vom Teil sich mitdehnt, wenn die Stelle festgehalten wird. Festhalten: im Animations-Editor Doppelklick auf den Punkt.": "スライダー=範囲:その場所を固定したとき、パーツのどこまでが伸びるか。固定するには、アニメーションエディターで点をダブルクリック。",
+"Punkte wie Pins bei den Bones, z. B. Handfläche, Ferse oder Knie. Im Animations-Editor hält ein Doppelklick die Stelle fest – der Rest der Figur bewegt sich weiter und dehnt sich.": "ボーンのピンのような点(例:手のひら、かかと、ひざ)。アニメーションエディターでダブルクリックするとその場所が固定され、残りは動き続けて伸びます。",
+"Haftpunkt hält hier fest – die Figur dehnt sich, wenn sie sich wegbewegt": "固定点はここに留まります。キャラクターが離れると伸びます",
+"Haftpunkt gelöst": "固定点を解除しました"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

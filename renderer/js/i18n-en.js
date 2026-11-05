@@ -4057,7 +4057,25 @@ window.VN_I18N_EN = {
 "Unter der Linie liegt kein Teil einer anderen Figur": "There is no part of another character under the line",
 "Nähte an andere Figuren": "Seams to other characters",
 "Die Naht bleibt in der Lage, in der sie gezogen wurde. Wer die Puppen danach anders stellen will: Naht löschen und neu ziehen.": "The seam keeps the position in which it was drawn. To arrange the puppets differently afterwards: delete the seam and draw it again.",
-"Mit „🧵 Annähen“ oben eine Linie über ein Teil dieser Figur ziehen, das auf einer anderen Figur liegt (z. B. Hand auf der Schulter). Es bewegt sich dann mit der anderen Figur mit.": "With “🧵 Sew on” at the top, draw a line over a part of this character that lies on another character (e.g. a hand on a shoulder). It then moves along with the other character."
+"Mit „🧵 Annähen“ oben eine Linie über ein Teil dieser Figur ziehen, das auf einer anderen Figur liegt (z. B. Hand auf der Schulter). Es bewegt sich dann mit der anderen Figur mit.": "With “🧵 Sew on” at the top, draw a line over a part of this character that lies on another character (e.g. a hand on a shoulder). It then moves along with the other character.",
+"„{a}“ an „{b}“ angenäht – das Gelenk liegt jetzt auf der Naht": "“{a}” sewn to “{b}” – the joint now sits on the seam",
+"Gelenk liegt auf der Naht": "Joint sits on the seam",
+"Das Teil hängt dann an diesem Teil und dreht sich um die Mitte der Naht": "The part then hangs on this part and turns around the middle of the seam",
+"Gelenk auf die Naht legen": "Put the joint on the seam",
+"Ausprobieren eingeschaltet – jetzt den Torso ziehen, das Festgepinnte bleibt stehen": "Try-out switched on – now drag the torso, the pinned part stays in place",
+"Haftpunkte setzen wie Pins bei den Bones – im Animations-Editor hält ein Doppelklick die Stelle fest, der Rest der Figur bewegt und dehnt sich weiter": "Set hold points like pins on bones – in the animation editor a double-click holds that spot in place, the rest of the character keeps moving and stretching",
+"📌 Haftpunkte": "📌 Hold points",
+"✓ Haftpunkte": "✓ Hold points",
+"Haftpunkte": "Hold points",
+"Haftpunkte: auf ein Teil klicken = Punkt setzen (z. B. Handfläche, Ferse, Knie) · Punkt ziehen = verschieben · rechts unter „Haftpunkte“ Reichweite und Löschen. Im Animations-Editor hält ein Doppelklick auf den Punkt diese Stelle fest: Bewegst du die Figur, bleibt sie kleben, die Glieder beugen sich und das Bild dehnt sich, wo sie nicht reichen.": "Hold points: click a part = set a point (e.g. palm, heel, knee) · drag a point = move it · reach and delete on the right under “Hold points”. In the animation editor, double-clicking the point holds that spot: when you move the character it stays stuck, the limbs bend and the image stretches where they don't reach.",
+"Haftpunkt auf „{name}“ gesetzt": "Hold point set on “{name}”",
+"Reichweite: wie viel vom Teil sich mitdehnt": "Reach: how much of the part stretches along",
+"✓ Haftpunkte setzen": "✓ Set hold points",
+"📌 Haftpunkte setzen": "📌 Set hold points",
+"Regler = Reichweite: wie viel vom Teil sich mitdehnt, wenn die Stelle festgehalten wird. Festhalten: im Animations-Editor Doppelklick auf den Punkt.": "Slider = reach: how much of the part stretches along when the spot is held. To hold: double-click the point in the animation editor.",
+"Punkte wie Pins bei den Bones, z. B. Handfläche, Ferse oder Knie. Im Animations-Editor hält ein Doppelklick die Stelle fest – der Rest der Figur bewegt sich weiter und dehnt sich.": "Points like pins on bones, e.g. palm, heel or knee. In the animation editor a double-click holds the spot – the rest of the character keeps moving and stretches.",
+"Haftpunkt hält hier fest – die Figur dehnt sich, wenn sie sich wegbewegt": "Hold point stays here – the character stretches when it moves away",
+"Haftpunkt gelöst": "Hold point released"
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",
