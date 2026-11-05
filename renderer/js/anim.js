@@ -121,6 +121,7 @@
         ctx.drawImage(im, (W - im.naturalWidth * k) / 2, (H - im.naturalHeight * k) / 2, im.naturalWidth * k, im.naturalHeight * k);
       }
       const maps = [];
+      const smearOn = !!(window.Smear && dt > 0 && opts.alpha == null);
       for (const it of sc.items) {
         const a = it.actor;
         const pl = Anim.place(a, t);
@@ -138,12 +139,26 @@
           const k = boxH / bb.h;
           const base = Puppet.m.mul(Puppet.m.S(k, k), Puppet.m.T(-(bb.x + bb.w / 2), -(bb.y + bb.h)));
           const pose = opts.pose || Puppet.poseAt(a, t);
-          const out = Puppet.draw(ctx, pup, it.pup, base, t, dt, pose, it.st);
+          // Smear-Bilder (0.9.9): Puppe auf eigener Ebene zeichnen, dann Smear dahinter
+          const smc = smearOn ? Smear.cfgFor(anim.smear) : null;
+          let out;
+          if (smc) {
+            const L = Smear.layer(W, H), lg = L.getContext('2d');
+            lg.setTransform(1, 0, 0, 1, 0, 0); lg.clearRect(0, 0, W, H);
+            const m0 = ctx.getTransform(); lg.setTransform(m0);
+            out = Puppet.draw(lg, pup, it.pup, base, t, dt, pose, it.st);
+            const cm0 = [m0.a, m0.b, m0.c, m0.d, m0.e, m0.f], wm = {};
+            for (const [pid, pm] of Object.entries(out)) wm[pid] = Puppet.m.mul(cm0, pm);
+            Smear.inPlace(L, it._sm || (it._sm = {}), Smear.pupPts(pup, wm), t, boxH, smc, (dtF) => Smear.marked(anim, t - dtF, t));
+            ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(L, 0, 0); ctx.setTransform(m0);
+          } else out = Puppet.draw(ctx, pup, it.pup, base, t, dt, pose, it.st);
           const m = ctx.getTransform(), cm = [m.a, m.b, m.c, m.d, m.e, m.f];
           it.pmats = {}; for (const [pid, pm] of Object.entries(out)) it.pmats[pid] = Puppet.m.mul(cm, pm);
           it.pbase = Puppet.m.mul(cm, base);
         } else if (it.inst) {
           Rig.renderAt(it.inst, t, dt, Anim.angles(a, t));
+          const smc = smearOn ? Smear.cfgFor(anim.smear) : null;
+          if (smc) Smear.inPlace(it.inst.cv, it._sm || (it._sm = {}), Smear.rigPts(it.inst), t, it.inst.mesh.h, smc, (dtF) => Smear.marked(anim, t - dtF, t));
           const P = Rig.PAD, cv = it.inst.cv;
           const cvH = boxH * (1 + 2 * P), cvW = cvH * cv.width / cv.height;
           const ox = -cvW / 2, oy = P * boxH - cvH;
@@ -184,13 +199,14 @@
         }
         const frame = (now) => {
           if (ctrl.stopped || !canvas.isConnected) { ctrl.stop(); return; }
+          const fps = VN.animFps(anim.fps);
           const gap = window.Perf ? Perf.minInterval('bones') * 1000 : 0;
-          if (gap && now - last < gap) { requestAnimationFrame(frame); return; }
-          const t = (now - t0) / 1000;
+          if (fps ? !VN.fpsStep(ctrl, (now - t0) / 1000, fps) : (gap && now - last < gap)) { requestAnimationFrame(frame); return; }
+          const t = fps ? Math.floor((now - t0) / 1000 * fps + 1e-6) / fps : (now - t0) / 1000;
           const dur = anim.dur || 3;
           const tt = anim.loop ? t % dur : Math.min(t, dur);
           if (canvas.width !== Math.round(canvas.getBoundingClientRect().width * Math.min(2, window.devicePixelRatio || 1))) fit();
-          Anim.draw(ctx, sc, tt, Math.min(1 / 30, (now - last) / 1000));
+          Anim.draw(ctx, sc, tt, Math.min(fps ? 1 / 5 : 1 / 30, (now - last) / 1000));
           last = now;
           ctrl.t = tt;
           if (!anim.loop && t >= dur) { ctrl.stop(true); if (opts.onEnd) opts.onEnd(); return; }

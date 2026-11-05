@@ -42,6 +42,33 @@
     TEMPLATES,
     _sc: null, _scKey: '',
 
+    // Bildrate (0.9.9): Animation (a) und Grundeinstellung fürs Projekt
+    fpsFields(a) {
+      const p = VN.project;
+      const mk = (val, opts, commit) => { const s = el('select', { onchange: (e) => commit(e.target.value) }); for (const [v, l] of opts) { const o = el('option', { value: v }, l); if (String(v) === String(val == null ? '' : val)) o.selected = true; s.appendChild(o); } return s; };
+      const projName = (VN.FPS_LIST.find((x) => Number(x[0]) === Number(p.animFps || 0)) || VN.FPS_LIST[0])[1];
+      return el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Bildrate'),
+        a ? el('div', { class: 'field' }, el('div', { class: 'lbl' }, 'Diese Animation'), mk(a.fps != null ? a.fps : '', [['', VN.t('Wie im Projekt') + ' (' + VN.t(projName) + ')'], ...VN.FPS_LIST], (v) => VN.mutate(() => { if (v === '') delete a.fps; else a.fps = Number(v); }))) : null,
+        el('div', { class: 'field' }, el('div', { class: 'lbl' }, 'Grundeinstellung fürs ganze Projekt'), mk(p.animFps || 0, VN.FPS_LIST, (v) => VN.mutate(() => { if (Number(v)) p.animFps = Number(v); else delete p.animFps; }))),
+        el('div', { class: 'muted small' }, 'Weniger Bilder pro Sekunde wirken gezeichnet wie im Anime oder Cartoon: jedes Bild bleibt kurz stehen. Gilt für Animationen, Idle, Gesten, Bones und Gliederpuppen. Dialoge, Menüs und Kamerafahrten bleiben flüssig.'),
+        // Smear-Bilder (0.9.9)
+        window.Smear ? el('div', { class: 'sec-title', style: { marginTop: '8px' } }, 'Smear-Bilder') : null,
+        window.Smear && a ? el('div', { class: 'muted small' }, 'Diese Animation') : null,
+        window.Smear && a ? Smear.fields(a, 'smear', VN.t('Wie im Projekt')) : null,
+        window.Smear && a ? AnimEd.smearMarks(a) : null,
+        window.Smear ? el('div', { class: 'muted small' }, 'Grundeinstellung fürs ganze Projekt') : null,
+        window.Smear ? Smear.fields(p, 'smear', null) : null,
+        window.Smear ? el('div', { class: 'muted small' }, 'Bei sehr schnellen Bewegungen (Faustschlag, Ausholen, Sprung) zeichnet die Engine ein Smear-Bild: Mehrfachbilder, ein lang gezogenes Körperteil oder Speedlines. Passt besonders gut zu 12 oder 8 Bildern pro Sekunde.') : null);
+    },
+    // Smear-Bilder von Hand an der Stelle des Abspielkopfs
+    smearMarks(a) {
+      const t = Math.round((VN.ui.animT || 0) * 100) / 100;
+      const L = (a.smearAt || []).slice().sort((x, y) => x - y);
+      const has = L.some((x) => Math.abs(x - t) < 0.005);
+      return el('div', { class: 'field' },
+        el('button', { class: 'btn tiny' + (has ? ' primary' : ''), title: VN.t('Erzwingt an dieser Stelle ein Smear-Bild, auch wenn die Bewegung nicht schnell genug ist'), onclick: () => VN.mutate(() => { a.smearAt = (a.smearAt || []).filter((x) => Math.abs(x - t) >= 0.005); if (!has) a.smearAt.push(t); if (!a.smearAt.length) delete a.smearAt; }) }, (has ? '✦ ' + VN.t('Smear-Bild entfernen') : '✦ ' + VN.t('Smear-Bild hier')) + ' · ' + t.toFixed(2) + ' s'),
+        L.length ? el('div', { class: 'row gap4', style: { flexWrap: 'wrap', marginTop: '4px' } }, ...L.map((x) => el('span', { class: 'chip', style: { cursor: 'pointer' }, title: VN.t('Hinspringen'), onclick: () => { VN.ui.animT = x; VN.render(); } }, '✦ ' + x.toFixed(2) + ' s'))) : null);
+    },
     create(type) {
       const p = VN.project;
       const img = VN.assetsOf('image').find((a) => p.rigs[a.id]) || VN.assetsOf('image')[0];
@@ -86,7 +113,8 @@
             el('button', { class: 'btn primary', onclick: () => AnimEd.create('idle') }, '+ Idle-Animation'),
             el('button', { class: 'btn', onclick: () => AnimEd.create('gesture') }, '+ Geste'),
             el('button', { class: 'btn', onclick: () => AnimEd.create('scene') }, '+ Zwischensequenz')),
-          el('div', { class: 'muted small' }, 'Figuren brauchen dafür Bones (Reiter „Figuren“ → „Bones & Blinzeln“) – oder du nimmst eine Gliederpuppe aus Körperteilen (Reiter „Figuren“ → „Gliederpuppen“).')));
+          el('div', { class: 'muted small' }, 'Figuren brauchen dafür Bones (Reiter „Figuren“ → „Bones & Blinzeln“) – oder du nimmst eine Gliederpuppe aus Körperteilen (Reiter „Figuren“ → „Gliederpuppen“).'),
+          el('div', { style: { maxWidth: '420px', margin: '14px auto 0', textAlign: 'left' } }, AnimEd.fpsFields(null))));
         return;
       }
       const t = Math.max(0, Math.min(a.dur, ui().animT || 0));
@@ -137,13 +165,17 @@
           ui().animT = t;
           AnimEd.movePlayhead(t);
         }
-        const t = ui().animT || 0;
+        // Bildrate (0.9.9): beim Abspielen nur auf dem Zeitraster neu zeichnen – so sieht man den Cartoon-Look schon hier
+        const fps = VN.animFps(a.fps);
+        if (ui().animPlay && fps && !VN.fpsStep(AnimEd, ui().animT || 0, fps) && AnimEd._maps) { AnimEd._raf = requestAnimationFrame(frame); return; }
+        const t = ui().animPlay && fps ? Math.floor((ui().animT || 0) * fps + 1e-6) / fps : ui().animT || 0;
         const bgOpts = { bgFill: true, bgColor: '#15161b' };
+        const dd = fps ? 1 / fps : dt;
         if (ui().animOnion && !ui().animPlay) {
           Anim.draw(ctx, sc, Math.max(0, t - 0.25), 0, Object.assign({ alpha: 0.2 }, bgOpts));
           Anim.draw(ctx, sc, Math.min(a.dur, t + 0.25), 0, { alpha: 0.2, noClear: true, noBg: true });
-          AnimEd._maps = Anim.draw(ctx, sc, t, ui().animPlay ? dt : 0, { noClear: true, noBg: true });
-        } else AnimEd._maps = Anim.draw(ctx, sc, t, ui().animPlay ? dt : 0, bgOpts);
+          AnimEd._maps = Anim.draw(ctx, sc, t, ui().animPlay ? dd : 0, { noClear: true, noBg: true });
+        } else AnimEd._maps = Anim.draw(ctx, sc, t, ui().animPlay ? dd : 0, bgOpts);
         AnimEd.drawBones(svg, sc, a);
         AnimEd._raf = requestAnimationFrame(frame);
       };
@@ -487,7 +519,8 @@
         el('div', { class: 'grid2' },
           field('Länge (Sekunden)', el('input', { type: 'number', min: 0.2, step: 0.1, value: a.dur, onchange: (e) => VN.mutate(() => { a.dur = Math.max(0.2, Number(e.target.value) || 1); }) })),
           field('Art', (() => { const s = el('select', { onchange: (e) => VN.mutate(() => { a.type = e.target.value; a.loop = a.type === 'idle'; }) }); for (const [v, l] of [['idle', 'Idle (Schleife)'], ['gesture', 'Geste (einmal)'], ['scene', 'Zwischensequenz']]) { const o = el('option', { value: v }, l); if (v === a.type) o.selected = true; s.appendChild(o); } return s; })())),
-        a.type === 'scene' ? field('Hintergrund', VN.assetSelect('image', a.bg, set(a, 'bg'))) : null);
+        a.type === 'scene' ? field('Hintergrund', VN.assetSelect('image', a.bg, set(a, 'bg'))) : null,
+        AnimEd.fpsFields(a));
 
       // Darsteller
       const acCard = el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, a.type === 'scene' ? 'Darsteller' : 'Figur'));
@@ -659,9 +692,11 @@
         for (const [au, b] of bufs) { const s = actx.createBufferSource(); s.buffer = b; const g = actx.createGain(); g.gain.value = (au.vol != null ? au.vol : 90) / 100; s.connect(g); g.connect(dest); s.start(t0 + (au.at || 0)); }
         await new Promise((done) => {
           let last = start;
+          const fps = VN.animFps(a.fps), stepO = {};
           const frame = (now) => {
             const t = Math.min(a.dur, (now - start) / 1000);
-            Anim.draw(ctx, sc, t, Math.min(1 / 30, (now - last) / 1000), { bgFill: true });
+            if (fps && t < a.dur && !VN.fpsStep(stepO, t, fps)) { requestAnimationFrame(frame); return; }
+            Anim.draw(ctx, sc, fps ? Math.floor(t * fps + 1e-6) / fps : t, Math.min(fps ? 1 / 5 : 1 / 30, (now - last) / 1000), { bgFill: true });
             last = now;
             bar.style.width = (t / a.dur * 100) + '%';
             info.textContent = t.toFixed(1) + ' / ' + a.dur.toFixed(1) + ' s · ' + W + ' × ' + H;

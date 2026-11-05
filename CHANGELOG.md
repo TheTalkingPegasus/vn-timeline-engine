@@ -2,6 +2,16 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.10 – Frame rate and smear frames for animations
+- Frame rate for animations: smooth, 24, 12 (“on twos”, anime look), 8 (“on threes”, cartoon) or 6 frames per second.
+  Set per animation, per character or as the project default (animation editor). Applies to idle animations, gestures,
+  bones, jointed puppets and cutscenes from the animation editor, also in its preview and the video export.
+  Dialogue, menus and camera moves stay smooth.
+- Smear frames on very fast movements, like in cartoons: multiples (the fast body part appears two or three times),
+  stretch (the part is pulled into a streak) and speed lines. Detected automatically via bones and puppet parts, with
+  an adjustable speed threshold; per animation, per character or as the project default. In the animation editor you
+  can also force a smear frame at a specific point in time.
+
 ## 0.9.9 – Light sources, TV filters (CRT, LCD, RGB split)
 - New effect type “Light” on effect tracks and in hubs: spotlight, lamp / light circle, neon tube and backlight.
   Color, brightness, size or reach, beam width, direction, soft edge, haze in the light and flicker are adjustable;

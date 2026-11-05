@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.9
+VN Timeline Engine · Prototyp 0.9.10
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,16 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.10 · Bildrate und Smear-Bilder für Animationen
+- Bildrate für Animationen: flüssig, 24, 12 („auf Zweiern“, Anime-Look), 8 („auf Dreiern“, Cartoon) oder 6 Bilder pro
+  Sekunde. Einstellbar pro Animation, pro Figur oder als Grundeinstellung fürs Projekt (Animations-Editor). Gilt für
+  Idle-Animationen, Gesten, Bones, Gliederpuppen und Zwischensequenzen aus dem Animations-Editor, auch in dessen
+  Vorschau und beim Video-Export. Dialoge, Menüs und Kamerafahrten bleiben flüssig.
+- Smear-Bilder bei sehr schnellen Bewegungen wie im Zeichentrick: Mehrfachbilder (das schnelle Körperteil erscheint
+  zwei-, dreimal), Ziehen (das Teil wird zum Streifen lang gezogen) und Speedlines. Wird über Bones und Puppenteile
+  automatisch erkannt, ab einstellbarem Tempo; pro Animation, pro Figur oder als Grundeinstellung fürs Projekt. Im
+  Animations-Editor lässt sich ein Smear-Bild auch an einer bestimmten Stelle erzwingen.
 
 NEU IN 0.9.9 · Lichtquellen, TV-Filter (Röhrenfernseher, LCD, RGB-Split)
 - Neue Effekt-Art „Licht“ auf Effekt-Spuren und im Hub: Scheinwerfer, Lampe / Lichtkreis, Neonröhre und Gegenlicht.

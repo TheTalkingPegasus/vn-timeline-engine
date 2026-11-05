@@ -340,7 +340,7 @@
       cv.style.bottom = (-100 * PAD) + '%';
       cv.style.transform = 'translateX(-50%)';
       cv.width = 10; cv.height = 10;
-      const inst = { cv, assetId, amp: (clip && clip.boneAmp != null ? clip.boneAmp : 100) / 100, phys: {}, static: !!opts.static, manual: !!opts.manual, extraFn: opts.extraFn || null, t0: performance.now() / 1000 };
+      const inst = { cv, assetId, amp: (clip && clip.boneAmp != null ? clip.boneAmp : 100) / 100, phys: {}, static: !!opts.static, manual: !!opts.manual, extraFn: opts.extraFn || null, t0: performance.now() / 1000, clip: clip || null };
       cv._inst = inst;
       let readyRes;
       inst.ready = new Promise((r) => { readyRes = r; });
@@ -715,6 +715,13 @@
     }
   }
 
+  // Smear-Bilder (0.9.9) hinter der Figur auf der Bühne
+  function smearHook(inst, now) {
+    if (!window.Smear || inst.manual || !inst.mesh) return;
+    const cfg = Smear.figCfg(inst.clip);
+    if (!cfg && !(inst.cv._sm && inst.cv._sm.under)) return;
+    Smear.dom(inst.cv, cfg ? Smear.rigPts(inst) : [], now, inst.mesh.h, cfg, (dtF) => Smear.figMarked(inst.clip, inst.cv.parentNode, now, dtF));
+  }
   let last = 0;
   function startLoop() {
     if (rafOn) return;
@@ -732,6 +739,8 @@
           continue;
         }
         if (inst.static) continue;
+        const fps = VN.clipFps ? VN.clipFps(inst.clip) : 0;
+        if (fps) { if (!VN.fpsStep(inst, now, fps)) continue; const t0 = inst.ctx2d ? performance.now() : 0; drawFrame(inst, now, inst.lastDraw ? Math.min(1 / 5, now - inst.lastDraw) : dt); if (inst.ctx2d) inst.cost2d = (inst.cost2d || 0) * 0.8 + (performance.now() - t0) * 0.2; inst.lastDraw = now; smearHook(inst, now); continue; }
         let gap = window.Perf ? Perf.minInterval('bones') : 0;
         // Ersatzweg ohne WebGL: dauert ein Bild lange, seltener zeichnen (mind. ~15 fps, Spiel bleibt flüssig)
         if (inst.ctx2d && inst.cost2d > 8) gap = Math.max(gap, Math.min(1 / 15, inst.cost2d / 1000 * 3));
@@ -740,6 +749,7 @@
         drawFrame(inst, now, inst.lastDraw ? Math.min(1 / 15, now - inst.lastDraw) : dt);
         if (inst.ctx2d) inst.cost2d = (inst.cost2d || 0) * 0.8 + (performance.now() - t0) * 0.2;
         inst.lastDraw = now;
+        smearHook(inst, now);
       }
       if (live.size) requestAnimationFrame(tick); else rafOn = false;
     };

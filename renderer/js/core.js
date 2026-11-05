@@ -41,6 +41,17 @@
     { key: 'voice', label: 'Voices', kind: 'audio', color: '#5fa8e8', fg: '#0a1826' },
     { key: 'sfx', label: 'Soundeffekte', kind: 'audio', color: '#c9b37a', fg: '#1f1806' }
   ];
+  // Bildrate für Animationen (0.9.9): weniger Bilder pro Sekunde für Cartoon-/Anime-Look („auf Zweiern“)
+  VN.FPS_LIST = [['0', 'Flüssig'], ['24', '24 Bilder/s (wie im Kino)'], ['12', '12 Bilder/s (auf Zweiern, Anime)'], ['8', '8 Bilder/s (auf Dreiern, Cartoon)'], ['6', '6 Bilder/s (sehr abgehackt)']];
+  VN.animFps = (own) => { const v = own != null && own !== '' ? Number(own) : Number((VN.project && VN.project.animFps) || 0); return v > 0 ? v : 0; };
+  // Bildrate einer Figur: eigene Einstellung am Clip, sonst die ihrer Idle-Animation, sonst das Projekt
+  VN.clipFps = (clip) => {
+    if (clip && clip.fps != null && clip.fps !== '') return VN.animFps(clip.fps);
+    const a = clip && clip.idleAnim && window.Anim ? Anim.get(clip.idleAnim) : null;
+    return VN.animFps(a ? a.fps : '');
+  };
+  // Neues Bild fällig? (Schritt-Nummer auf dem Zeitraster der Bildrate)
+  VN.fpsStep = (o, sec, fps) => { if (!fps) return true; const k = Math.floor(sec * fps + 1e-6); if (o._fpsK === k) return false; o._fpsK = k; return true; };
   VN.track = (key) => VN.TRACKS.find((t) => t.key === key);
 
   VN.uid = (p) => {
