@@ -17,12 +17,28 @@
   W.state = (rs) => {
     if (!rs.world) {
       const c = W.cfg();
-      rs.world = { unlocked: {}, free: !!c.freeAtStart, here: '', ret: '', done: {} };
+      rs.world = { unlocked: {}, free: !!c.freeAtStart, here: '', ret: '', done: {}, gone: {} };
       for (const s of W.locs()) if ((s.loc.unlock || 'start') === 'start') rs.world.unlocked[s.id] = true;
     }
     return rs.world;
   };
-  W.unlocked = (rs, id) => !!W.state(rs).unlocked[id];
+  // Freigeschaltet? (0.9.10: auch per Bedingung; „gesperrt, wenn …“ und „gesperrt und weg“)
+  W.gone = (rs, id) => {
+    const st = W.state(rs), L = W.loc(id);
+    st.gone = st.gone || {};
+    if (st.gone[id]) return true;
+    // „Gesperrt und weg, wenn …“: sobald die Bedingung einmal stimmt, ist der Ort für immer weg
+    if (L && L.lockMode === 'gone' && (L.lockConds || []).length && VN.checkConds(L.lockConds, rs)) { st.gone[id] = true; delete st.unlocked[id]; return true; }
+    return false;
+  };
+  W.lockedNow = (rs, id) => { const L = W.loc(id); return !!(L && L.lockMode === 'lock' && (L.lockConds || []).length && VN.checkConds(L.lockConds, rs)); };
+  W.unlocked = (rs, id) => {
+    if (W.gone(rs, id) || W.lockedNow(rs, id)) return false;
+    const L = W.loc(id);
+    // „Wenn …“: frei, sobald die Bedingung einmal stimmt – bleibt dann frei
+    if (L && L.unlock === 'cond' && !W.state(rs).unlocked[id] && (L.unlockConds || []).length && VN.checkConds(L.unlockConds, rs)) W.state(rs).unlocked[id] = true;
+    return !!W.state(rs).unlocked[id];
+  };
   // Offen zur aktuellen Tageszeit?
   W.openNow = (rs, id) => {
     const L = W.loc(id);
@@ -34,6 +50,7 @@
   W.status = (rs, id) => {
     const L = W.loc(id);
     if (!L) return 'hidden';
+    if (W.gone(rs, id)) return 'hidden';
     if (!W.unlocked(rs, id)) return L.whenLocked === 'unknown' ? 'unknown' : L.whenLocked === 'visible' ? 'locked' : 'hidden';
     if (!W.openNow(rs, id)) return 'closed';
     return 'open';
@@ -77,6 +94,9 @@
     walk(VN.project.scenes); walk(c.events); walk(VN.project.items);
     for (const s of W.locs()) {
       if ((s.loc.unlock || 'start') === 'action' && !unlockedSomewhere.has(s.id)) out.push({ scene: s, text: 'Ort „' + s.name + '“ wird nirgends freigeschaltet' });
+      if (s.loc.unlock === 'cond' && !(s.loc.unlockConds || []).length) out.push({ scene: s, text: 'Ort „' + s.name + '“: Bedingung zum Freischalten fehlt' });
+      if (s.loc.lockMode && !(s.loc.lockConds || []).length) out.push({ scene: s, text: 'Ort „' + s.name + '“: Bedingung zum Sperren fehlt' });
+      for (const cd of (s.loc.unlockConds || []).concat(s.loc.lockConds || [])) { const pr = VN.condProblem(cd); if (pr) out.push({ scene: s, text: 'Ort „' + s.name + '“: ' + pr }); }
       if (c.maps.length && !W.mapOf(s.id) && c.home !== s.id) out.push({ scene: s, text: 'Ort „' + s.name + '“ liegt auf keiner Karte' });
       if (s.loc.hours && s.loc.hours.length === 0) out.push({ scene: s, text: 'Ort „' + s.name + '“ hat zu keiner Tageszeit offen' });
     }
@@ -139,11 +159,11 @@
     row: (row, c, sel) => row.appendChild(sel(String(c.value !== false), [['true', 'läuft'], ['false', 'läuft nicht']], (v) => VN.mutate(() => { c.value = v === 'true'; })))
   });
   VN.registerAction('unlockLoc', {
-    label: '📍 Ort freischalten / sperren', on: W.on, make: () => ({ scene: '', value: true }),
-    apply: (a, rs) => { const st = W.state(rs); if (a.value === false) delete st.unlocked[a.scene]; else if (a.scene) { const nw = !st.unlocked[a.scene]; st.unlocked[a.scene] = true; if (nw && window.Player && Player.worldToast) Player.worldToast(a.scene); } },
-    text: (a) => { const s = VN.scene(a.scene); return (a.value === false ? 'Sperren: ' : 'Freischalten: ') + (s ? s.name : '?'); },
+    label: '📍 Ort freischalten / sperren / entfernen', on: W.on, make: () => ({ scene: '', value: true }),
+    apply: (a, rs) => { const st = W.state(rs); if (a.value === 'gone') { if (a.scene) { st.gone = st.gone || {}; st.gone[a.scene] = true; delete st.unlocked[a.scene]; } } else if (a.value === false) delete st.unlocked[a.scene]; else if (a.scene && !(st.gone && st.gone[a.scene])) { const nw = !st.unlocked[a.scene]; st.unlocked[a.scene] = true; if (nw && window.Player && Player.worldToast) Player.worldToast(a.scene); } },
+    text: (a) => { const s = VN.scene(a.scene); return (a.value === 'gone' ? 'Sperren und weg: ' : a.value === false ? 'Sperren: ' : 'Freischalten: ') + (s ? s.name : '?'); },
     problem: (a) => (W.isLoc(a.scene) ? null : 'Ort fehlt'),
-    row: (row, a, sel) => { row.appendChild(sel(a.scene || '', locOpts(), (v) => VN.mutate(() => { a.scene = v; }))); row.appendChild(sel(String(a.value !== false), [['true', 'freischalten'], ['false', 'sperren']], (v) => VN.mutate(() => { a.value = v === 'true'; }))); }
+    row: (row, a, sel) => { row.appendChild(sel(a.scene || '', locOpts(), (v) => VN.mutate(() => { a.scene = v; }))); row.appendChild(sel(a.value === 'gone' ? 'gone' : String(a.value !== false), [['true', 'freischalten'], ['false', 'sperren'], ['gone', 'sperren und von der Karte entfernen']], (v) => VN.mutate(() => { a.value = v === 'gone' ? 'gone' : v === 'true'; }))); }
   });
   VN.registerAction('freeTime', {
     label: '📍 Freie Zeit beginnt / endet', on: W.on, make: () => ({ value: true }),

@@ -4085,7 +4085,18 @@ window.VN_I18N_JA = {
 "Erzwingt an dieser Stelle ein Smear-Bild, auch wenn die Bewegung nicht schnell genug ist": "動きが十分に速くなくても、ここでスミアのコマを強制します",
 "Smear-Bild entfernen": "スミアのコマを削除",
 "Smear-Bild hier": "ここにスミアのコマ",
-"Hinspringen": "そこへ移動"
+"Hinspringen": "そこへ移動",
+"wenn …": "条件付き …",
+"Später sperren": "後でロック",
+"gesperrt, wenn …": "ロック(条件中)…",
+"gesperrt + weg, wenn …": "ロック+消去(条件)…",
+"Ort freigeschaltet, wenn …": "場所の解放条件 …",
+"Ort gesperrt und weg, sobald …": "次の条件で場所をロックして消去 …",
+"Ort gesperrt, solange …": "次の条件の間、場所をロック …",
+"Jede Hub-Szene kann ein Ort sein. „Per Aktion“ heißt: erst nach der Aktion „📍 Ort freischalten“ (z. B. am Ende von Kapitel 1). „Wenn …“ heißt: frei, sobald die Bedingung stimmt (z. B. Szene gesehen, Gegenstand im Inventar).": "どのハブシーンも場所にできます。「アクションで」は「📍 場所を解放」アクションの後(例:第1章の終わり)。「条件付き」は条件を満たした時点で解放されます(例:シーンを見た、アイテムを持っている)。",
+"„Gesperrt, wenn …“ sperrt den Ort, solange die Bedingung stimmt (z. B. nachts). „Gesperrt und weg“ entfernt ihn für immer von der Karte, sobald die Bedingung einmal gestimmt hat (z. B. abgebranntes Haus). Beides geht auch mit der Aktion „📍 Ort freischalten / sperren / entfernen“.": "「ロック(条件中)」は条件を満たしている間、場所をロックします(例:夜)。「ロック+消去」は条件を一度満たすと、その場所をマップから永久に消します(例:焼け落ちた家)。どちらも「📍 場所を解放/ロック/削除」アクションでも可能です。",
+"📍 Ort freischalten / sperren / entfernen": "📍 場所を解放/ロック/削除",
+"sperren und von der Karte entfernen": "ロックしてマップから削除"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

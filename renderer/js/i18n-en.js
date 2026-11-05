@@ -4024,7 +4024,18 @@ window.VN_I18N_EN = {
 "Erzwingt an dieser Stelle ein Smear-Bild, auch wenn die Bewegung nicht schnell genug ist": "Forces a smear frame here, even if the movement isn't fast enough",
 "Smear-Bild entfernen": "Remove smear frame",
 "Smear-Bild hier": "Smear frame here",
-"Hinspringen": "Jump there"
+"Hinspringen": "Jump there",
+"wenn …": "if …",
+"Später sperren": "Lock later",
+"gesperrt, wenn …": "locked while …",
+"gesperrt + weg, wenn …": "locked + gone once …",
+"Ort freigeschaltet, wenn …": "Place unlocked once …",
+"Ort gesperrt und weg, sobald …": "Place locked and gone as soon as …",
+"Ort gesperrt, solange …": "Place locked while …",
+"Jede Hub-Szene kann ein Ort sein. „Per Aktion“ heißt: erst nach der Aktion „📍 Ort freischalten“ (z. B. am Ende von Kapitel 1). „Wenn …“ heißt: frei, sobald die Bedingung stimmt (z. B. Szene gesehen, Gegenstand im Inventar).": "Every hub scene can be a place. “By action” means: only after the action “📍 Unlock place” (e.g. at the end of chapter 1). “If …” means: unlocked as soon as the condition is met (e.g. scene seen, item in inventory).",
+"„Gesperrt, wenn …“ sperrt den Ort, solange die Bedingung stimmt (z. B. nachts). „Gesperrt und weg“ entfernt ihn für immer von der Karte, sobald die Bedingung einmal gestimmt hat (z. B. abgebranntes Haus). Beides geht auch mit der Aktion „📍 Ort freischalten / sperren / entfernen“.": "“Locked while …” locks the place as long as the condition is met (e.g. at night). “Locked + gone” removes it from the map for good once the condition has been met (e.g. a burned-down house). Both also work with the action “📍 Unlock / lock / remove place”.",
+"📍 Ort freischalten / sperren / entfernen": "📍 Unlock / lock / remove place",
+"sperren und von der Karte entfernen": "lock and remove from the map"
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",
