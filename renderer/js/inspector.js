@@ -580,7 +580,7 @@
         el('div', null, el('h3', null, 'Pfade'), el('div', { class: 'insp-title' }, VN.project.scenes.length + ' Szenen')),
         el('div', { class: 'hint-box' },
           'Doppelklick öffnet eine Szene. Rechtsklick auf eine Szene oder eine Linienbeschriftung für neue Pfade. ',
-          'Hintergrund ziehen zum Verschieben, Mausrad zum Zoomen.'),
+          'Rahmen ziehen markiert mehrere Szenen, die du dann zusammen verschiebst (Umschalt/Strg + Klick = einzeln dazu, Strg + A = alle, Esc = aufheben). Ansicht verschieben: rechte oder mittlere Maustaste ziehen oder Leertaste + Ziehen. Mausrad zum Zoomen.'),
         sel ? el('div', { class: 'opt-card' },
           el('strong', null, sel.name),
           el('div', { class: 'muted small' }, sel.type === 'hub' ? 'Hub-Szene' : sel.beats + ' Schritte'),

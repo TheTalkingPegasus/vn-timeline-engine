@@ -153,6 +153,12 @@
       AnimEd._ro && AnimEd._ro.disconnect();
       AnimEd._ro = Stage.fit(wrap, stage);
       main.appendChild(AnimEd.timeline(a, t));
+      // Wurde ein Körperteil im Bild gewählt, die passende Ebene unten ins Blickfeld holen
+      const selKey = (ui().animPart || '') + '|' + (ui().animBone || '');
+      if (AnimEd._selSeen !== selKey) {
+        AnimEd._selSeen = selKey;
+        requestAnimationFrame(() => { const r = main.querySelector('.an-row.sel'); const sc = r && r.closest('.tl-scroll'); if (sc) { const rt = r.offsetTop, h = sc.clientHeight; if (rt < sc.scrollTop + 26 || rt + r.offsetHeight > sc.scrollTop + h) sc.scrollTop = Math.max(0, rt - h / 2); } });
+      }
       AnimEd.startStage(a, stage, canvas, svg);
     },
 
@@ -343,7 +349,17 @@
         });
         lane.addEventListener('mousedown', (e) => { ui().animPlay = false; if (row.bone) ui().animBone = row.bone; if (row.part) ui().animPart = row.part; scrub(e, lane); });
         inner.appendChild(el('div', { class: 'tl-row an-row' + ((row.bone && ui().animBone === row.bone) || (row.part && ui().animPart === row.part) ? ' sel' : '') },
-          el('div', { class: 'tl-head' }, el('span', { class: 'sw', style: { background: row.color } }), row.label), lane));
+          el('div', { class: 'tl-head an-head' + (row.bone || row.part ? ' pick' : ''), title: row.bone || row.part ? VN.t('Anklicken = dieses Körperteil auswählen') : '',
+            onclick: () => {
+              if (!row.bone && !row.part) return;
+              ui().animPlay = false;
+              if (row.bone) ui().animBone = row.bone;
+              if (row.part) ui().animPart = row.part;
+              // Keyframe an der Abspielposition gleich mit auswählen
+              const k = row.keys.find((x) => Math.abs(x.t - (ui().animT || 0)) < 0.001);
+              ui().animKey = k ? { row: row.id, t: k.t } : null;
+              VN.render();
+            } }, el('span', { class: 'sw', style: { background: row.color } }), row.label), lane));
       }
       // Audiospur
       if (a.type === 'scene') {

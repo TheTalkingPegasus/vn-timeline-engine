@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototype 0.9.18
+VN Timeline Engine · Prototype 0.9.19
 ====================================
 (Deutsch: siehe LIES MICH.txt)
 
@@ -15,6 +15,11 @@ Without installing (ZIP):
    isn't signed: "More info" → "Run anyway".
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
+
+NEW IN 0.9.19 · Select body parts in the layers · frame selection in Paths
+- Animation editor: click a body part in the keyframe layers to select it.
+- Paths: drag a frame to select several scenes and move them together (Shift/Ctrl + click, Ctrl + A, Esc).
+  Move the view with the right or middle mouse button or Space + drag.
 
 NEW IN 0.9.18 · Fitness minigames: barbell and dumbbells · curve graph for keyframes
 - Curve graph: shape every transition between keyframes with two handles (ease in/out, overshoot, hold) – in the

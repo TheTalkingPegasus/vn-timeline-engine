@@ -1166,7 +1166,6 @@ window.VN_I18N_JA = {
 "Hintergrund dahinter": "後ろの背景",
 "Hintergrund für alle Fenster": "全ウィンドウの背景",
 "Hintergrund ohne Bild – rechts eins wählen": "画像のない背景 — 右で選んでください",
-"Hintergrund ziehen zum Verschieben, Mausrad zum Zoomen.": "背景をドラッグで移動、マウスホイールでズーム。",
 "Hintergrund zieht schnell endlos vorbei, leichtes Rütteln": "背景が延々と流れ、少し揺れる",
 "Hintergrund ·": "背景 ·",
 "Hintergrund, Musik, Titel oder Logo und das Aussehen der Buttons. Im Reiter „Design“ kannst du den Buttons eigene Bilder geben.": "背景、音楽、タイトルまたはロゴ、ボタンの見た目。「デザイン」タブでボタンに独自画像を設定できます。",
@@ -4714,7 +4713,10 @@ window.VN_I18N_JA = {
 "Eigene Kurve": "カスタムカーブ",
 "vorher": "前",
 "Keyframe": "キーフレーム",
-"Griffe ziehen = eigene Kurve · Umschalt = waagrecht · Doppelklick = zurücksetzen": "ハンドルをドラッグ＝カスタムカーブ · Shift＝水平 · ダブルクリック＝リセット"
+"Griffe ziehen = eigene Kurve · Umschalt = waagrecht · Doppelklick = zurücksetzen": "ハンドルをドラッグ＝カスタムカーブ · Shift＝水平 · ダブルクリック＝リセット",
+"Anklicken = dieses Körperteil auswählen": "クリック＝この部位を選択",
+"Rahmen ziehen = markieren · rechte Maustaste ziehen = Ansicht verschieben": "枠をドラッグ＝選択 · 右ボタンでドラッグ＝表示を移動",
+"Rahmen ziehen markiert mehrere Szenen, die du dann zusammen verschiebst (Umschalt/Strg + Klick = einzeln dazu, Strg + A = alle, Esc = aufheben). Ansicht verschieben: rechte oder mittlere Maustaste ziehen oder Leertaste + Ziehen. Mausrad zum Zoomen.": "枠をドラッグして複数のシーンを選び、まとめて移動できます（Shift/Ctrl＋クリック＝1つ追加、Ctrl＋A＝すべて、Esc＝解除）。表示の移動：右または中ボタンでドラッグ、またはスペース＋ドラッグ。ホイールでズーム。"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",
