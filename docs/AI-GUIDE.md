@@ -1,6 +1,6 @@
 # VN Timeline Engine – guide for AI assistants
 
-Engine 0.9.17 · project format 1 · generated 2026-11-05
+Engine 0.9.18 · project format 1 · generated 2026-11-06
 
 This file explains a VN Timeline Engine project so that any AI can read and change it **without the engine source code**. 
 The engine is a free visual novel editor that works like a video editor: every scene is a timeline, every column ("step") is one click of the player.
@@ -42,7 +42,7 @@ The engine is a free visual novel editor that works like a video editor: every s
 - `cam` – Camera / Kamera (cam): `{"id":"<unique id>","start":0,"len":3,"zoom":130,"panX":0,"panY":-8,"rot":0,"shake":0,"dur":1.2,"ease":"ease-in-out","keys":[]}`
 - `video` – Video (video): `{"id":"<unique id>","start":0,"len":1,"asset":null,"layer":"front","loop":false,"muted":false,"vol":90,"fit":"cover","waitEnd":true,"skippable":true}`
 - `dialog` – Dialogue / Dialog (dialog): `{"id":"<unique id>","start":0,"len":1,"speaker":"","color":"#ffffff","text":"Neuer Text …","speed":40,"actions":[]}`
-- `choice` – Choice / Auswahl (choice): `{"id":"<unique id>","start":0,"len":1,"options":[{"id":"opt_1opxl","text":"Antwort A","target":null,"conds":[],"actions":[]},{"id":"opt_1paz4","text":"Antwort B","target":null,"conds":[],"actions":[]}]}`
+- `choice` – Choice / Auswahl (choice): `{"id":"<unique id>","start":0,"len":1,"options":[{"id":"opt_1ole4","text":"Antwort A","target":null,"conds":[],"actions":[]},{"id":"opt_1pl4b","text":"Antwort B","target":null,"conds":[],"actions":[]}]}`
 - `code` – Code (code): `{"id":"<unique id>","start":0,"len":1,"code":""}`
 - `music` – Music / Musik (music): `{"id":"<unique id>","start":0,"len":3,"asset":null,"vol":70,"loop":true,"carry":false,"fade":1}`
 - `voice` – Voices (voice): `{"id":"<unique id>","start":0,"len":1,"asset":null,"vol":90,"delay":0}`
@@ -75,7 +75,7 @@ The engine is a free visual novel editor that works like a video editor: every s
 ## Animations (idle, gestures, cutscenes, battle moves)
 
 `anims: [{ id, name, type: "idle"|"gesture"|"cutscene", dur (seconds), loop, fps, smear, hitAt, actors: [...], cam: [...], audio: [...] }]`.
-- Actor: `{ id, asset: "<image with bones>" | puppet: "<puppet id>", bones: { "<bone name>": [{ t, a, e }] } }` (a = angle, e = easing) or `parts` for puppets (see above).
+- Actor: `{ id, asset: "<image with bones>" | puppet: "<puppet id>", bones: { "<bone name>": [{ t, a, e }] } }` (a = angle, e = easing: "ease-in-out", "ease-in", "ease-out", "linear", "smooth", "back", "bounce", "hold" or a custom Bézier curve "cb:x1,y1,x2,y2" – the same values work for `ease` on scene keyframes and camera clips) or `parts` for puppets (see above).
 - `fps`: `0`/empty = smooth, `24`, `12` (on twos, anime), `8` (on threes, cartoon), `6`. Project default: `animFps`. `smear: { on, multi, stretch, lines, sens }` = smear frames on fast motion; project default: `smear`.
 - `hitAt` (seconds) = the moment where effect, damage and sound appear when the animation is used in battle (default: halfway).
 
