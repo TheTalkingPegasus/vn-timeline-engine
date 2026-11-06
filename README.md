@@ -7,7 +7,7 @@ every column is one click of the player. Free, source available (VN Timeline Eng
 
 ![Editor with timeline](docs/screenshots/en/editor-timeline.png)
 
-> **Status:** prototype (0.9.21). It works and is tested, but expect rough edges. Back up your projects.
+> **Status:** prototype (0.9.22). It works and is tested, but expect rough edges. Back up your projects.
 
 ## Try it in the browser
 
@@ -69,6 +69,8 @@ Because the program isn’t code-signed, Windows may show “Windows protected y
   relationships, gallery, quests, map … and your own apps (notes, mails, websites). Fully designable, optional PIN or password
 - **Social media app:** characters post pictures and text, posts appear through conditions or actions, the player likes
   and comments, and follower counts grow with the story
+- **Browser and websites:** build in-game websites with a free page editor – texts, images, buttons, links, password
+  and search fields
 - **Messages that persist across scenes:** contacts, conversations with different lines per story route, replies the
   player picks, hidden messages, messages only for the phone or only for the computer, and messages that unlock
   locations, items or quests when read
@@ -171,7 +173,7 @@ jede Spalte ist ein Klick des Spielers. Kostenlos, Quellcode einsehbar (VN Timel
 
 ![Editor mit Timeline](docs/screenshots/de/editor-timeline.png)
 
-> **Stand:** Prototyp (0.9.21). Funktioniert und ist getestet, aber noch nicht in allem rund. Mach Sicherungen deiner Projekte.
+> **Stand:** Prototyp (0.9.22). Funktioniert und ist getestet, aber noch nicht in allem rund. Mach Sicherungen deiner Projekte.
 
 ### Im Browser ausprobieren
 
@@ -226,6 +228,8 @@ Weil das Programm nicht signiert ist, zeigt Windows evtl. „Der Computer wurde 
   und Nachrichten, die beim Lesen Orte, Gegenstände oder Quests freischalten
 - **Social-Media-App:** Figuren posten Bilder und Text, Beiträge erscheinen über Bedingungen oder Aktionen, der Spieler
   liked und kommentiert, und die Follower wachsen mit der Story
+- **Browser und Websites:** Websites im Spiel mit freiem Seiten-Editor – Texte, Bilder, Knöpfe, Links, Passwort- und
+  Suchfelder
 - **Für Spieler:** Verlauf, Auto, Skip, Spielstände, Schnellspeichern, Lesen & Barrierefreiheit, Grafikqualität, Tonausgabe
 - **Export:** Windows-Spiel mit eigener `.exe` oder Web-Spiel für itch.io – Spieldateien offen (gut zum Modden), gepackt in
   einer verschlüsselten Datei oder gepackt mit `mods`-Ordner

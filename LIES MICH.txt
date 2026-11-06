@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.21
+VN Timeline Engine · Prototyp 0.9.22
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,19 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.22 · Browser mit eigenen Websites
+- Neue Geräte-App „Browser“ für Handy und Computer: Adresszeile, Zurück, Startseite mit Lesezeichen, 404-Seite.
+- Websites (Spielsysteme → Websites): jede mit Adresse (z. B. www.gildenmarkt.ra) und beliebig vielen Seiten, auf Wunsch
+  geheim (nur über Adresse, Link oder Suche) oder mit Bedingungen gesperrt.
+- Freier Seiten-Editor wie im Menü-Designer: Texte, Bilder, Knöpfe, Flächen und Eingabefelder mit der Maus platzieren und
+  skalieren; Hintergrund (Farbe oder Bild), Seitenlänge (im Spiel scrollbar), Farben, Schrift, Größe, fett, Ausrichtung,
+  Ecken und Rahmen pro Element; Ebenen-Reihenfolge, Duplizieren.
+- Links und Aktionen: Texte, Bilder und Knöpfe führen auf andere Seiten oder lösen Aktionen aus (kaufen, Szene starten …).
+- Passwort-Felder (Antwort fest oder aus Variable, Meldung bei falsch, Seite und Aktionen bei richtig) und Suchfelder
+  (Begriffe → Treffer). Bedingungen „🌐 Webseite besucht“ und „🔑 Passwort eingegeben“; Elemente per Bedingung zeigen.
+  „📱 Gerät öffnen“ springt direkt auf eine Seite.
+- Hilfe für Neulinge: Tipp-Kasten und 💡-Anleitung mit Beispielen (geheimes Postfach, Suchmaschine, Shop).
 
 NEU IN 0.9.21 · Social-Media-App
 - Neue Geräte-App „Social Media“ (Name frei wählbar, z. B. „Pixgram“): Kontakte posten Text und Bilder, andere Figuren

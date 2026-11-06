@@ -2377,7 +2377,7 @@ img[src*="px_"] { image-rendering: pixelated; }
 .dv-win-body .dv-web { height: 100%; }
 /* Website-Editor (0.9.22) */
 .web-ed { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
-.web-ed-left { flex: 1 1 420px; min-width: 320px; max-width: 620px; }
+.web-ed-left { flex: 1 1 340px; min-width: 300px; max-width: 420px; }
 .web-ed-right { flex: 1 1 260px; min-width: 260px; }
 .web-ed-frame { max-height: 70vh; overflow-y: auto; border: 1px solid var(--line2); border-radius: 8px; background: #2a2d36; }
 .web-ed-page { position: relative; width: 100%; container-type: inline-size; background-size: cover; background-position: center top; overflow: hidden; user-select: none; }
