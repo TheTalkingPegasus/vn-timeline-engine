@@ -78,7 +78,7 @@ Because the program isn’t code-signed, Windows may show “Windows protected y
 - More minigames: **safe / combination lock** (dial, keypad or wheels, code from the story or random) and **connect
   the pipes** (always solvable, water, cables or magic runes)
 - Fitness minigames: **barbell** (mash the space bar until the bar reaches the line) and **dumbbells** (a rhythm game –
-  left and right move to their own beat, press A or D when a dumbbell is up in the zone); figure, weights and colours designable
+  left and right move to their own beat, press A or D when a dumbbell is up in the zone); weights, background and colours designable
 
 **For players** (in every game automatically): history, auto mode, skip, save slots, quick save,
 reading & accessibility options, graphics quality, sound output, language switch.

@@ -20,7 +20,7 @@ NEW IN 0.9.18 · Fitness minigames: barbell and dumbbells
 - Barbell: mash the space bar – every press lifts the bar a little, the weight pulls it back down. Reach the goal line.
 - Dumbbells: a rhythm game. Left and right go up and down to their own beat; press A (left) or D (right) when a
   dumbbell is up in the zone. Perfect / good / too early / too late, combos, three rhythm patterns, custom keys.
-- Both: difficulty, helper item, skill tree perks, own images for figure, weights and background, every colour adjustable.
+- Both: difficulty, helper item, skill tree perks, own images for weights and background, every colour adjustable.
 
 NEW IN 0.9.17 · Arcade: darts, pool, blackjack and slot machine · safe and pipes
 - New bundled plugin "Arcade": darts and pool against computer opponents whose skill you set, blackjack against a

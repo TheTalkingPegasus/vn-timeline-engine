@@ -2249,15 +2249,9 @@ img[src*="px_"] { image-rendering: pixelated; }
 /* Fitness: Langhantel & Kurzhanteln */
 .mg-area.mg-lift { display: flex; align-items: center; justify-content: center; height: 58cqh; cursor: pointer; background: linear-gradient(#2a2f38, #15181d 78%, #0e1013); }
 .mg-lift-svg { height: 94%; aspect-ratio: 1; overflow: visible; margin-top: 1cqh; }
-.mg-lift-shadow { fill: rgba(0,0,0,0.35); }
-.mg-lift-shirt { fill: var(--g-figur, #3d6fd8); }
-.mg-lift-pants { fill: var(--g-hose, #2a2e38); }
-.mg-lift-skin { fill: var(--g-haut, #f1c29b); }
-.mg-lift-hair { fill: var(--g-haare, #3b2a20); }
-.mg-lift-arm { fill: none; stroke: var(--g-haut, #f1c29b); stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
 .mg-lift-bar { stroke: var(--g-stange, #c9ced6); stroke-width: 4; stroke-linecap: round; }
 .mg-lift-plate { fill: var(--g-scheiben, #30343c); stroke: color-mix(in srgb, var(--g-scheiben, #30343c) 55%, #fff); stroke-width: 1; }
-.mg-lift-kg { fill: #fff; font: 700 7px var(--sys-font, system-ui), sans-serif; text-anchor: middle; opacity: 0.8; }
+.mg-lift-kg { fill: #fff; font: 700 8px var(--sys-font, system-ui), sans-serif; text-anchor: middle; opacity: 0.8; }
 .mg-lift-goal { stroke: var(--g-ziel, #6fe39a); stroke-width: 1.6; stroke-dasharray: 5 4; }
 .mg-lift-goaltx { fill: var(--g-ziel, #6fe39a); font: 700 7px var(--sys-font, system-ui), sans-serif; }
 .mg-lift-meter { fill: rgba(255,255,255,0.1); }
@@ -2276,3 +2270,7 @@ img[src*="px_"] { image-rendering: pixelated; }
 .mg-lift-fx.show { animation: mgLiftFx 0.65s ease-out; }
 @keyframes mgLiftFx { 0% { opacity: 1; transform: translateY(4px); } 70% { opacity: 1; } 100% { opacity: 0; transform: translateY(-6px); } }
 .mg-qt-hint.top { top: 1.2cqh; bottom: auto; }
+.mg-lift-rail { stroke: color-mix(in srgb, var(--g-stange, #c9ced6) 35%, transparent); stroke-width: 3; stroke-linecap: round; }
+.mg-lift-floor { stroke: rgba(255,255,255,0.18); stroke-width: 2; stroke-linecap: round; }
+.mg-lift-track { fill: color-mix(in srgb, var(--g-spur, #ffffff) 14%, transparent); }
+.mg-qt-hint.gone { opacity: 0; transition: opacity 0.6s; }

@@ -1030,7 +1030,7 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
         host.querySelectorAll('.mg-lift-dbg').forEach((g, i) => {
           const y = parseFloat(g.getAttribute('transform').split(' ')[1]);
           const z = host.querySelectorAll('.mg-lift-zone')[i];
-          if (y < 78.5 && !z.classList.contains('hit')) kd(i ? 'l' : 'j');
+          if (y < 47 && !z.classList.contains('hit')) kd(i ? 'l' : 'j');
         });
       });
       if (c && (!c.ok || c.score < 0.9)) out.push('Kurzhanteln: Bot nicht perfekt (' + JSON.stringify(c) + ')');

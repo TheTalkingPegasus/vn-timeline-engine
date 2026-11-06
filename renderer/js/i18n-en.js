@@ -4552,11 +4552,6 @@ window.VN_I18N_EN = {
 "Felder": "Tiles",
 "Elf Minispiele mit Ergebnis (0–100 % oder geschafft/nicht geschafft): Klick-Reflex, Memory, Puzzle, Kochen & Brauen, Münzwurf, Blütenblätter, Quicktime-Kreis, Tresor, Rohre, Langhantel, Kurzhanteln.": "Eleven minigames with a result (0–100 % or done/not done): click reflex, memory, puzzle, cooking & brewing, coin toss, petals, quicktime circle, safe, pipes, barbell, dumbbells.",
 "Langhantel": "Barbell",
-"Figur (Körper ohne Arme)": "Figure (body without arms)",
-"Shirt": "Shirt",
-"Hose": "Trousers",
-"Haut": "Skin",
-"Haare": "Hair",
 "Stange": "Bar",
 "Gewichtsscheiben": "Weight plates",
 "Ziellinie": "Goal line",
@@ -4578,7 +4573,6 @@ window.VN_I18N_EN = {
 "Gewicht zur Anzeige (z. B. 80 kg)": "Weight shown (e.g. 80 kg)",
 "Gegenstand: Kraft + %": "Item: power + %",
 "Titel (leer = „Hantel hoch!“)": "Title (empty = “Lift it!”)",
-"Bild Figur (Körper ohne Arme)": "Image figure (body without arms)",
 "Bild Langhantel": "Image barbell",
 "Ton bei jedem Druck": "Sound on every press",
 "Hantel hoch!": "Lift it!",
@@ -4617,10 +4611,11 @@ window.VN_I18N_EN = {
 "Gut!": "Good!",
 "Verpasst!": "Missed!",
 "Fitness: Leertaste so schnell wie möglich drücken – jeder Druck stemmt die Hantel ein Stück hoch, das Gewicht zieht sie wieder runter. Oben an der Ziellinie ist die Wiederholung geschafft.": "Fitness: press the space bar as fast as you can – every press pushes the barbell up a little, the weight pulls it back down. Reaching the goal line at the top completes the rep.",
-"Schwierigkeit, Wiederholungen, Zeit, angezeigtes Gewicht, Hilfs-Gegenstand, Bilder für Figur, Hantel und Hintergrund, alle Farben": "Difficulty, repetitions, time, displayed weight, helper item, images for figure, barbell and background, all colours",
 "Fitness als Rhythmusspiel: Linke und rechte Hantel gehen in eigenem Takt auf und ab. Erreicht eine Hantel oben die Zone, A (links) bzw. D (rechts) drücken – zu früh, zu spät oder verpasst zählt als Fehler.": "Fitness as a rhythm game: the left and right dumbbells go up and down to their own beat. When a dumbbell reaches the zone at the top, press A (left) or D (right) – too early, too late or missed counts as a mistake.",
 "Schwierigkeit, Takt (abwechselnd, asymmetrisch, unregelmäßig), Treffer, Fehler, Tempo, schneller werden, eigene Tasten, Hilfs-Gegenstand, Bilder, alle Farben": "Difficulty, rhythm (alternating, asymmetric, irregular), hits, mistakes, tempo, speed-up, custom keys, helper item, images, all colours",
-"Elf Minispiele. Du startest sie über „+ Aktion“ → „Minispiele: …“ – in einer Antwort, an einem Hub-Objekt, in einem Dialog oder als Minispiel eines Jobs. Einstellungen und Bilder wählst du direkt an der Aktion. Jedes Spiel liefert ein Ergebnis von 0–100 % (Feld „Ergebnis in“ → Variable).": "Eleven minigames. Start them with “+ Action” → “Minigames: …” – in an answer, on a hub object, in a dialogue or as a job’s minigame. Settings and images are chosen right on the action. Every game returns a result of 0–100 % (field “Result in” → variable)."
+"Elf Minispiele. Du startest sie über „+ Aktion“ → „Minispiele: …“ – in einer Antwort, an einem Hub-Objekt, in einem Dialog oder als Minispiel eines Jobs. Einstellungen und Bilder wählst du direkt an der Aktion. Jedes Spiel liefert ein Ergebnis von 0–100 % (Feld „Ergebnis in“ → Variable).": "Eleven minigames. Start them with “+ Action” → “Minigames: …” – in an answer, on a hub object, in a dialogue or as a job’s minigame. Settings and images are chosen right on the action. Every game returns a result of 0–100 % (field “Result in” → variable).",
+"Schwierigkeit, Wiederholungen, Zeit, angezeigtes Gewicht, Hilfs-Gegenstand, eigene Bilder für Hantel und Hintergrund, alle Farben": "Difficulty, repetitions, time, displayed weight, helper item, own images for barbell and background, all colours",
+"Schienen": "Tracks"
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",

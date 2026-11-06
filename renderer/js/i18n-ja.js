@@ -4640,11 +4640,6 @@ window.VN_I18N_JA = {
 "Felder": "マス",
 "Elf Minispiele mit Ergebnis (0–100 % oder geschafft/nicht geschafft): Klick-Reflex, Memory, Puzzle, Kochen & Brauen, Münzwurf, Blütenblätter, Quicktime-Kreis, Tresor, Rohre, Langhantel, Kurzhanteln.": "結果つきミニゲーム11種（0〜100%または成功/失敗）：クリック反射、神経衰弱、パズル、料理と調合、コイン投げ、花占い、クイックタイム、金庫、パイプ、バーベル、ダンベル。",
 "Langhantel": "バーベル",
-"Figur (Körper ohne Arme)": "人物（腕なしの体）",
-"Shirt": "シャツ",
-"Hose": "ズボン",
-"Haut": "肌",
-"Haare": "髪",
 "Stange": "シャフト",
 "Gewichtsscheiben": "プレート",
 "Ziellinie": "ゴールライン",
@@ -4666,7 +4661,6 @@ window.VN_I18N_JA = {
 "Gewicht zur Anzeige (z. B. 80 kg)": "表示する重さ（例：80 kg）",
 "Gegenstand: Kraft + %": "アイテム：パワー＋%",
 "Titel (leer = „Hantel hoch!“)": "タイトル（空欄＝「持ち上げろ！」）",
-"Bild Figur (Körper ohne Arme)": "人物の画像（腕なしの体）",
 "Bild Langhantel": "バーベルの画像",
 "Ton bei jedem Druck": "押すたびの音",
 "Hantel hoch!": "持ち上げろ！",
@@ -4705,10 +4699,11 @@ window.VN_I18N_JA = {
 "Gut!": "グッド！",
 "Verpasst!": "ミス！",
 "Fitness: Leertaste so schnell wie möglich drücken – jeder Druck stemmt die Hantel ein Stück hoch, das Gewicht zieht sie wieder runter. Oben an der Ziellinie ist die Wiederholung geschafft.": "フィットネス：スペースキーをできるだけ速く連打。押すたびにバーベルが少し上がり、重さで下がっていきます。上のゴールラインに届けば1回成功。",
-"Schwierigkeit, Wiederholungen, Zeit, angezeigtes Gewicht, Hilfs-Gegenstand, Bilder für Figur, Hantel und Hintergrund, alle Farben": "難易度、回数、時間、表示する重さ、補助アイテム、人物・バーベル・背景の画像、全色",
 "Fitness als Rhythmusspiel: Linke und rechte Hantel gehen in eigenem Takt auf und ab. Erreicht eine Hantel oben die Zone, A (links) bzw. D (rechts) drücken – zu früh, zu spät oder verpasst zählt als Fehler.": "リズムゲームのフィットネス：左右のダンベルがそれぞれのリズムで上下します。ダンベルが上のゾーンに来たらA（左）またはD（右）を押す。早すぎ・遅すぎ・見逃しはミス。",
 "Schwierigkeit, Takt (abwechselnd, asymmetrisch, unregelmäßig), Treffer, Fehler, Tempo, schneller werden, eigene Tasten, Hilfs-Gegenstand, Bilder, alle Farben": "難易度、リズム（交互・非対称・不規則）、ヒット数、ミス、テンポ、加速、キー設定、補助アイテム、画像、全色",
-"Elf Minispiele. Du startest sie über „+ Aktion“ → „Minispiele: …“ – in einer Antwort, an einem Hub-Objekt, in einem Dialog oder als Minispiel eines Jobs. Einstellungen und Bilder wählst du direkt an der Aktion. Jedes Spiel liefert ein Ergebnis von 0–100 % (Feld „Ergebnis in“ → Variable).": "ミニゲーム11種。「＋アクション」→「ミニゲーム：…」で開始（選択肢、ハブのオブジェクト、会話、仕事のミニゲーム）。設定と画像はアクションで直接選びます。結果は0〜100%（「結果の保存先」→変数）。"
+"Elf Minispiele. Du startest sie über „+ Aktion“ → „Minispiele: …“ – in einer Antwort, an einem Hub-Objekt, in einem Dialog oder als Minispiel eines Jobs. Einstellungen und Bilder wählst du direkt an der Aktion. Jedes Spiel liefert ein Ergebnis von 0–100 % (Feld „Ergebnis in“ → Variable).": "ミニゲーム11種。「＋アクション」→「ミニゲーム：…」で開始（選択肢、ハブのオブジェクト、会話、仕事のミニゲーム）。設定と画像はアクションで直接選びます。結果は0〜100%（「結果の保存先」→変数）。",
+"Schwierigkeit, Wiederholungen, Zeit, angezeigtes Gewicht, Hilfs-Gegenstand, eigene Bilder für Hantel und Hintergrund, alle Farben": "難易度、回数、時間、表示する重さ、補助アイテム、バーベルと背景の画像、全色",
+"Schienen": "レール"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

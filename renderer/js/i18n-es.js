@@ -4640,11 +4640,6 @@ window.VN_I18N_ES = {
 "Felder": "Casillas",
 "Elf Minispiele mit Ergebnis (0–100 % oder geschafft/nicht geschafft): Klick-Reflex, Memory, Puzzle, Kochen & Brauen, Münzwurf, Blütenblätter, Quicktime-Kreis, Tresor, Rohre, Langhantel, Kurzhanteln.": "Once minijuegos con resultado (0–100 % o logrado/no logrado): reflejos, memoria, puzle, cocina y pociones, moneda, pétalos, círculo de reacción, caja fuerte, tuberías, barra, mancuernas.",
 "Langhantel": "Barra",
-"Figur (Körper ohne Arme)": "Figura (cuerpo sin brazos)",
-"Shirt": "Camiseta",
-"Hose": "Pantalón",
-"Haut": "Piel",
-"Haare": "Pelo",
 "Stange": "Barra",
 "Gewichtsscheiben": "Discos",
 "Ziellinie": "Línea de meta",
@@ -4666,7 +4661,6 @@ window.VN_I18N_ES = {
 "Gewicht zur Anzeige (z. B. 80 kg)": "Peso mostrado (p. ej. 80 kg)",
 "Gegenstand: Kraft + %": "Objeto: fuerza + %",
 "Titel (leer = „Hantel hoch!“)": "Título (vacío = «¡Arriba!»)",
-"Bild Figur (Körper ohne Arme)": "Imagen figura (cuerpo sin brazos)",
 "Bild Langhantel": "Imagen barra",
 "Ton bei jedem Druck": "Sonido en cada pulsación",
 "Hantel hoch!": "¡Arriba!",
@@ -4705,10 +4699,11 @@ window.VN_I18N_ES = {
 "Gut!": "¡Bien!",
 "Verpasst!": "¡Fallado!",
 "Fitness: Leertaste so schnell wie möglich drücken – jeder Druck stemmt die Hantel ein Stück hoch, das Gewicht zieht sie wieder runter. Oben an der Ziellinie ist die Wiederholung geschafft.": "Fitness: pulsa la barra espaciadora lo más rápido posible – cada pulsación sube un poco la barra y el peso la vuelve a bajar. Al llegar a la línea de meta arriba, la repetición cuenta.",
-"Schwierigkeit, Wiederholungen, Zeit, angezeigtes Gewicht, Hilfs-Gegenstand, Bilder für Figur, Hantel und Hintergrund, alle Farben": "Dificultad, repeticiones, tiempo, peso mostrado, objeto de ayuda, imágenes de figura, barra y fondo, todos los colores",
 "Fitness als Rhythmusspiel: Linke und rechte Hantel gehen in eigenem Takt auf und ab. Erreicht eine Hantel oben die Zone, A (links) bzw. D (rechts) drücken – zu früh, zu spät oder verpasst zählt als Fehler.": "Fitness como juego de ritmo: las mancuernas izquierda y derecha suben y bajan con su propio ritmo. Cuando una llega a la zona de arriba, pulsa A (izquierda) o D (derecha); demasiado pronto, tarde o fallada cuenta como fallo.",
 "Schwierigkeit, Takt (abwechselnd, asymmetrisch, unregelmäßig), Treffer, Fehler, Tempo, schneller werden, eigene Tasten, Hilfs-Gegenstand, Bilder, alle Farben": "Dificultad, ritmo (alterno, asimétrico, irregular), aciertos, fallos, tempo, acelerar, teclas propias, objeto de ayuda, imágenes, todos los colores",
-"Elf Minispiele. Du startest sie über „+ Aktion“ → „Minispiele: …“ – in einer Antwort, an einem Hub-Objekt, in einem Dialog oder als Minispiel eines Jobs. Einstellungen und Bilder wählst du direkt an der Aktion. Jedes Spiel liefert ein Ergebnis von 0–100 % (Feld „Ergebnis in“ → Variable).": "Once minijuegos. Se inician con «+ Acción» → «Minijuegos: …», en una respuesta, en un objeto de hub, en un diálogo o como minijuego de un trabajo. Los ajustes e imágenes se eligen en la propia acción. Cada juego da un resultado de 0–100 % (campo «Resultado en» → variable)."
+"Elf Minispiele. Du startest sie über „+ Aktion“ → „Minispiele: …“ – in einer Antwort, an einem Hub-Objekt, in einem Dialog oder als Minispiel eines Jobs. Einstellungen und Bilder wählst du direkt an der Aktion. Jedes Spiel liefert ein Ergebnis von 0–100 % (Feld „Ergebnis in“ → Variable).": "Once minijuegos. Se inician con «+ Acción» → «Minijuegos: …», en una respuesta, en un objeto de hub, en un diálogo o como minijuego de un trabajo. Los ajustes e imágenes se eligen en la propia acción. Cada juego da un resultado de 0–100 % (campo «Resultado en» → variable).",
+"Schwierigkeit, Wiederholungen, Zeit, angezeigtes Gewicht, Hilfs-Gegenstand, eigene Bilder für Hantel und Hintergrund, alle Farben": "Dificultad, repeticiones, tiempo, peso mostrado, objeto de ayuda, imágenes propias de barra y fondo, todos los colores",
+"Schienen": "Rieles"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",
