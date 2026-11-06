@@ -2,6 +2,13 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.19 – Select body parts in the layers · frame selection in Paths
+- **Animation editor:** click a body part (bone or puppet part) in the keyframe layers below to select it – the
+  canvas, inspector and graph follow. Picking a part in the picture scrolls its layer into view.
+- **Paths:** drag a frame around scenes to select several and move them together. Shift/Ctrl + click adds or removes
+  single scenes, Ctrl + A selects all, Esc clears. Move the view with the right or middle mouse button or Space + drag.
+  Moving a group is one undo step.
+
 ## 0.9.18 – Fitness minigames: barbell and dumbbells · curve graph for keyframes
 - **Curve graph:** every transition from keyframe to keyframe now has a graph with two handles (Bézier) – drag them
   for your own ease-in/ease-out, overshoot or a hard stop; Shift keeps a handle flat, double-click resets. Works in

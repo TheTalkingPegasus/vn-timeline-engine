@@ -74,14 +74,62 @@
         el('div', null, el('span', { class: 'ln', style: { background: 'transparent', border: '1px dashed #9a9ca8', height: '0' } }), 'Gestrichelt: nicht erreichbar')));
       root.appendChild(wrap);
 
-      // Verschieben der Ansicht
-      wrap.addEventListener('mousedown', (e) => {
-        if (e.button !== 0 || e.target.closest('.g-node') || e.target.closest('.g-label')) return;
+      // Mehrfachauswahl (0.9.19): Rahmen ziehen markiert Szenen, die man dann gemeinsam verschiebt
+      Graph._multi = new Set((VN.ui.graphMulti || []).filter((id) => p.scenes.some((x) => x.id === id)));
+      const markMulti = () => { for (const id in nodeEls) nodeEls[id].classList.toggle('msel', Graph._multi.has(id)); };
+      markMulti();
+      const toWorld = (cx, cy) => { const r = wrap.getBoundingClientRect(); return { x: (cx - r.left - VN.ui.graphPan.x) / zoom, y: (cy - r.top - VN.ui.graphPan.y) / zoom }; };
+      const pan = (e) => {
         const start = { ...VN.ui.graphPan };
         wrap.classList.add('panning');
         VN.drag(e, (dx, dy) => { VN.ui.graphPan = { x: start.x + dx, y: start.y + dy }; applyView(); },
-          (dx, dy, moved) => { wrap.classList.remove('panning'); if (!moved && VN.ui.graphSel) { VN.ui.graphSel = null; VN.render(); } });
+          (dx, dy, moved) => { wrap.classList.remove('panning'); if (moved) wrap._noMenu = true; });
+      };
+      // Leertaste gedrückt halten = Ansicht verschieben
+      if (!Graph._keys) {
+        Graph._keys = true;
+        window.addEventListener('keydown', (e) => {
+          if (VN.ui.view !== 'graph' || /INPUT|TEXTAREA|SELECT/.test((e.target || {}).tagName || '') || (e.target && e.target.isContentEditable)) return;
+          if (e.code === 'Space') { Graph._space = true; const w = document.querySelector('.graph-wrap'); if (w) w.classList.add('pan-ready'); e.preventDefault(); }
+          if (e.key === 'Escape' && Graph._multi && Graph._multi.size) { VN.ui.graphMulti = []; VN.render(); }
+          if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') { e.preventDefault(); VN.ui.graphMulti = VN.project.scenes.map((x) => x.id); VN.render(); }
+        });
+        window.addEventListener('keyup', (e) => { if (e.code === 'Space') { Graph._space = false; const w = document.querySelector('.graph-wrap'); if (w) w.classList.remove('pan-ready'); } });
+      }
+      wrap.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.g-node') || e.target.closest('.g-label') || e.target.closest('.graph-legend')) return;
+        // Ansicht verschieben: mittlere oder rechte Maustaste, oder Leertaste + Ziehen
+        if (e.button === 1 || e.button === 2 || (e.button === 0 && Graph._space)) { e.preventDefault(); return pan(e); }
+        if (e.button !== 0) return;
+        // Rahmen ziehen; Umschalt/Strg = zur Auswahl hinzufügen
+        const add = e.shiftKey || e.ctrlKey || e.metaKey;
+        const base = add ? new Set(Graph._multi) : new Set();
+        const r0 = wrap.getBoundingClientRect(), x0 = e.clientX - r0.left, y0 = e.clientY - r0.top;
+        const box = el('div', { class: 'g-marquee', style: { left: x0 + 'px', top: y0 + 'px', width: '0px', height: '0px' } });
+        const w0 = toWorld(e.clientX, e.clientY);
+        let shown = false;
+        VN.drag(e, (dx, dy, ev) => {
+          if (!shown) { wrap.appendChild(box); shown = true; }
+          box.style.left = Math.min(x0, x0 + dx) + 'px'; box.style.top = Math.min(y0, y0 + dy) + 'px';
+          box.style.width = Math.abs(dx) + 'px'; box.style.height = Math.abs(dy) + 'px';
+          const w1 = toWorld(ev.clientX, ev.clientY);
+          const ax = Math.min(w0.x, w1.x), bx = Math.max(w0.x, w1.x), ay = Math.min(w0.y, w1.y), by = Math.max(w0.y, w1.y);
+          Graph._multi = new Set(base);
+          for (const sc of p.scenes) {
+            const n = nodeEls[sc.id]; if (!n) continue;
+            const nx = sc.x || 0, ny = sc.y || 0, nw = n.offsetWidth || NW, nh = n.offsetHeight || NH;
+            if (nx < bx && nx + nw > ax && ny < by && ny + nh > ay) Graph._multi.add(sc.id);
+          }
+          markMulti();
+        }, (dx, dy, moved) => {
+          box.remove();
+          if (!moved) { if (VN.ui.graphSel || (VN.ui.graphMulti || []).length) { VN.ui.graphSel = null; VN.ui.graphMulti = []; VN.render(); } return; }
+          VN.ui.graphMulti = [...Graph._multi];
+          if (VN.ui.graphMulti.length === 1) VN.ui.graphSel = VN.ui.graphMulti[0];
+          VN.render();
+        });
       });
+      wrap.appendChild(el('div', { class: 'graph-help muted small' }, VN.t('Rahmen ziehen = markieren · rechte Maustaste ziehen = Ansicht verschieben')));
       wrap.addEventListener('wheel', (e) => {
         e.preventDefault();
         const r = wrap.getBoundingClientRect();
@@ -95,6 +143,7 @@
       wrap.addEventListener('contextmenu', (e) => {
         if (e.target.closest('.g-node') || e.target.closest('.g-label')) return;
         e.preventDefault();
+        if (wrap._noMenu) { wrap._noMenu = false; return; }
         const r = wrap.getBoundingClientRect();
         const x = (e.clientX - r.left - VN.ui.graphPan.x) / zoom, y = (e.clientY - r.top - VN.ui.graphPan.y) / zoom;
         VN.menu(e.clientX, e.clientY, [
@@ -152,6 +201,7 @@
         : s.beats + ' Schritte · ' + s.tracks.dialog.length + ' Dialoge' + (s.tracks.choice.length ? ' · ' + s.tracks.choice.reduce((n, c) => n + c.options.length, 0) + ' Antworten' : '');
       const node = el('div', {
         class: 'g-node' + (s.type === 'hub' ? ' hub' : '') + (VN.ui.graphSel === s.id ? ' sel' : '') + (reach.has(s.id) ? '' : ' unreach'),
+        'data-id': s.id,
         style: { left: (s.x || 0) + 'px', top: (s.y || 0) + 'px', borderColor: s.type === 'story' && isEnd ? '#6cc48a' : '' }
       },
         el('div', { class: 'tag' }, s.type === 'hub' ? (s.loc && VN.World && VN.World.on() ? (VN.World.cfg().home === s.id ? '🏠 Zuhause' : '📍 Ort') : 'Hub') : isEnd ? 'Ende' : 'Story',
@@ -165,17 +215,30 @@
       node.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
         e.stopPropagation();
-        const ox = s.x || 0, oy = s.y || 0;
+        const multi = Graph._multi || new Set();
+        // Umschalt/Strg + Klick = Szene zur Auswahl hinzufügen oder herausnehmen
+        if (e.shiftKey || e.ctrlKey || e.metaKey) {
+          const m = new Set(multi.size ? multi : VN.ui.graphSel ? [VN.ui.graphSel] : []);
+          if (m.has(s.id)) m.delete(s.id); else m.add(s.id);
+          VN.ui.graphMulti = [...m]; VN.ui.graphSel = s.id; VN.render();
+          return;
+        }
+        // Gehört die Szene zur Mehrfachauswahl, wandern alle markierten mit
+        const group = multi.has(s.id) ? p.scenes.filter((x) => multi.has(x.id)) : [s];
+        const orig = group.map((x) => [x, x.x || 0, x.y || 0]);
+        const els = group.map((x) => document.querySelector('.g-node[data-id="' + x.id + '"]') || (x === s ? node : null));
         VN.drag(e, (dx, dy) => {
-          s.x = Math.max(0, ox + dx / zoom); s.y = Math.max(0, oy + dy / zoom);
-          node.style.left = s.x + 'px'; node.style.top = s.y + 'px';
+          orig.forEach(([x, ox, oy], i) => {
+            x.x = Math.max(0, ox + dx / zoom); x.y = Math.max(0, oy + dy / zoom);
+            if (els[i]) { els[i].style.left = x.x + 'px'; els[i].style.top = x.y + 'px'; }
+          });
           redraw();
         }, (dx, dy, moved) => {
           if (moved) {
-            const nx = s.x, ny = s.y;
-            s.x = ox; s.y = oy;
-            VN.mutate(() => { s.x = nx; s.y = ny; VN.ui.graphSel = s.id; });
-          } else { VN.ui.graphSel = s.id; VN.render(); }
+            const now = orig.map(([x]) => [x, x.x, x.y]);
+            orig.forEach(([x, ox, oy]) => { x.x = ox; x.y = oy; });
+            VN.mutate(() => { for (const [x, nx, ny] of now) { x.x = nx; x.y = ny; } VN.ui.graphSel = s.id; if (group.length === 1) VN.ui.graphMulti = []; });
+          } else { VN.ui.graphSel = s.id; if (!multi.has(s.id)) VN.ui.graphMulti = []; VN.render(); }
         });
       });
       node.addEventListener('dblclick', () => App.openScene(s.id));

@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.18
+VN Timeline Engine · Prototyp 0.9.19
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,13 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.19 · Körperteile in den Ebenen wählen · Rahmen-Auswahl in den Pfaden
+- Animations-Editor: Ein Klick auf ein Körperteil (Knochen oder Puppenteil) unten in den Keyframe-Ebenen wählt es aus –
+  Bild, Inspektor und Graph ziehen mit. Wählt man ein Teil im Bild, rollt seine Ebene unten ins Blickfeld.
+- Pfade: Rahmen um Szenen ziehen markiert mehrere, die man dann zusammen verschiebt. Umschalt/Strg + Klick nimmt einzelne
+  dazu oder heraus, Strg + A markiert alle, Esc hebt auf. Die Ansicht verschiebt man jetzt mit rechter oder mittlerer
+  Maustaste oder Leertaste + Ziehen. Eine verschobene Gruppe ist ein einziger Rückgängig-Schritt.
 
 NEU IN 0.9.18 · Fitness-Minispiele: Langhantel und Kurzhanteln · Kurven-Graph für Keyframes
 - Kurven-Graph: Jeder Übergang von Keyframe zu Keyframe hat jetzt einen Graph mit zwei Griffen (Bézier). Ziehen ergibt

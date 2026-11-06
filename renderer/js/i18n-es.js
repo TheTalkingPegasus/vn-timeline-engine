@@ -1166,7 +1166,6 @@ window.VN_I18N_ES = {
 "Hintergrund dahinter": "Fondo detrás",
 "Hintergrund für alle Fenster": "Fondo para todas las ventanas",
 "Hintergrund ohne Bild – rechts eins wählen": "Fondo sin imagen: elige uno a la derecha",
-"Hintergrund ziehen zum Verschieben, Mausrad zum Zoomen.": "Arrastra el fondo para desplazar, rueda del ratón para el zoom.",
 "Hintergrund zieht schnell endlos vorbei, leichtes Rütteln": "El fondo pasa sin fin, con leve traqueteo",
 "Hintergrund ·": "Fondo ·",
 "Hintergrund, Musik, Titel oder Logo und das Aussehen der Buttons. Im Reiter „Design“ kannst du den Buttons eigene Bilder geben.": "Fondo, música, título o logo y el aspecto de los botones. En la pestaña “Diseño” puedes dar a los botones imágenes propias.",
@@ -4714,7 +4713,10 @@ window.VN_I18N_ES = {
 "Eigene Kurve": "Curva propia",
 "vorher": "antes",
 "Keyframe": "Fotograma clave",
-"Griffe ziehen = eigene Kurve · Umschalt = waagrecht · Doppelklick = zurücksetzen": "Arrastra los tiradores = curva propia · Mayús = horizontal · doble clic = restablecer"
+"Griffe ziehen = eigene Kurve · Umschalt = waagrecht · Doppelklick = zurücksetzen": "Arrastra los tiradores = curva propia · Mayús = horizontal · doble clic = restablecer",
+"Anklicken = dieses Körperteil auswählen": "Clic = seleccionar esta parte del cuerpo",
+"Rahmen ziehen = markieren · rechte Maustaste ziehen = Ansicht verschieben": "Arrastra un marco = seleccionar · arrastra con el botón derecho = mover vista",
+"Rahmen ziehen markiert mehrere Szenen, die du dann zusammen verschiebst (Umschalt/Strg + Klick = einzeln dazu, Strg + A = alle, Esc = aufheben). Ansicht verschieben: rechte oder mittlere Maustaste ziehen oder Leertaste + Ziehen. Mausrad zum Zoomen.": "Arrastra un marco para seleccionar varias escenas y moverlas juntas (Mayús/Ctrl + clic = añadir una, Ctrl + A = todas, Esc = quitar). Mover la vista: arrastra con el botón derecho o central, o Espacio + arrastrar. Rueda para hacer zoom."
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

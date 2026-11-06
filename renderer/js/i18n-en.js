@@ -1168,7 +1168,6 @@ window.VN_I18N_EN = {
 "Hintergrund dahinter": "Background behind",
 "Hintergrund für alle Fenster": "Background for all windows",
 "Hintergrund ohne Bild – rechts eins wählen": "Background without image – choose one on the right",
-"Hintergrund ziehen zum Verschieben, Mausrad zum Zoomen.": "Drag the background to pan, mouse wheel to zoom.",
 "Hintergrund zieht schnell endlos vorbei, leichtes Rütteln": "Background rushes by endlessly, slight shaking",
 "Hintergrund ·": "Background ·",
 "Hintergrund, Musik, Titel oder Logo und das Aussehen der Buttons. Im Reiter „Design“ kannst du den Buttons eigene Bilder geben.": "Background, music, title or logo and the look of the buttons. In the “Design” tab you can give the buttons custom images.",
@@ -4627,7 +4626,10 @@ window.VN_I18N_EN = {
 "Eigene Kurve": "Custom curve",
 "vorher": "before",
 "Keyframe": "Keyframe",
-"Griffe ziehen = eigene Kurve · Umschalt = waagrecht · Doppelklick = zurücksetzen": "Drag handles = custom curve · Shift = horizontal · double-click = reset"
+"Griffe ziehen = eigene Kurve · Umschalt = waagrecht · Doppelklick = zurücksetzen": "Drag handles = custom curve · Shift = horizontal · double-click = reset",
+"Anklicken = dieses Körperteil auswählen": "Click = select this body part",
+"Rahmen ziehen = markieren · rechte Maustaste ziehen = Ansicht verschieben": "Drag a frame = select · drag with right mouse button = move view",
+"Rahmen ziehen markiert mehrere Szenen, die du dann zusammen verschiebst (Umschalt/Strg + Klick = einzeln dazu, Strg + A = alle, Esc = aufheben). Ansicht verschieben: rechte oder mittlere Maustaste ziehen oder Leertaste + Ziehen. Mausrad zum Zoomen.": "Drag a frame to select several scenes and then move them together (Shift/Ctrl + click = add one, Ctrl + A = all, Esc = clear). Move the view: drag with the right or middle mouse button, or Space + drag. Mouse wheel to zoom."
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",
