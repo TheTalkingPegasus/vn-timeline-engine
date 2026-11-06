@@ -222,15 +222,17 @@
   };
   VN.save = async () => {
     clearTimeout(saveTimer);
-    if (!VN.dir || !VN.project) return;
+    if (!VN.dir || !VN.project) return true;
     // Läuft schon ein Speichern: abwarten, danach nur noch speichern, wenn sich seitdem etwas geändert hat
     while (saving) { try { await saving; } catch (e) { /* unten erneut */ } }
-    if (VN.savedRev === VN.saveRev && !VN.dirty) return;
+    if (VN.savedRev === VN.saveRev && !VN.dirty) return true;
     const rev = VN.saveRev;
     const dir = VN.dir;
     saving = (async () => {
       if (VN.Schema) VN.Schema.stamp(VN.project);
-      await api.saveProject(dir, JSON.stringify(VN.project, null, 1));
+      // Nur ein echtes „true“ zählt als gespeichert (verweigert = null/false, auch ohne Fehler)
+      const ok = await api.saveProject(dir, JSON.stringify(VN.project, null, 1));
+      if (ok !== true) throw new Error(VN.t('Die Datei wurde nicht geschrieben.'));
     })();
     try {
       await saving;
@@ -243,9 +245,10 @@
     VN.dirty = VN.savedRev !== VN.saveRev;
     VN.updateSaveStatus();
     if (VN.dirty) { clearTimeout(saveTimer); saveTimer = setTimeout(VN.save, 400); }
+    return !VN.dirty;
   };
-  // Vor dem Schließen des Fensters: alles Ausstehende sichern
-  VN.flush = async () => { if (VN.dirty || saving) await VN.save(); };
+  // Vor dem Schließen des Fensters: alles Ausstehende sichern – true nur, wenn wirklich alles gespeichert ist
+  VN.flush = async () => { if (VN.dirty || saving) return (await VN.save()) && !VN.dirty; return true; };
   if (api && api.onFlush) api.onFlush(() => VN.flush());
   VN.updateSaveStatus = () => {
     const el = document.getElementById('save-status');

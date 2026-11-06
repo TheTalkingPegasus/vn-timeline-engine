@@ -1,7 +1,26 @@
 // Start für das Web-Export: ersetzt die Desktop-Schnittstelle durch Browser-Funktionen
 (function () {
   // Gepacktes Spiel: Projekt erst nach dem Laden des Pakets bekannt, daher Präfix erst bei Bedarf
-  const pre = () => 'vnsave:' + ((window.VN_GAME && window.VN_GAME.title) || 'spiel') + ':';
+  // Schlüssel = Titel + feste Projektkennung, damit zwei Spiele mit gleichem Namen auf derselben Seite
+  // sich keine Spielstände teilen. Ältere Spielstände (nur nach Titel) werden einmalig übernommen.
+  const oldPre = () => 'vnsave:' + ((window.VN_GAME && window.VN_GAME.title) || 'spiel') + ':';
+  let migrated = false;
+  const pre = () => {
+    const g = window.VN_GAME || {};
+    const pid = String(g.persistId || '').replace(/[^a-z0-9]/gi, '');
+    if (!pid) return oldPre();
+    const p = 'vnsave:' + (g.title || 'spiel') + ':' + pid + ':';
+    if (!migrated) {
+      migrated = true;
+      try {
+        const op = oldPre(), keys = [];
+        let has = false;
+        for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (!k) continue; if (k.startsWith(p)) has = true; else if (k.startsWith(op) && !k.slice(op.length).includes(':')) keys.push(k); }
+        if (!has) for (const k of keys) localStorage.setItem(p + k.slice(op.length), localStorage.getItem(k));
+      } catch (e) { /* Speicher gesperrt: dann eben ohne Übernahme */ }
+    }
+    return p;
+  };
   const urls = {}; // gepackte Dateien → Blob-Adressen
   const saves = {
     list: async () => {

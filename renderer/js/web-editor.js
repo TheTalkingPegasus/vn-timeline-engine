@@ -30,7 +30,20 @@
   const req = (r) => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
   const store = async (name, mode) => (await db()).transaction(name, mode || 'readonly').objectStore(name);
   const Reg = {
-    all: async () => (await req((await store('projects')).getAll())).sort((a, b) => (b.updated || 0) - (a.updated || 0)),
+    all: async () => {
+      const list = await req((await store('projects')).getAll());
+      // Einmal pro Sitzung: Dateien ohne Projekt (z. B. von abgebrochenen Importen älterer Versionen) entfernen
+      if (!Reg._cleaned) {
+        Reg._cleaned = true;
+        try {
+          const ids = new Set(list.map((m) => m.id));
+          const keys = await req((await store('files')).getAllKeys());
+          const orphan = new Set(keys.map((k) => String(k).split('/')[0]).filter((id) => !ids.has(id)));
+          for (const id of orphan) { const st = await store('files', 'readwrite'); await req(st.delete(IDBKeyRange.bound(id + '/', id + '/\uffff'))); }
+        } catch (e) { /* Aufräumen ist nur ein Extra */ }
+      }
+      return list.sort((a, b) => (b.updated || 0) - (a.updated || 0));
+    },
     get: async (id) => req((await store('projects')).get(id)),
     put: async (m) => req((await store('projects', 'readwrite')).put(m)),
     remove: async (id) => {
@@ -186,12 +199,28 @@
     const pj = names.filter((n) => /(^|\/)project\.json$/.test(n)).sort((a, b) => a.length - b.length)[0];
     if (!pj) { VN.toast(T('In der ZIP-Datei ist kein Projekt (project.json fehlt).')); return null; }
     const base = pj.slice(0, -'project.json'.length);
+    // Grenzen gegen kaputte oder bösartige ZIPs: Dateianzahl und entpackte Gesamtgröße
+    const inBase = names.filter((n) => n.startsWith(base));
+    const total = inBase.reduce((t, n) => t + ((zip.files[n]._data && zip.files[n]._data.uncompressedSize) || 0), 0);
+    if (inBase.length > 50000 || total > 4 * 1024 * 1024 * 1024) { VN.toast(T('Die ZIP-Datei ist zu groß oder enthält zu viele Dateien.')); return null; }
+    // project.json zuerst prüfen, bevor irgendetwas in den Browser-Speicher geschrieben wird
+    let data = null;
+    try { data = JSON.parse(await zip.files[pj].async('string')); } catch (e) { data = null; }
+    if (!data || typeof data !== 'object') { VN.toast(T('Die project.json in der ZIP-Datei ist beschädigt.')); return null; }
     const meta = { id: newId(), kind: 'idb', name: file.name.replace(/\.zip$/i, ''), created: Date.now(), updated: Date.now() };
     const fsys = idbFs(meta.id);
-    for (const n of names) { if (!n.startsWith(base)) continue; const rel = n.slice(base.length); if (!rel || rel.startsWith('.') || rel.includes('/.')) continue; await fsys.write(rel, typed(await zip.files[n].async('blob'), rel)); }
-    const data = await readJson(fsys);
-    if (data && data.title) meta.name = data.title;
-    await Reg.put(meta);
+    try {
+      for (const n of inBase) { const rel = n.slice(base.length); if (!rel || rel.startsWith('.') || rel.includes('/.')) continue; await fsys.write(rel, typed(await zip.files[n].async('blob'), rel)); }
+      data = await readJson(fsys);
+      if (!data) throw new Error('project.json');
+      if (data.title) meta.name = data.title;
+      await Reg.put(meta);
+    } catch (e) {
+      // Abgebrochen (z. B. Speicher voll): alles Geschriebene wieder entfernen, damit nichts unsichtbar liegen bleibt
+      try { await Reg.remove(meta.id); } catch (e2) { /* nichts da */ }
+      VN.toast(T('Import abgebrochen – es wurde nichts gespeichert.') + ' (' + (e && e.message || e) + ')');
+      return null;
+    }
     const dir = await activate(meta, fsys);
     return { dir, data };
   };
@@ -246,7 +275,7 @@
     if (!packed) zip.file(root + 'engine/game-data.js', 'window.VN_GAME = ' + JSON.stringify(data) + ';');
     try { const r = await fetch('LICENSE.txt'); if (r.ok) zip.file(root + 'engine/LICENSE.txt', await r.blob()); } catch (e) { /* egal */ }
     const esc = (t) => String(t).replace(/[<&>]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
-    const html = `<!doctype html>\n<html lang="${(data.languages && data.languages[0]) || 'de'}">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>${esc(data.title || 'Spiel')}</title>\n<link rel="stylesheet" href="engine/style.css">\n<style>html,body{background:#000;overflow:hidden}</style>\n</head>\n<body>\n<div id="player"></div><div id="toast"></div><div id="ctxmenu" hidden></div>\n` +
+    const html = `<!doctype html>\n<html lang="${((l) => (/^[a-z]{2,3}(-[a-z0-9]{2,8})*$/i.test(l) ? l : 'de'))(String((data.languages && data.languages[0]) || 'de'))}">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>${esc(data.title || 'Spiel')}</title>\n<link rel="stylesheet" href="engine/style.css">\n<style>html,body{background:#000;overflow:hidden}</style>\n</head>\n<body>\n<div id="player"></div><div id="toast"></div><div id="ctxmenu" hidden></div>\n` +
       info.web.filter((f) => !(packed && f === 'game-data.js')).map((f) => `<script src="engine/${f}"></script>`).join('\n') + '\n' +
       plugins.map((f) => `<script>VNPlugin._current = ${JSON.stringify(f)};</script><script src="plugins/${encodeURIComponent(f)}"></script>`).join('\n') + '\n<script src="engine/player.js"></script>\n<script>' + (packed ? 'VNWeb.startPacked("data.vnpak");' : 'VNWeb.start();') + '</script>\n</body>\n</html>\n';
     zip.file(root + 'index.html', html);

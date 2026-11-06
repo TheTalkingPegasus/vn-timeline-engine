@@ -14,19 +14,41 @@ on:
         description: 'Was ist neu? (erscheint in der Engine unter „Was ist neu?“). Leer = Abschnitt aus CHANGELOG.md'
         required: false
         default: ''
+      skipTests:
+        description: 'Selbsttests überspringen (nur im Notfall)'
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: write
 
 jobs:
+  # Ohne bestandene Selbsttests wird nichts gebaut oder veröffentlicht
+  test:
+    if: ${{ !inputs.skipTests }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Abhängigkeiten installieren
+        run: npm ci
+      - name: Selbsttests
+        run: xvfb-run -a npm test
+
   release:
+    needs: test
+    if: ${{ always() && (needs.test.result == 'success' || needs.test.result == 'skipped') }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Versionsnummer setzen

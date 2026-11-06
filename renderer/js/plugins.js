@@ -67,14 +67,15 @@
       VNPlugin.mods = [];
       for (const f of files) {
         if (shipped) {
-          let h = '';
-          try { h = VNPlugin.hash(await VN.api.plugins.read(f)); } catch (e) { h = ''; }
-          if (shipped[f] && shipped[f] === h) { if (!(VN.project.plugins && VN.project.plugins[f] && VN.project.plugins[f].enabled === false)) await VNPlugin.inject(f); continue; }
+          // SHA-256 (ab 0.9.20); alte Exporte haben noch die kurze Prüfsumme und werden weiter erkannt
+          let h = '', hf = '';
+          try { const txt = await VN.api.plugins.read(f); h = await VNPlugin.sha(txt); hf = VNPlugin.hash(txt); } catch (e) { h = ''; }
+          if (shipped[f] && h && (shipped[f] === h || (!/^sha256:/.test(shipped[f]) && shipped[f] === hf))) { if (!(VN.project.plugins && VN.project.plugins[f] && VN.project.plugins[f].enabled === false)) await VNPlugin.inject(f); continue; }
           // Nicht mitgeliefert oder verändert = Mod
           const allow = !!(VN.project.export && VN.project.export.mods);
           VNPlugin.mods.push({ file: f, hash: h, allowedByGame: allow });
           if (!allow) { console.warn('Mod nicht erlaubt, nicht geladen:', f); continue; }
-          if (await VNPlugin.modApproved(f, h)) await VNPlugin.inject(f);
+          if (await VNPlugin.modApproved(f, h, hf)) await VNPlugin.inject(f);
           continue;
         }
         if (!VN.project.plugins[f]) VN.project.plugins[f] = { enabled: true };
@@ -88,10 +89,12 @@
     modKey() { return 'vn-mods:' + (VN.Extras && VN.Extras.pid ? VN.Extras.pid() : VN.project.title); },
     modStore() { try { return JSON.parse(localStorage.getItem(VNPlugin.modKey()) || '{}'); } catch (e) { return {}; } },
     modSave(st) { try { localStorage.setItem(VNPlugin.modKey(), JSON.stringify(st)); } catch (e) { /* egal */ } },
-    async modApproved(f, h) {
+    async modApproved(f, h, hf) {
       const st = VNPlugin.modStore();
       const cur = st[f];
       if (cur && cur.hash === h) return !!cur.on;
+      // Freigabe aus älterer Version (kurze Prüfsumme): einmal anerkennen und auf SHA-256 umstellen
+      if (cur && hf && cur.hash === hf && /^sha256:/.test(h)) { st[f] = { hash: h, on: !!cur.on }; VNPlugin.modSave(st); return !!cur.on; }
       const lang = VN.lang || (VN.project.languages || ['de'])[0];
       const en = String(lang).startsWith('en');
       let r = 1;
@@ -104,6 +107,30 @@
     // selbst geänderte nur auf Wunsch (Knopf im Plugin-Reiter)
     BUNDLED_FILES: ['jobs.js', 'minispiele.js', 'spielhalle.js'],
     KNOWN_OLD: { 'minispiele.js': ['91d6ffff', '8a6bc3dc', 'dd6b9029', 'daadc030', 'e10b8e4b', 'e0a842bb'], 'jobs.js': ['322ce80e', '1e08ad44'] },
+    // Kryptografische Prüfsumme (SHA-256) für Freigaben und mitgelieferte Plugins – eigene Umsetzung,
+    // damit sie auch in Web-Spielen ohne HTTPS (kein crypto.subtle) dasselbe Ergebnis liefert
+    async sha(t) { return VNPlugin.shaSync(t); },
+    shaSync(t) {
+      const bytes = new TextEncoder().encode(String(t || '').replace(/\r\n/g, '\n'));
+      const K = VNPlugin._K || (VNPlugin._K = (() => { const k = [], isP = (n) => { for (let i = 2; i * i <= n; i++) if (n % i === 0) return false; return true; }; for (let n = 2; k.length < 64; n++) if (isP(n)) k.push((Math.cbrt(n) % 1) * 4294967296 | 0); return k; })());
+      const H = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
+      const len = bytes.length, total = ((len + 9 + 63) >> 6) << 6;
+      const m = new Uint8Array(total); m.set(bytes); m[len] = 0x80;
+      const dv = new DataView(m.buffer); dv.setUint32(total - 4, (len * 8) >>> 0); dv.setUint32(total - 8, Math.floor(len / 536870912));
+      const w = new Int32Array(64), r = (x, n) => (x >>> n) | (x << (32 - n));
+      for (let o = 0; o < total; o += 64) {
+        for (let i = 0; i < 16; i++) w[i] = dv.getInt32(o + i * 4);
+        for (let i = 16; i < 64; i++) { const a = w[i - 15], b = w[i - 2]; w[i] = (w[i - 16] + (r(a, 7) ^ r(a, 18) ^ (a >>> 3)) + w[i - 7] + (r(b, 17) ^ r(b, 19) ^ (b >>> 10))) | 0; }
+        let [a, b, c, d, e, f, g, h] = H;
+        for (let i = 0; i < 64; i++) {
+          const t1 = (h + (r(e, 6) ^ r(e, 11) ^ r(e, 25)) + ((e & f) ^ (~e & g)) + K[i] + w[i]) | 0;
+          const t2 = ((r(a, 2) ^ r(a, 13) ^ r(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) | 0;
+          h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+        }
+        H[0] = (H[0] + a) | 0; H[1] = (H[1] + b) | 0; H[2] = (H[2] + c) | 0; H[3] = (H[3] + d) | 0; H[4] = (H[4] + e) | 0; H[5] = (H[5] + f) | 0; H[6] = (H[6] + g) | 0; H[7] = (H[7] + h) | 0;
+      }
+      return 'sha256:' + H.map((x) => (x >>> 0).toString(16).padStart(8, '0')).join('');
+    },
     hash(t) { t = String(t || '').replace(/\r\n/g, '\n'); let x = 2166136261; for (let i = 0; i < t.length; i++) { x ^= t.charCodeAt(i); x = Math.imul(x, 16777619); } return (x >>> 0).toString(16); },
     updates: {},
     async checkBundled() {

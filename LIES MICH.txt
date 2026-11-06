@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.19
+VN Timeline Engine · Prototyp 0.9.20
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,17 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.20 · Zuverlässigkeit (keine neuen Funktionen)
+- Speichern: Ein fehlgeschlagenes oder verweigertes Speichern gilt nicht mehr als gespeichert. Konnten Änderungen beim
+  Schließen nicht gesichert werden, fragt der Editor nach, statt sie still zu verlieren.
+- Web-Spiele: Spielstände hängen jetzt an der festen Projekt-Kennung – zwei Web-Spiele mit gleichem Titel teilen sich
+  keine Spielstände mehr; ältere Spielstände werden einmalig übernommen.
+- Export: Sprachkürzel werden geprüft (im Projekt und im exportierten HTML).
+- Web-Editor: ZIP-Import prüft zuerst die project.json, hat Größengrenzen und räumt bei Abbruch alles wieder weg;
+  Reste älterer abgebrochener Importe werden entfernt.
+- Plugins: mitgelieferte Plugins und Mod-Freigaben nutzen SHA-256 statt einer kurzen Prüfsumme (ältere Exporte gehen weiter).
+- Veröffentlichen: Ohne bestandene Selbsttests wird kein Release gebaut; Node 22; Versionsnummer im package-lock.
 
 NEU IN 0.9.19 · Körperteile in den Ebenen wählen · Rahmen-Auswahl in den Pfaden
 - Animations-Editor: Ein Klick auf ein Körperteil (Knochen oder Puppenteil) unten in den Keyframe-Ebenen wählt es aus –

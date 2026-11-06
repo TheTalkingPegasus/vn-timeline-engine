@@ -2,6 +2,17 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.20 – Reliability round (no new features)
+- **Saving:** a save that fails or is refused is no longer treated as saved. When closing with unsaved changes that could
+  not be written, the editor asks instead of quietly losing them.
+- **Web games:** save slots now use the project’s fixed ID, so two web games with the same title no longer share saves;
+  older saves are taken over once.
+- **Export:** language codes are validated (in the project and in the exported HTML).
+- **Web editor:** ZIP imports check project.json first, have size limits and remove everything again if the import fails;
+  leftovers from older failed imports are cleaned up.
+- **Plugins:** shipped plugins and mod approvals use SHA-256 instead of a short checksum (older exports still work).
+- **Releases:** self-tests must pass before a release is built; Node 22; package-lock version kept in sync.
+
 ## 0.9.19 – Select body parts in the layers · frame selection in Paths
 - **Animation editor:** click a body part (bone or puppet part) in the keyframe layers below to select it – the
   canvas, inspector and graph follow. Picking a part in the picture scrolls its layer into view.

@@ -1,5 +1,5 @@
 // Versionsnummer überall auf einmal setzen: node tools/set-version.js 0.7.1
-// Ändert package.json, renderer/js/schema.js, renderer/index.html, README.md, README.txt, LIES MICH.txt (erste Zeile)
+// Ändert package.json, package-lock.json, renderer/js/schema.js, renderer/index.html, README.md, README.txt, LIES MICH.txt (erste Zeile)
 const fs = require('fs');
 const path = require('path');
 const v = String(process.argv[2] || '').replace(/^v/i, '').trim();
@@ -7,6 +7,8 @@ if (!/^\d+\.\d+\.\d+$/.test(v)) { console.error('Bitte Version wie 0.7.1 angeben
 const root = path.join(__dirname, '..');
 const edit = (rel, fn) => { const f = path.join(root, rel); if (!fs.existsSync(f)) return; const a = fs.readFileSync(f, 'utf8'); const b = fn(a); if (a !== b) { fs.writeFileSync(f, b); console.log('✓', rel); } };
 edit('package.json', (s) => s.replace(/"version":\s*"[^"]+"/, `"version": "${v}"`));
+// package-lock.json: Version des Projekts selbst (oben und unter packages[""]), nicht die der Abhängigkeiten
+edit('package-lock.json', (s) => { const j = JSON.parse(s); j.version = v; if (j.packages && j.packages['']) j.packages[''].version = v; return JSON.stringify(j, null, 2) + '\n'; });
 edit('renderer/js/schema.js', (s) => s.replace(/S\.ENGINE = '[^']+'/, `S.ENGINE = '${v}'`));
 edit('renderer/index.html', (s) => s.replace(/(<span data-notr>)\d+\.\d+\.\d+(<\/span>)/, `$1${v}$2`));
 edit('README.md', (s) => s.replace(/prototype \(\d+\.\d+\.\d+\)/, `prototype (${v})`).replace(/Prototyp \(\d+\.\d+\.\d+\)/, `Prototyp (${v})`));

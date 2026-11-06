@@ -4716,7 +4716,11 @@ window.VN_I18N_JA = {
 "Griffe ziehen = eigene Kurve · Umschalt = waagrecht · Doppelklick = zurücksetzen": "ハンドルをドラッグ＝カスタムカーブ · Shift＝水平 · ダブルクリック＝リセット",
 "Anklicken = dieses Körperteil auswählen": "クリック＝この部位を選択",
 "Rahmen ziehen = markieren · rechte Maustaste ziehen = Ansicht verschieben": "枠をドラッグ＝選択 · 右ボタンでドラッグ＝表示を移動",
-"Rahmen ziehen markiert mehrere Szenen, die du dann zusammen verschiebst (Umschalt/Strg + Klick = einzeln dazu, Strg + A = alle, Esc = aufheben). Ansicht verschieben: rechte oder mittlere Maustaste ziehen oder Leertaste + Ziehen. Mausrad zum Zoomen.": "枠をドラッグして複数のシーンを選び、まとめて移動できます（Shift/Ctrl＋クリック＝1つ追加、Ctrl＋A＝すべて、Esc＝解除）。表示の移動：右または中ボタンでドラッグ、またはスペース＋ドラッグ。ホイールでズーム。"
+"Rahmen ziehen markiert mehrere Szenen, die du dann zusammen verschiebst (Umschalt/Strg + Klick = einzeln dazu, Strg + A = alle, Esc = aufheben). Ansicht verschieben: rechte oder mittlere Maustaste ziehen oder Leertaste + Ziehen. Mausrad zum Zoomen.": "枠をドラッグして複数のシーンを選び、まとめて移動できます（Shift/Ctrl＋クリック＝1つ追加、Ctrl＋A＝すべて、Esc＝解除）。表示の移動：右または中ボタンでドラッグ、またはスペース＋ドラッグ。ホイールでズーム。",
+"Die Datei wurde nicht geschrieben.": "ファイルが書き込まれませんでした。",
+"Die ZIP-Datei ist zu groß oder enthält zu viele Dateien.": "ZIPファイルが大きすぎるか、ファイル数が多すぎます。",
+"Die project.json in der ZIP-Datei ist beschädigt.": "ZIPファイル内のproject.jsonが破損しています。",
+"Import abgebrochen – es wurde nichts gespeichert.": "インポートを中止しました – 何も保存されていません。"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

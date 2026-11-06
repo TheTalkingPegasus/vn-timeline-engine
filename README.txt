@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototype 0.9.19
+VN Timeline Engine · Prototype 0.9.20
 ====================================
 (Deutsch: siehe LIES MICH.txt)
 
@@ -15,6 +15,10 @@ Without installing (ZIP):
    isn't signed: "More info" → "Run anyway".
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
+
+NEW IN 0.9.20 · Reliability round
+- Failed saves are detected (asks before closing), web saves per project ID, validated language codes,
+  safer ZIP import, SHA-256 for plugins, tests required before every release.
 
 NEW IN 0.9.19 · Select body parts in the layers · frame selection in Paths
 - Animation editor: click a body part in the keyframe layers to select it.

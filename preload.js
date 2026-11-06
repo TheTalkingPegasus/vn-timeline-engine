@@ -16,7 +16,7 @@ contextBridge.exposeInMainWorld('vnApi', {
   saveBinary: (name, bytes, ext) => ipcRenderer.invoke('file:saveBinary', { name, bytes, ext }),
   setUiLang: (l) => ipcRenderer.send('ui:lang', l),
   // Vor dem Schließen: ausstehende Änderungen speichern, dann Bescheid geben
-  onFlush: (fn) => ipcRenderer.on('app:flush', async () => { try { await fn(); } finally { ipcRenderer.send('app:flushed'); } }),
+  onFlush: (fn) => ipcRenderer.on('app:flush', async () => { let ok = false; try { ok = (await fn()) !== false; } catch (e) { ok = false; } finally { ipcRenderer.send('app:flushed', ok); } }),
   confirm: (message, buttons) => ipcRenderer.invoke('app:confirm', { message, buttons }),
   gameInfo: () => ipcRenderer.invoke('app:gameInfo'),
   quit: () => ipcRenderer.invoke('app:quit'),
