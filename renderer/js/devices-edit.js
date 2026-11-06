@@ -391,10 +391,9 @@
     const ADD = [['text', 'Text', { w: 60, h: 10, text: VN.t('Neuer Text'), size: 4 }], ['image', 'Bild', { w: 40, h: 30 }], ['button', 'Knopf', { w: 30, h: 8, text: VN.t('Weiter'), size: 3.6, color: '#ffffff', bg: '#2f7de1', align: 'center', radius: 10 }], ['box', 'Fläche', { w: 100, h: 14, x: 0, bg: '#2f7de1' }], ['input', 'Eingabefeld', { w: 60, h: 7, size: 3.4 }]];
     const H0 = Math.max(10, Number(page.height) || 140);
     const elSel = page.els.find((e) => e.id === VN.ui.webEl) || null;
-    const canvas = el('div', { class: 'web-ed-page', style: { aspectRatio: '100 / ' + H0, background: page.bg || '#fff', backgroundImage: page.bgImg && VN.assetUrl(page.bgImg) ? `url("${VN.assetUrl(page.bgImg)}")` : '' }, onmousedown: (e) => { if (e.target === canvas && VN.ui.webEl) { VN.ui.webEl = null; VN.render(); } } });
+    const canvas = el('div', { class: 'web-ed-page', style: { aspectRatio: '100 / ' + H0, backgroundColor: page.bg || '#fff', backgroundImage: page.bgImg && VN.assetUrl(page.bgImg) ? `url("${VN.assetUrl(page.bgImg)}")` : '' }, onmousedown: (e) => { if (e.target === canvas && VN.ui.webEl) { VN.ui.webEl = null; VN.render(); } } });
     for (const e of page.els) {
-      const st = { left: e.x + '%', top: (e.y / H0 * 100) + '%', width: e.w + '%', height: (e.h / H0 * 100) + '%', color: e.color || '', background: e.bg || '', fontSize: (Number(e.size) || 4) + 'cqw', fontWeight: e.bold ? '700' : '', textAlign: e.align || 'left', borderRadius: (Number(e.radius) || 0) / 10 + 'cqw', border: e.border ? '0.25cqw solid ' + e.border : '' };
-      if (e.font && window.Theme && Theme.fontCss) st.fontFamily = Theme.fontCss(e.font);
+      const st = DV().elStyle(e, H0);
       if (e.kind === 'image') Object.assign(st, { backgroundImage: e.image && VN.assetUrl(e.image) ? `url("${VN.assetUrl(e.image)}")` : '' });
       const n = el('div', { class: 'dv-web-el ' + ({ image: 'img', box: 'box', button: 'btn', input: 'input', text: 'text' }[e.kind] || 'text') + ' web-ed-el' + (e === elSel ? ' sel' : '') + (e.kind === 'image' && !e.image ? ' empty' : ''), style: st },
         e.kind === 'input' ? el('div', { class: 'dv-web-in' }, el('input', { disabled: true, placeholder: e.place || (e.mode === 'password' ? VN.t('Passwort') : VN.t('Suchen …')) }), el('button', null, '→')) : e.kind === 'image' ? (e.image ? null : '🖼') : e.kind === 'box' ? null : (e.text || ''),
@@ -406,11 +405,29 @@
         const unit = canvas.getBoundingClientRect().width / 100;
         const o = { x: e.x, y: e.y, w: e.w, h: e.h };
         if (VN.ui.webEl !== e.id) { VN.ui.webEl = e.id; }
-        VN.drag(ev, (dx, dy) => {
-          if (rs) { e.w = Math.max(2, Math.round((o.w + dx / unit) * 2) / 2); e.h = Math.max(2, Math.round((o.h + dy / unit) * 2) / 2); }
-          else { e.x = Math.max(-e.w + 2, Math.min(98, Math.round((o.x + dx / unit) * 2) / 2)); e.y = Math.max(0, Math.min(H0 - 2, Math.round((o.y + dy / unit) * 2) / 2)); }
+        // Einrasten: an Hilfslinien, Seitenrand und -mitte (Kanten und Mitte des Elements), Alt = frei
+        const G = page.guides || { x: [], y: [] };
+        const snapOn = VN.ui.webSnap !== false;
+        const lx = [0, 50, 100, ...G.x], ly = [0, H0 / 2, H0, ...G.y];
+        const near = (v, list) => { let best = null; for (const t of list) if (Math.abs(t - v) <= 1.5 && (best === null || Math.abs(t - v) < Math.abs(best - v))) best = t; return best; };
+        const showHit = (ax, ay) => { canvas.querySelectorAll('.web-ed-hit').forEach((x) => x.remove()); if (ax != null) canvas.appendChild(el('div', { class: 'web-ed-hit v', style: { left: ax + '%' } })); if (ay != null) canvas.appendChild(el('div', { class: 'web-ed-hit h', style: { top: (ay / H0 * 100) + '%' } })); };
+        VN.drag(ev, (dx, dy, mev) => {
+          const free = !snapOn || (mev && mev.altKey);
+          let hx = null, hy = null;
+          if (rs) {
+            e.w = Math.max(2, Math.round((o.w + dx / unit) * 2) / 2); e.h = Math.max(2, Math.round((o.h + dy / unit) * 2) / 2);
+            if (!free) { const sx = near(e.x + e.w, lx); if (sx !== null) { e.w = Math.max(2, sx - e.x); hx = sx; } const sy = near(e.y + e.h, ly); if (sy !== null) { e.h = Math.max(2, sy - e.y); hy = sy; } }
+          } else {
+            e.x = Math.max(-e.w + 2, Math.min(98, Math.round((o.x + dx / unit) * 2) / 2)); e.y = Math.max(0, Math.min(H0 - 2, Math.round((o.y + dy / unit) * 2) / 2));
+            if (!free) {
+              for (const [off, k] of [[0, 'l'], [e.w / 2, 'c'], [e.w, 'r']]) { const t = near(e.x + off, lx); if (t !== null) { e.x = t - off; hx = t; break; } }
+              for (const off of [0, e.h / 2, e.h]) { const t = near(e.y + off, ly); if (t !== null) { e.y = t - off; hy = t; break; } }
+            }
+          }
+          showHit(hx, hy);
           n.style.left = e.x + '%'; n.style.top = (e.y / H0 * 100) + '%'; n.style.width = e.w + '%'; n.style.height = (e.h / H0 * 100) + '%';
         }, (dx, dy, moved) => {
+          showHit(null, null);
           if (!moved) { VN.render(); return; }
           const now = { x: e.x, y: e.y, w: e.w, h: e.h }; Object.assign(e, o);
           VN.mutate(() => { Object.assign(e, now); });
@@ -418,12 +435,68 @@
       });
       canvas.appendChild(n);
     }
+    // Hilfslinien zeichnen (ziehen = verschieben, aus der Fläche ziehen = löschen)
+    page.guides = page.guides || { x: [], y: [] };
+    const drawGuide = (axis, i) => {
+      const v = page.guides[axis][i];
+      const g = el('div', { class: 'web-ed-guide ' + (axis === 'x' ? 'v' : 'h'), title: VN.t('Hilfslinie – ziehen zum Verschieben, aus der Fläche ziehen zum Löschen'), style: axis === 'x' ? { left: v + '%' } : { top: (v / H0 * 100) + '%' } });
+      g.addEventListener('mousedown', (ev) => {
+        ev.stopPropagation(); ev.preventDefault();
+        const r = canvas.getBoundingClientRect(), unit = r.width / 100;
+        VN.drag(ev, (dx, dy, mev) => {
+          const val = axis === 'x' ? (mev.clientX - r.left) / unit : (mev.clientY - r.top) / unit;
+          g.style[axis === 'x' ? 'left' : 'top'] = axis === 'x' ? val + '%' : (val / H0 * 100) + '%';
+          g.classList.toggle('del', axis === 'x' ? val < -2 || val > 102 : val < -2 || val > H0 + 2);
+        }, (dx, dy, moved, mev) => {
+          if (!moved) return;
+          const ex = mev || { clientX: 0, clientY: 0 };
+          const val = Math.round((axis === 'x' ? (ex.clientX - r.left) / unit : (ex.clientY - r.top) / unit) * 2) / 2;
+          VN.mutate(() => { const out = axis === 'x' ? val < -2 || val > 102 : val < -2 || val > H0 + 2; if (out) page.guides[axis].splice(i, 1); else page.guides[axis][i] = val; });
+        });
+      });
+      canvas.appendChild(g);
+    };
+    if (VN.ui.webGuides !== false) { page.guides.x.forEach((_, i) => drawGuide('x', i)); page.guides.y.forEach((_, i) => drawGuide('y', i)); }
+    // Lineale: oben und links, Klick oder Ziehen setzt eine Hilfslinie
+    const ruler = (axis) => {
+      const r = el('div', { class: 'web-ed-ruler ' + axis, title: VN.t('Klicken oder ziehen = Hilfslinie setzen') });
+      const max = axis === 'x' ? 100 : H0;
+      for (let v = 0; v <= max; v += 5) r.appendChild(el('span', { class: 'tick' + (v % 10 ? '' : ' big'), style: axis === 'x' ? { left: v + '%' } : { top: (v / max * 100) + '%' } }, v % 10 ? '' : String(v)));
+      r.addEventListener('mousedown', (ev) => {
+        ev.preventDefault();
+        const cr = canvas.getBoundingClientRect(), unit = cr.width / 100;
+        const at = (m) => Math.round((axis === 'x' ? (m.clientX - cr.left) / unit : (m.clientY - cr.top) / unit) * 2) / 2;
+        const tmp = el('div', { class: 'web-ed-guide ' + (axis === 'x' ? 'v' : 'h') + ' new' });
+        canvas.appendChild(tmp);
+        const place = (m) => { const v = at(m); if (axis === 'x') tmp.style.left = v + '%'; else tmp.style.top = (v / H0 * 100) + '%'; };
+        place(ev);
+        VN.drag(ev, (dx, dy, m) => place(m), (dx, dy, moved, m) => {
+          const v = at(m || ev); tmp.remove();
+          if (v >= 0 && v <= max) VN.mutate(() => { page.guides[axis].push(v); VN.ui.webGuides = true; });
+        });
+      });
+      return r;
+    };
+    const frameW = Math.max(300, Math.min(1400, Number(VN.ui.webEdW) || 420));
+    const resizer = el('div', { class: 'web-ed-resize', title: VN.t('Ziehen = Arbeitsfläche größer oder kleiner') });
+    resizer.addEventListener('mousedown', (ev) => {
+      ev.preventDefault();
+      const left = resizer.previousSibling, w0 = left.getBoundingClientRect().width;
+      VN.drag(ev, (dx) => { left.style.maxWidth = left.style.width = Math.max(300, Math.min(1400, w0 + dx)) + 'px'; left.style.flex = 'none'; },
+        (dx) => { VN.ui.webEdW = Math.max(300, Math.min(1400, Math.round(w0 + dx))); VN.render(); });
+    });
     body.appendChild(el('div', { class: 'web-ed' },
-      el('div', { class: 'web-ed-left' },
+      el('div', { class: 'web-ed-left', style: { width: frameW + 'px', maxWidth: frameW + 'px', flex: 'none' } },
         el('div', { class: 'row gap4', style: { flexWrap: 'wrap', marginBottom: '6px' } }, el('span', { class: 'muted small' }, '+'),
           ...ADD.map(([k, l, d]) => el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const e = DV().fixEl(Object.assign({ kind: k, x: 10, y: Math.min(H0 - 10, 10 + page.els.length * 4) }, JSON.parse(JSON.stringify(d)))); page.els.push(e); VN.ui.webEl = e.id; }) }, VN.t(l)))),
-        el('div', { class: 'web-ed-frame' }, canvas),
-        el('div', { class: 'muted small', style: { marginTop: '4px' } }, VN.t('Ziehen = verschieben · Ecke unten rechts = Größe · Klick = bearbeiten'))),
+        el('div', { class: 'row gap8', style: { marginBottom: '4px', flexWrap: 'wrap' } },
+          el('label', { class: 'check small' }, el('input', { type: 'checkbox', checked: VN.ui.webSnap !== false, onchange: (ev) => { VN.ui.webSnap = ev.target.checked; } }), VN.t('Einrasten')),
+          el('label', { class: 'check small' }, el('input', { type: 'checkbox', checked: VN.ui.webGuides !== false, onchange: (ev) => { VN.ui.webGuides = ev.target.checked; VN.render(); } }), VN.t('Hilfslinien zeigen')),
+          page.guides.x.length + page.guides.y.length ? el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { page.guides = { x: [], y: [] }; }) }, VN.t('Hilfslinien löschen')) : null,
+          el('button', { class: 'btn tiny', title: VN.t('Hilfslinien für Ränder (5) und Mitte setzen'), onclick: () => VN.mutate(() => { page.guides.x = [...new Set([...page.guides.x, 5, 50, 95])]; }) }, VN.t('Ränder + Mitte'))),
+        el('div', { class: 'web-ed-rulers' }, el('div', { class: 'web-ed-corner' }), ruler('x'), ruler('y'), el('div', { class: 'web-ed-frame' }, canvas)),
+        el('div', { class: 'muted small', style: { marginTop: '4px' } }, VN.t('Ziehen = verschieben · Ecke unten rechts = Größe · Klick = bearbeiten · Lineal anklicken oder ziehen = Hilfslinie · Alt = ohne Einrasten'))),
+      resizer,
       el('div', { class: 'web-ed-right' }, elSel ? elPanel(site, page, elSel) : el('div', { class: 'muted small' }, VN.t('Ein Element anklicken, um es zu bearbeiten.')))));
   };
   // Einstellungen des gewählten Elements
@@ -441,7 +514,10 @@
     if (e.kind !== 'image') box.appendChild(el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } },
       e.kind !== 'box' ? el('label', { class: 'check' }, col(e.color || '#1c1e24', (v) => { e.color = v; }), VN.t('Schrift')) : null,
       el('label', { class: 'check' }, col(e.bg || '#ffffff', (v) => { e.bg = v; }), VN.t('Fläche')),
-      e.bg ? el('button', { class: 'btn tiny', title: VN.t('Keine Hintergrundfarbe'), onclick: () => VN.mutate(() => { e.bg = ''; }) }, '∅') : null));
+      e.bg ? el('button', { class: 'btn tiny', title: VN.t('Keine Hintergrundfarbe'), onclick: () => VN.mutate(() => { e.bg = ''; }) }, '∅') : null,
+      e.bg ? el('span', { class: 'muted small' }, VN.t('Deckkraft %')) : null,
+      e.bg ? el('input', { type: 'range', min: 0, max: 100, value: e.alpha != null ? e.alpha : 100, style: { width: '90px' }, title: VN.t('0 = durchsichtig, 100 = voll'), onchange: (ev) => VN.mutate(() => { e.alpha = Number(ev.target.value); }) }) : null,
+      e.bg ? el('span', { class: 'muted small' }, String(e.alpha != null ? e.alpha : 100)) : null));
     if (e.kind === 'text' || e.kind === 'button' || e.kind === 'input') box.appendChild(el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } },
       el('span', { class: 'muted small' }, VN.t('Größe')), num(e.size, (v) => { e.size = Math.max(1, Math.min(30, v)); }, { width: '60px' }),
       chk(e.bold, 'fett', (v) => { e.bold = v; }),
@@ -451,6 +527,11 @@
       el('span', { class: 'muted small' }, VN.t('Ecken')), num(e.radius, (v) => { e.radius = Math.max(0, Math.min(100, Math.round(v))); }, { width: '60px' }),
       el('label', { class: 'check' }, col(e.border || '#888888', (v) => { e.border = v; }), VN.t('Rahmen')),
       e.border ? el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { e.border = ''; }) }, '∅') : null));
+    box.appendChild(el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } },
+      el('span', { class: 'muted small' }, VN.t('Schlagschatten')),
+      el('input', { type: 'range', min: 0, max: 20, value: Number(e.shadow) || 0, style: { width: '90px' }, title: VN.t('0 = kein Schatten'), onchange: (ev) => VN.mutate(() => { e.shadow = Number(ev.target.value); }) }),
+      el('span', { class: 'muted small' }, String(Number(e.shadow) || 0)),
+      Number(e.shadow) ? el('label', { class: 'check' }, col(e.shadowColor || '#000000', (v) => { e.shadowColor = v; }), VN.t('Farbe')) : null));
     if (e.kind !== 'input' && e.kind !== 'box') {
       box.appendChild(el('div', { class: 'sec-title', style: { marginTop: '6px' } }, VN.t('Beim Klick')));
       box.appendChild(row('Link zu Seite', sel(allPages.some((x) => x[0] === e.link) ? e.link : '', allPages, (v) => { e.link = v; }, { width: '170px' })));

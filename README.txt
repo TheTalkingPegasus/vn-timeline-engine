@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototype 0.9.22
+VN Timeline Engine · Prototype 0.9.23
 ====================================
 (Deutsch: siehe LIES MICH.txt)
 
@@ -15,6 +15,8 @@ Without installing (ZIP):
    isn't signed: "More info" → "Run anyway".
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
+
+NEW IN 0.9.23 · Website editor: resizable canvas, rulers and snapping guides, drop shadows, transparent shapes
 
 NEW IN 0.9.22 · Browser with your own websites
 - In-game browser; build websites with a free page editor (texts, images, buttons, inputs), links, passwords, search.

@@ -72,7 +72,7 @@
     for (const w of p.web.sites) {
       VN.fill(w, { id: VN.uid('ws'), name: VN.t('Neue Website'), domain: 'meine-seite.de', hidden: false, conds: [], pages: [] });
       if (!w.pages.length) w.pages.push(DV.newPage(''));
-      for (const g of w.pages) { VN.fill(g, { id: VN.uid('wp'), path: '', title: '', bg: '#ffffff', bgImg: '', height: 140, els: [] }); for (const e of g.els) DV.fixEl(e); }
+      for (const g of w.pages) { VN.fill(g, { id: VN.uid('wp'), path: '', title: '', bg: '#ffffff', bgImg: '', height: 140, els: [], guides: { x: [], y: [] } }); g.guides = VN.fill(g.guides, { x: [], y: [] }); for (const e of g.els) DV.fixEl(e); }
     }
     if (!Array.isArray(p.social.posts)) p.social.posts = [];
     for (const s of p.social.posts) {
@@ -122,9 +122,24 @@
   DV.web = () => (P() && P().web) || { sites: [] };
   DV.sites = () => DV.web().sites || [];
   DV.webOn = () => !!(P() && P().devices && P().devices.enabled && DV.sites().length);
-  DV.EL = { kind: 'text', x: 10, y: 10, w: 40, h: 8, text: '', image: '', color: '#1c1e24', bg: '', size: 4, bold: false, align: 'left', font: '', radius: 0, border: '', link: '', actions: [], conds: [], mode: 'password', answer: '', place: '', fail: '', okLink: '', okActions: [], results: [] };
+  // Stil eines Elements (Spiel und Editor gleich): Position, Farben, Schatten, Transparenz
+  DV.elStyle = (e, H0) => {
+    const bg = e.bg ? (Number(e.alpha) < 100 && e.alpha != null ? `color-mix(in srgb, ${e.bg} ${Math.max(0, Number(e.alpha) || 0)}%, transparent)` : e.bg) : '';
+    const st = { left: e.x + '%', top: (e.y / H0 * 100) + '%', width: e.w + '%', height: (e.h / H0 * 100) + '%', color: e.color || '', backgroundColor: bg, fontSize: (Number(e.size) || 4) + 'cqw', fontWeight: e.bold ? '700' : '', textAlign: e.align || 'left', borderRadius: (Number(e.radius) || 0) / 10 + 'cqw', border: e.border ? '0.25cqw solid ' + e.border : '' };
+    if (e.font) st.fontFamily = window.Theme && Theme.fontCss ? Theme.fontCss(e.font) : e.font;
+    const sh = Number(e.shadow) || 0;
+    if (sh > 0) {
+      const c = e.shadowColor || 'rgba(0,0,0,0.5)', o = (sh * 0.12).toFixed(2), b = (sh * 0.35).toFixed(2);
+      // Text ohne eigene Fläche: Schatten an den Buchstaben, sonst am Kasten
+      if (e.kind === 'text' && !e.bg && !e.border) st.textShadow = `${o}cqw ${o}cqw ${b}cqw ${c}`;
+      else if (e.kind === 'image') st.filter = `drop-shadow(${o}cqw ${o}cqw ${b}cqw ${c})`;
+      else st.boxShadow = `${o}cqw ${o}cqw ${b}cqw ${c}`;
+    }
+    return st;
+  };
+  DV.EL = { kind: 'text', x: 10, y: 10, w: 40, h: 8, text: '', image: '', color: '#1c1e24', bg: '', size: 4, bold: false, align: 'left', font: '', radius: 0, border: '', shadow: 0, shadowColor: '#000000', alpha: 100, link: '', actions: [], conds: [], mode: 'password', answer: '', place: '', fail: '', okLink: '', okActions: [], results: [] };
   DV.fixEl = (e) => { VN.fill(e, Object.assign({ id: VN.uid('we') }, JSON.parse(JSON.stringify(DV.EL)))); return e; };
-  DV.newPage = (path) => ({ id: VN.uid('wp'), path: path || '', title: '', bg: '#ffffff', bgImg: '', height: 140, els: [] });
+  DV.newPage = (path) => ({ id: VN.uid('wp'), path: path || '', title: '', bg: '#ffffff', bgImg: '', height: 140, els: [], guides: { x: [], y: [] } });
   DV.newSite = () => { const w = { id: VN.uid('ws'), name: VN.t('Neue Website'), domain: 'meine-seite.de', hidden: false, conds: [], pages: [DV.newPage('')] }; w.pages[0].els.push(DV.fixEl({ kind: 'text', x: 8, y: 8, w: 84, h: 12, text: VN.t('Willkommen!'), size: 7, bold: true }), DV.fixEl({ kind: 'text', x: 8, y: 24, w: 84, h: 20, text: VN.t('Hier steht der Text deiner Seite.'), size: 3.6 })); return w; };
   const normAddr = (a) => String(a || '').trim().toLowerCase().replace(/^[a-z]+:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '');
   DV.addrOf = (w, g) => normAddr(w.domain) + (g && g.path ? '/' + normAddr(g.path) : '');
@@ -691,8 +706,7 @@
       const click = (e) => { if (runActs(e.actions, e.id)) return; if (e.link) go(e.link); else if ((e.actions || []).length) draw(); };
       const pageEl = (w, g, e) => {
         const H0 = Math.max(10, Number(g.height) || 140);
-        const st = { left: e.x + '%', top: (e.y / H0 * 100) + '%', width: e.w + '%', height: (e.h / H0 * 100) + '%', color: e.color || '', background: e.bg || '', fontSize: (Number(e.size) || 4) + 'cqw', fontWeight: e.bold ? '700' : '', textAlign: e.align || 'left', borderRadius: (Number(e.radius) || 0) / 10 + 'cqw', border: e.border ? '0.25cqw solid ' + e.border : '' };
-        if (e.font) st.fontFamily = window.Theme && Theme.fontCss ? Theme.fontCss(e.font) : e.font;
+        const st = DV.elStyle(e, H0);
         const clickable = !!(e.link || (e.actions || []).length);
         if (e.kind === 'image') return el('div', { class: 'dv-web-el img' + (clickable ? ' link' : ''), style: Object.assign(st, { backgroundImage: e.image && VN.assetUrl(e.image) ? `url("${VN.assetUrl(e.image)}")` : '' }), onclick: clickable ? (ev) => { ev.stopPropagation(); click(e); } : null });
         if (e.kind === 'box') return el('div', { class: 'dv-web-el box', style: st });
@@ -739,7 +753,7 @@
         if (!f || !usable(f.site)) { view.appendChild(el('div', { class: 'dv-web-404' }, el('div', { class: 'dv-web-h' }, '404'), tp('Diese Seite gibt es nicht.'))); return; }
         W.visited[normAddr(cur)] = 1;
         const g = f.page;
-        const page = el('div', { class: 'dv-web-page', style: { aspectRatio: '100 / ' + Math.max(10, Number(g.height) || 140), background: g.bg || '#fff', backgroundImage: g.bgImg && VN.assetUrl(g.bgImg) ? `url("${VN.assetUrl(g.bgImg)}")` : '' } });
+        const page = el('div', { class: 'dv-web-page', style: { aspectRatio: '100 / ' + Math.max(10, Number(g.height) || 140), backgroundColor: g.bg || '#fff', backgroundImage: g.bgImg && VN.assetUrl(g.bgImg) ? `url("${VN.assetUrl(g.bgImg)}")` : '' } });
         for (const e of g.els) if (VN.checkConds(e.conds || [], rs)) page.appendChild(pageEl(f.site, g, e));
         view.appendChild(page);
       };

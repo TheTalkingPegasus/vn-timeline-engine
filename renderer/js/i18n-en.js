@@ -4825,7 +4825,18 @@ window.VN_I18N_EN = {
 "Keine Lesezeichen.": "No bookmarks.",
 "Ergebnisse für": "Results for",
 "Diese Seite gibt es nicht.": "This page does not exist.",
-"fett": "bold"
+"fett": "bold",
+"Hilfslinie – ziehen zum Verschieben, aus der Fläche ziehen zum Löschen": "Guide – drag to move, drag off the canvas to delete",
+"Klicken oder ziehen = Hilfslinie setzen": "Click or drag = add a guide",
+"Ziehen = Arbeitsfläche größer oder kleiner": "Drag = make the canvas bigger or smaller",
+"Hilfslinien zeigen": "Show guides",
+"Hilfslinien löschen": "Delete guides",
+"Hilfslinien für Ränder (5) und Mitte setzen": "Add guides for margins (5) and center",
+"Ränder + Mitte": "Margins + center",
+"Ziehen = verschieben · Ecke unten rechts = Größe · Klick = bearbeiten · Lineal anklicken oder ziehen = Hilfslinie · Alt = ohne Einrasten": "Drag = move · bottom-right corner = size · click = edit · click or drag the ruler = guide · Alt = no snapping",
+"Deckkraft %": "Opacity %",
+"0 = durchsichtig, 100 = voll": "0 = transparent, 100 = solid",
+"0 = kein Schatten": "0 = no shadow"
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",

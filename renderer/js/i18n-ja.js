@@ -4910,7 +4910,18 @@ window.VN_I18N_JA = {
 "Keine Lesezeichen.": "ブックマークはありません。",
 "Ergebnisse für": "検索結果：",
 "Diese Seite gibt es nicht.": "このページは存在しません。",
-"fett": "太字"
+"fett": "太字",
+"Hilfslinie – ziehen zum Verschieben, aus der Fläche ziehen zum Löschen": "ガイド – ドラッグで移動、キャンバスの外へドラッグで削除",
+"Klicken oder ziehen = Hilfslinie setzen": "クリックまたはドラッグ＝ガイドを追加",
+"Ziehen = Arbeitsfläche größer oder kleiner": "ドラッグ＝キャンバスを拡大・縮小",
+"Hilfslinien zeigen": "ガイドを表示",
+"Hilfslinien löschen": "ガイドを削除",
+"Hilfslinien für Ränder (5) und Mitte setzen": "余白（5）と中央にガイドを追加",
+"Ränder + Mitte": "余白＋中央",
+"Ziehen = verschieben · Ecke unten rechts = Größe · Klick = bearbeiten · Lineal anklicken oder ziehen = Hilfslinie · Alt = ohne Einrasten": "ドラッグ＝移動 · 右下の角＝サイズ · クリック＝編集 · 定規をクリック/ドラッグ＝ガイド · Alt＝スナップなし",
+"Deckkraft %": "不透明度 %",
+"0 = durchsichtig, 100 = voll": "0＝透明、100＝不透明",
+"0 = kein Schatten": "0＝影なし"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",
