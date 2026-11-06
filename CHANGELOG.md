@@ -11,6 +11,9 @@ All notable changes. German details: `LIES MICH.txt`.
 - **👥 Change followers** (+/−, percent or set) and a matching condition – followers grow with the story.
 - New condition **📸 Post** (visible, not posted yet, deleted, liked, commented). Editor: Game systems → Social media,
   with preview.
+- Works on the in-game **phone and computer** (own window on the desktop). **Page design:** colors for background,
+  header, posts, text, accent and heart, a logo instead of the name, header and background images, fonts, corner
+  rounding, and presets (dark, light, retro, neon).
 
 ## 0.9.20 – Reliability round (no new features)
 - **Saving:** a save that fails or is refused is no longer treated as saved. When closing with unsaved changes that could

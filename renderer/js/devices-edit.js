@@ -254,11 +254,30 @@
     const C = DV().chats();
     body.appendChild(el('p', { class: 'muted' }, VN.t('Ein Social Media im Spiel: Kontakte posten Beiträge mit Text und Bild, andere Figuren liken und kommentieren. Ein Beitrag erscheint automatisch, sobald seine Bedingungen stimmen, oder nur per Aktion „📸 Beitrag posten“ (z. B. nach einer Entscheidung, an einem Ort oder nach einem Minispiel). Der Spieler kann liken und mit vorbereiteten Antworten kommentieren.')));
     const devs = DV().list();
-    if (!devs.some((d) => d.apps.some((a) => a.type === 'social'))) body.appendChild(el('div', { class: 'cond-warn' }, '⚠ ' + VN.t('Noch kein Gerät hat die App „Social Media“.'),
-      devs.length ? el('button', { class: 'btn tiny', style: { marginLeft: '8px' }, onclick: () => VN.mutate(() => { devs[0].apps.push(DV().fixApp({ id: VN.uid('app'), type: 'social' })); }) }, VN.tf('Zu „{n}“ hinzufügen', { n: devs[0].name })) : null));
+    const without = devs.filter((d) => !d.apps.some((a) => a.type === 'social'));
+    if (without.length) body.appendChild(el('div', { class: devs.length === without.length ? 'cond-warn' : 'hint-box' }, (devs.length === without.length ? '⚠ ' + VN.t('Noch kein Gerät hat die App „Social Media“.') : VN.t('App „Social Media“ auch auf:')),
+      ...without.map((d) => el('button', { class: 'btn tiny', style: { marginLeft: '8px' }, onclick: () => VN.mutate(() => { d.apps.push(DV().fixApp({ id: VN.uid('app'), type: 'social' })); }) }, (d.kind === 'desktop' ? '💻 ' : '📱 ') + VN.tf('Zu „{n}“ hinzufügen', { n: d.name })))));
     body.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, VN.t('Einstellungen')),
       row('Name der App im Spiel', txt(SO.name, (v) => { SO.name = v || 'Pixgram'; }, 'Pixgram', { width: '180px' })),
       el('div', { class: 'logic-row' }, chk(SO.notify !== false, 'Meldung bei neuem Beitrag (Klick öffnet die App)', (v) => { SO.notify = v; }))));
+    // Aussehen der Seite
+    const SL = SO.look;
+    const fontOpts = (none) => (window.Theme ? Theme.fontOptions(none) : [['', none]]);
+    const look = el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, VN.t('Aussehen der Seite')),
+      el('div', { class: 'logic-row' }, chk(SL.custom, 'Eigenes Design (sonst wie das Gerät)', (v) => { SL.custom = v; })));
+    if (SL.custom) {
+      look.append(
+        el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } },
+          ...[['bg', 'Hintergrund'], ['head', 'Kopfzeile'], ['card', 'Beiträge'], ['text', 'Text'], ['muted', 'Nebentext'], ['accent', 'Akzent'], ['like', 'Herz']].map(([k, l]) => el('label', { class: 'check' }, col(SL[k], (v) => { SL[k] = v; }), VN.t(l)))),
+        row('Logo (statt Name)', thumb(SL.logo), sel(SL.logo, imgOpts('— Name als Text —'), (v) => { SL.logo = v; }, { width: '160px' })),
+        row('Bild Kopfzeile', thumb(SL.headImg), sel(SL.headImg, imgOpts('— Farbe —'), (v) => { SL.headImg = v; }, { width: '160px' })),
+        row('Bild Hintergrund', thumb(SL.bgImg), sel(SL.bgImg, imgOpts('— Farbe —'), (v) => { SL.bgImg = v; }, { width: '160px' })),
+        row('Schrift', sel(SL.font || '', fontOpts('— wie das Gerät —'), (v) => { SL.font = v; })),
+        row('Schrift des Namens', sel(SL.logoFont || '', fontOpts('— wie oben —'), (v) => { SL.logoFont = v; })),
+        row('Ecken-Rundung', num(SL.radius, (v) => { SL.radius = Math.max(0, Math.min(40, Math.round(v))); })),
+        el('div', { class: 'row gap8' }, ...[['Dunkel', { bg: '#0f1320', head: '#151a27', card: '#1b2232', text: '#f2f4f8', muted: '#9aa3b5', accent: '#e1306c', like: '#ff3b6b' }], ['Hell', { bg: '#f4f5f8', head: '#ffffff', card: '#ffffff', text: '#1c1e24', muted: '#6b7080', accent: '#3d6fd8', like: '#ff3b6b' }], ['Retro', { bg: '#20140c', head: '#3a2414', card: '#2e1d10', text: '#f5e6c8', muted: '#c7a77a', accent: '#e8a43a', like: '#e8573a' }], ['Neon', { bg: '#0b0716', head: '#140c26', card: '#1a1030', text: '#f0e8ff', muted: '#a492d0', accent: '#18e0d0', like: '#ff2fd0' }]].map(([n, v]) => el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { Object.assign(SL, v); }) }, VN.t(n)))));
+    }
+    body.appendChild(look);
     if (!C.contacts.length) { body.appendChild(el('div', { class: 'hint-box' }, VN.t('Beiträge schreiben Kontakte. Lege zuerst unter „Nachrichten“ Kontakte an (z. B. aus deinen Figuren).'))); return; }
     // Profile
     const pr = el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, VN.t('Profile')));

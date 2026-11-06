@@ -2330,3 +2330,15 @@ img[src*="px_"] { image-rendering: pixelated; }
 .dv-soc-bio { font-size: 1.75cqh; margin-top: 0.5cqh; }
 .dv-soc-list .dv-empty { padding: 4cqh 1cqh; text-align: center; opacity: 0.6; }
 .dv-soc-post .dv-soc-cm:last-child, .dv-soc-post .dv-soc-bar:last-child { padding-bottom: 1.2cqh; }
+.dv-soc.custom { background: var(--soc-bg) var(--soc-bg-img, none) center / cover; color: var(--soc-text); font-family: var(--soc-font, inherit); }
+.dv-soc.custom .dv-soc-head { background: var(--soc-head) var(--soc-head-img, none) center / cover; color: var(--soc-text); border-bottom-color: color-mix(in srgb, var(--soc-text) 15%, transparent); }
+.dv-soc.custom .dv-soc-logo { font-family: var(--soc-logo-font, inherit); }
+.dv-soc.custom .dv-back-btn { color: var(--soc-acc); }
+.dv-soc.custom .dv-soc-post { background: var(--soc-card); color: var(--soc-text); border-radius: var(--soc-radius); }
+.dv-soc.custom .dv-soc-when, .dv-soc.custom .dv-soc-stat { color: var(--soc-muted); opacity: 1; }
+.dv-soc.custom .dv-soc-like.on { color: var(--soc-like); }
+.dv-soc.custom .dv-soc-cm.me strong { color: var(--soc-acc); }
+.dv-soc.custom .dv-reply { border-color: var(--soc-acc); }
+.dv-soc.custom .dv-reply:hover { background: var(--soc-acc); color: #fff; }
+.dv-soc-logoimg { height: 3.4cqh; max-width: 60%; object-fit: contain; display: block; }
+.dv-win-body .dv-soc { height: 100%; }

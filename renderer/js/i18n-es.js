@@ -4779,7 +4779,21 @@ window.VN_I18N_ES = {
 "weniger als": "menos de",
 "mindestens": "al menos",
 "Kontakt fehlt": "Falta el contacto",
-"Startwert – im Spiel ändern Aktionen „👥 Follower ändern“ die Zahl (z. B. nach einer Entscheidung oder einem Ereignis)": "Valor inicial – en el juego, las acciones «👥 Cambiar seguidores» cambian el número (p. ej. tras una decisión o un evento)"
+"Startwert – im Spiel ändern Aktionen „👥 Follower ändern“ die Zahl (z. B. nach einer Entscheidung oder einem Ereignis)": "Valor inicial – en el juego, las acciones «👥 Cambiar seguidores» cambian el número (p. ej. tras una decisión o un evento)",
+"Aussehen der Seite": "Diseño de la página",
+"Eigenes Design (sonst wie das Gerät)": "Diseño propio (si no, como el dispositivo)",
+"Kopfzeile": "Cabecera",
+"Nebentext": "Texto secundario",
+"Logo (statt Name)": "Logo (en lugar del nombre)",
+"— Name als Text —": "— nombre como texto —",
+"Bild Kopfzeile": "Imagen de cabecera",
+"— Farbe —": "— color —",
+"— wie das Gerät —": "— como el dispositivo —",
+"Schrift des Namens": "Fuente del nombre",
+"— wie oben —": "— como arriba —",
+"Ecken-Rundung": "Redondeo de esquinas",
+"Retro": "Retro",
+"App „Social Media“ auch auf:": "Añadir la app «Redes sociales» también a:"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

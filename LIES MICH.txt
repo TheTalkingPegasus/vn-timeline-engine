@@ -23,6 +23,9 @@ NEU IN 0.9.21 · Social-Media-App
 - „👥 Follower ändern“ (+/−, Prozent oder Wert setzen) und passende Bedingung – Follower wachsen mit der Story.
 - Neue Bedingung „📸 Beitrag“ (sichtbar, noch nicht gepostet, gelöscht, geliked, kommentiert). Editor: Spielsysteme →
   Social Media, mit Vorschau.
+- Läuft auf Handy und Computer im Spiel (eigenes Fenster am Desktop). Seite frei gestaltbar: Farben für Hintergrund,
+  Kopfzeile, Beiträge, Text, Akzent und Herz, Logo statt Name, Bilder für Kopfzeile und Hintergrund, Schriften,
+  Ecken-Rundung und Vorlagen (Dunkel, Hell, Retro, Neon).
 
 NEU IN 0.9.20 · Zuverlässigkeit (keine neuen Funktionen)
 - Speichern: Ein fehlgeschlagenes oder verweigertes Speichern gilt nicht mehr als gespeichert. Konnten Änderungen beim

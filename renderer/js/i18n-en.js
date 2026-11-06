@@ -4692,7 +4692,22 @@ window.VN_I18N_EN = {
 "weniger als": "less than",
 "mindestens": "at least",
 "Kontakt fehlt": "Contact missing",
-"Startwert – im Spiel ändern Aktionen „👥 Follower ändern“ die Zahl (z. B. nach einer Entscheidung oder einem Ereignis)": "Starting value – in the game, “👥 Change followers” actions change the number (e.g. after a decision or an event)"
+"Startwert – im Spiel ändern Aktionen „👥 Follower ändern“ die Zahl (z. B. nach einer Entscheidung oder einem Ereignis)": "Starting value – in the game, “👥 Change followers” actions change the number (e.g. after a decision or an event)",
+"Aussehen der Seite": "Page design",
+"Eigenes Design (sonst wie das Gerät)": "Custom design (otherwise like the device)",
+"Kopfzeile": "Header",
+"Nebentext": "Secondary text",
+"Logo (statt Name)": "Logo (instead of name)",
+"— Name als Text —": "— name as text —",
+"Bild Kopfzeile": "Header image",
+"— Farbe —": "— color —",
+"— wie das Gerät —": "— like the device —",
+"Schrift des Namens": "Name font",
+"— wie oben —": "— as above —",
+"Ecken-Rundung": "Corner rounding",
+"Retro": "Retro",
+"Neon": "Neon",
+"App „Social Media“ auch auf:": "Also add the “Social media” app to:"
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",

@@ -4779,7 +4779,21 @@ window.VN_I18N_JA = {
 "weniger als": "未満",
 "mindestens": "以上",
 "Kontakt fehlt": "連絡先がありません",
-"Startwert – im Spiel ändern Aktionen „👥 Follower ändern“ die Zahl (z. B. nach einer Entscheidung oder einem Ereignis)": "初期値 – ゲーム内ではアクション「👥 フォロワーを変更」で数が変わります（選択やイベントの後など）"
+"Startwert – im Spiel ändern Aktionen „👥 Follower ändern“ die Zahl (z. B. nach einer Entscheidung oder einem Ereignis)": "初期値 – ゲーム内ではアクション「👥 フォロワーを変更」で数が変わります（選択やイベントの後など）",
+"Aussehen der Seite": "ページのデザイン",
+"Eigenes Design (sonst wie das Gerät)": "独自デザイン（オフ＝端末と同じ）",
+"Kopfzeile": "ヘッダー",
+"Nebentext": "補足テキスト",
+"Logo (statt Name)": "ロゴ（名前の代わり）",
+"— Name als Text —": "— 名前をテキストで —",
+"Bild Kopfzeile": "ヘッダー画像",
+"— Farbe —": "— 色 —",
+"— wie das Gerät —": "— 端末と同じ —",
+"Schrift des Namens": "名前のフォント",
+"— wie oben —": "— 上と同じ —",
+"Ecken-Rundung": "角の丸み",
+"Retro": "レトロ",
+"App „Social Media“ auch auf:": "「SNS」アプリを追加："
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

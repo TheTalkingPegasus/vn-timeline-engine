@@ -64,6 +64,7 @@
     if (!Array.isArray(p.chats.threads)) p.chats.threads = [];
     // Social Media (0.9.21): Beiträge von Kontakten, erscheinen per Bedingung oder Aktion
     p.social = VN.fill(p.social, { name: 'Pixgram', notify: true, posts: [] });
+    p.social.look = VN.fill(p.social.look, DV.SOC_LOOK);
     if (!Array.isArray(p.social.posts)) p.social.posts = [];
     for (const s of p.social.posts) {
       VN.fill(s, { id: VN.uid('sp'), author: '', text: '', image: '', likes: 0, when: '', mode: 'auto', conds: [], comments: [], replies: [], likeActions: [] });
@@ -79,6 +80,8 @@
   };
 
   // ---------- Social Media (0.9.21) ----------
+  // Aussehen der Social-Media-Seite (frei gestaltbar)
+  DV.SOC_LOOK = { custom: false, bg: '#0f1320', head: '#151a27', card: '#1b2232', text: '#f2f4f8', muted: '#9aa3b5', accent: '#e1306c', like: '#ff3b6b', logo: '', headImg: '', bgImg: '', font: '', radius: 16, logoFont: '' };
   DV.social = () => P().social || { posts: [] };
   DV.posts = () => DV.social().posts || [];
   DV.post = (id) => DV.posts().find((x) => x.id === id) || null;
@@ -107,7 +110,7 @@
   };
 
   // ---------- Namen und Bilder ----------
-  DV.appName = (a) => (a.name ? tr(a.id + ':name', a.name) : tp((DV.BUILTIN[a.type] || DV.BUILTIN.app).name));
+  DV.appName = (a) => (a.name ? tr(a.id + ':name', a.name) : a.type === 'social' && P().social && P().social.name ? tr('social:name', P().social.name) : tp((DV.BUILTIN[a.type] || DV.BUILTIN.app).name));
   DV.appIcon = (a) => a.icon || (DV.BUILTIN[a.type] || DV.BUILTIN.app).icon;
   DV.appColor = (a) => a.color || (DV.BUILTIN[a.type] || DV.BUILTIN.app).color;
   DV.relOf = (c) => (c && c.char && VN.Life && VN.Life.relOn() ? VN.Life.relChar(c.char) : null);
@@ -619,6 +622,19 @@
     // Social Media: Feed, Profile, Likes und Kommentare des Spielers
     const socialView = (a, onBack) => {
       const box = el('div', { class: 'dv-soc' });
+      const SL = (DV.social().look) || DV.SOC_LOOK;
+      if (SL.custom) {
+        box.classList.add('custom');
+        const st = box.style, font = (f) => (window.Theme && Theme.fontCss ? Theme.fontCss(f) : f);
+        st.setProperty('--soc-bg', SL.bg); st.setProperty('--soc-head', SL.head); st.setProperty('--soc-card', SL.card);
+        st.setProperty('--soc-text', SL.text); st.setProperty('--soc-muted', SL.muted); st.setProperty('--soc-acc', SL.accent); st.setProperty('--soc-like', SL.like);
+        st.setProperty('--soc-radius', (Number(SL.radius) || 0) / 10 + 'cqh');
+        if (SL.font) st.setProperty('--soc-font', font(SL.font));
+        if (SL.logoFont) st.setProperty('--soc-logo-font', font(SL.logoFont));
+        if (SL.bgImg && VN.assetUrl(SL.bgImg)) st.setProperty('--soc-bg-img', `url("${VN.assetUrl(SL.bgImg)}")`);
+        if (SL.headImg && VN.assetUrl(SL.headImg)) st.setProperty('--soc-head-img', `url("${VN.assetUrl(SL.headImg)}")`);
+      }
+      const logo = () => (SL.custom && SL.logo && VN.assetUrl(SL.logo) ? el('img', { class: 'dv-soc-logoimg', src: VN.assetUrl(SL.logo), alt: tr('social:name', DV.social().name || 'Pixgram') }) : tr('social:name', DV.social().name || 'Pixgram'));
       let prof = null;
       const S = DV.sst(rs);
       DV.socialSync(rs);
@@ -628,7 +644,7 @@
         S.seen = S.seq;
         const head = el('div', { class: 'dv-head dv-soc-head' },
           onBack || prof ? el('button', { class: 'dv-back-btn', onclick: (e) => { e.stopPropagation(); if (prof) { prof = null; draw(); } else onBack(); } }, '‹') : null,
-          el('div', { class: 'dv-head-t' }, el('strong', { class: 'dv-soc-logo' }, prof ? name(DV.contact(prof)) : tr('social:name', DV.social().name || 'Pixgram'))));
+          el('div', { class: 'dv-head-t' }, el('strong', { class: 'dv-soc-logo' }, prof ? name(DV.contact(prof)) : logo())));
         box.appendChild(head);
         const list = el('div', { class: 'dv-soc-list' });
         box.appendChild(list);
@@ -750,8 +766,8 @@
       const had = wins.find((w) => w.app === a);
       if (had) { front(had); return had; }
       const n = wins.length;
-      const msg = a.type === 'messages';
-      const w = { app: a, z: ++zTop, x: 20 + n * 4, y: 6 + n * 4, cw: msg ? 62 : 46, ch: msg ? 72 : 62 };
+      const msg = a.type === 'messages', soc = a.type === 'social';
+      const w = { app: a, z: ++zTop, x: (soc ? 30 : 20) + n * 4, y: (soc ? 4 : 6) + n * 4, cw: msg ? 62 : soc ? 40 : 46, ch: msg ? 72 : soc ? 84 : 62 };
       const content = el('div', { class: 'dv-win-body' });
       const bar = el('div', { class: 'dv-win-bar' }, el('span', null, DV.appIcon(a) + ' ' + DV.appName(a)), el('button', { class: 'dv-win-x', title: tp('Schließen'), onclick: (e) => { e.stopPropagation(); closeWin(w); } }, '✕'));
       w.el = el('div', { class: 'dv-win', style: { left: w.x + '%', top: w.y + '%', width: w.cw + '%', height: w.ch + '%', zIndex: w.z }, onmousedown: () => front(w), onclick: (e) => e.stopPropagation() }, bar, content);
