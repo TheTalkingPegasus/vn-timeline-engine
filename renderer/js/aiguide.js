@@ -131,7 +131,7 @@
       '`rigs: { "<image asset id>": { … } }` – skeleton and mesh of an image, set up under **Characters → Bones & blinking**. Don’t write rigs by hand; keep them unchanged. `cellEdit: { nx, ny, add: [cell index …], del: [cell index …] }` stores manual mesh edits for one mesh density. Layered characters (`figures`) use the bones of their lowest layer for all layers.', '');
     L.push('## Animations (idle, gestures, cutscenes, battle moves)', '',
       '`anims: [{ id, name, type: "idle"|"gesture"|"cutscene", dur (seconds), loop, fps, smear, hitAt, actors: [...], cam: [...], audio: [...] }]`.',
-      '- Actor: `{ id, asset: "<image with bones>" | puppet: "<puppet id>", bones: { "<bone name>": [{ t, a, e }] } }` (a = angle, e = easing) or `parts` for puppets (see above).',
+      '- Actor: `{ id, asset: "<image with bones>" | puppet: "<puppet id>", bones: { "<bone name>": [{ t, a, e }] } }` (a = angle, e = easing: "ease-in-out", "ease-in", "ease-out", "linear", "smooth", "back", "bounce", "hold" or a custom Bézier curve "cb:x1,y1,x2,y2" – the same values work for `ease` on scene keyframes and camera clips) or `parts` for puppets (see above).',
       '- `fps`: `0`/empty = smooth, `24`, `12` (on twos, anime), `8` (on threes, cartoon), `6`. Project default: `animFps`. `smear: { on, multi, stretch, lines, sens }` = smear frames on fast motion; project default: `smear`.',
       '- `hitAt` (seconds) = the moment where effect, damage and sound appear when the animation is used in battle (default: halfway).', '');
     L.push('## Formulas and code', '',

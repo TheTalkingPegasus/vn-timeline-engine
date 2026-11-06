@@ -281,6 +281,10 @@
     },
 
     // ---------- Timeline ----------
+    // Werte einer Zeile (für Inspektor und Graph)
+    fields(row) {
+      return row.id === 'move' ? [['x', 'X %'], ['y', 'Höhe %'], ['scale', 'Größe %'], ['rot', 'Drehung °'], ['opacity', 'Deckkraft']] : row.id === 'cam' ? [['zoom', 'Zoom %'], ['panX', 'Schwenk X'], ['panY', 'Schwenk Y'], ['rot', 'Drehung °']] : row.part ? [['r', 'Drehung °'], ['x', 'Versatz X'], ['y', 'Versatz Y']] : [['a', 'Winkel °']];
+    },
     rows(a) {
       const actor = actorOf(a);
       const rows = [];
@@ -305,6 +309,7 @@
         el('span', { class: 'muted small' }, (t.toFixed(2)) + ' s / ' + a.dur.toFixed(1) + ' s'),
         el('span', { class: 'muted small' }, actorOf(a) && actorOf(a).puppet ? '· Teil ziehen = drehen · gelbes Quadrat / Pfeile oder Alt + Ziehen = ganze Figur verschieben · Doppelklick = festpinnen' : '· Knochen-Griff ziehen = Keyframe an der Abspielposition · Raute ziehen = verschieben · Rechtsklick = löschen'),
         el('div', { style: { flex: '1' } }),
+        el('button', { class: 'btn tiny' + (ui().animGraph ? ' primary' : ''), title: VN.t('Werte über die Zeit als Kurve – Übergänge mit Griffen weicher machen'), onclick: () => { ui().animGraph = !ui().animGraph; VN.render(); } }, '📈 Graph'),
         actorOf(a) ? AnimEd.actorSelect(a) : null));
       const scroll = el('div', { class: 'tl-scroll' });
       const inner = el('div', { class: 'tl-inner', style: { width: (150 + W + 40) + 'px' } });
@@ -356,6 +361,7 @@
         lane.addEventListener('drop', (e) => { const id = e.dataTransfer.getData('vn/asset-audio'); if (!id) return; e.preventDefault(); const r = lane.getBoundingClientRect(); VN.mutate(() => { a.audio = a.audio || []; a.audio.push({ id: VN.uid('au'), asset: id, at: Math.max(0, Math.round((e.clientX - r.left) / PX * 20) / 20), vol: 90 }); }); });
         inner.appendChild(el('div', { class: 'tl-row audio sep' }, el('div', { class: 'tl-head' }, el('span', { class: 'sw', style: { background: '#a58cf0' } }), 'Audio'), lane));
       }
+      if (ui().animGraph) { const g = AnimEd.graph(a, W); if (g) inner.appendChild(g); }
       inner.appendChild(el('div', { class: 'tl-beatcol an-playhead', style: { left: (150 + t * PX) + 'px', width: '2px', top: '26px' } }));
       scroll.appendChild(inner);
       tl.appendChild(scroll);
@@ -613,6 +619,104 @@
           el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const ps = Puppet.poseAt(actor, t); actor.parts = actor.parts || {}; for (const p of pup.parts) { const v = ps[p.id] || { r: 0, x: 0, y: 0 }; AnimEd.setKey(actor.parts[p.id] = actor.parts[p.id] || [], t, { r: v.r, x: v.x, y: v.y }); } }) }, '◆ Ganze Pose als Keyframe'),
           el('button', { class: 'btn tiny', onclick: () => { VN.ui.view = 'bones'; VN.ui.figSub = 'puppet'; VN.ui.pupSel = pup.id; VN.render(); } }, '✏ Puppe bearbeiten')));
     },
+    // Graph (0.9.18): Wert einer Zeile über die Zeit. Punkte = Keyframes (ziehen = Wert/Zeit ändern),
+    // beim gewählten Keyframe zwei Griffe für die Kurve vom vorigen Keyframe hierher.
+    graph(a, W) {
+      const rows = AnimEd.rows(a), kSel = ui().animKey;
+      const row = (kSel && rows.find((r) => r.id === kSel.row)) || rows.find((r) => (r.bone && r.bone === ui().animBone) || (r.part && r.part === ui().animPart)) || rows.find((r) => r.keys.length);
+      if (!row) return null;
+      const flds = AnimEd.fields(row).filter(([f]) => row.keys.some((k) => k[f] != null));
+      const head = el('div', { class: 'tl-head an-graph-head' }, el('div', { class: 'an-graph-title' }, el('span', { class: 'sw', style: { background: row.color } }), '📈 ' + row.label));
+      const lane = el('div', { class: 'tl-lane an-graph-lane', style: { width: W + 'px' } });
+      const box = el('div', { class: 'tl-row an-graph-row' }, head, lane);
+      if (!flds.length) { lane.appendChild(el('div', { class: 'lane-hint', style: { left: '8px' } }, VN.t('Diese Zeile hat noch keine Keyframes.'))); return box; }
+      const f = flds.some(([x]) => x === ui().animGField) ? ui().animGField : flds[0][0];
+      head.appendChild(el('div', { class: 'row gap4', style: { flexWrap: 'wrap' } }, ...flds.map(([x, l]) => el('button', { class: 'btn tiny' + (x === f ? ' primary' : ''), onclick: () => { ui().animGField = x; VN.render(); } }, VN.t(l)))));
+      const keys = row.keys.filter((k) => k[f] != null).sort((x, y) => x.t - y.t);
+      const H = 170, PAD = 16, NS = 'http://www.w3.org/2000/svg';
+      const sv = (tag, at) => { const n = document.createElementNS(NS, tag); for (const k in at) n.setAttribute(k, at[k]); return n; };
+      const svg = sv('svg', { width: W, height: H, class: 'an-graph' });
+      lane.appendChild(svg);
+      // Wertebereich (mit Platz für Überschwingen)
+      let lo = Infinity, hi = -Infinity;
+      for (let t = 0; t <= a.dur + 1e-6; t += 1 / 60) { const v = Anim.sample(keys, t, f); if (v != null) { lo = Math.min(lo, v); hi = Math.max(hi, v); } }
+      for (const k of keys) { lo = Math.min(lo, k[f]); hi = Math.max(hi, k[f]); }
+      // Griffe des gewählten Übergangs sollen sichtbar bleiben
+      const sk = kSel && kSel.row === row.id ? keys.findIndex((k) => Math.abs(k.t - kSel.t) < 0.001) : -1;
+      if (sk > 0 && keys[sk].e !== 'hold') { const c = CurveEd.pts(keys[sk].e, 'anim'), v0 = keys[sk - 1][f], dv = keys[sk][f] - v0; for (const y of [c[1], c[3]]) { const v = v0 + y * dv; lo = Math.min(lo, v); hi = Math.max(hi, v); } }
+      if (hi - lo < 1) { lo -= 1; hi += 1; }
+      const m = (hi - lo) * 0.12; lo -= m; hi += m;
+      const X = (t) => t * PX, Y = (v) => PAD + (hi - v) / (hi - lo) * (H - 2 * PAD), V = (y) => hi - (y - PAD) / (H - 2 * PAD) * (hi - lo);
+      // Nulllinie und Raster
+      for (let i = 0; i <= 4; i++) { const v = lo + (hi - lo) * i / 4; svg.appendChild(sv('line', { x1: 0, x2: W, y1: Y(v), y2: Y(v), class: 'an-g-grid' })); const tx = sv('text', { x: 4, y: Y(v) - 2, class: 'an-g-lbl' }); tx.textContent = Math.round(v * 10) / 10; svg.appendChild(tx); }
+      const curve = sv('path', { class: 'an-g-curve', stroke: row.color });
+      svg.appendChild(curve);
+      const drawCurve = () => {
+        let d = '';
+        for (let px = 0; px <= W; px += 2) { const v = Anim.sample(keys, px / PX, f); if (v != null) d += (d ? 'L' : 'M') + px + ' ' + Y(v).toFixed(1); }
+        curve.setAttribute('d', d);
+      };
+      drawCurve();
+      const selK = kSel && kSel.row === row.id ? keys.find((k) => Math.abs(k.t - kSel.t) < 0.001) : null;
+      // Griffe des gewählten Übergangs (vorheriger Keyframe → gewählter Keyframe)
+      const ki = selK ? keys.indexOf(selK) : -1;
+      if (ki > 0 && selK.e !== 'hold') {
+        const k0 = keys[ki - 1], k1 = selK;
+        const dv = k1[f] - k0[f];
+        const arms = [sv('line', { class: 'an-g-arm' }), sv('line', { class: 'an-g-arm' })];
+        const hs = [sv('circle', { r: 6, class: 'an-g-h' }), sv('circle', { r: 6, class: 'an-g-h' })];
+        const place = () => {
+          const c = CurveEd.pts(k1.e, 'anim');
+          const p1 = [X(k0.t + c[0] * (k1.t - k0.t)), Y(k0[f] + c[1] * dv)], p2 = [X(k0.t + c[2] * (k1.t - k0.t)), Y(k0[f] + c[3] * dv)];
+          arms[0].setAttribute('x1', X(k0.t)); arms[0].setAttribute('y1', Y(k0[f])); arms[0].setAttribute('x2', p1[0]); arms[0].setAttribute('y2', p1[1]);
+          arms[1].setAttribute('x1', X(k1.t)); arms[1].setAttribute('y1', Y(k1[f])); arms[1].setAttribute('x2', p2[0]); arms[1].setAttribute('y2', p2[1]);
+          hs[0].setAttribute('cx', p1[0]); hs[0].setAttribute('cy', p1[1]); hs[1].setAttribute('cx', p2[0]); hs[1].setAttribute('cy', p2[1]);
+        };
+        if (Math.abs(dv) > 1e-6) {
+          svg.append(...arms, ...hs);
+          place();
+          hs.forEach((h, i) => h.addEventListener('mousedown', (e) => {
+            e.stopPropagation(); e.preventDefault();
+            const before = k1.e, r = svg.getBoundingClientRect();
+            VN.drag(e, (dx, dy, ev) => {
+              const c = CurveEd.pts(k1.e, 'anim').slice();
+              const tx = (ev.clientX - r.left) / PX, vy = V(ev.clientY - r.top);
+              c[i * 2] = Math.round(Math.max(0, Math.min(1, (tx - k0.t) / (k1.t - k0.t))) * 100) / 100;
+              c[i * 2 + 1] = ev.shiftKey ? i : Math.round(Math.max(-1, Math.min(2, (vy - k0[f]) / dv)) * 100) / 100;
+              k1.e = CurveEd.fmt(c); place(); drawCurve();
+            }, (dx, dy, moved) => { if (!moved) return; const v = k1.e; k1.e = before; VN.mutate(() => { k1.e = v; }); });
+          }));
+        }
+      }
+      // Keyframe-Punkte: ziehen = Wert (hoch/runter) und Zeit (seitlich)
+      for (const k of keys) {
+        const c = sv('circle', { cx: X(k.t), cy: Y(k[f]), r: k === selK ? 6.5 : 5, class: 'an-g-key' + (k === selK ? ' sel' : ''), fill: row.color });
+        c.addEventListener('mousedown', (e) => {
+          e.stopPropagation(); e.preventDefault();
+          const t0 = k.t, v0 = k[f];
+          ui().animKey = { row: row.id, t: k.t };
+          VN.drag(e, (dx, dy, ev) => {
+            k.t = Math.max(0, Math.min(a.dur, Math.round((t0 + dx / PX) * 20) / 20));
+            k[f] = Math.round((v0 - dy / (H - 2 * PAD) * (hi - lo)) * 10) / 10;
+            if (ev.shiftKey) k.t = t0; // Umschalt = nur Wert
+            c.setAttribute('cx', X(k.t)); c.setAttribute('cy', Y(k[f])); keys.sort((x, y) => x.t - y.t); drawCurve();
+          }, (dx, dy, moved) => {
+            if (!moved) { ui().animT = k.t; VN.render(); return; }
+            const nt = k.t, nv = k[f]; k.t = t0; k[f] = v0;
+            VN.mutate(() => { k.t = nt; k[f] = nv; row.keys.sort((x, y) => x.t - y.t); ui().animKey = { row: row.id, t: nt }; ui().animT = nt; });
+          });
+        });
+        svg.appendChild(c);
+      }
+      // Klick in einen Übergang = den Keyframe danach wählen (dessen Kurve gilt für diesen Weg)
+      svg.addEventListener('mousedown', (e) => {
+        const t = (e.clientX - svg.getBoundingClientRect().left) / PX;
+        const nk = keys.find((k) => k.t > t);
+        if (nk) { ui().animKey = { row: row.id, t: nk.t }; VN.render(); }
+      });
+      head.appendChild(el('div', { class: 'muted small' }, VN.t('Punkt ziehen = Wert/Zeit · Übergang anklicken, dann Griffe ziehen')));
+      return box;
+    },
     movePlayhead(t) { const p = document.querySelector('.an-playhead'); if (p) p.style.left = (150 + t * PX) + 'px'; },
     actorSelect(a) {
       const s = el('select', { class: 'small-input', onchange: (e) => { ui().animActor = e.target.value; ui().animBone = null; VN.render(); } });
@@ -667,12 +771,12 @@
         const row = AnimEd.rows(a).find((r) => r.id === kSel.row);
         const k = row && row.keys.find((x) => Math.abs(x.t - kSel.t) < 0.001);
         if (k) {
-          const flds = row.id === 'move' ? [['x', 'X %'], ['y', 'Höhe %'], ['scale', 'Größe %'], ['rot', 'Drehung °'], ['opacity', 'Deckkraft']] : row.id === 'cam' ? [['zoom', 'Zoom %'], ['panX', 'Schwenk X'], ['panY', 'Schwenk Y'], ['rot', 'Drehung °']] : row.part ? [['r', 'Drehung °'], ['x', 'Versatz X'], ['y', 'Versatz Y']] : [['a', 'Winkel °']];
+          const flds = AnimEd.fields(row);
           box.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, '◆ Keyframe · ' + row.label),
             el('div', { class: 'kf-grid' },
               el('label', null, el('span', { class: 'muted small' }, 'Zeit s'), el('input', { type: 'number', step: 0.05, value: k.t, onchange: (e) => VN.mutate(() => { k.t = Math.max(0, Math.min(a.dur, Number(e.target.value))); row.keys.sort((x, y) => x.t - y.t); ui().animKey = { row: row.id, t: k.t }; }) })),
               ...flds.map(([f, l]) => el('label', null, el('span', { class: 'muted small' }, l), el('input', { type: 'number', step: 0.5, value: k[f] != null ? k[f] : '', onchange: (e) => VN.mutate(() => { k[f] = e.target.value === '' ? undefined : Number(e.target.value); }) })))),
-            el('div', { class: 'row gap8' }, el('span', { class: 'muted small' }, 'Kurve zum Keyframe'), (() => { const s = el('select', { onchange: (e) => VN.mutate(() => { k.e = e.target.value; }) }); for (const [v, l] of Fx.EASE_LIST) { const o = el('option', { value: v }, l); if (v === (k.e || 'ease-in-out')) o.selected = true; s.appendChild(o); } return s; })()),
+            row.keys.indexOf(k) > 0 ? CurveEd.box(k.e, (v) => VN.mutate(() => { k.e = v; }), { mode: 'anim', label: VN.t('Kurve zum Keyframe') }) : el('div', { class: 'muted small' }, 'Erster Keyframe – die Kurve gilt für den Weg vom vorigen Keyframe hierher.'),
             el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { row.keys.splice(row.keys.indexOf(k), 1); ui().animKey = null; }) }, 'Keyframe löschen')));
         }
       }

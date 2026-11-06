@@ -2,6 +2,22 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.18 – Fitness minigames: barbell and dumbbells · curve graph for keyframes
+- **Curve graph:** every transition from keyframe to keyframe now has a graph with two handles (Bézier) – drag them
+  for your own ease-in/ease-out, overshoot or a hard stop; Shift keeps a handle flat, double-click resets. Works in
+  the animation editor (bones, jointed puppets, movement, camera) and for keyframes and camera moves in scenes.
+  New curve “Hold (jumps)”.
+- **📈 Graph in the animation timeline:** shows the value of a row over time (e.g. X, rotation, zoom). Drag points
+  to change value and time, click a transition and shape it with the handles right in the graph.
+- **Barbell:** mash the space bar – every press lifts the bar a little, the weight pulls it back down. Reaching the
+  goal line completes a rep. Difficulty, repetitions, time, displayed weight (e.g. “80 kg”). A power bar shows how
+  fast you press; at full power the bar trembles.
+- **Dumbbells:** a rhythm game. Left and right dumbbells go up and down to their own beat. When one is up in the
+  zone, press A (left) or D (right) – perfect, good, too early, too late or missed, with combos. Rhythm alternating,
+  asymmetric or irregular; optional speed-up; keys can be changed (arrow keys always work).
+- Both: helper item, perks for skill trees and equipment (more power, larger target zone, more mistakes allowed), own
+  images for the weights and background, every colour (bar, plates, tracks, target, perfect hits …) adjustable.
+
 ## 0.9.17 – Arcade: darts, pool, blackjack and slot machine · safe and pipes
 - New bundled plugin **Arcade** (switch it on under Game systems → Overview). Three minigames that, like the others,
   end in a win or a loss (scene afterwards, result in a variable):

@@ -48,7 +48,8 @@
           el('div', { class: 'kf-grid' }, ...props.map(([p, l]) => el('label', null, el('span', { class: 'muted small' }, l), num(k[p] != null ? k[p] : '', (v) => VN.mutate(() => { k[p] = v; }))))),
           el('div', { class: 'row gap8' },
             el('span', { class: 'muted small' }, 'Dauer'), num(k.dur != null ? k.dur : 0.8, (v) => VN.mutate(() => { k.dur = Math.max(0, v); }), 52), el('span', { class: 'muted small' }, 's'),
-            sel(k.ease || 'ease-in-out', Fx.EASE_LIST, (v) => VN.mutate(() => { k.ease = v; }))),
+            window.CurveEd ? null : sel(k.ease || 'ease-in-out', Fx.EASE_LIST, (v) => VN.mutate(() => { k.ease = v; }))),
+          window.CurveEd ? CurveEd.box(k.ease, (v) => VN.mutate(() => { k.ease = v; }), { mode: 'css', label: VN.t('Kurve') }) : null,
           t.key === 'cam' ? el('div', { class: 'row gap8' }, el('span', { class: 'muted small' }, 'Wackeln'), num(k.shake || 0, (v) => VN.mutate(() => { k.shake = v; }), 52), el('span', { class: 'muted small' }, '(0–100)')) : null);
         box.appendChild(row);
       }
@@ -70,7 +71,8 @@
         rng('Drehung', c.rot || 0, -20, 20, 0.5, (v) => v + '°', set(c, 'rot')),
         el('div', { class: 'grid2' },
           field('Fahrt-Dauer (s)', num(c.dur != null ? c.dur : 1, set(c, 'dur'), 80)),
-          field('Kurve', sel(c.ease || 'ease-in-out', Fx.EASE_LIST, set(c, 'ease')))),
+          window.CurveEd ? null : field('Kurve', sel(c.ease || 'ease-in-out', Fx.EASE_LIST, set(c, 'ease')))),
+        window.CurveEd ? CurveEd.box(c.ease, set(c, 'ease'), { mode: 'css', label: VN.t('Kurve der Kamerafahrt'), fromLabel: VN.t('Start'), toLabel: VN.t('Ziel') }) : null,
         el('div', { class: 'grid2' },
           field('Wackeln beim Start', num(c.shake || 0, set(c, 'shake'), 80)),
           field('Wackel-Dauer (s)', num(c.shakeDur || 0.5, set(c, 'shakeDur'), 80))),

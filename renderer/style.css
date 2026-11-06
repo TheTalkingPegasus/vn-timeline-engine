@@ -2246,3 +2246,54 @@ img[src*="px_"] { image-rendering: pixelated; }
 
 .ud-gcols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
 .ud-gcols .d-color .btn { padding: 0 5px; }
+/* Fitness: Langhantel & Kurzhanteln */
+.mg-area.mg-lift { display: flex; align-items: center; justify-content: center; height: 58cqh; cursor: pointer; background: linear-gradient(#2a2f38, #15181d 78%, #0e1013); }
+.mg-lift-svg { height: 94%; aspect-ratio: 1; overflow: visible; margin-top: 1cqh; }
+.mg-lift-bar { stroke: var(--g-stange, #c9ced6); stroke-width: 4; stroke-linecap: round; }
+.mg-lift-plate { fill: var(--g-scheiben, #30343c); stroke: color-mix(in srgb, var(--g-scheiben, #30343c) 55%, #fff); stroke-width: 1; }
+.mg-lift-kg { fill: #fff; font: 700 8px var(--sys-font, system-ui), sans-serif; text-anchor: middle; opacity: 0.8; }
+.mg-lift-goal { stroke: var(--g-ziel, #6fe39a); stroke-width: 1.6; stroke-dasharray: 5 4; }
+.mg-lift-goaltx { fill: var(--g-ziel, #6fe39a); font: 700 7px var(--sys-font, system-ui), sans-serif; }
+.mg-lift-meter { fill: rgba(255,255,255,0.1); }
+.mg-lift-meterfill { fill: var(--g-balken, #e8a43a); }
+.mg-lift-dbbar { fill: color-mix(in srgb, var(--g-hantel, #30343c) 40%, #c9ced6); }
+.mg-lift-dbw { fill: var(--g-hantel, #30343c); stroke: color-mix(in srgb, var(--g-hantel, #30343c) 55%, #fff); stroke-width: 0.8; }
+.mg-lift-zone { fill: color-mix(in srgb, var(--g-ziel, #6fe39a) 14%, transparent); stroke: color-mix(in srgb, var(--g-ziel, #6fe39a) 60%, transparent); stroke-width: 1; transition: fill 0.1s; }
+.mg-lift-zone.in { fill: color-mix(in srgb, var(--g-ziel, #6fe39a) 38%, transparent); stroke: var(--g-ziel, #6fe39a); }
+.mg-lift-zone.hit { fill: color-mix(in srgb, var(--g-perfekt, #ffd23f) 30%, transparent); stroke: var(--g-perfekt, #ffd23f); }
+.mg-lift-perf { stroke: var(--g-perfekt, #ffd23f); stroke-width: 1; stroke-dasharray: 2 2; opacity: 0.8; }
+.mg-lift-key { fill: rgba(255,255,255,0.1); stroke: rgba(255,255,255,0.45); stroke-width: 1; transition: fill 0.1s; }
+.mg-lift-key.on { fill: var(--g-ziel, #6fe39a); }
+.mg-lift-keytx { fill: #fff; font: 800 10px var(--sys-font, system-ui), sans-serif; text-anchor: middle; pointer-events: none; }
+.mg-lift-fx { font: 800 10px var(--sys-font, system-ui), sans-serif; text-anchor: middle; opacity: 0; paint-order: stroke; stroke: rgba(0,0,0,0.6); stroke-width: 2px; }
+.mg-lift-fx.perfect { fill: var(--g-perfekt, #ffd23f); } .mg-lift-fx.good { fill: var(--g-ziel, #6fe39a); } .mg-lift-fx.miss { fill: #ff6b6b; }
+.mg-lift-fx.show { animation: mgLiftFx 0.65s ease-out; }
+@keyframes mgLiftFx { 0% { opacity: 1; transform: translateY(4px); } 70% { opacity: 1; } 100% { opacity: 0; transform: translateY(-6px); } }
+.mg-qt-hint.top { top: 1.2cqh; bottom: auto; }
+.mg-lift-rail { stroke: color-mix(in srgb, var(--g-stange, #c9ced6) 35%, transparent); stroke-width: 3; stroke-linecap: round; }
+.mg-lift-floor { stroke: rgba(255,255,255,0.18); stroke-width: 2; stroke-linecap: round; }
+.mg-lift-track { fill: color-mix(in srgb, var(--g-spur, #ffffff) 14%, transparent); }
+.mg-qt-hint.gone { opacity: 0; transition: opacity 0.6s; }
+/* Kurven-Editor (0.9.18) */
+.cv-box { display: flex; flex-direction: column; gap: 4px; }
+.cv-sel { flex: 1; min-width: 0; }
+.cv-svg { width: 100%; max-width: 260px; aspect-ratio: 200 / 120; background: #15161b; border: 1px solid #2c2f38; border-radius: 6px; user-select: none; }
+.cv-area { fill: rgba(255,255,255,0.03); }
+.cv-grid { stroke: #3a3e49; stroke-width: 1; } .cv-grid.faint { stroke: #262932; }
+.cv-lbl { fill: #7d8290; font: 600 7px system-ui, sans-serif; }
+.cv-curve { fill: none; stroke: #e8a43a; stroke-width: 2.4; stroke-linecap: round; }
+.cv-arm { stroke: #8fc3f0; stroke-width: 1.2; }
+.cv-h { fill: #15161b; stroke: #8fc3f0; stroke-width: 2; cursor: grab; } .cv-h:hover { fill: #8fc3f0; }
+.cv-dot { fill: #fff; }
+.cv-hint { font-size: 10px; }
+.an-graph-row { height: auto; align-items: stretch; }
+.an-graph-head { display: flex; flex-direction: column; gap: 6px; padding: 6px 8px; height: auto; white-space: normal; }
+.an-graph-title { display: flex; align-items: center; gap: 6px; font-weight: 600; }
+.an-graph-lane { height: 170px; background: #121318; }
+.an-graph { display: block; overflow: hidden; }
+.an-g-grid { stroke: #23262e; stroke-width: 1; }
+.an-g-lbl { fill: #5d606b; font: 600 9px system-ui, sans-serif; }
+.an-g-curve { fill: none; stroke-width: 2.2; }
+.an-g-key { stroke: #111; stroke-width: 1.5; cursor: move; } .an-g-key.sel { stroke: #fff; stroke-width: 2; }
+.an-g-arm { stroke: #8fc3f0; stroke-width: 1.2; stroke-dasharray: 3 2; }
+.an-g-h { fill: #15161b; stroke: #8fc3f0; stroke-width: 2; cursor: grab; } .an-g-h:hover { fill: #8fc3f0; }

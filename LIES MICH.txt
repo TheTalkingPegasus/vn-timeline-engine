@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.17
+VN Timeline Engine · Prototyp 0.9.18
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,22 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.18 · Fitness-Minispiele: Langhantel und Kurzhanteln · Kurven-Graph für Keyframes
+- Kurven-Graph: Jeder Übergang von Keyframe zu Keyframe hat jetzt einen Graph mit zwei Griffen (Bézier). Ziehen ergibt
+  eine eigene Kurve – sanft anfahren, weich ankommen, überschwingen oder hart stoppen; Umschalt hält einen Griff
+  waagrecht, Doppelklick setzt zurück. Im Animations-Editor (Knochen, Gliederpuppen, Bewegung, Kamera) und bei
+  Keyframes und Kamerafahrten in Szenen. Neue Kurve „Halten (springt)“.
+- 📈 Graph in der Animations-Timeline: zeigt den Wert einer Zeile über die Zeit (z. B. X, Drehung, Zoom). Punkte ziehen
+  ändert Wert und Zeit; einen Übergang anklicken und direkt im Graph mit den Griffen formen.
+- Langhantel: Leertaste hämmern – jeder Druck stemmt die Hantel ein Stück hoch, das Gewicht zieht sie wieder runter.
+  Erreicht sie oben die Ziellinie, ist die Wiederholung geschafft. Schwierigkeit, Wiederholungen, Zeit, angezeigtes
+  Gewicht (z. B. „80 kg“). Ein Kraftbalken zeigt, wie schnell man drückt; bei voller Kraft zittert die Stange.
+- Kurzhanteln: Rhythmusspiel. Linke und rechte Hantel gehen im eigenen Takt auf und ab. Ist eine Hantel oben in der
+  Zone, A (links) bzw. D (rechts) drücken – Perfekt, Gut, zu früh, zu spät oder verpasst, mit Combo. Takt abwechselnd,
+  asymmetrisch oder unregelmäßig; wird auf Wunsch schneller; Tasten frei wählbar (Pfeiltasten gehen immer).
+- Beide: Hilfs-Gegenstand, Perks für Skilltrees und Ausrüstung (mehr Kraft, größere Zielzone, mehr Fehler erlaubt),
+  eigene Bilder für Hantel und Hintergrund, alle Farben (Stange, Scheiben, Schienen, Ziel, Perfekt-Treffer …) einstellbar.
 
 NEU IN 0.9.17 · Spielhalle: Dart, Billard, Blackjack und Spielautomat · Tresor und Rohre
 - Neues mitgeliefertes Plugin „Spielhalle“ (einschalten unter Spielsysteme → Übersicht). Drei Minispiele, die wie die
