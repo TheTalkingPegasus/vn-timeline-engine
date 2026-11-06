@@ -222,16 +222,31 @@ function createWindow() {
       Menu.buildFromTemplate(items).popup({ window: win });
     });
   }
-  // Schließen: erst die Oberfläche ausstehende Änderungen speichern lassen (höchstens 4 s warten)
-  let closeOk = !!gameData;
+  // Schließen: erst die Oberfläche ausstehende Änderungen speichern lassen. Klappt das nicht (Fehler oder nach 8 s
+  // keine Antwort), wird gefragt, statt still Änderungen zu verlieren.
+  let closeOk = !!gameData, closing = false;
   win.on('close', (e) => {
     if (closeOk || !projectDir) return;
     e.preventDefault();
+    if (closing) return;
+    closing = true;
     const w = win;
-    const go = () => { if (closeOk) return; closeOk = true; ipcMain.removeAllListeners('app:flushed'); if (!w.isDestroyed()) w.close(); };
-    ipcMain.once('app:flushed', go);
-    setTimeout(go, 4000);
-    try { w.webContents.send('app:flush'); } catch (er) { go(); }
+    let done = false, timer = null;
+    const finish = (ok) => {
+      if (done) return; done = true;
+      clearTimeout(timer); ipcMain.removeAllListeners('app:flushed');
+      if (w.isDestroyed()) return;
+      if (ok) { closeOk = true; w.close(); return; }
+      const de = uiLang === 'de';
+      const r = dialog.showMessageBoxSync(w, { type: 'warning', buttons: de ? ['Nicht schließen', 'Trotzdem schließen'] : ['Keep open', 'Close anyway'], defaultId: 0, cancelId: 0,
+        title: de ? 'Nicht gespeichert' : 'Not saved',
+        message: de ? 'Die letzten Änderungen konnten nicht gespeichert werden.' : 'The latest changes could not be saved.',
+        detail: de ? 'Wenn du jetzt schließt, gehen sie verloren. Prüfe z. B., ob der Projektordner noch erreichbar ist und genug Speicherplatz frei ist.' : 'If you close now, they will be lost. Check that the project folder is still reachable and has enough free space.' });
+      if (r === 1) { closeOk = true; w.close(); } else closing = false;
+    };
+    ipcMain.once('app:flushed', (_ev, ok) => finish(ok !== false));
+    timer = setTimeout(() => finish(false), 8000);
+    try { w.webContents.send('app:flush'); } catch (er) { finish(false); }
   });
   // Keine fremden Seiten laden oder neue Fenster öffnen (auch nicht aus Plugins)
   win.webContents.on('will-navigate', (e, url) => { if (!/^file:/i.test(url)) e.preventDefault(); });
@@ -757,7 +772,7 @@ async function exportWebTo(dest, data, files) {
   try { fs.copyFileSync(path.join(__dirname, 'LICENSE'), path.join(dest, 'engine', 'LICENSE.txt')); } catch (e) { /* Lizenzdatei fehlt in der Entwicklung */ }
   const plugins = Object.entries(data.plugins || {}).filter(([, v]) => v && v.enabled).map(([k]) => k);
   const esc = (t) => String(t).replace(/[<&>]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
-  const html = `<!doctype html>\n<html lang="${(data.languages && data.languages[0]) || 'de'}">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>${esc(data.title || 'Spiel')}</title>\n<link rel="stylesheet" href="engine/style.css">\n<style>html,body{background:#000;overflow:hidden}</style>\n</head>\n<body>\n<div id="player"></div><div id="toast"></div><div id="ctxmenu" hidden></div>\n` +
+  const html = `<!doctype html>\n<html lang="${((l) => (/^[a-z]{2,3}(-[a-z0-9]{2,8})*$/i.test(l) ? l : 'de'))(String((data.languages && data.languages[0]) || 'de'))}">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>${esc(data.title || 'Spiel')}</title>\n<link rel="stylesheet" href="engine/style.css">\n<style>html,body{background:#000;overflow:hidden}</style>\n</head>\n<body>\n<div id="player"></div><div id="toast"></div><div id="ctxmenu" hidden></div>\n` +
     ['game-data.js', 'web-boot.js', 'vnpak.js', 'i18n-en.js', 'i18n-es.js', 'i18n-ja.js', 'core.js', 'i18n.js', 'audioout.js', 'logic.js', 'formula.js', 'life.js', 'extras.js', 'did.js', 'equip.js', 'world.js', 'quests.js', 'skills.js', 'combat.js', 'idle.js', 'devices.js', 'theme.js', 'a11y.js', 'uipresets.js', 'uidesign.js', 'perf.js', 'fx.js', 'lights.js', 'smear.js', 'gif.js', 'pixel.js', 'stage.js', 'systems.js', 'rig.js', 'anim.js', 'puppet.js', 'blink.js', 'plugins.js', 'menu.js', 'player-audio.js', 'player-menus.js', 'player-extras.js', 'player-world.js', 'relmsg.js', 'player-notify.js', 'player-skills.js', 'player-combat.js', 'player-idle.js', 'schema.js'].filter((f) => !(packed && f === 'game-data.js')).map((f) => `<script src="engine/${f}"></script>`).join('\n') + '\n' +
     plugins.map((f) => `<script>VNPlugin._current = ${JSON.stringify(f)};</script><script src="plugins/${encodeURIComponent(f)}"></script>`).join('\n') + '\n<script src="engine/player.js"></script>\n<script>' + (packed ? 'VNWeb.startPacked("data.vnpak");' : 'VNWeb.start();') + '</script>\n</body>\n</html>\n';
   fs.writeFileSync(path.join(dest, 'index.html'), html, 'utf8');

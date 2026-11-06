@@ -4716,7 +4716,11 @@ window.VN_I18N_ES = {
 "Griffe ziehen = eigene Kurve · Umschalt = waagrecht · Doppelklick = zurücksetzen": "Arrastra los tiradores = curva propia · Mayús = horizontal · doble clic = restablecer",
 "Anklicken = dieses Körperteil auswählen": "Clic = seleccionar esta parte del cuerpo",
 "Rahmen ziehen = markieren · rechte Maustaste ziehen = Ansicht verschieben": "Arrastra un marco = seleccionar · arrastra con el botón derecho = mover vista",
-"Rahmen ziehen markiert mehrere Szenen, die du dann zusammen verschiebst (Umschalt/Strg + Klick = einzeln dazu, Strg + A = alle, Esc = aufheben). Ansicht verschieben: rechte oder mittlere Maustaste ziehen oder Leertaste + Ziehen. Mausrad zum Zoomen.": "Arrastra un marco para seleccionar varias escenas y moverlas juntas (Mayús/Ctrl + clic = añadir una, Ctrl + A = todas, Esc = quitar). Mover la vista: arrastra con el botón derecho o central, o Espacio + arrastrar. Rueda para hacer zoom."
+"Rahmen ziehen markiert mehrere Szenen, die du dann zusammen verschiebst (Umschalt/Strg + Klick = einzeln dazu, Strg + A = alle, Esc = aufheben). Ansicht verschieben: rechte oder mittlere Maustaste ziehen oder Leertaste + Ziehen. Mausrad zum Zoomen.": "Arrastra un marco para seleccionar varias escenas y moverlas juntas (Mayús/Ctrl + clic = añadir una, Ctrl + A = todas, Esc = quitar). Mover la vista: arrastra con el botón derecho o central, o Espacio + arrastrar. Rueda para hacer zoom.",
+"Die Datei wurde nicht geschrieben.": "El archivo no se ha escrito.",
+"Die ZIP-Datei ist zu groß oder enthält zu viele Dateien.": "El archivo ZIP es demasiado grande o contiene demasiados archivos.",
+"Die project.json in der ZIP-Datei ist beschädigt.": "El project.json del archivo ZIP está dañado.",
+"Import abgebrochen – es wurde nichts gespeichert.": "Importación cancelada: no se ha guardado nada."
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

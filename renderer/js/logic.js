@@ -25,7 +25,9 @@
     p.currencies = p.currencies || [];
     p.lootTables = p.lootTables || [];
     p.inventory = VN.fill(p.inventory, { title: VN.t('Inventar'), cols: 6, rows: 4, bg: null, slot: null, showMoney: true, hudMoney: true, enabled: true });
-    p.languages = p.languages && p.languages.length ? p.languages : ['de'];
+    // Nur gültige Sprachkürzel (z. B. de, en, pt-BR) – Werte aus fremden Dateien landen sonst ungeprüft im Export
+    p.languages = (Array.isArray(p.languages) ? p.languages : []).map((l) => String(l || '').trim()).filter((l, i, a) => /^[a-z]{2,3}(-[a-z0-9]{2,8})*$/i.test(l) && a.indexOf(l) === i);
+    if (!p.languages.length) p.languages = ['de'];
     p.translations = p.translations || {};
     p.rigs = p.rigs || {};
     p.blinks = p.blinks || {};

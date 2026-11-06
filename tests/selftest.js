@@ -1002,6 +1002,33 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Tresor, Rohre (immer lösbar) und Blackjack (Werte, Tipps)');
   } catch (e) { general.push('Tresor/Rohre/Blackjack: ' + e.message); }
 
+  // 19. Korrekturrunde 0.9.20: Speichern meldet Fehler ehrlich, Sprachkürzel geprüft, SHA-256 für Plugins
+  try {
+    const r = JSON.parse(await js(`(async () => {
+      const out = [], keepDir = VN.dir;
+      // Speichern, das verweigert wird (anderer Ordner → Antwort null, kein Fehler), darf nicht als gespeichert gelten
+      const keepToast = VN.toast; VN.toast = () => {};
+      VN.dir = keepDir + '-gibt-es-nicht';
+      VN.markDirty();
+      const bad = await VN.flush();
+      VN.dir = keepDir; VN.toast = keepToast;
+      if (bad !== false || !VN.dirty) out.push('Fehlgeschlagenes Speichern gilt als gespeichert');
+      const good = await VN.flush();
+      if (good !== true || VN.dirty) out.push('Speichern nach Fehler klappt nicht');
+      // Sprachkürzel aus fremden Dateien
+      const p = { languages: ['de"><script>x</script>', 'en', 'pt-BR', 'en'] };
+      try { VN.migrate(p); } catch (e) { /* andere Felder fehlen – egal */ }
+      if (JSON.stringify(p.languages) !== '["en","pt-BR"]') out.push('Sprachkürzel: ' + JSON.stringify(p.languages));
+      // SHA-256 (Testvektor) und gleiches Ergebnis wie crypto.subtle
+      if (VNPlugin.shaSync('abc') !== 'sha256:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad') out.push('SHA-256 falsch');
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('Grüße ✓'));
+      if (VNPlugin.shaSync('Grüße ✓') !== 'sha256:' + [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('')) out.push('SHA-256 weicht ab');
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Korrekturen: ' + r.join(', '));
+    else log('✓ Korrekturen: Speicherfehler wird erkannt, Sprachkürzel geprüft, SHA-256 für Plugins');
+  } catch (e) { general.push('Korrekturen: ' + e.message); }
+
   // 18. Kurven-Editor: eigene Bézier-Kurven und „Halten“ zwischen Keyframes
   try {
     const r = JSON.parse(await js(`(() => {

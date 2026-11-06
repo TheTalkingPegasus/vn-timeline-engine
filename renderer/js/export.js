@@ -192,9 +192,9 @@
       data.shipped = {};
       for (const [f, v] of Object.entries(data.plugins || {})) {
         if (!v || (!v.enabled && slim)) continue;
-        try { data.shipped[f] = VNPlugin.hash(await VN.api.plugins.read(f)); } catch (e) { /* Datei fehlt */ }
+        try { data.shipped[f] = await VNPlugin.sha(await VN.api.plugins.read(f)); } catch (e) { /* Datei fehlt */ }
       }
-      if (!slim) for (const f of (VNPlugin.available || [])) if (!data.shipped[f]) { try { data.shipped[f] = VNPlugin.hash(await VN.api.plugins.read(f)); data.plugins = data.plugins || {}; data.plugins[f] = data.plugins[f] || { enabled: false }; } catch (e) { /* egal */ } }
+      if (!slim) for (const f of (VNPlugin.available || [])) if (!data.shipped[f]) { try { data.shipped[f] = await VNPlugin.sha(await VN.api.plugins.read(f)); data.plugins = data.plugins || {}; data.plugins[f] = data.plugins[f] || { enabled: false }; } catch (e) { /* egal */ } }
       const files = [];
       const lim = o.downscale ? Math.max(VN.res().w, VN.res().h) : 0;
       const todo = data.assets.filter((a) => {
