@@ -2375,3 +2375,17 @@ img[src*="px_"] { image-rendering: pixelated; }
 .dv-web-bm strong { font-size: 1.9cqh; color: #1a56b0; }
 .dv-web-bm span { font-size: 1.5cqh; color: #3a8a4a; }
 .dv-win-body .dv-web { height: 100%; }
+/* Website-Editor (0.9.22) */
+.web-ed { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+.web-ed-left { flex: 1 1 420px; min-width: 320px; max-width: 620px; }
+.web-ed-right { flex: 1 1 260px; min-width: 260px; }
+.web-ed-frame { max-height: 70vh; overflow-y: auto; border: 1px solid var(--line2); border-radius: 8px; background: #2a2d36; }
+.web-ed-page { position: relative; width: 100%; container-type: inline-size; background-size: cover; background-position: center top; overflow: hidden; user-select: none; }
+.web-ed-el { cursor: move; outline: 1px dashed rgba(127,127,127,0.35); }
+.web-ed-el.sel { outline: 2px solid #e8a43a; z-index: 5; }
+.web-ed-el.empty { display: flex; align-items: center; justify-content: center; background: rgba(127,127,127,0.18); font-size: 6cqw; }
+.web-ed-el .dv-web-in input { pointer-events: none; }
+.web-ed-rs { position: absolute; right: 0; bottom: 0; width: 12px; height: 12px; background: #e8a43a; cursor: nwse-resize; border-radius: 2px 0 0 0; }
+.web-ed-badge { position: absolute; top: 1px; right: 2px; font-size: 11px; pointer-events: none; }
+.web-ed-props { display: flex; flex-direction: column; gap: 6px; }
+.web-ed-props .logic-row span.muted.small { width: auto !important; }

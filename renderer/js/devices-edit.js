@@ -348,6 +348,163 @@
     ideas: ['Ein Beitrag verschwindet nach einem Ereignis („🗑 Beitrag löschen“) – wer ihn vorher gesehen hat, weiß mehr.', 'Likes und Kommentare des Spielers geben Beziehungspunkte – oder kosten welche.', 'Mehrere Figuren posten nach einem großen Ereignis, jede aus ihrer Sicht.', 'Ein #Hashtag als Spur: Unter #Vermisst sammeln sich Hinweise.']
   });
 
+  // ---------- Websites (0.9.22): Seiten frei gestalten wie im Menü-Designer ----------
+  S.webTab = (body) => {
+    const WB = VN.project.web;
+    if (window.Help && !Help.hidden('tip:web')) body.appendChild(Help.box({ level: 'tip', key: 'tip:web', topic: 'web',
+      text: VN.t('Neu hier? Eigene Websites in 4 Schritten'),
+      detail: VN.t('1. „+ Website“ und eine Adresse wählen (z. B. gildenmarkt.ra). 2. Auf der Fläche Texte, Bilder, Knöpfe und Eingabefelder hinzufügen und mit der Maus verschieben. 3. Knöpfen einen Link auf eine andere Seite oder eine Aktion geben. 4. Dem Handy oder Computer die App „Browser“ geben. Mehr mit 💡.') }));
+    const devs = DV().list();
+    const without = devs.filter((d) => !d.apps.some((a) => a.type === 'web'));
+    if (WB.sites.length && without.length) body.appendChild(el('div', { class: devs.length === without.length ? 'cond-warn' : 'hint-box' }, (devs.length === without.length ? '⚠ ' + VN.t('Noch kein Gerät hat die App „Browser“.') : VN.t('App „Browser“ auch auf:')),
+      ...without.map((d) => el('button', { class: 'btn tiny', style: { marginLeft: '8px' }, onclick: () => VN.mutate(() => { d.apps.push(DV().fixApp({ id: VN.uid('app'), type: 'web' })); }) }, (d.kind === 'desktop' ? '💻 ' : '📱 ') + VN.tf('Zu „{n}“ hinzufügen', { n: d.name })))));
+    // Websites
+    const site = WB.sites.find((w) => w.id === VN.ui.webSite) || WB.sites[0];
+    body.appendChild(el('div', { class: 'row gap8', style: { flexWrap: 'wrap', margin: '6px 0 10px' } }, el('strong', null, VN.t('Websites')),
+      ...WB.sites.map((w) => el('button', { class: 'dv-pill' + (w === site ? ' on' : ''), onclick: () => { VN.ui.webSite = w.id; VN.ui.webPage = null; VN.ui.webEl = null; VN.render(); } }, (w.hidden ? '🔒 ' : '🌐 ') + (w.name || '?'))),
+      el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const w = DV().newSite(); let n = 1; while (WB.sites.some((x) => x.domain === w.domain)) w.domain = 'meine-seite' + (++n) + '.de'; WB.sites.push(w); VN.ui.webSite = w.id; VN.ui.webPage = null; }) }, '+ ' + VN.t('Website'))));
+    if (!site) { body.appendChild(el('div', { class: 'hint-box' }, VN.t('Noch keine Website. Mit „+ Website“ legst du die erste an.'))); return; }
+    body.appendChild(el('div', { class: 'opt-card' },
+      el('div', { class: 'logic-row' },
+        txt(site.name, (v) => { site.name = v || VN.t('Website'); }, 'Name (für Lesezeichen)', { width: '180px', fontWeight: '600' }),
+        el('span', { class: 'muted small' }, 'www.'), txt(site.domain, (v) => { site.domain = String(v || '').trim().toLowerCase().replace(/^[a-z]+:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '') || 'meine-seite.de'; }, 'adresse.de', { width: '170px' }),
+        el('span', { title: VN.t('Erscheint nicht bei den Lesezeichen – man kommt nur über die Adresse, einen Link oder eine Suche hin.') }, chk(site.hidden, 'geheim (nur über Adresse)', (v) => { site.hidden = v; })),
+        condBtn(site.conds, 'Website nur erreichbar, wenn …', '🔒 ' + VN.t('Nur wenn')),
+        el('div', { class: 'spacer' }),
+        el('button', { class: 'btn tiny danger', onclick: () => { if (confirm(VN.tf('Website „{n}“ löschen?', { n: site.name }))) VN.mutate(() => { WB.sites = WB.sites.filter((x) => x !== site); }); } }, '×'))));
+    // Seiten
+    const page = site.pages.find((g) => g.id === VN.ui.webPage) || site.pages[0];
+    body.appendChild(el('div', { class: 'row gap8', style: { flexWrap: 'wrap', margin: '4px 0 8px' } }, el('span', { class: 'muted small' }, VN.t('Seiten')),
+      ...site.pages.map((g) => el('button', { class: 'dv-pill' + (g === page ? ' on' : ''), onclick: () => { VN.ui.webPage = g.id; VN.ui.webEl = null; VN.render(); } }, '/' + (g.path || ''))),
+      el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { let n = site.pages.length, path = 'seite' + n; while (site.pages.some((g) => g.path === path)) path = 'seite' + (++n); const g = DV().newPage(path); g.bg = page.bg; site.pages.push(g); VN.ui.webPage = g.id; }) }, '+ ' + VN.t('Seite'))));
+    const addr = DV().addrOf(site, page);
+    body.appendChild(el('div', { class: 'opt-card' },
+      el('div', { class: 'logic-row' },
+        el('span', { class: 'muted small' }, 'www.' + DV().addrOf(site, null) + '/'), txt(page.path, (v) => { const p2 = String(v || '').trim().toLowerCase().replace(/^\/+|\/+$/g, ''); if (!site.pages.some((g) => g !== page && g.path === p2)) page.path = p2; }, 'leer = Startseite', { width: '120px' }),
+        el('span', { class: 'muted small' }, VN.t('Hintergrund')), col(page.bg || '#ffffff', (v) => { page.bg = v; }),
+        thumb(page.bgImg), sel(page.bgImg, imgOpts('— kein Bild —'), (v) => { page.bgImg = v; }, { width: '130px' }),
+        el('span', { class: 'muted small', title: VN.t('Höhe der Seite im Verhältnis zur Breite (100 = quadratisch). Größer = länger, im Spiel wird gescrollt.') }, VN.t('Länge')), num(page.height, (v) => { page.height = Math.max(30, Math.min(1000, Math.round(v))); }),
+        el('div', { class: 'spacer' }),
+        el('button', { class: 'btn tiny', onclick: () => previewWeb(addr) }, '▶ ' + VN.t('Vorschau')),
+        site.pages.length > 1 ? el('button', { class: 'btn tiny danger', title: VN.t('Seite löschen'), onclick: () => { if (confirm(VN.t('Seite löschen?'))) VN.mutate(() => { site.pages = site.pages.filter((x) => x !== page); VN.ui.webPage = null; }); } }, '×') : null)));
+    // Fläche
+    const ADD = [['text', 'Text', { w: 60, h: 10, text: VN.t('Neuer Text'), size: 4 }], ['image', 'Bild', { w: 40, h: 30 }], ['button', 'Knopf', { w: 30, h: 8, text: VN.t('Weiter'), size: 3.6, color: '#ffffff', bg: '#2f7de1', align: 'center', radius: 10 }], ['box', 'Fläche', { w: 100, h: 14, x: 0, bg: '#2f7de1' }], ['input', 'Eingabefeld', { w: 60, h: 7, size: 3.4 }]];
+    const H0 = Math.max(10, Number(page.height) || 140);
+    const elSel = page.els.find((e) => e.id === VN.ui.webEl) || null;
+    const canvas = el('div', { class: 'web-ed-page', style: { aspectRatio: '100 / ' + H0, background: page.bg || '#fff', backgroundImage: page.bgImg && VN.assetUrl(page.bgImg) ? `url("${VN.assetUrl(page.bgImg)}")` : '' }, onmousedown: (e) => { if (e.target === canvas && VN.ui.webEl) { VN.ui.webEl = null; VN.render(); } } });
+    for (const e of page.els) {
+      const st = { left: e.x + '%', top: (e.y / H0 * 100) + '%', width: e.w + '%', height: (e.h / H0 * 100) + '%', color: e.color || '', background: e.bg || '', fontSize: (Number(e.size) || 4) + 'cqw', fontWeight: e.bold ? '700' : '', textAlign: e.align || 'left', borderRadius: (Number(e.radius) || 0) / 10 + 'cqw', border: e.border ? '0.25cqw solid ' + e.border : '' };
+      if (e.font && window.Theme && Theme.fontCss) st.fontFamily = Theme.fontCss(e.font);
+      if (e.kind === 'image') Object.assign(st, { backgroundImage: e.image && VN.assetUrl(e.image) ? `url("${VN.assetUrl(e.image)}")` : '' });
+      const n = el('div', { class: 'dv-web-el ' + ({ image: 'img', box: 'box', button: 'btn', input: 'input', text: 'text' }[e.kind] || 'text') + ' web-ed-el' + (e === elSel ? ' sel' : '') + (e.kind === 'image' && !e.image ? ' empty' : ''), style: st },
+        e.kind === 'input' ? el('div', { class: 'dv-web-in' }, el('input', { disabled: true, placeholder: e.place || (e.mode === 'password' ? VN.t('Passwort') : VN.t('Suchen …')) }), el('button', null, '→')) : e.kind === 'image' ? (e.image ? null : '🖼') : e.kind === 'box' ? null : (e.text || ''),
+        (e.link || (e.actions || []).length) ? el('span', { class: 'web-ed-badge' }, e.link ? '🔗' : '⚡') : null,
+        e === elSel ? el('span', { class: 'web-ed-rs' }) : null);
+      n.addEventListener('mousedown', (ev) => {
+        ev.stopPropagation(); ev.preventDefault();
+        const rs = ev.target.classList.contains('web-ed-rs');
+        const unit = canvas.getBoundingClientRect().width / 100;
+        const o = { x: e.x, y: e.y, w: e.w, h: e.h };
+        if (VN.ui.webEl !== e.id) { VN.ui.webEl = e.id; }
+        VN.drag(ev, (dx, dy) => {
+          if (rs) { e.w = Math.max(2, Math.round((o.w + dx / unit) * 2) / 2); e.h = Math.max(2, Math.round((o.h + dy / unit) * 2) / 2); }
+          else { e.x = Math.max(-e.w + 2, Math.min(98, Math.round((o.x + dx / unit) * 2) / 2)); e.y = Math.max(0, Math.min(H0 - 2, Math.round((o.y + dy / unit) * 2) / 2)); }
+          n.style.left = e.x + '%'; n.style.top = (e.y / H0 * 100) + '%'; n.style.width = e.w + '%'; n.style.height = (e.h / H0 * 100) + '%';
+        }, (dx, dy, moved) => {
+          if (!moved) { VN.render(); return; }
+          const now = { x: e.x, y: e.y, w: e.w, h: e.h }; Object.assign(e, o);
+          VN.mutate(() => { Object.assign(e, now); });
+        });
+      });
+      canvas.appendChild(n);
+    }
+    body.appendChild(el('div', { class: 'web-ed' },
+      el('div', { class: 'web-ed-left' },
+        el('div', { class: 'row gap4', style: { flexWrap: 'wrap', marginBottom: '6px' } }, el('span', { class: 'muted small' }, '+'),
+          ...ADD.map(([k, l, d]) => el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const e = DV().fixEl(Object.assign({ kind: k, x: 10, y: Math.min(H0 - 10, 10 + page.els.length * 4) }, JSON.parse(JSON.stringify(d)))); page.els.push(e); VN.ui.webEl = e.id; }) }, VN.t(l)))),
+        el('div', { class: 'web-ed-frame' }, canvas),
+        el('div', { class: 'muted small', style: { marginTop: '4px' } }, VN.t('Ziehen = verschieben · Ecke unten rechts = Größe · Klick = bearbeiten'))),
+      el('div', { class: 'web-ed-right' }, elSel ? elPanel(site, page, elSel) : el('div', { class: 'muted small' }, VN.t('Ein Element anklicken, um es zu bearbeiten.')))));
+  };
+  // Einstellungen des gewählten Elements
+  const elPanel = (site, page, e) => {
+    const box = el('div', { class: 'opt-card web-ed-props' });
+    const allPages = [['', '— kein Link —'], ...VN.project.web.sites.flatMap((w) => w.pages.map((g) => [DV().addrOf(w, g), DV().addrOf(w, g)]))];
+    const idx = page.els.indexOf(e);
+    box.appendChild(el('div', { class: 'row gap4' }, el('strong', { style: { flex: '1' } }, VN.t({ text: 'Text', image: 'Bild', button: 'Knopf', box: 'Fläche', input: 'Eingabefeld' }[e.kind] || 'Element')),
+      el('button', { class: 'btn tiny', title: VN.t('Nach vorne'), onclick: () => VN.mutate(() => { page.els.splice(idx, 1); page.els.push(e); }) }, '⬆'),
+      el('button', { class: 'btn tiny', title: VN.t('Nach hinten'), onclick: () => VN.mutate(() => { page.els.splice(idx, 1); page.els.unshift(e); }) }, '⬇'),
+      el('button', { class: 'btn tiny', title: VN.t('Duplizieren'), onclick: () => VN.mutate(() => { const n = JSON.parse(JSON.stringify(e)); n.id = VN.uid('we'); n.y += 4; page.els.push(n); VN.ui.webEl = n.id; }) }, '⧉'),
+      el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { page.els.splice(idx, 1); VN.ui.webEl = null; }) }, '×')));
+    if (e.kind === 'text' || e.kind === 'button') box.appendChild(el('textarea', { class: 'dv-ta', rows: 3, onchange: (ev) => VN.mutate(() => { e.text = ev.target.value; }) }, e.text || ''));
+    if (e.kind === 'image') box.appendChild(row('Bild', thumb(e.image), sel(e.image, imgOpts('— Bild wählen —'), (v) => { e.image = v; }, { width: '140px' })));
+    if (e.kind !== 'image') box.appendChild(el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } },
+      e.kind !== 'box' ? el('label', { class: 'check' }, col(e.color || '#1c1e24', (v) => { e.color = v; }), VN.t('Schrift')) : null,
+      el('label', { class: 'check' }, col(e.bg || '#ffffff', (v) => { e.bg = v; }), VN.t('Fläche')),
+      e.bg ? el('button', { class: 'btn tiny', title: VN.t('Keine Hintergrundfarbe'), onclick: () => VN.mutate(() => { e.bg = ''; }) }, '∅') : null));
+    if (e.kind === 'text' || e.kind === 'button' || e.kind === 'input') box.appendChild(el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } },
+      el('span', { class: 'muted small' }, VN.t('Größe')), num(e.size, (v) => { e.size = Math.max(1, Math.min(30, v)); }, { width: '60px' }),
+      chk(e.bold, 'fett', (v) => { e.bold = v; }),
+      sel(e.align, [['left', 'links'], ['center', 'Mitte'], ['right', 'rechts']], (v) => { e.align = v; }),
+      sel(e.font || '', window.Theme ? Theme.fontOptions('— Schrift —') : [['', '— Schrift —']], (v) => { e.font = v; }, { width: '120px' })));
+    box.appendChild(el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } },
+      el('span', { class: 'muted small' }, VN.t('Ecken')), num(e.radius, (v) => { e.radius = Math.max(0, Math.min(100, Math.round(v))); }, { width: '60px' }),
+      el('label', { class: 'check' }, col(e.border || '#888888', (v) => { e.border = v; }), VN.t('Rahmen')),
+      e.border ? el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { e.border = ''; }) }, '∅') : null));
+    if (e.kind !== 'input' && e.kind !== 'box') {
+      box.appendChild(el('div', { class: 'sec-title', style: { marginTop: '6px' } }, VN.t('Beim Klick')));
+      box.appendChild(row('Link zu Seite', sel(allPages.some((x) => x[0] === e.link) ? e.link : '', allPages, (v) => { e.link = v; }, { width: '170px' })));
+      box.appendChild(row('oder Adresse', txt(e.link, (v) => { e.link = String(v || '').trim(); }, 'z. B. gildenmarkt.ra/shop', { width: '170px' })));
+      box.appendChild(el('div', { class: 'logic-row' }, actBtn(e.actions, 'Beim Klick ausführen (z. B. Gegenstand kaufen, Szene starten)'), el('span', { class: 'muted small' }, e.actions.length ? VN.tf('{n} Aktionen', { n: e.actions.length }) : VN.t('Aktionen'))));
+    }
+    if (e.kind === 'input') {
+      box.appendChild(row('Art', sel(e.mode, [['password', 'Passwort-Feld'], ['search', 'Suchfeld']], (v) => { e.mode = v; })));
+      box.appendChild(row('Platzhalter', txt(e.place, (v) => { e.place = v; }, e.mode === 'password' ? 'Passwort' : 'Suchen …')));
+      if (e.mode === 'password') {
+        box.appendChild(row('Richtiges Passwort', txt(e.answer, (v) => { e.answer = v; }, 'z. B. katze123 oder ${variable}')));
+        box.appendChild(row('Bei falschem', txt(e.fail, (v) => { e.fail = v; }, 'Falsches Passwort.')));
+        box.appendChild(row('Richtig → Seite', sel(allPages.some((x) => x[0] === e.okLink) ? e.okLink : '', [['', '— hier bleiben —'], ...allPages.slice(1)], (v) => { e.okLink = v; }, { width: '170px' })));
+        box.appendChild(el('div', { class: 'logic-row' }, actBtn(e.okActions, 'Bei richtigem Passwort ausführen'), el('span', { class: 'muted small' }, VN.t('Tipp: Andere Elemente mit 🔒 „Passwort eingegeben“ erst danach zeigen.'))));
+      } else {
+        box.appendChild(el('div', { class: 'muted small' }, VN.t('Suchbegriffe → Treffer. Mehrere Begriffe mit Komma trennen.')));
+        e.results = e.results || [];
+        e.results.forEach((r, j) => box.appendChild(el('div', { class: 'logic-row' },
+          txt(r.word, (v) => { r.word = v; }, 'Begriffe', { width: '110px' }),
+          sel(r.addr || '', allPages, (v) => { r.addr = v; }, { width: '130px' }),
+          txt(r.label, (v) => { r.label = v; }, 'Titel', { width: '100px' }),
+          el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { e.results.splice(j, 1); }) }, '×'))));
+        box.appendChild(el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { e.results.push({ word: '', addr: '', label: '' }); }) }, '+ ' + VN.t('Treffer')));
+      }
+    }
+    box.appendChild(el('div', { class: 'logic-row', style: { marginTop: '6px' } }, condBtn(e.conds, 'Element nur zeigen, wenn …', '🔒 ' + VN.t('Nur wenn')),
+      el('span', { class: 'muted small' }, 'x ' + e.x + ' · y ' + e.y + ' · ' + e.w + '×' + e.h)));
+    return box;
+  };
+  const previewWeb = (addr) => {
+    const d = DV().list().find((x) => x.apps.some((a) => a.type === 'web')) || (() => { const n = DV().newDevice('desktop'); n.apps.push(DV().fixApp({ id: VN.uid('app'), type: 'web' })); return n; })();
+    const back = el('div', { class: 'modal-back', onclick: (e) => { if (e.target === back) back.remove(); } });
+    const box = el('div', { class: 'modal', style: { width: '900px', maxWidth: '92vw' } },
+      el('div', { class: 'row gap8' }, el('strong', { style: { flex: '1' } }, '▶ www.' + addr), el('button', { class: 'btn', onclick: () => back.remove() }, VN.t('Schließen'))),
+      el('div', { class: 'muted small' }, VN.t('Links funktionieren in der Vorschau, Aktionen laufen erst im Spiel.')));
+    const host = el('div', { class: 'dv-prev', style: { marginTop: '8px' } });
+    box.appendChild(host); back.appendChild(box); document.body.appendChild(back);
+    const ap = d.apps.find((a) => a.type === 'web');
+    requestAnimationFrame(() => DV().open(host, { dev: d, rs: VN.newRunState(), preview: true, app: ap && ap.id, contact: addr, H: { onClose: () => back.remove() } }));
+  };
+  if (window.Help) Help.topic('web', {
+    title: 'Websites – so geht’s',
+    what: 'Eigene Webseiten für den Browser im Handy oder Computer des Spiels. Jede Website hat eine Adresse (z. B. www.gildenmarkt.ra) und beliebig viele Seiten. Auf jeder Seite platzierst du Texte, Bilder, Knöpfe, Flächen und Eingabefelder frei – wie im Menü-Designer.',
+    whyTitle: 'Wofür ist das gut?',
+    why: 'Recherche, Geheimnisse und Weltenbau: Der Spieler sucht Hinweise im Netz, knackt ein Passwort, kauft in einem Online-Shop ein oder liest Nachrichten über die Spielwelt.',
+    fixTitle: 'So legst du los',
+    fix: ['„+ Website“ klicken, Namen und Adresse eintragen.', 'Mit „+ Text“, „+ Bild“, „+ Knopf“ … Elemente hinzufügen und auf der Fläche verschieben, an der Ecke unten rechts die Größe ändern.', 'Rechts beim gewählten Element Farben, Schrift, Link oder Aktion einstellen.', 'Mit „+ Seite“ weitere Seiten anlegen und per Link verbinden.', 'Unter Geräte dem Handy oder Computer die App „Browser“ geben – oder oben auf „Zu … hinzufügen“ klicken.'],
+    examples: [
+      { title: 'Geheimes Postfach mit Passwort', steps: ['Website „mail.gilde.ra“ anlegen und auf „geheim“ stellen.', 'Ein Eingabefeld als Passwort-Feld, richtiges Passwort z. B. „katze123“.', 'Bei „Richtig → Seite“ die Seite mit den Mails wählen.'] },
+      { title: 'Suchmaschine', steps: ['Website „sucher.ra“ mit einem Suchfeld.', 'Treffer anlegen: Begriffe „Ray, Diebin“ → Seite mit Rays Steckbrief.', 'Nur wer den Namen kennt, findet die Seite.'] },
+      { title: 'Shop', steps: ['Seite mit Bildern der Waren.', 'Knopf „Kaufen“ mit den Aktionen „Geld −20“ und „Gegenstand geben“.', 'Mit 🔒 „Nur wenn“ den Knopf ausblenden, wenn schon gekauft.'] }],
+    ideas: ['Eine Nachrichtenseite, deren Schlagzeilen sich mit der Story ändern (Elemente mit 🔒 Bedingung).', 'Im Social-Media-Profil steht eine Adresse – der Spieler tippt sie im Browser ein.', 'Eine Aktion „📱 Gerät öffnen“ springt direkt auf eine bestimmte Seite.']
+  });
+
   // Vorschau: alle Beiträge im Probe-Handy
   const previewSocial = () => {
     const d = DV().list().find((x) => x.apps.some((a) => a.type === 'social')) || (() => { const n = DV().newDevice('phone'); n.apps.push(DV().fixApp({ id: VN.uid('app'), type: 'social' })); return n; })();
