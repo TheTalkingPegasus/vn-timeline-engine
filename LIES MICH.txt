@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.20
+VN Timeline Engine · Prototyp 0.9.21
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,16 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.21 · Social-Media-App
+- Neue Geräte-App „Social Media“ (Name frei wählbar, z. B. „Pixgram“): Kontakte posten Text und Bilder, andere Figuren
+  liken und kommentieren. Feed, Profile mit Profiltext und Followern, Meldung mit Klick zum Öffnen.
+- Beiträge erscheinen automatisch, sobald ihre Bedingungen stimmen, oder per neuer Aktion „📸 Beitrag posten“ – nach
+  einer Auswahl, an einem Ort, nach einem Minispiel, als Quest-Belohnung. „🗑 Beitrag löschen“ nimmt einen wieder weg.
+- Der Spieler liked (eine Aktion läuft einmal, z. B. Beziehung +2) und kommentiert mit vorbereiteten Antworten (mit Aktionen).
+- „👥 Follower ändern“ (+/−, Prozent oder Wert setzen) und passende Bedingung – Follower wachsen mit der Story.
+- Neue Bedingung „📸 Beitrag“ (sichtbar, noch nicht gepostet, gelöscht, geliked, kommentiert). Editor: Spielsysteme →
+  Social Media, mit Vorschau.
 
 NEU IN 0.9.20 · Zuverlässigkeit (keine neuen Funktionen)
 - Speichern: Ein fehlgeschlagenes oder verweigertes Speichern gilt nicht mehr als gespeichert. Konnten Änderungen beim

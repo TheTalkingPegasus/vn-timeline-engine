@@ -1002,6 +1002,43 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Tresor, Rohre (immer lösbar) und Blackjack (Werte, Tipps)');
   } catch (e) { general.push('Tresor/Rohre/Blackjack: ' + e.message); }
 
+  // 20. Social Media: Beiträge per Bedingung und Aktion, löschen, Likes mit Aktion nur einmal
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [], p = VN.project, DV = VN.Devices;
+      const keep = JSON.stringify({ d: p.devices, c: p.chats, s: p.social });
+      p.devices.enabled = true;
+      p.chats.contacts = [{ id: 'cA', name: 'A' }, { id: 'cB', name: 'B' }];
+      const v = p.vars[0];
+      p.social = { name: 'X', notify: true, posts: [
+        { id: 'p1', author: 'cA', text: 'eins', mode: 'auto', conds: [] },
+        { id: 'p2', author: 'cB', text: 'zwei', mode: 'action', conds: [] },
+        { id: 'p3', author: 'cA', text: 'drei', mode: 'auto', conds: [{ type: 'social', post: 'p2', state: 'shown' }] }] };
+      VN.migrate(p);
+      const rs = VN.newRunState();
+      DV.socialSync(rs);
+      if (DV.feed(rs).map((x) => x.id).join() !== 'p1') out.push('automatisch: ' + DV.feed(rs).map((x) => x.id).join());
+      VN.applyActions([{ type: 'socialPost', post: 'p2', quiet: true }], rs);
+      DV.socialSync(rs);
+      if (DV.feed(rs).map((x) => x.id).join() !== 'p3,p2,p1') out.push('Aktion/Reihenfolge: ' + DV.feed(rs).map((x) => x.id).join());
+      if (!VN.checkConds([{ type: 'social', post: 'p2', state: 'shown' }], rs)) out.push('Bedingung sichtbar');
+      VN.applyActions([{ type: 'socialDelete', post: 'p2' }], rs);
+      if (DV.feed(rs).some((x) => x.id === 'p2') || !VN.checkConds([{ type: 'social', post: 'p2', state: 'deleted' }], rs)) out.push('Löschen');
+      p.chats.contacts[0].followers = 100;
+      VN.applyActions([{ type: 'socialFollowers', contact: 'cA', op: 'add', amount: 50 }, { type: 'socialFollowers', contact: 'cA', op: 'pct', amount: 100 }], rs);
+      if (DV.followers(DV.contact('cA'), rs) !== 300) out.push('Follower: ' + DV.followers(DV.contact('cA'), rs));
+      if (!VN.checkConds([{ type: 'socialFollowers', contact: 'cA', cmp: '>=', value: 300 }], rs) || VN.checkConds([{ type: 'socialFollowers', contact: 'cA', cmp: '<', value: 300 }], rs)) out.push('Follower-Bedingung');
+      VN.applyActions([{ type: 'socialFollowers', contact: 'cA', op: 'set', amount: 7 }], rs);
+      if (DV.followers(DV.contact('cA'), rs) !== 7) out.push('Follower setzen');
+      if (!DV.list().length) { const d = DV.newDevice('phone'); p.devices.list.push(d); }
+      if (!DV.BUILTIN.social.on()) out.push('App nicht verfügbar');
+      const t = JSON.parse(keep); p.devices = t.d; p.chats = t.c; p.social = t.s; VN.migrate(p);
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Social Media: ' + r.join(', '));
+    else log('✓ Social Media: Beiträge per Bedingung und Aktion, Reihenfolge, Löschen');
+  } catch (e) { general.push('Social Media: ' + e.message); }
+
   // 19. Korrekturrunde 0.9.20: Speichern meldet Fehler ehrlich, Sprachkürzel geprüft, SHA-256 für Plugins
   try {
     const r = JSON.parse(await js(`(async () => {

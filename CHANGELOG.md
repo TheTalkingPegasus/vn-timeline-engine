@@ -2,6 +2,16 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.21 – Social media app
+- New device app **Social media** (name freely chosen, e.g. “Pixgram”): contacts post text and pictures, other
+  characters like and comment. Feed, profiles with bio and followers, notification with click-to-open.
+- Posts appear automatically when their conditions are met, or via the new action **📸 Post** – after a choice, at a
+  location, after a minigame, as a quest reward. **🗑 Delete post** removes one again (great for clues).
+- The player likes posts (an action can run once, e.g. relationship +2) and comments with prepared replies (with actions).
+- **👥 Change followers** (+/−, percent or set) and a matching condition – followers grow with the story.
+- New condition **📸 Post** (visible, not posted yet, deleted, liked, commented). Editor: Game systems → Social media,
+  with preview.
+
 ## 0.9.20 – Reliability round (no new features)
 - **Saving:** a save that fails or is refused is no longer treated as saved. When closing with unsaved changes that could
   not be written, the editor asks instead of quietly losing them.
