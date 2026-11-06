@@ -14,7 +14,13 @@ Ohne Installation (ZIP):
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
 
-NEU IN 0.9.18 · Fitness-Minispiele: Langhantel und Kurzhanteln
+NEU IN 0.9.18 · Fitness-Minispiele: Langhantel und Kurzhanteln · Kurven-Graph für Keyframes
+- Kurven-Graph: Jeder Übergang von Keyframe zu Keyframe hat jetzt einen Graph mit zwei Griffen (Bézier). Ziehen ergibt
+  eine eigene Kurve – sanft anfahren, weich ankommen, überschwingen oder hart stoppen; Umschalt hält einen Griff
+  waagrecht, Doppelklick setzt zurück. Im Animations-Editor (Knochen, Gliederpuppen, Bewegung, Kamera) und bei
+  Keyframes und Kamerafahrten in Szenen. Neue Kurve „Halten (springt)“.
+- 📈 Graph in der Animations-Timeline: zeigt den Wert einer Zeile über die Zeit (z. B. X, Drehung, Zoom). Punkte ziehen
+  ändert Wert und Zeit; einen Übergang anklicken und direkt im Graph mit den Griffen formen.
 - Langhantel: Leertaste hämmern – jeder Druck stemmt die Hantel ein Stück hoch, das Gewicht zieht sie wieder runter.
   Erreicht sie oben die Ziellinie, ist die Wiederholung geschafft. Schwierigkeit, Wiederholungen, Zeit, angezeigtes
   Gewicht (z. B. „80 kg“). Ein Kraftbalken zeigt, wie schnell man drückt; bei voller Kraft zittert die Stange.

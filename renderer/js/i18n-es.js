@@ -4703,7 +4703,18 @@ window.VN_I18N_ES = {
 "Schwierigkeit, Takt (abwechselnd, asymmetrisch, unregelmäßig), Treffer, Fehler, Tempo, schneller werden, eigene Tasten, Hilfs-Gegenstand, Bilder, alle Farben": "Dificultad, ritmo (alterno, asimétrico, irregular), aciertos, fallos, tempo, acelerar, teclas propias, objeto de ayuda, imágenes, todos los colores",
 "Elf Minispiele. Du startest sie über „+ Aktion“ → „Minispiele: …“ – in einer Antwort, an einem Hub-Objekt, in einem Dialog oder als Minispiel eines Jobs. Einstellungen und Bilder wählst du direkt an der Aktion. Jedes Spiel liefert ein Ergebnis von 0–100 % (Feld „Ergebnis in“ → Variable).": "Once minijuegos. Se inician con «+ Acción» → «Minijuegos: …», en una respuesta, en un objeto de hub, en un diálogo o como minijuego de un trabajo. Los ajustes e imágenes se eligen en la propia acción. Cada juego da un resultado de 0–100 % (campo «Resultado en» → variable).",
 "Schwierigkeit, Wiederholungen, Zeit, angezeigtes Gewicht, Hilfs-Gegenstand, eigene Bilder für Hantel und Hintergrund, alle Farben": "Dificultad, repeticiones, tiempo, peso mostrado, objeto de ayuda, imágenes propias de barra y fondo, todos los colores",
-"Schienen": "Rieles"
+"Schienen": "Rieles",
+"Werte über die Zeit als Kurve – Übergänge mit Griffen weicher machen": "Valores en el tiempo como curva – suaviza las transiciones con tiradores",
+"📈 Graph": "📈 Gráfica",
+"Diese Zeile hat noch keine Keyframes.": "Esta fila aún no tiene fotogramas clave.",
+"Punkt ziehen = Wert/Zeit · Übergang anklicken, dann Griffe ziehen": "Arrastra un punto = valor/tiempo · haz clic en una transición y arrastra los tiradores",
+"Erster Keyframe – die Kurve gilt für den Weg vom vorigen Keyframe hierher.": "Primer fotograma clave: la curva se aplica al tramo desde el fotograma clave anterior hasta este.",
+"Halten (springt)": "Mantener (salta)",
+"Kurve der Kamerafahrt": "Curva del movimiento de cámara",
+"Eigene Kurve": "Curva propia",
+"vorher": "antes",
+"Keyframe": "Fotograma clave",
+"Griffe ziehen = eigene Kurve · Umschalt = waagrecht · Doppelklick = zurücksetzen": "Arrastra los tiradores = curva propia · Mayús = horizontal · doble clic = restablecer"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

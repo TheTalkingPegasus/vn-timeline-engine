@@ -9,11 +9,38 @@
     linear: 'linear', 'ease-in': 'cubic-bezier(.42,0,1,1)', 'ease-out': 'cubic-bezier(0,0,.58,1)', 'ease-in-out': 'cubic-bezier(.42,0,.58,1)',
     smooth: 'cubic-bezier(.2,.8,.2,1)', back: 'cubic-bezier(.34,1.56,.64,1)', bounce: 'cubic-bezier(.5,1.8,.5,.8)'
   };
-  const EASE_LIST = [['ease-in-out', 'Weich (an & ab)'], ['ease-out', 'Abbremsen'], ['ease-in', 'Beschleunigen'], ['linear', 'Gleichmäßig'], ['smooth', 'Sanft auslaufen'], ['back', 'Überschwingen'], ['bounce', 'Federn']];
+  const EASE_LIST = [['ease-in-out', 'Weich (an & ab)'], ['ease-out', 'Abbremsen'], ['ease-in', 'Beschleunigen'], ['linear', 'Gleichmäßig'], ['smooth', 'Sanft auslaufen'], ['back', 'Überschwingen'], ['bounce', 'Federn'], ['hold', 'Halten (springt)']];
+  // Eigene Kurven (0.9.18): "cb:x1,y1,x2,y2" = Bézier-Kurve aus dem Graph-Editor, "hold" = Wert halten und springen
+  const parseCb = (k) => {
+    if (typeof k !== 'string' || k.slice(0, 3) !== 'cb:') return null;
+    const v = k.slice(3).split(',').map(Number);
+    return v.length === 4 && v.every((n) => isFinite(n)) ? [Math.max(0, Math.min(1, v[0])), v[1], Math.max(0, Math.min(1, v[2])), v[3]] : null;
+  };
+  const bezier = (x1, y1, x2, y2) => {
+    const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
+    const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+    const X = (s) => ((ax * s + bx) * s + cx) * s, Y = (s) => ((ay * s + by) * s + cy) * s, dX = (s) => (3 * ax * s + 2 * bx) * s + cx;
+    return (t) => {
+      if (t <= 0) return 0; if (t >= 1) return 1;
+      let s = t;
+      for (let i = 0; i < 6; i++) { const e = X(s) - t, d = dX(s); if (Math.abs(e) < 1e-6) return Y(s); if (Math.abs(d) < 1e-6) break; s -= e / d; }
+      let lo = 0, hi = 1; s = t;
+      for (let i = 0; i < 30; i++) { const x = X(s); if (Math.abs(x - t) < 1e-6) break; if (x < t) lo = s; else hi = s; s = (lo + hi) / 2; }
+      return Y(s);
+    };
+  };
+  const fnCache = {};
 
   const Fx = (window.Fx = {
-    EASES, EASE_LIST,
-    ease: (k) => EASES[k] || EASES['ease-in-out'],
+    EASES, EASE_LIST, parseCb, bezier,
+    ease: (k) => { if (k === 'hold') return 'steps(1, end)'; const c = parseCb(k); return c ? `cubic-bezier(${c.join(',')})` : EASES[k] || EASES['ease-in-out']; },
+    // Kurve als Funktion 0…1 → 0…1 (nur eigene Kurven und „Halten“; sonst null)
+    easeFn: (k) => {
+      if (k === 'hold') return (t) => (t >= 1 ? 1 : 0);
+      if (fnCache[k]) return fnCache[k];
+      const c = parseCb(k);
+      return c ? (fnCache[k] = bezier(c[0], c[1], c[2], c[3])) : null;
+    },
 
     // ---------- Keyframes: Werte eines Clips in einem Schritt ----------
     CHAR_PROPS: ['x', 'y', 'scale', 'rot', 'opacity'],

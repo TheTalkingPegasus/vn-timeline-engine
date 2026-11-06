@@ -13,6 +13,8 @@
     bounce: (t) => { const c1 = 2.6, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); }
   };
 
+  // Kurve eines Keyframes: fertige Kurve, eigene Bézier-Kurve ("cb:…") oder „Halten“
+  const easeFn = (e) => EASE[e] || (window.Fx && Fx.easeFn && Fx.easeFn(e)) || EASE['ease-in-out'];
   // Wert einer Keyframe-Liste zur Zeit t ([{t, v, e}], sortiert)
   const sample = (keys, t, field) => {
     let prev = null, next = null;
@@ -24,13 +26,13 @@
     if (!prev) return next[field];
     if (!next) return prev[field];
     const u = (t - prev.t) / Math.max(0.0001, next.t - prev.t);
-    const f = (EASE[next.e] || EASE['ease-in-out'])(Math.max(0, Math.min(1, u)));
+    const f = easeFn(next.e)(Math.max(0, Math.min(1, u)));
     return prev[field] + (next[field] - prev[field]) * f;
   };
   const sorted = (arr) => (arr || []).slice().sort((a, b) => a.t - b.t);
 
   const Anim = (window.Anim = {
-    EASE, sample,
+    EASE, sample, easeFn,
     list() { return (VN.project && VN.project.anims) || []; },
     get(id) { return Anim.list().find((a) => a.id === id) || null; },
 

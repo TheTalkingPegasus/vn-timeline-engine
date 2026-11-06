@@ -2,7 +2,13 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
-## 0.9.18 – Fitness minigames: barbell and dumbbells
+## 0.9.18 – Fitness minigames: barbell and dumbbells · curve graph for keyframes
+- **Curve graph:** every transition from keyframe to keyframe now has a graph with two handles (Bézier) – drag them
+  for your own ease-in/ease-out, overshoot or a hard stop; Shift keeps a handle flat, double-click resets. Works in
+  the animation editor (bones, jointed puppets, movement, camera) and for keyframes and camera moves in scenes.
+  New curve “Hold (jumps)”.
+- **📈 Graph in the animation timeline:** shows the value of a row over time (e.g. X, rotation, zoom). Drag points
+  to change value and time, click a transition and shape it with the handles right in the graph.
 - **Barbell:** mash the space bar – every press lifts the bar a little, the weight pulls it back down. Reaching the
   goal line completes a rep. Difficulty, repetitions, time, displayed weight (e.g. “80 kg”). A power bar shows how
   fast you press; at full power the bar trembles.

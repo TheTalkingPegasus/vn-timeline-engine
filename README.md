@@ -43,7 +43,7 @@ Because the program isn’t code-signed, Windows may show “Windows protected y
   **hold points** (pin a hand or foot and the body bends around it), an inpaint brush for gaps, an eraser, folders for
   parts, and puppet-style posing in the animation editor
 - Animation editor for idle, gestures and cutscenes with **frame rates** (smooth, 24, on twos, on threes) and cartoon
-  **smear frames** on fast motion
+  **smear frames** on fast motion; a **curve graph** with Bézier handles smooths every transition between keyframes
 - **Pixel art editor** (Design → 🎨 Pixel art): draw and animate frame by frame with layers, palettes, onion skin and
   mirroring – finished animations become pixel-sharp animated GIFs you can use as characters, backgrounds, hub objects or fighters
 - Layer characters with expressions and outfits, animation editor for gestures and cutscenes
@@ -203,7 +203,8 @@ Weil das Programm nicht signiert ist, zeigt Windows evtl. „Der Computer wurde 
 - **Licht und Filter:** Scheinwerfer, Lampe, Neonröhre und Gegenlicht mit Randlicht auf Figuren, Dunst und Staub im Strahl,
   Flackern und Schwenken, auch in Hubs und mit Parallax · Röhren-TV, LCD-TV und RGB-Split
 - **Animation:** Idle, Gesten und Zwischensequenzen mit **Bildrate** (flüssig, 24, auf Zweiern, auf Dreiern) und
-  Cartoon-**Smear-Bildern** bei schnellen Bewegungen
+  Cartoon-**Smear-Bildern** bei schnellen Bewegungen; ein **Kurven-Graph** mit Bézier-Griffen macht jeden Übergang
+  zwischen Keyframes weich
 - **Pixel-Art-Editor** (Design → 🎨 Pixel-Art): Bild für Bild zeichnen und animieren mit Ebenen, Paletten, Zwiebelhaut und
   Spiegeln – fertige Animationen werden pixelscharfe animierte GIFs für Figuren, Hintergründe, Hub-Objekte oder Kämpfer
 - **Spielsysteme (einzeln einschaltbar):** Inventar, Geld & Läden, Loot, Zeit & Kalender mit Jahreszeiten und Ambient-Sounds,

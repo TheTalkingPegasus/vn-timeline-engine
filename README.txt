@@ -16,7 +16,9 @@ Without installing (ZIP):
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
 
-NEW IN 0.9.18 · Fitness minigames: barbell and dumbbells
+NEW IN 0.9.18 · Fitness minigames: barbell and dumbbells · curve graph for keyframes
+- Curve graph: shape every transition between keyframes with two handles (ease in/out, overshoot, hold) – in the
+  animation editor (also as a value graph in the timeline) and for keyframes and camera moves in scenes.
 - Barbell: mash the space bar – every press lifts the bar a little, the weight pulls it back down. Reach the goal line.
 - Dumbbells: a rhythm game. Left and right go up and down to their own beat; press A (left) or D (right) when a
   dumbbell is up in the zone. Perfect / good / too early / too late, combos, three rhythm patterns, custom keys.

@@ -4615,7 +4615,19 @@ window.VN_I18N_EN = {
 "Schwierigkeit, Takt (abwechselnd, asymmetrisch, unregelmäßig), Treffer, Fehler, Tempo, schneller werden, eigene Tasten, Hilfs-Gegenstand, Bilder, alle Farben": "Difficulty, rhythm (alternating, asymmetric, irregular), hits, mistakes, tempo, speed-up, custom keys, helper item, images, all colours",
 "Elf Minispiele. Du startest sie über „+ Aktion“ → „Minispiele: …“ – in einer Antwort, an einem Hub-Objekt, in einem Dialog oder als Minispiel eines Jobs. Einstellungen und Bilder wählst du direkt an der Aktion. Jedes Spiel liefert ein Ergebnis von 0–100 % (Feld „Ergebnis in“ → Variable).": "Eleven minigames. Start them with “+ Action” → “Minigames: …” – in an answer, on a hub object, in a dialogue or as a job’s minigame. Settings and images are chosen right on the action. Every game returns a result of 0–100 % (field “Result in” → variable).",
 "Schwierigkeit, Wiederholungen, Zeit, angezeigtes Gewicht, Hilfs-Gegenstand, eigene Bilder für Hantel und Hintergrund, alle Farben": "Difficulty, repetitions, time, displayed weight, helper item, own images for barbell and background, all colours",
-"Schienen": "Tracks"
+"Schienen": "Tracks",
+"Werte über die Zeit als Kurve – Übergänge mit Griffen weicher machen": "Values over time as a curve – smooth transitions with handles",
+"📈 Graph": "📈 Graph",
+"Diese Zeile hat noch keine Keyframes.": "This row has no keyframes yet.",
+"Punkt ziehen = Wert/Zeit · Übergang anklicken, dann Griffe ziehen": "Drag a point = value/time · click a transition, then drag the handles",
+"Erster Keyframe – die Kurve gilt für den Weg vom vorigen Keyframe hierher.": "First keyframe – the curve applies to the way from the previous keyframe to this one.",
+"Halten (springt)": "Hold (jumps)",
+"Kurve der Kamerafahrt": "Curve of the camera move",
+"Start": "Start",
+"Eigene Kurve": "Custom curve",
+"vorher": "before",
+"Keyframe": "Keyframe",
+"Griffe ziehen = eigene Kurve · Umschalt = waagrecht · Doppelklick = zurücksetzen": "Drag handles = custom curve · Shift = horizontal · double-click = reset"
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",

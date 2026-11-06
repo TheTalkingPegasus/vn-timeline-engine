@@ -4703,7 +4703,18 @@ window.VN_I18N_JA = {
 "Schwierigkeit, Takt (abwechselnd, asymmetrisch, unregelmäßig), Treffer, Fehler, Tempo, schneller werden, eigene Tasten, Hilfs-Gegenstand, Bilder, alle Farben": "難易度、リズム（交互・非対称・不規則）、ヒット数、ミス、テンポ、加速、キー設定、補助アイテム、画像、全色",
 "Elf Minispiele. Du startest sie über „+ Aktion“ → „Minispiele: …“ – in einer Antwort, an einem Hub-Objekt, in einem Dialog oder als Minispiel eines Jobs. Einstellungen und Bilder wählst du direkt an der Aktion. Jedes Spiel liefert ein Ergebnis von 0–100 % (Feld „Ergebnis in“ → Variable).": "ミニゲーム11種。「＋アクション」→「ミニゲーム：…」で開始（選択肢、ハブのオブジェクト、会話、仕事のミニゲーム）。設定と画像はアクションで直接選びます。結果は0〜100%（「結果の保存先」→変数）。",
 "Schwierigkeit, Wiederholungen, Zeit, angezeigtes Gewicht, Hilfs-Gegenstand, eigene Bilder für Hantel und Hintergrund, alle Farben": "難易度、回数、時間、表示する重さ、補助アイテム、バーベルと背景の画像、全色",
-"Schienen": "レール"
+"Schienen": "レール",
+"Werte über die Zeit als Kurve – Übergänge mit Griffen weicher machen": "時間ごとの値をカーブで表示 – ハンドルで変化をなめらかに",
+"📈 Graph": "📈 グラフ",
+"Diese Zeile hat noch keine Keyframes.": "この行にはまだキーフレームがありません。",
+"Punkt ziehen = Wert/Zeit · Übergang anklicken, dann Griffe ziehen": "点をドラッグ＝値/時間 · 区間をクリックしてハンドルをドラッグ",
+"Erster Keyframe – die Kurve gilt für den Weg vom vorigen Keyframe hierher.": "最初のキーフレーム – カーブは前のキーフレームからここまでの区間に使われます。",
+"Halten (springt)": "ホールド（ジャンプ）",
+"Kurve der Kamerafahrt": "カメラ移動のカーブ",
+"Eigene Kurve": "カスタムカーブ",
+"vorher": "前",
+"Keyframe": "キーフレーム",
+"Griffe ziehen = eigene Kurve · Umschalt = waagrecht · Doppelklick = zurücksetzen": "ハンドルをドラッグ＝カスタムカーブ · Shift＝水平 · ダブルクリック＝リセット"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

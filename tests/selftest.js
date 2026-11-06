@@ -1002,6 +1002,30 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Tresor, Rohre (immer lösbar) und Blackjack (Werte, Tipps)');
   } catch (e) { general.push('Tresor/Rohre/Blackjack: ' + e.message); }
 
+  // 18. Kurven-Editor: eigene Bézier-Kurven und „Halten“ zwischen Keyframes
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [], near = (a, b) => Math.abs(a - b) < 0.002;
+      const lin = Fx.bezier(0, 0, 1, 1);
+      if (![0.1, 0.3, 0.77].every((t) => near(lin(t), t))) out.push('Bézier linear');
+      const css = Fx.bezier(0.42, 0, 0.58, 1);
+      if (!near(css(0.5), 0.5) || css(0.25) >= 0.25) out.push('Bézier weich');
+      if (Fx.ease('cb:0.2,0,0.1,1.6') !== 'cubic-bezier(0.2,0,0.1,1.6)') out.push('CSS-Kurve');
+      if (Fx.ease('cb:1.5,0,-1,1') !== 'cubic-bezier(1,0,0,1)') out.push('CSS-Kurve x begrenzt');
+      if (Fx.ease('hold') !== 'steps(1, end)') out.push('CSS halten');
+      const keys = [{ t: 0, v: 0, e: 'ease-in-out' }, { t: 1, v: 10, e: 'cb:0.2,0,0.1,1.6' }, { t: 2, v: 20, e: 'hold' }];
+      const over = Math.max(...[0.6, 0.7, 0.8, 0.9].map((t) => Anim.sample(keys, t, 'v')));
+      if (!(over > 10)) out.push('eigene Kurve schwingt nicht über (' + over + ')');
+      if (Anim.sample(keys, 1.5, 'v') !== 10 || Anim.sample(keys, 2, 'v') !== 20) out.push('Halten');
+      if (!window.CurveEd || CurveEd.fmt(CurveEd.pts('ease-in-out', 'anim')) !== 'cb:0.645,0.045,0.355,1') out.push('Kurven-Editor');
+      const box = CurveEd.box('back', () => {}, { mode: 'css' });
+      if (!box.querySelector('.cv-h') || !box.querySelector('select')) out.push('Kurven-Feld');
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Kurven: ' + r.join(', '));
+    else log('✓ Kurven-Editor: Bézier-Kurven, Überschwingen und Halten');
+  } catch (e) { general.push('Kurven: ' + e.message); }
+
   // 17. Fitness: Langhantel (Taste hämmern) und Kurzhanteln (Rhythmus) – mit echten Tastendrücken gespielt
   try {
     const r = JSON.parse(await js(`(async () => {
