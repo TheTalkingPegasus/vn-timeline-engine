@@ -2098,7 +2098,7 @@ window.VN_I18N_ES = {
 "Schiebe „Figuren an das Licht anpassen“ hoch, damit Ray nicht aufgeklebt wirkt.": "Sube “Ajustar personajes a la luz” para que Ray no parezca pegado.",
 "Schild": "Etiqueta",
 "Schlag": "Golpe",
-"Schlagschatten": "Sombra proyectada",
+"Schlagschatten": "Sombra",
 "Schlangen, Tentakel, Fische": "Serpientes, tentáculos, peces",
 "Schlank": "Delgado",
 "Schleife": "Lazo",
@@ -4910,7 +4910,18 @@ window.VN_I18N_ES = {
 "Keine Lesezeichen.": "No hay marcadores.",
 "Ergebnisse für": "Resultados para",
 "Diese Seite gibt es nicht.": "Esta página no existe.",
-"fett": "negrita"
+"fett": "negrita",
+"Hilfslinie – ziehen zum Verschieben, aus der Fläche ziehen zum Löschen": "Guía: arrastra para mover, sácala del lienzo para borrarla",
+"Klicken oder ziehen = Hilfslinie setzen": "Clic o arrastrar = añadir guía",
+"Ziehen = Arbeitsfläche größer oder kleiner": "Arrastrar = agrandar o reducir el lienzo",
+"Hilfslinien zeigen": "Mostrar guías",
+"Hilfslinien löschen": "Borrar guías",
+"Hilfslinien für Ränder (5) und Mitte setzen": "Añadir guías para márgenes (5) y centro",
+"Ränder + Mitte": "Márgenes + centro",
+"Ziehen = verschieben · Ecke unten rechts = Größe · Klick = bearbeiten · Lineal anklicken oder ziehen = Hilfslinie · Alt = ohne Einrasten": "Arrastrar = mover · esquina inferior derecha = tamaño · clic = editar · clic o arrastrar en la regla = guía · Alt = sin ajuste",
+"Deckkraft %": "Opacidad %",
+"0 = durchsichtig, 100 = voll": "0 = transparente, 100 = sólido",
+"0 = kein Schatten": "0 = sin sombra"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

@@ -2,6 +2,14 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.23 – Website editor: bigger canvas, rulers and guides, shadows, transparency
+- The canvas of the page editor can be made **bigger or smaller** with the bar next to it (up to 1400 px).
+- **Rulers** on top and left: click or drag to add guides; guides can be moved or dragged off to delete.
+  Elements **snap** to guides, page edges and the center (edges and middle of the element); Alt = no snapping.
+  Button “Margins + center”, show/hide guides.
+- **Drop shadow** for texts (on the letters), images (follows transparent PNGs), buttons and shapes, with color.
+- **Opacity** for the background color of shapes, texts and buttons (e.g. a half-transparent bar over a picture).
+
 ## 0.9.22 – Browser with your own websites
 - New device app **Browser** for phone and computer: address bar, back, home page with bookmarks, 404 page.
 - **Websites** (Game systems → Websites): every site has an address (e.g. www.gildenmarkt.ra), any number of pages,
