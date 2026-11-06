@@ -2342,3 +2342,6 @@ img[src*="px_"] { image-rendering: pixelated; }
 .dv-soc.custom .dv-reply:hover { background: var(--soc-acc); color: #fff; }
 .dv-soc-logoimg { height: 3.4cqh; max-width: 60%; object-fit: contain; display: block; }
 .dv-win-body .dv-soc { height: 100%; }
+.dv-soc-rich > span { white-space: pre-wrap; }
+.dv-soc-at, .dv-soc-tag { color: var(--soc-acc, var(--dv-acc, #3d8bfd)); font-weight: 600; cursor: pointer; text-decoration: none; }
+.dv-soc-at:hover, .dv-soc-tag:hover { text-decoration: underline; }

@@ -14,6 +14,9 @@ All notable changes. German details: `LIES MICH.txt`.
 - Works on the in-game **phone and computer** (own window on the desktop). **Page design:** colors for background,
   header, posts, text, accent and heart, a logo instead of the name, header and background images, fonts, corner
   rounding, and presets (dark, light, retro, neon).
+- **Links:** @Name in posts, comments and bios opens that profile (names with spaces work), #topic shows all posts
+  with that hashtag.
+- Newcomer help in the editor: a tip box with the 4 steps and a 💡 guide with examples and ideas.
 
 ## 0.9.20 – Reliability round (no new features)
 - **Saving:** a save that fails or is refused is no longer treated as saved. When closing with unsaved changes that could

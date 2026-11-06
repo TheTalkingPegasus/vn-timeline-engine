@@ -252,6 +252,10 @@
   S.socialTab = (body) => {
     const SO = VN.project.social;
     const C = DV().chats();
+    // Erklärung für Neulinge über das Helfer-System (💡 öffnet Schritt-für-Schritt-Anleitung, „Nicht mehr zeigen“ blendet aus)
+    if (window.Help && !Help.hidden('tip:social')) body.appendChild(Help.box({ level: 'tip', key: 'tip:social', topic: 'social',
+      text: VN.t('Neu hier? Social Media in 4 Schritten'),
+      detail: VN.t('1. Unter „Nachrichten“ Kontakte anlegen (die Autoren). 2. Die App einem Handy oder Computer geben. 3. Hier Beiträge schreiben. 4. Festlegen, wann sie erscheinen. Im Text werden @Name und #Thema automatisch zu Links. Mehr mit 💡.') }));
     body.appendChild(el('p', { class: 'muted' }, VN.t('Ein Social Media im Spiel: Kontakte posten Beiträge mit Text und Bild, andere Figuren liken und kommentieren. Ein Beitrag erscheint automatisch, sobald seine Bedingungen stimmen, oder nur per Aktion „📸 Beitrag posten“ (z. B. nach einer Entscheidung, an einem Ort oder nach einem Minispiel). Der Spieler kann liken und mit vorbereiteten Antworten kommentieren.')));
     const devs = DV().list();
     const without = devs.filter((d) => !d.apps.some((a) => a.type === 'social'));
@@ -330,6 +334,20 @@
     });
     body.appendChild(el('button', { class: 'btn', onclick: () => VN.mutate(() => { SO.posts.push(DV().newPost(C.contacts[0].id)); }) }, '+ ' + VN.t('Beitrag')));
   };
+  if (window.Help) Help.topic('social', {
+    title: 'Social Media – so geht’s',
+    what: 'Eine App für Handy oder Computer im Spiel, in der deine Figuren Beiträge posten – wie Instagram oder Twitter, nur mit deinen Figuren. Beiträge haben Text, Bild, Likes und Kommentare. Der Spieler kann liken, kommentieren und Profile ansehen.',
+    whyTitle: 'Wofür ist das gut?',
+    why: 'Die Spielwelt wirkt lebendig: Figuren reagieren auf das, was der Spieler tut. Ein Beitrag kann ein Hinweis sein, eine Belohnung, ein Stimmungsbild – oder ein Geheimnis, das später wieder gelöscht wird.',
+    fixTitle: 'So legst du los',
+    fix: ['Spielsysteme → Nachrichten: Kontakte anlegen (am besten aus deinen Figuren – dann stimmt das Profilbild).', 'Spielsysteme → Geräte: dem Handy oder Computer die App „Social Media“ geben (oder oben auf „Zu … hinzufügen“ klicken).', 'Hier unter „Beiträge“ auf „+ Beitrag“ klicken, Autor, Text und Bild wählen.', 'Entscheiden, wann er erscheint: „automatisch“ mit 🔒 Bedingung (z. B. ab Tag 3) oder „nur per Aktion“ – dann die Aktion „📸 Beitrag posten“ an eine Auswahl, ein Hub-Objekt oder ein Minispiel hängen.', 'Mit „▶ Vorschau“ ansehen.'],
+    examples: [
+      { title: 'Beitrag nach einer Entscheidung', steps: ['Beitrag anlegen und auf „nur per Aktion“ stellen.', 'In der Szene die Antwort „Ray helfen“ anklicken.', 'Bei „Aktionen“ „📸 Beitrag posten“ wählen und den Beitrag aussuchen.'] },
+      { title: 'Follower wachsen lassen', steps: ['Unter „Profile“ den Startwert eintragen (z. B. 120).', 'An eine Antwort oder ein Ereignis die Aktion „👥 Follower ändern“ hängen, z. B. +200 oder +50 %.', 'Mit der Bedingung „👥 Follower mindestens …“ etwas freischalten.'] },
+      { title: 'Links im Text', steps: ['Im Text „@Ray“ schreiben – im Spiel öffnet ein Klick Rays Profil (auch Namen mit Leerzeichen wie „@Wache Bernd“).', '„#Gildenfest“ schreiben – ein Klick zeigt alle Beiträge mit diesem Hashtag.', 'Das klappt in Beiträgen, Kommentaren und Profiltexten.'] }],
+    ideas: ['Ein Beitrag verschwindet nach einem Ereignis („🗑 Beitrag löschen“) – wer ihn vorher gesehen hat, weiß mehr.', 'Likes und Kommentare des Spielers geben Beziehungspunkte – oder kosten welche.', 'Mehrere Figuren posten nach einem großen Ereignis, jede aus ihrer Sicht.', 'Ein #Hashtag als Spur: Unter #Vermisst sammeln sich Hinweise.']
+  });
+
   // Vorschau: alle Beiträge im Probe-Handy
   const previewSocial = () => {
     const d = DV().list().find((x) => x.apps.some((a) => a.type === 'social')) || (() => { const n = DV().newDevice('phone'); n.apps.push(DV().fixApp({ id: VN.uid('app'), type: 'social' })); return n; })();

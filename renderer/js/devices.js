@@ -635,25 +635,48 @@
         if (SL.headImg && VN.assetUrl(SL.headImg)) st.setProperty('--soc-head-img', `url("${VN.assetUrl(SL.headImg)}")`);
       }
       const logo = () => (SL.custom && SL.logo && VN.assetUrl(SL.logo) ? el('img', { class: 'dv-soc-logoimg', src: VN.assetUrl(SL.logo), alt: tr('social:name', DV.social().name || 'Pixgram') }) : tr('social:name', DV.social().name || 'Pixgram'));
-      let prof = null;
+      let prof = null, tag = null;
       const S = DV.sst(rs);
+      // @Name → Profil, #Thema → Feed gefiltert (Namen mit Leerzeichen werden erkannt, längster Name zuerst)
+      const rich = (text) => {
+        const box = el('span', { class: 'dv-soc-rich' });
+        const cs = DV.contacts().filter((c) => DV.cName(c)).sort((a, b) => DV.cName(b).length - DV.cName(a).length);
+        let buf = '', i = 0;
+        const flush = () => { if (buf) { box.appendChild(fmtText(el('span'), buf)); buf = ''; } };
+        while (i < text.length) {
+          const ch = text[i];
+          if (ch === '@' && (i === 0 || /[\s(„"'.,!?]/.test(text[i - 1]))) {
+            const rest = text.slice(i + 1).toLowerCase();
+            const c = cs.find((x) => rest.startsWith(DV.cName(x).toLowerCase()) && !/[\p{L}\p{N}_]/u.test(rest.charAt(DV.cName(x).length)));
+            if (c) { flush(); const nm = text.substr(i + 1, DV.cName(c).length); box.appendChild(el('a', { class: 'dv-soc-at', onclick: (e) => { e.stopPropagation(); prof = c.id; tag = null; snd('click'); draw(); } }, '@' + nm)); i += 1 + nm.length; continue; }
+          }
+          if (ch === '#' && (i === 0 || /[\s(„"'.,!?]/.test(text[i - 1]))) {
+            const m = /^#([\p{L}\p{N}_]+)/u.exec(text.slice(i));
+            if (m) { flush(); const t = m[1]; box.appendChild(el('a', { class: 'dv-soc-tag', onclick: (e) => { e.stopPropagation(); tag = t.toLowerCase(); prof = null; snd('click'); draw(); } }, '#' + t)); i += m[0].length; continue; }
+          }
+          buf += ch; i++;
+        }
+        flush();
+        return box;
+      };
+      const hasTag = (s, t) => new RegExp('(^|[\\s(„"\'.,!?])#' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![\\p{L}\\p{N}_])', 'iu').test(XF(tr(s.id, s.text || '')));
       DV.socialSync(rs);
       const name = (c) => DV.cName(c);
       const draw = () => {
         box.innerHTML = '';
         S.seen = S.seq;
         const head = el('div', { class: 'dv-head dv-soc-head' },
-          onBack || prof ? el('button', { class: 'dv-back-btn', onclick: (e) => { e.stopPropagation(); if (prof) { prof = null; draw(); } else onBack(); } }, '‹') : null,
-          el('div', { class: 'dv-head-t' }, el('strong', { class: 'dv-soc-logo' }, prof ? name(DV.contact(prof)) : logo())));
+          onBack || prof || tag ? el('button', { class: 'dv-back-btn', onclick: (e) => { e.stopPropagation(); if (prof || tag) { prof = null; tag = null; draw(); } else onBack(); } }, '‹') : null,
+          el('div', { class: 'dv-head-t' }, el('strong', { class: 'dv-soc-logo' }, prof ? name(DV.contact(prof)) : tag ? '#' + tag : logo())));
         box.appendChild(head);
         const list = el('div', { class: 'dv-soc-list' });
         box.appendChild(list);
-        const feed = DV.feed(rs).filter((s) => !prof || s.author === prof);
+        const feed = DV.feed(rs).filter((s) => (!prof || s.author === prof) && (!tag || hasTag(s, tag)));
         if (prof) {
           const c = DV.contact(prof);
           list.appendChild(el('div', { class: 'dv-soc-prof' }, DV.avatar(c, 'xl'),
             el('div', null, el('strong', null, name(c)), el('div', { class: 'dv-soc-stat' }, (feed.length === 1 ? tp('1 Beitrag') : VN.tf('{n} Beiträge', { n: feed.length })) + (c && (c.followers || DV.sst(rs).fol[c.id]) ? ' · ' + VN.tf('{n} Follower', { n: DV.followers(c, rs).toLocaleString() }) : '')),
-              c && c.bio ? el('div', { class: 'dv-soc-bio' }, tr(c.id + ':bio', c.bio)) : null)));
+              c && c.bio ? el('div', { class: 'dv-soc-bio' }, rich(XF(tr(c.id + ':bio', c.bio)))) : null)));
         }
         if (!feed.length) list.appendChild(el('div', { class: 'dv-empty' }, tp('Noch keine Beiträge.')));
         for (const s of feed) {
@@ -663,13 +686,13 @@
           card.appendChild(el('div', { class: 'dv-soc-top', onclick: (e) => { e.stopPropagation(); if (!prof && c) { prof = c.id; snd('click'); draw(); list.scrollTop = 0; } } },
             DV.avatar(c, 'sm'), el('div', null, el('strong', null, name(c)), el('div', { class: 'dv-soc-when' }, DV.whenLabel(s, rs)))));
           if (s.image && VN.assetUrl(s.image)) card.appendChild(el('img', { class: 'dv-soc-img', src: VN.assetUrl(s.image), alt: '', ondblclick: (e) => { e.stopPropagation(); if (!liked) like(s); } }));
-          if (s.text) card.appendChild(fmtText(el('div', { class: 'dv-soc-text' }), XF(tr(s.id, s.text))));
+          if (s.text) card.appendChild(el('div', { class: 'dv-soc-text' }, rich(XF(tr(s.id, s.text)))));
           card.appendChild(el('div', { class: 'dv-soc-bar' },
             el('button', { class: 'dv-soc-like' + (liked ? ' on' : ''), onclick: (e) => { e.stopPropagation(); like(s); } }, liked ? '♥' : '♡'),
             el('span', null, String((Number(s.likes) || 0) + (liked ? 1 : 0))),
             el('span', { class: 'dv-soc-cn' }, '💬 ' + (DV.postComments(s, rs).length + (S.rep[s.id] ? 1 : 0)))));
-          for (const cm of DV.postComments(s, rs)) card.appendChild(el('div', { class: 'dv-soc-cm' }, el('strong', null, name(DV.contact(cm.author)) + ' '), XF(tr(cm.id, cm.text))));
-          if (S.rep[s.id]) { const r = (s.replies || []).find((x) => x.id === S.rep[s.id]); if (r) card.appendChild(el('div', { class: 'dv-soc-cm me' }, el('strong', null, tp('Du') + ' '), XF(tr(r.id, r.text)))); }
+          for (const cm of DV.postComments(s, rs)) card.appendChild(el('div', { class: 'dv-soc-cm' }, el('strong', null, name(DV.contact(cm.author)) + ' '), rich(XF(tr(cm.id, cm.text)))));
+          if (S.rep[s.id]) { const r = (s.replies || []).find((x) => x.id === S.rep[s.id]); if (r) card.appendChild(el('div', { class: 'dv-soc-cm me' }, el('strong', null, tp('Du') + ' '), rich(XF(tr(r.id, r.text))))); }
           const reps = DV.postReplies(s, rs);
           if (reps.length) card.appendChild(el('div', { class: 'dv-soc-reps' }, ...reps.map((r) => el('button', { class: 'dv-reply', onclick: (e) => { e.stopPropagation(); reply(s, r); } }, XF(tr(r.id, r.text))))));
           list.appendChild(card);

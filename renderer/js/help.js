@@ -45,8 +45,8 @@
       el('div', { class: 'row gap8' }, el('span', { style: { fontSize: '22px' } }, '💡'), el('strong', { style: { flex: '1', fontSize: '16px' } }, VN.t(t.title)), el('button', { class: 'btn', onclick: () => back.remove() }, VN.t('Schließen'))),
       iss ? el('div', { class: 'hm-cur hb-' + (iss.level || 'warn') }, iss.text) : null,
       sec('Was bedeutet das?', [t.what]),
-      sec('Warum kommt die Meldung?', [t.why]),
-      sec('So wird die Meldung behoben', t.fix),
+      t.why ? sec(t.whyTitle || 'Warum kommt die Meldung?', [t.why]) : null,
+      sec(t.fixTitle || 'So wird die Meldung behoben', t.fix),
       ex.length ? sec('Beispiele', ex) : null,
       sec('Ideen, was du daraus machen kannst', t.ideas, 'hm-ideas'),
       fixes && fixes.length ? el('div', { class: 'hb-fixes', style: { marginTop: '4px' } }, ...fixes.map((f) => el('button', { class: 'btn' + (f.primary ? ' primary' : ''), onclick: () => { back.remove(); f.run(); } }, VN.t(f.label)))) : null));

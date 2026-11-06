@@ -26,6 +26,9 @@ NEU IN 0.9.21 · Social-Media-App
 - Läuft auf Handy und Computer im Spiel (eigenes Fenster am Desktop). Seite frei gestaltbar: Farben für Hintergrund,
   Kopfzeile, Beiträge, Text, Akzent und Herz, Logo statt Name, Bilder für Kopfzeile und Hintergrund, Schriften,
   Ecken-Rundung und Vorlagen (Dunkel, Hell, Retro, Neon).
+- Links: @Name in Beiträgen, Kommentaren und Profiltexten öffnet das Profil (auch Namen mit Leerzeichen), #Thema zeigt
+  alle Beiträge mit diesem Hashtag.
+- Hilfe für Neulinge im Editor: Tipp-Kasten mit den 4 Schritten und 💡-Anleitung mit Beispielen und Ideen.
 
 NEU IN 0.9.20 · Zuverlässigkeit (keine neuen Funktionen)
 - Speichern: Ein fehlgeschlagenes oder verweigertes Speichern gilt nicht mehr als gespeichert. Konnten Änderungen beim
