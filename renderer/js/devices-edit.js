@@ -248,6 +248,121 @@
     return card;
   };
 
+  // ---------- Social Media (0.9.21) ----------
+  S.socialTab = (body) => {
+    const SO = VN.project.social;
+    const C = DV().chats();
+    // Erklärung für Neulinge über das Helfer-System (💡 öffnet Schritt-für-Schritt-Anleitung, „Nicht mehr zeigen“ blendet aus)
+    if (window.Help && !Help.hidden('tip:social')) body.appendChild(Help.box({ level: 'tip', key: 'tip:social', topic: 'social',
+      text: VN.t('Neu hier? Social Media in 4 Schritten'),
+      detail: VN.t('1. Unter „Nachrichten“ Kontakte anlegen (die Autoren). 2. Die App einem Handy oder Computer geben. 3. Hier Beiträge schreiben. 4. Festlegen, wann sie erscheinen. Im Text werden @Name und #Thema automatisch zu Links. Mehr mit 💡.') }));
+    body.appendChild(el('p', { class: 'muted' }, VN.t('Ein Social Media im Spiel: Kontakte posten Beiträge mit Text und Bild, andere Figuren liken und kommentieren. Ein Beitrag erscheint automatisch, sobald seine Bedingungen stimmen, oder nur per Aktion „📸 Beitrag posten“ (z. B. nach einer Entscheidung, an einem Ort oder nach einem Minispiel). Der Spieler kann liken und mit vorbereiteten Antworten kommentieren.')));
+    const devs = DV().list();
+    const without = devs.filter((d) => !d.apps.some((a) => a.type === 'social'));
+    if (without.length) body.appendChild(el('div', { class: devs.length === without.length ? 'cond-warn' : 'hint-box' }, (devs.length === without.length ? '⚠ ' + VN.t('Noch kein Gerät hat die App „Social Media“.') : VN.t('App „Social Media“ auch auf:')),
+      ...without.map((d) => el('button', { class: 'btn tiny', style: { marginLeft: '8px' }, onclick: () => VN.mutate(() => { d.apps.push(DV().fixApp({ id: VN.uid('app'), type: 'social' })); }) }, (d.kind === 'desktop' ? '💻 ' : '📱 ') + VN.tf('Zu „{n}“ hinzufügen', { n: d.name })))));
+    body.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, VN.t('Einstellungen')),
+      row('Name der App im Spiel', txt(SO.name, (v) => { SO.name = v || 'Pixgram'; }, 'Pixgram', { width: '180px' })),
+      el('div', { class: 'logic-row' }, chk(SO.notify !== false, 'Meldung bei neuem Beitrag (Klick öffnet die App)', (v) => { SO.notify = v; }))));
+    // Aussehen der Seite
+    const SL = SO.look;
+    const fontOpts = (none) => (window.Theme ? Theme.fontOptions(none) : [['', none]]);
+    const look = el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, VN.t('Aussehen der Seite')),
+      el('div', { class: 'logic-row' }, chk(SL.custom, 'Eigenes Design (sonst wie das Gerät)', (v) => { SL.custom = v; })));
+    if (SL.custom) {
+      look.append(
+        el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } },
+          ...[['bg', 'Hintergrund'], ['head', 'Kopfzeile'], ['card', 'Beiträge'], ['text', 'Text'], ['muted', 'Nebentext'], ['accent', 'Akzent'], ['like', 'Herz']].map(([k, l]) => el('label', { class: 'check' }, col(SL[k], (v) => { SL[k] = v; }), VN.t(l)))),
+        row('Logo (statt Name)', thumb(SL.logo), sel(SL.logo, imgOpts('— Name als Text —'), (v) => { SL.logo = v; }, { width: '160px' })),
+        row('Bild Kopfzeile', thumb(SL.headImg), sel(SL.headImg, imgOpts('— Farbe —'), (v) => { SL.headImg = v; }, { width: '160px' })),
+        row('Bild Hintergrund', thumb(SL.bgImg), sel(SL.bgImg, imgOpts('— Farbe —'), (v) => { SL.bgImg = v; }, { width: '160px' })),
+        row('Schrift', sel(SL.font || '', fontOpts('— wie das Gerät —'), (v) => { SL.font = v; })),
+        row('Schrift des Namens', sel(SL.logoFont || '', fontOpts('— wie oben —'), (v) => { SL.logoFont = v; })),
+        row('Ecken-Rundung', num(SL.radius, (v) => { SL.radius = Math.max(0, Math.min(40, Math.round(v))); })),
+        el('div', { class: 'row gap8' }, ...[['Dunkel', { bg: '#0f1320', head: '#151a27', card: '#1b2232', text: '#f2f4f8', muted: '#9aa3b5', accent: '#e1306c', like: '#ff3b6b' }], ['Hell', { bg: '#f4f5f8', head: '#ffffff', card: '#ffffff', text: '#1c1e24', muted: '#6b7080', accent: '#3d6fd8', like: '#ff3b6b' }], ['Retro', { bg: '#20140c', head: '#3a2414', card: '#2e1d10', text: '#f5e6c8', muted: '#c7a77a', accent: '#e8a43a', like: '#e8573a' }], ['Neon', { bg: '#0b0716', head: '#140c26', card: '#1a1030', text: '#f0e8ff', muted: '#a492d0', accent: '#18e0d0', like: '#ff2fd0' }]].map(([n, v]) => el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { Object.assign(SL, v); }) }, VN.t(n)))));
+    }
+    body.appendChild(look);
+    if (!C.contacts.length) { body.appendChild(el('div', { class: 'hint-box' }, VN.t('Beiträge schreiben Kontakte. Lege zuerst unter „Nachrichten“ Kontakte an (z. B. aus deinen Figuren).'))); return; }
+    // Profile
+    const pr = el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, VN.t('Profile')));
+    for (const c of C.contacts) pr.appendChild(el('div', { class: 'logic-row' }, DV().avatar(c, 'sm'), el('strong', { style: { width: '120px' } }, c.name || '?'),
+      txt(c.bio, (v) => { c.bio = v; }, 'Profiltext (z. B. „Diebin. Katzen. Chaos.“)', { flex: '1', minWidth: '180px' }),
+      el('span', { class: 'muted small', title: VN.t('Startwert – im Spiel ändern Aktionen „👥 Follower ändern“ die Zahl (z. B. nach einer Entscheidung oder einem Ereignis)') }, VN.t('Follower')), num(c.followers || 0, (v) => { c.followers = Math.max(0, Math.round(v)); }, { width: '80px' })));
+    body.appendChild(pr);
+    // Beiträge
+    const cOpts = (none) => [['', none || '— Kontakt —'], ...C.contacts.map((x) => [x.id, x.name])];
+    body.appendChild(el('div', { class: 'row gap8', style: { margin: '6px 0 10px' } }, el('strong', null, VN.t('Beiträge')), el('span', { class: 'muted small' }, VN.t('Im Feed steht das zuletzt Erschienene oben.')),
+      el('div', { class: 'spacer' }), el('button', { class: 'btn tiny', onclick: () => previewSocial() }, '▶ ' + VN.t('Vorschau'))));
+    SO.posts.forEach((s, i) => {
+      const card = el('div', { class: 'opt-card dv-th' });
+      card.appendChild(el('div', { class: 'logic-row' },
+        DV().avatar(DV().contact(s.author), 'sm'),
+        sel(s.author, cOpts(), (v) => { s.author = v; }, { width: '140px' }),
+        sel(s.mode, [['auto', 'erscheint automatisch (Bedingungen)'], ['action', 'nur per Aktion „Beitrag posten“']], (v) => { s.mode = v; }),
+        s.mode !== 'action' ? condBtn(s.conds, 'Beitrag erscheint, sobald …', '🔒 ' + VN.t('Nur wenn')) : null,
+        el('div', { class: 'spacer' }),
+        el('span', { class: 'muted small' }, 'ID ' + s.id),
+        el('button', { class: 'btn tiny', disabled: i === 0, onclick: () => VN.mutate(() => { SO.posts.splice(i, 1); SO.posts.splice(i - 1, 0, s); }) }, '↑'),
+        el('button', { class: 'btn tiny', title: VN.t('Duplizieren'), onclick: () => VN.mutate(() => { const n = JSON.parse(JSON.stringify(s)); n.id = VN.uid('sp'); for (const c of n.comments) c.id = VN.uid('sc'); for (const r of n.replies) r.id = VN.uid('sr'); SO.posts.splice(i + 1, 0, n); }) }, '⧉'),
+        el('button', { class: 'btn tiny danger', onclick: () => { if (confirm(VN.t('Beitrag löschen?'))) VN.mutate(() => { SO.posts.splice(i, 1); }); } }, '×')));
+      card.appendChild(el('div', { class: 'logic-row' },
+        el('textarea', { rows: 2, class: 'dv-ta', style: { flex: '1', minWidth: '220px' }, placeholder: VN.t('Text des Beitrags'), onchange: (e) => VN.mutate(() => { s.text = e.target.value; }) }, s.text || ''),
+        thumb(s.image), sel(s.image, imgOpts('— Bild —'), (v) => { s.image = v; }, { width: '120px' })));
+      card.appendChild(el('div', { class: 'logic-row' },
+        el('span', { class: 'muted small' }, '♥'), num(s.likes || 0, (v) => { s.likes = Math.max(0, Math.round(v)); }),
+        txt(s.when, (v) => { s.when = v; }, 'Zeit (leer = automatisch, z. B. „vor 2 Std.“)', { width: '200px' }),
+        actBtn(s.likeActions, 'Wenn der Spieler den Beitrag liked (einmal), ausführen – z. B. Beziehung +2'),
+        el('span', { class: 'muted small' }, s.likeActions.length ? VN.t('Aktion beim Like') : '')));
+      // Kommentare anderer Figuren
+      card.appendChild(el('div', { class: 'sec-title', style: { marginTop: '6px' } }, VN.t('Kommentare')));
+      s.comments.forEach((c, j) => card.appendChild(el('div', { class: 'logic-row' }, el('span', null, '💬'),
+        sel(c.author, cOpts(), (v) => { c.author = v; }, { width: '130px' }),
+        txt(c.text, (v) => { c.text = v; }, 'Kommentar', { flex: '1', minWidth: '160px' }),
+        condBtn(c.conds, 'Kommentar nur zeigen, wenn …'),
+        el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { s.comments.splice(j, 1); }) }, '×'))));
+      // Antworten des Spielers
+      card.appendChild(el('div', { class: 'sec-title', style: { marginTop: '6px' } }, VN.t('Kommentare des Spielers (zur Auswahl)')));
+      s.replies.forEach((r, j) => card.appendChild(el('div', { class: 'logic-row' }, el('span', null, '↩'),
+        txt(r.text, (v) => { r.text = v; }, 'Kommentar-Text', { flex: '1', minWidth: '160px' }),
+        condBtn(r.conds, 'Nur anbieten, wenn …'),
+        actBtn(r.actions, 'Bei diesem Kommentar ausführen (z. B. Beziehung +/−)'),
+        el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { s.replies.splice(j, 1); }) }, '×'))));
+      card.appendChild(el('div', { class: 'row gap8' },
+        el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { s.comments.push({ id: VN.uid('sc'), author: (C.contacts.find((x) => x.id !== s.author) || C.contacts[0]).id, text: '', conds: [] }); }) }, '+ ' + VN.t('Kommentar')),
+        el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { s.replies.push({ id: VN.uid('sr'), text: '', conds: [], actions: [] }); }) }, '+ ' + VN.t('Kommentar des Spielers'))));
+      body.appendChild(card);
+    });
+    body.appendChild(el('button', { class: 'btn', onclick: () => VN.mutate(() => { SO.posts.push(DV().newPost(C.contacts[0].id)); }) }, '+ ' + VN.t('Beitrag')));
+  };
+  if (window.Help) Help.topic('social', {
+    title: 'Social Media – so geht’s',
+    what: 'Eine App für Handy oder Computer im Spiel, in der deine Figuren Beiträge posten – wie Instagram oder Twitter, nur mit deinen Figuren. Beiträge haben Text, Bild, Likes und Kommentare. Der Spieler kann liken, kommentieren und Profile ansehen.',
+    whyTitle: 'Wofür ist das gut?',
+    why: 'Die Spielwelt wirkt lebendig: Figuren reagieren auf das, was der Spieler tut. Ein Beitrag kann ein Hinweis sein, eine Belohnung, ein Stimmungsbild – oder ein Geheimnis, das später wieder gelöscht wird.',
+    fixTitle: 'So legst du los',
+    fix: ['Spielsysteme → Nachrichten: Kontakte anlegen (am besten aus deinen Figuren – dann stimmt das Profilbild).', 'Spielsysteme → Geräte: dem Handy oder Computer die App „Social Media“ geben (oder oben auf „Zu … hinzufügen“ klicken).', 'Hier unter „Beiträge“ auf „+ Beitrag“ klicken, Autor, Text und Bild wählen.', 'Entscheiden, wann er erscheint: „automatisch“ mit 🔒 Bedingung (z. B. ab Tag 3) oder „nur per Aktion“ – dann die Aktion „📸 Beitrag posten“ an eine Auswahl, ein Hub-Objekt oder ein Minispiel hängen.', 'Mit „▶ Vorschau“ ansehen.'],
+    examples: [
+      { title: 'Beitrag nach einer Entscheidung', steps: ['Beitrag anlegen und auf „nur per Aktion“ stellen.', 'In der Szene die Antwort „Ray helfen“ anklicken.', 'Bei „Aktionen“ „📸 Beitrag posten“ wählen und den Beitrag aussuchen.'] },
+      { title: 'Follower wachsen lassen', steps: ['Unter „Profile“ den Startwert eintragen (z. B. 120).', 'An eine Antwort oder ein Ereignis die Aktion „👥 Follower ändern“ hängen, z. B. +200 oder +50 %.', 'Mit der Bedingung „👥 Follower mindestens …“ etwas freischalten.'] },
+      { title: 'Links im Text', steps: ['Im Text „@Ray“ schreiben – im Spiel öffnet ein Klick Rays Profil (auch Namen mit Leerzeichen wie „@Wache Bernd“).', '„#Gildenfest“ schreiben – ein Klick zeigt alle Beiträge mit diesem Hashtag.', 'Das klappt in Beiträgen, Kommentaren und Profiltexten.'] }],
+    ideas: ['Ein Beitrag verschwindet nach einem Ereignis („🗑 Beitrag löschen“) – wer ihn vorher gesehen hat, weiß mehr.', 'Likes und Kommentare des Spielers geben Beziehungspunkte – oder kosten welche.', 'Mehrere Figuren posten nach einem großen Ereignis, jede aus ihrer Sicht.', 'Ein #Hashtag als Spur: Unter #Vermisst sammeln sich Hinweise.']
+  });
+
+  // Vorschau: alle Beiträge im Probe-Handy
+  const previewSocial = () => {
+    const d = DV().list().find((x) => x.apps.some((a) => a.type === 'social')) || (() => { const n = DV().newDevice('phone'); n.apps.push(DV().fixApp({ id: VN.uid('app'), type: 'social' })); return n; })();
+    const rs = VN.newRunState();
+    for (const s of DV().posts()) DV().showPost(rs, s.id);
+    const back = el('div', { class: 'modal-back', onclick: (e) => { if (e.target === back) back.remove(); } });
+    const box = el('div', { class: 'modal', style: { width: '900px', maxWidth: '92vw' } },
+      el('div', { class: 'row gap8' }, el('strong', { style: { flex: '1' } }, '▶ ' + (VN.project.social.name || 'Pixgram')), el('button', { class: 'btn', onclick: () => back.remove() }, VN.t('Schließen'))),
+      el('div', { class: 'muted small' }, VN.t('Vorschau mit allen Beiträgen – im Spiel erscheinen sie nach ihren Bedingungen oder Aktionen.')));
+    const host = el('div', { class: 'dv-prev', style: { marginTop: '8px' } });
+    box.appendChild(host); back.appendChild(box); document.body.appendChild(back);
+    const ap = d.apps.find((a) => a.type === 'social');
+    requestAnimationFrame(() => DV().open(host, { dev: d, rs, preview: true, app: ap && ap.id, H: { onClose: () => back.remove() } }));
+  };
+
   // Unterhaltung im Probe-Handy abspielen (Antworten gehen, Aktionen laufen erst im Spiel)
   const playThread = (t) => {
     const msgDev = (x) => x.apps.some((a) => a.type === 'messages') && DV().onDev(t, x);

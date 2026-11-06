@@ -1321,7 +1321,21 @@
     if (run.jump) { const j = run.jump; run.jump = null; if (j === '@end') showEnd(); else if (j === '@gameover') showEnd({ over: true }); else enterScene(j, 0); }
     renderHud();
   };
-  const chatAuto = () => { if (run && DV() && DV().on()) for (const r of DV().autoCheck(run.rs)) chatNotify(r); };
+  const chatAuto = () => {
+    if (!(run && DV() && DV().on())) return;
+    for (const r of DV().autoCheck(run.rs)) chatNotify(r);
+    for (const s of DV().socialSync(run.rs)) socialNotify(s);
+  };
+  // Neuer Social-Media-Beitrag: Meldung oben, Klick öffnet die App
+  const socialNotify = (s) => {
+    if (!run || !s) return;
+    if (VN.project.social && VN.project.social.notify === false) { renderHud(); return; }
+    const c = DV().contact(s.author);
+    const d = DV().list().find((x) => x.apps.some((a) => a.type === 'social') && DV().usable(x, run.rs));
+    if (devCtl) devCtl.refresh();
+    if (c) DV().note(stage, { contact: c, added: [{ x: '📸 ' + (s.text ? VN.tr(s.id, s.text) : VN.t('hat etwas gepostet')) }] }, d ? () => { if (run && !run.overlay && !run.blocked) { const ap = d.apps.find((a) => a.type === 'social'); deviceFromUiAt(d.id, ap.id, null); } } : null);
+    renderHud();
+  };
   const drawDevCtrl = () => {
     devCtrl.innerHTML = '';
     if (!run || !DV() || !DV().on()) return;
@@ -1535,6 +1549,7 @@
     // Geräte (0.9.0): Handy/Computer öffnen (Promise: offene Abläufe), Meldung „Neue Nachricht“
     device: (id, o) => openDevice(id, o),
     chatNotify: (r) => chatNotify(r),
+    socialNotify: (s) => socialNotify(s),
     _device: () => devCtl,
     // Nachricht einer Figur (Beziehungs-Meilenstein) – wartet, bis der Spieler sie schließt
     relMessage(charId, msId) {

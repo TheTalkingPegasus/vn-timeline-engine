@@ -25,6 +25,7 @@
     stats: { icon: '📊', name: 'Werte', color: '#5c7cfa', on: () => !!(VN.Extras && VN.Extras.statsOn()) },
     log: { icon: '🕘', name: 'Verlauf', color: '#8a8f9c', on: () => true },
     idle: { icon: '🏗', name: 'Aufbau', color: '#b07a4a', on: () => !!(VN.Idle && VN.Idle.on()) },
+    social: { icon: '📸', name: 'Social Media', color: '#e1306c', on: () => !!(DV.socialOn && DV.socialOn()) },
     app: { icon: '⭐', name: 'Eigene App', color: '#9b59b6', on: () => true }
   };
 
@@ -61,6 +62,15 @@
     p.chats = VN.fill(p.chats, { contacts: [], threads: [], notify: true, sound: '' });
     if (!Array.isArray(p.chats.contacts)) p.chats.contacts = [];
     if (!Array.isArray(p.chats.threads)) p.chats.threads = [];
+    // Social Media (0.9.21): Beiträge von Kontakten, erscheinen per Bedingung oder Aktion
+    p.social = VN.fill(p.social, { name: 'Pixgram', notify: true, posts: [] });
+    p.social.look = VN.fill(p.social.look, DV.SOC_LOOK);
+    if (!Array.isArray(p.social.posts)) p.social.posts = [];
+    for (const s of p.social.posts) {
+      VN.fill(s, { id: VN.uid('sp'), author: '', text: '', image: '', likes: 0, when: '', mode: 'auto', conds: [], comments: [], replies: [], likeActions: [] });
+      for (const c of s.comments) VN.fill(c, { id: VN.uid('sc'), author: '', text: '', conds: [] });
+      for (const r of s.replies) VN.fill(r, { id: VN.uid('sr'), text: '', conds: [], actions: [] });
+    }
     for (const t of p.chats.threads) {
       VN.fill(t, { conds: [], msgs: [], replies: [], devs: [] });
       for (const m of t.msgs) VN.fill(m, { id: VN.uid('cm'), from: 'them', text: '', image: '', conds: [], actions: [] });
@@ -69,8 +79,38 @@
     return p;
   };
 
+  // ---------- Social Media (0.9.21) ----------
+  // Aussehen der Social-Media-Seite (frei gestaltbar)
+  DV.SOC_LOOK = { custom: false, bg: '#0f1320', head: '#151a27', card: '#1b2232', text: '#f2f4f8', muted: '#9aa3b5', accent: '#e1306c', like: '#ff3b6b', logo: '', headImg: '', bgImg: '', font: '', radius: 16, logoFont: '' };
+  DV.social = () => P().social || { posts: [] };
+  DV.posts = () => DV.social().posts || [];
+  DV.post = (id) => DV.posts().find((x) => x.id === id) || null;
+  DV.socialOn = () => !!(P() && P().devices && P().devices.enabled && DV.posts().length);
+  DV.newPost = (author) => ({ id: VN.uid('sp'), author: author || '', text: VN.t('Was für ein Tag! ✨'), image: '', likes: 12, when: '', mode: 'auto', conds: [], comments: [], replies: [], likeActions: [] });
+  DV.sst = (rs) => { rs.social = VN.fill(rs.social, { seq: 0, shown: {}, hidden: {}, liked: {}, rep: {}, seen: 0, fol: {} }); return rs.social; };
+  // Follower: Grundwert am Kontakt + Änderungen im Spielstand (Aktion „Follower ändern“)
+  DV.followers = (c, rs) => { if (!c) return 0; const base = Math.max(0, Math.round(Number(c.followers) || 0)); const f = rs ? DV.sst(rs).fol[c.id] : null; return Math.max(0, f && f.set != null ? f.set + (f.add || 0) : base + ((f && f.add) || 0)); };
+  // Beiträge, deren Bedingungen jetzt stimmen, erscheinen (einmal; danach bleiben sie, bis sie gelöscht werden)
+  DV.socialSync = (rs) => {
+    if (!rs || !DV.socialOn()) return [];
+    const S = DV.sst(rs), out = [];
+    for (const s of DV.posts()) if (s.mode !== 'action' && !S.shown[s.id] && !S.hidden[s.id] && VN.checkConds(s.conds || [], rs)) { S.shown[s.id] = ++S.seq; out.push(s); }
+    return out;
+  };
+  DV.showPost = (rs, id) => { const S = DV.sst(rs), s = DV.post(id); if (!s) return null; delete S.hidden[id]; if (!S.shown[id]) { S.shown[id] = ++S.seq; return s; } return null; };
+  DV.hidePost = (rs, id) => { const S = DV.sst(rs); if (S.shown[id]) S.hidden[id] = 1; };
+  DV.feed = (rs) => { const S = DV.sst(rs); return DV.posts().filter((s) => S.shown[s.id] && !S.hidden[s.id]).sort((a, b) => S.shown[b.id] - S.shown[a.id]); };
+  DV.socialNew = (rs) => { const S = DV.sst(rs); return DV.feed(rs).filter((s) => S.shown[s.id] > S.seen).length; };
+  DV.postComments = (s, rs) => (s.comments || []).filter((c) => VN.checkConds(c.conds || [], rs));
+  DV.postReplies = (s, rs) => (DV.sst(rs).rep[s.id] ? [] : (s.replies || []).filter((r) => VN.checkConds(r.conds || [], rs)));
+  DV.whenLabel = (s, rs) => {
+    if (s.when) return tr(s.id + ':when', s.when);
+    const n = Math.max(0, DV.sst(rs).seq - (DV.sst(rs).shown[s.id] || 0));
+    return n === 0 ? tp('gerade eben') : n <= 2 ? tp('vor kurzem') : tp('früher');
+  };
+
   // ---------- Namen und Bilder ----------
-  DV.appName = (a) => (a.name ? tr(a.id + ':name', a.name) : tp((DV.BUILTIN[a.type] || DV.BUILTIN.app).name));
+  DV.appName = (a) => (a.name ? tr(a.id + ':name', a.name) : a.type === 'social' && P().social && P().social.name ? tr('social:name', P().social.name) : tp((DV.BUILTIN[a.type] || DV.BUILTIN.app).name));
   DV.appIcon = (a) => a.icon || (DV.BUILTIN[a.type] || DV.BUILTIN.app).icon;
   DV.appColor = (a) => a.color || (DV.BUILTIN[a.type] || DV.BUILTIN.app).color;
   DV.relOf = (c) => (c && c.char && VN.Life && VN.Life.relOn() ? VN.Life.relChar(c.char) : null);
@@ -279,13 +319,79 @@
     }
   });
 
+  const postOpts = (none) => [['', none || '— Beitrag —'], ...DV.posts().map((s) => [s.id, (DV.contact(s.author) ? DV.contact(s.author).name + ': ' : '') + '„' + String(s.text || '').slice(0, 28) + '“'])];
+  VN.registerAction('socialPost', {
+    label: '📸 Beitrag posten', on: DV.socialOn, make: () => ({ post: (DV.posts()[0] || {}).id || '', quiet: false }),
+    apply: (a, rs) => {
+      const s = DV.showPost(rs, a.post);
+      if (s && !a.quiet && window.Player && Player.socialNotify && !(VN.Idle && VN.Idle._sim)) Player.socialNotify(s);
+    },
+    text: (a) => { const s = DV.post(a.post); return '📸 ' + (s ? (DV.contact(s.author) ? DV.contact(s.author).name + ': ' : '') + '„' + String(s.text || '').slice(0, 30) + '“' : '?'); },
+    problem: (a) => (DV.post(a.post) ? null : 'Beitrag fehlt'),
+    row: (row, a, sel) => {
+      row.appendChild(sel(a.post || '', postOpts(), (v) => VN.mutate(() => { a.post = v; })));
+      row.appendChild(el('label', { class: 'check small' }, el('input', { type: 'checkbox', checked: !!a.quiet, onchange: (e) => VN.mutate(() => { a.quiet = e.target.checked; }) }), VN.t('ohne Meldung')));
+    }
+  });
+  VN.registerAction('socialDelete', {
+    label: '🗑 Beitrag löschen', on: DV.socialOn, make: () => ({ post: (DV.posts()[0] || {}).id || '' }),
+    apply: (a, rs) => DV.hidePost(rs, a.post),
+    text: (a) => { const s = DV.post(a.post); return '🗑 ' + (s ? '„' + String(s.text || '').slice(0, 30) + '“' : '?'); },
+    problem: (a) => (DV.post(a.post) ? null : 'Beitrag fehlt'),
+    row: (row, a, sel) => row.appendChild(sel(a.post || '', postOpts(), (v) => VN.mutate(() => { a.post = v; })))
+  });
+  const ctOpts = () => [['', '— Kontakt —'], ...DV.contacts().map((c) => [c.id, c.name])];
+  VN.registerAction('socialFollowers', {
+    label: '👥 Follower ändern', on: DV.socialOn, make: () => ({ contact: (DV.contacts()[0] || {}).id || '', op: 'add', amount: 100 }),
+    apply: (a, rs) => {
+      const S = DV.sst(rs), n = Math.round(Number(a.amount) || 0);
+      const f = S.fol[a.contact] = S.fol[a.contact] || { add: 0 };
+      if (a.op === 'set') { f.set = Math.max(0, n); f.add = 0; } else if (a.op === 'pct') f.add = (f.add || 0) + Math.round(DV.followers(DV.contact(a.contact), rs) * n / 100); else f.add = (f.add || 0) + n;
+    },
+    text: (a) => { const c = DV.contact(a.contact); const n = Number(a.amount) || 0; return '👥 ' + (c ? c.name : '?') + ' ' + (a.op === 'set' ? '= ' + n : a.op === 'pct' ? (n >= 0 ? '+' : '') + n + ' %' : (n >= 0 ? '+' : '') + n) + ' ' + VN.t('Follower'); },
+    problem: (a) => (DV.contact(a.contact) ? null : 'Kontakt fehlt'),
+    row: (row, a, sel) => {
+      row.appendChild(sel(a.contact || '', ctOpts(), (v) => VN.mutate(() => { a.contact = v; })));
+      row.appendChild(sel(a.op || 'add', [['add', '+ / − Anzahl'], ['pct', '+ / − Prozent'], ['set', 'auf Wert setzen']], (v) => VN.mutate(() => { a.op = v; })));
+      row.appendChild(el('input', { type: 'number', value: a.amount != null ? a.amount : 0, style: { width: '90px' }, onchange: (e) => VN.mutate(() => { a.amount = Number(e.target.value) || 0; }) }));
+    }
+  });
+  VN.registerCond('socialFollowers', {
+    label: '👥 Follower', on: DV.socialOn, make: () => ({ contact: (DV.contacts()[0] || {}).id || '', cmp: '>=', value: 1000 }),
+    check: (c, rs) => { const n = DV.followers(DV.contact(c.contact), rs), v = Number(c.value) || 0; return c.cmp === '<' ? n < v : n >= v; },
+    text: (c) => { const k = DV.contact(c.contact); return '👥 ' + (k ? k.name : '?') + ' ' + (c.cmp === '<' ? '<' : '≥') + ' ' + (Number(c.value) || 0) + ' ' + VN.t('Follower'); },
+    problem: (c) => (DV.contact(c.contact) ? null : 'Kontakt fehlt'),
+    row: (row, c, sel) => {
+      row.appendChild(sel(c.contact || '', ctOpts(), (v) => VN.mutate(() => { c.contact = v; })));
+      row.appendChild(sel(c.cmp || '>=', [['>=', 'mindestens'], ['<', 'weniger als']], (v) => VN.mutate(() => { c.cmp = v; })));
+      row.appendChild(el('input', { type: 'number', value: c.value != null ? c.value : 0, style: { width: '90px' }, onchange: (e) => VN.mutate(() => { c.value = Number(e.target.value) || 0; }) }));
+    }
+  });
+  VN.registerCond('social', {
+    label: '📸 Beitrag', on: DV.socialOn, make: () => ({ post: (DV.posts()[0] || {}).id || '', state: 'shown' }),
+    check: (c, rs) => {
+      const S = DV.sst(rs);
+      if (c.state === 'not') return !S.shown[c.post];
+      if (c.state === 'deleted') return !!S.hidden[c.post];
+      if (c.state === 'liked') return !!S.liked[c.post];
+      if (c.state === 'replied') return !!S.rep[c.post];
+      return !!S.shown[c.post] && !S.hidden[c.post];
+    },
+    text: (c) => { const s = DV.post(c.post); return '📸 „' + (s ? String(s.text || '').slice(0, 24) : '?') + '“ ' + ({ shown: 'sichtbar', not: 'noch nicht gepostet', deleted: 'gelöscht', liked: 'geliked', replied: 'kommentiert' }[c.state] || ''); },
+    problem: (c) => (DV.post(c.post) ? null : 'Beitrag fehlt'),
+    row: (row, c, sel) => {
+      row.appendChild(sel(c.post || '', postOpts(), (v) => VN.mutate(() => { c.post = v; })));
+      row.appendChild(sel(c.state || 'shown', [['shown', 'sichtbar'], ['not', 'noch nicht gepostet'], ['deleted', 'gelöscht'], ['liked', 'vom Spieler geliked'], ['replied', 'vom Spieler kommentiert']], (v) => VN.mutate(() => { c.state = v; })));
+    }
+  });
+
   // Szenen, zu denen Apps, Nachrichten oder Antworten springen, gelten als erreichbar (Pfade, Prüfung)
   VN.reachRoots = VN.reachRoots || [];
   VN.reachRoots.push(() => {
     if (!DV.on()) return [];
     const out = [];
     const walk = (x, d) => { if (!x || typeof x !== 'object' || d > 10) return; if (Array.isArray(x)) { for (const y of x) walk(y, d + 1); return; } if (x.type && VN.SCENE_ACTIONS.includes(x.type) && x.scene) out.push(x.scene); for (const k in x) walk(x[k], d + 1); };
-    walk(DV.cfg().list, 0); walk(DV.threads(), 0);
+    walk(DV.cfg().list, 0); walk(DV.threads(), 0); walk(DV.posts(), 0);
     return out;
   });
 
@@ -398,7 +504,7 @@
       return String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0');
     };
     const badge = (n) => (n ? el('span', { class: 'dv-badge' }, n > 99 ? '99+' : String(n)) : null);
-    const appBadge = (a) => (a.type === 'messages' ? DV.unreadAll(rs, d) : a.type === 'gallery' && VN.Extras && VN.Extras.newCount ? VN.Extras.newCount() : 0);
+    const appBadge = (a) => (a.type === 'messages' ? DV.unreadAll(rs, d) : a.type === 'social' ? DV.socialNew(rs) : a.type === 'gallery' && VN.Extras && VN.Extras.newCount ? VN.Extras.newCount() : 0);
     const icon = (a) => {
       const img = a.image && VN.assetUrl(a.image);
       return el('span', { class: 'dv-ico' + (img ? ' img' : ''), style: { background: img ? `center/cover url("${img}")` : DV.appColor(a) } }, img ? '' : DV.appIcon(a));
@@ -513,6 +619,103 @@
       a.text ? fmtText(el('div', { class: 'dv-page-t' }), XF(tr(a.id + ':text', a.text))) : null);
     const hasPage = (a) => !!(a.title || a.text || a.pic);
 
+    // Social Media: Feed, Profile, Likes und Kommentare des Spielers
+    const socialView = (a, onBack) => {
+      const box = el('div', { class: 'dv-soc' });
+      const SL = (DV.social().look) || DV.SOC_LOOK;
+      if (SL.custom) {
+        box.classList.add('custom');
+        const st = box.style, font = (f) => (window.Theme && Theme.fontCss ? Theme.fontCss(f) : f);
+        st.setProperty('--soc-bg', SL.bg); st.setProperty('--soc-head', SL.head); st.setProperty('--soc-card', SL.card);
+        st.setProperty('--soc-text', SL.text); st.setProperty('--soc-muted', SL.muted); st.setProperty('--soc-acc', SL.accent); st.setProperty('--soc-like', SL.like);
+        st.setProperty('--soc-radius', (Number(SL.radius) || 0) / 10 + 'cqh');
+        if (SL.font) st.setProperty('--soc-font', font(SL.font));
+        if (SL.logoFont) st.setProperty('--soc-logo-font', font(SL.logoFont));
+        if (SL.bgImg && VN.assetUrl(SL.bgImg)) st.setProperty('--soc-bg-img', `url("${VN.assetUrl(SL.bgImg)}")`);
+        if (SL.headImg && VN.assetUrl(SL.headImg)) st.setProperty('--soc-head-img', `url("${VN.assetUrl(SL.headImg)}")`);
+      }
+      const logo = () => (SL.custom && SL.logo && VN.assetUrl(SL.logo) ? el('img', { class: 'dv-soc-logoimg', src: VN.assetUrl(SL.logo), alt: tr('social:name', DV.social().name || 'Pixgram') }) : tr('social:name', DV.social().name || 'Pixgram'));
+      let prof = null, tag = null;
+      const S = DV.sst(rs);
+      // @Name → Profil, #Thema → Feed gefiltert (Namen mit Leerzeichen werden erkannt, längster Name zuerst)
+      const rich = (text) => {
+        const box = el('span', { class: 'dv-soc-rich' });
+        const cs = DV.contacts().filter((c) => DV.cName(c)).sort((a, b) => DV.cName(b).length - DV.cName(a).length);
+        let buf = '', i = 0;
+        const flush = () => { if (buf) { box.appendChild(fmtText(el('span'), buf)); buf = ''; } };
+        while (i < text.length) {
+          const ch = text[i];
+          if (ch === '@' && (i === 0 || /[\s(„"'.,!?]/.test(text[i - 1]))) {
+            const rest = text.slice(i + 1).toLowerCase();
+            const c = cs.find((x) => rest.startsWith(DV.cName(x).toLowerCase()) && !/[\p{L}\p{N}_]/u.test(rest.charAt(DV.cName(x).length)));
+            if (c) { flush(); const nm = text.substr(i + 1, DV.cName(c).length); box.appendChild(el('a', { class: 'dv-soc-at', onclick: (e) => { e.stopPropagation(); prof = c.id; tag = null; snd('click'); draw(); } }, '@' + nm)); i += 1 + nm.length; continue; }
+          }
+          if (ch === '#' && (i === 0 || /[\s(„"'.,!?]/.test(text[i - 1]))) {
+            const m = /^#([\p{L}\p{N}_]+)/u.exec(text.slice(i));
+            if (m) { flush(); const t = m[1]; box.appendChild(el('a', { class: 'dv-soc-tag', onclick: (e) => { e.stopPropagation(); tag = t.toLowerCase(); prof = null; snd('click'); draw(); } }, '#' + t)); i += m[0].length; continue; }
+          }
+          buf += ch; i++;
+        }
+        flush();
+        return box;
+      };
+      const hasTag = (s, t) => new RegExp('(^|[\\s(„"\'.,!?])#' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![\\p{L}\\p{N}_])', 'iu').test(XF(tr(s.id, s.text || '')));
+      DV.socialSync(rs);
+      const name = (c) => DV.cName(c);
+      const draw = () => {
+        box.innerHTML = '';
+        S.seen = S.seq;
+        const head = el('div', { class: 'dv-head dv-soc-head' },
+          onBack || prof || tag ? el('button', { class: 'dv-back-btn', onclick: (e) => { e.stopPropagation(); if (prof || tag) { prof = null; tag = null; draw(); } else onBack(); } }, '‹') : null,
+          el('div', { class: 'dv-head-t' }, el('strong', { class: 'dv-soc-logo' }, prof ? name(DV.contact(prof)) : tag ? '#' + tag : logo())));
+        box.appendChild(head);
+        const list = el('div', { class: 'dv-soc-list' });
+        box.appendChild(list);
+        const feed = DV.feed(rs).filter((s) => (!prof || s.author === prof) && (!tag || hasTag(s, tag)));
+        if (prof) {
+          const c = DV.contact(prof);
+          list.appendChild(el('div', { class: 'dv-soc-prof' }, DV.avatar(c, 'xl'),
+            el('div', null, el('strong', null, name(c)), el('div', { class: 'dv-soc-stat' }, (feed.length === 1 ? tp('1 Beitrag') : VN.tf('{n} Beiträge', { n: feed.length })) + (c && (c.followers || DV.sst(rs).fol[c.id]) ? ' · ' + VN.tf('{n} Follower', { n: DV.followers(c, rs).toLocaleString() }) : '')),
+              c && c.bio ? el('div', { class: 'dv-soc-bio' }, rich(XF(tr(c.id + ':bio', c.bio)))) : null)));
+        }
+        if (!feed.length) list.appendChild(el('div', { class: 'dv-empty' }, tp('Noch keine Beiträge.')));
+        for (const s of feed) {
+          const c = DV.contact(s.author);
+          const liked = !!S.liked[s.id];
+          const card = el('div', { class: 'dv-soc-post' });
+          card.appendChild(el('div', { class: 'dv-soc-top', onclick: (e) => { e.stopPropagation(); if (!prof && c) { prof = c.id; snd('click'); draw(); list.scrollTop = 0; } } },
+            DV.avatar(c, 'sm'), el('div', null, el('strong', null, name(c)), el('div', { class: 'dv-soc-when' }, DV.whenLabel(s, rs)))));
+          if (s.image && VN.assetUrl(s.image)) card.appendChild(el('img', { class: 'dv-soc-img', src: VN.assetUrl(s.image), alt: '', ondblclick: (e) => { e.stopPropagation(); if (!liked) like(s); } }));
+          if (s.text) card.appendChild(el('div', { class: 'dv-soc-text' }, rich(XF(tr(s.id, s.text)))));
+          card.appendChild(el('div', { class: 'dv-soc-bar' },
+            el('button', { class: 'dv-soc-like' + (liked ? ' on' : ''), onclick: (e) => { e.stopPropagation(); like(s); } }, liked ? '♥' : '♡'),
+            el('span', null, String((Number(s.likes) || 0) + (liked ? 1 : 0))),
+            el('span', { class: 'dv-soc-cn' }, '💬 ' + (DV.postComments(s, rs).length + (S.rep[s.id] ? 1 : 0)))));
+          for (const cm of DV.postComments(s, rs)) card.appendChild(el('div', { class: 'dv-soc-cm' }, el('strong', null, name(DV.contact(cm.author)) + ' '), rich(XF(tr(cm.id, cm.text)))));
+          if (S.rep[s.id]) { const r = (s.replies || []).find((x) => x.id === S.rep[s.id]); if (r) card.appendChild(el('div', { class: 'dv-soc-cm me' }, el('strong', null, tp('Du') + ' '), rich(XF(tr(r.id, r.text))))); }
+          const reps = DV.postReplies(s, rs);
+          if (reps.length) card.appendChild(el('div', { class: 'dv-soc-reps' }, ...reps.map((r) => el('button', { class: 'dv-reply', onclick: (e) => { e.stopPropagation(); reply(s, r); } }, XF(tr(r.id, r.text))))));
+          list.appendChild(card);
+        }
+      };
+      const run = (actions, key) => { if (!o.preview && H.apply && (actions || []).length) { const x = H.apply(actions, key); if (x && x.close) { close(); return true; } } return false; };
+      const like = (s) => {
+        const first = !(s.id in S.liked);
+        if (S.liked[s.id]) S.liked[s.id] = 0; else S.liked[s.id] = 1;
+        snd('click');
+        // Aktionen nur beim ersten Like (sonst ließen sich Beziehungspunkte durch An/Aus sammeln)
+        if (first && S.liked[s.id] && run(s.likeActions, s.id + ':like')) return;
+        draw(); refreshBadges();
+      };
+      const reply = (s, r) => {
+        S.rep[s.id] = r.id; snd('click');
+        if (run(r.actions, r.id)) return;
+        draw();
+      };
+      draw();
+      return box;
+    };
+
     // Eingebaute Bildschirme (Inventar, Karte …): Gerät ausblenden, danach zurück
     const runBuiltin = (a) => {
       if (o.preview || !H.builtin) { flash(VN.tf('Öffnet im Spiel: {x}', { x: DV.appName(a) })); return; }
@@ -547,6 +750,9 @@
         main.classList.add('app');
         if (view.chat) main.appendChild(chatView(view.chat, () => { view.chat = null; snd('click'); phoneDraw(); }));
         else main.append(el('div', { class: 'dv-head' }, el('button', { class: 'dv-back-btn', onclick: (e) => { e.stopPropagation(); home(); } }, '‹'), el('div', { class: 'dv-head-t' }, el('strong', null, DV.appName(a)))), chatList((cid) => { view.chat = cid; phoneDraw(); }));
+      } else if (a.type === 'social') {
+        main.classList.add('app');
+        main.appendChild(socialView(a, home));
       } else {
         main.classList.add('app');
         main.append(el('div', { class: 'dv-head' }, el('button', { class: 'dv-back-btn', onclick: (e) => { e.stopPropagation(); home(); } }, '‹'), el('div', { class: 'dv-head-t' }, el('strong', null, DV.appName(a)))), pageView(a));
@@ -583,8 +789,8 @@
       const had = wins.find((w) => w.app === a);
       if (had) { front(had); return had; }
       const n = wins.length;
-      const msg = a.type === 'messages';
-      const w = { app: a, z: ++zTop, x: 20 + n * 4, y: 6 + n * 4, cw: msg ? 62 : 46, ch: msg ? 72 : 62 };
+      const msg = a.type === 'messages', soc = a.type === 'social';
+      const w = { app: a, z: ++zTop, x: (soc ? 30 : 20) + n * 4, y: (soc ? 4 : 6) + n * 4, cw: msg ? 62 : soc ? 40 : 46, ch: msg ? 72 : soc ? 84 : 62 };
       const content = el('div', { class: 'dv-win-body' });
       const bar = el('div', { class: 'dv-win-bar' }, el('span', null, DV.appIcon(a) + ' ' + DV.appName(a)), el('button', { class: 'dv-win-x', title: tp('Schließen'), onclick: (e) => { e.stopPropagation(); closeWin(w); } }, '✕'));
       w.el = el('div', { class: 'dv-win', style: { left: w.x + '%', top: w.y + '%', width: w.cw + '%', height: w.ch + '%', zIndex: w.z }, onmousedown: () => front(w), onclick: (e) => e.stopPropagation() }, bar, content);
@@ -604,7 +810,8 @@
           const cv = w.chat ? chatView(w.chat, null) : el('div', { class: 'dv-chat dv-empty' }, tp('Noch keine Nachrichten.'));
           content.append(el('div', { class: 'dv-split' }, chatList((cid) => { w.chat = cid; w.fill(); }, w.chat), cv));
           setTimeout(refreshBadges, 0);
-        } else content.appendChild(pageView(a));
+        } else if (a.type === 'social') content.appendChild(socialView(a, null));
+        else content.appendChild(pageView(a));
       };
       w.fill();
       wins.push(w);
@@ -619,6 +826,10 @@
       if (a.type === 'messages') {
         if (desk) { const w = openWin(a); if (contact) { w.chat = contact; w.fill(); } }
         else { view = { app: a, chat: contact || null }; phoneDraw(); }
+        return;
+      }
+      if (a.type === 'social') {
+        if (desk) openWin(a); else { view = { app: a, chat: null }; phoneDraw(); }
         return;
       }
       if (a.type === 'app') {

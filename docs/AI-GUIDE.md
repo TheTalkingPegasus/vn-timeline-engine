@@ -1,6 +1,6 @@
 # VN Timeline Engine – guide for AI assistants
 
-Engine 0.9.20 · project format 1 · generated 2026-11-06
+Engine 0.9.21 · project format 1 · generated 2026-11-06
 
 This file explains a VN Timeline Engine project so that any AI can read and change it **without the engine source code**. 
 The engine is a free visual novel editor that works like a video editor: every scene is a timeline, every column ("step") is one click of the player.
@@ -42,7 +42,7 @@ The engine is a free visual novel editor that works like a video editor: every s
 - `cam` – Camera / Kamera (cam): `{"id":"<unique id>","start":0,"len":3,"zoom":130,"panX":0,"panY":-8,"rot":0,"shake":0,"dur":1.2,"ease":"ease-in-out","keys":[]}`
 - `video` – Video (video): `{"id":"<unique id>","start":0,"len":1,"asset":null,"layer":"front","loop":false,"muted":false,"vol":90,"fit":"cover","waitEnd":true,"skippable":true}`
 - `dialog` – Dialogue / Dialog (dialog): `{"id":"<unique id>","start":0,"len":1,"speaker":"","color":"#ffffff","text":"Neuer Text …","speed":40,"actions":[]}`
-- `choice` – Choice / Auswahl (choice): `{"id":"<unique id>","start":0,"len":1,"options":[{"id":"opt_1o2x4","text":"Antwort A","target":null,"conds":[],"actions":[]},{"id":"opt_1ptyw","text":"Antwort B","target":null,"conds":[],"actions":[]}]}`
+- `choice` – Choice / Auswahl (choice): `{"id":"<unique id>","start":0,"len":1,"options":[{"id":"opt_1o52r","text":"Antwort A","target":null,"conds":[],"actions":[]},{"id":"opt_1p61b","text":"Antwort B","target":null,"conds":[],"actions":[]}]}`
 - `code` – Code (code): `{"id":"<unique id>","start":0,"len":1,"code":""}`
 - `music` – Music / Musik (music): `{"id":"<unique id>","start":0,"len":3,"asset":null,"vol":70,"loop":true,"carry":false,"fade":1}`
 - `voice` – Voices (voice): `{"id":"<unique id>","start":0,"len":1,"asset":null,"vol":90,"delay":0}`
@@ -124,6 +124,8 @@ One statement per line, `#` = comment. Operators: `+ - * / % **`, `== != < <= > 
 - `idleRunning`: `{"type":"idleRunning"}  – 🏰 Building is running / 🏰 Aufbau läuft  (only when that game system is switched on)`
 - `chat`: `{"type":"chat","thread":"","state":"got","reply":""}  – 💬 Message / 💬 Nachricht  (only when that game system is switched on)`
 - `devOpen`: `{"type":"devOpen","device":"","value":true}  – 🔓 Device unlocked / 🔓 Gerät entsperrt  (only when that game system is switched on)`
+- `socialFollowers`: `{"type":"socialFollowers","contact":"","cmp":">=","value":1000}  – 👥 Followers / 👥 Follower  (only when that game system is switched on)`
+- `social`: `{"type":"social","post":"","state":"shown"}  – 📸 Post / 📸 Beitrag  (only when that game system is switched on)`
 
 Operators: `>=`, `>`, `<=`, `<`, `==`, `!=`.
 
@@ -174,6 +176,9 @@ Operators: `>=`, `>`, `<=`, `<`, `==`, `!=`.
 - `device`: `{"type":"device","device":"","app":""}  – 📱 Open device / 📱 Gerät öffnen  (only when that game system is switched on)`
 - `devUnlock`: `{"type":"devUnlock","device":""}  – 🔓 Unlock device / 🔓 Gerät entsperren  (only when that game system is switched on)`
 - `chatSend`: `{"type":"chatSend","thread":"","quiet":false}  – 💬 Send message / 💬 Nachricht schicken  (only when that game system is switched on)`
+- `socialPost`: `{"type":"socialPost","post":"","quiet":false}  – 📸 Post / 📸 Beitrag posten  (only when that game system is switched on)`
+- `socialDelete`: `{"type":"socialDelete","post":""}  – 🗑 Delete post / 🗑 Beitrag löschen  (only when that game system is switched on)`
+- `socialFollowers`: `{"type":"socialFollowers","contact":"","op":"add","amount":100}  – 👥 Change followers / 👥 Follower ändern  (only when that game system is switched on)`
 
 ## Game systems
 
