@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototype 0.9.17
+VN Timeline Engine · Prototype 0.9.18
 ====================================
 (Deutsch: siehe LIES MICH.txt)
 
@@ -15,6 +15,12 @@ Without installing (ZIP):
    isn't signed: "More info" → "Run anyway".
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
+
+NEW IN 0.9.18 · Fitness minigames: barbell and dumbbells
+- Barbell: mash the space bar – every press lifts the bar a little, the weight pulls it back down. Reach the goal line.
+- Dumbbells: a rhythm game. Left and right go up and down to their own beat; press A (left) or D (right) when a
+  dumbbell is up in the zone. Perfect / good / too early / too late, combos, three rhythm patterns, custom keys.
+- Both: difficulty, helper item, skill tree perks, own images for figure, weights and background, every colour adjustable.
 
 NEW IN 0.9.17 · Arcade: darts, pool, blackjack and slot machine · safe and pipes
 - New bundled plugin "Arcade": darts and pool against computer opponents whose skill you set, blackjack against a
@@ -84,7 +90,7 @@ Game systems (switch on what you need)
   offline or game time; time preview in the editor.
 - Equipment, seasons and ambient sounds, game over screen.
 - Devices: phone or computer with apps, lock code; messages across scenes with routes, replies and unlocks.
-- Bundled plugins: Jobs, nine minigames (incl. safe and pipes) and the Arcade (darts, pool, blackjack, slot machine).
+- Bundled plugins: Jobs, eleven minigames (incl. safe, pipes, barbell and dumbbells) and the Arcade (darts, pool, blackjack, slot machine).
   Write your own plugins in JavaScript (see PLUGINS.en.md).
 For players (in every game automatically)
 - History, auto mode, skip, quick save, save slots, settings, reading & accessibility options,

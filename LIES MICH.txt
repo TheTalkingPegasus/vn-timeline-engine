@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.17
+VN Timeline Engine · Prototyp 0.9.18
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,16 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.18 · Fitness-Minispiele: Langhantel und Kurzhanteln
+- Langhantel: Leertaste hämmern – jeder Druck stemmt die Hantel ein Stück hoch, das Gewicht zieht sie wieder runter.
+  Erreicht sie oben die Ziellinie, ist die Wiederholung geschafft. Schwierigkeit, Wiederholungen, Zeit, angezeigtes
+  Gewicht (z. B. „80 kg“). Ein Kraftbalken zeigt, wie schnell man drückt; der Kopf wird bei Anstrengung rot.
+- Kurzhanteln: Rhythmusspiel. Linke und rechte Hantel gehen im eigenen Takt auf und ab. Ist eine Hantel oben in der
+  Zone, A (links) bzw. D (rechts) drücken – Perfekt, Gut, zu früh, zu spät oder verpasst, mit Combo. Takt abwechselnd,
+  asymmetrisch oder unregelmäßig; wird auf Wunsch schneller; Tasten frei wählbar (Pfeiltasten gehen immer).
+- Beide: Hilfs-Gegenstand, Perks für Skilltrees und Ausrüstung (mehr Kraft, größere Zielzone, mehr Fehler erlaubt),
+  eigene Bilder für Figur, Hantel und Hintergrund, alle Farben (Shirt, Hose, Haut, Haare, Hanteln, Ziel …) einstellbar.
 
 NEU IN 0.9.17 · Spielhalle: Dart, Billard, Blackjack und Spielautomat · Tresor und Rohre
 - Neues mitgeliefertes Plugin „Spielhalle“ (einschalten unter Spielsysteme → Übersicht). Drei Minispiele, die wie die

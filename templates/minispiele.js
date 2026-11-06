@@ -1,5 +1,5 @@
 // Mitgeliefertes Plugin: Minispiele
-// Klick-Reflex, Memory, Puzzle, Kochen & Brauen, Münzwurf, Blütenblätter zupfen, Quicktime-Kreis, Tresor, Rohre.
+// Klick-Reflex, Memory, Puzzle, Kochen & Brauen, Münzwurf, Blütenblätter zupfen, Quicktime-Kreis, Tresor, Rohre, Langhantel, Kurzhanteln.
 // Jedes Minispiel liefert ein Ergebnis { score: 0…1, ok } – für Jobs (Lohn), Beziehungen oder Pfade.
 // Bilder sind überall austauschbar (leer = eingebaute Grafik). Du darfst die Datei frei ändern.
 (function () {
@@ -105,13 +105,49 @@
     if (flow().done) { const c = at(0, r0); c.r = (c.r + 1) % 4; c.deg += 90; }
     return { cells, path, r0, r1, at, flow, mask, rot };
   };
+  // Fitness: Bühne mit Figur (Beine, Körper, Kopf) – Arme zeichnet das jeweilige Spiel
+  const liftScene = (ctx, F, game, params, cls, vb) => {
+    const NS = 'http://www.w3.org/2000/svg';
+    const sv = (tag, at) => { const n = document.createElementNS(NS, tag); for (const k in at) n.setAttribute(k, at[k]); return n; };
+    F.area.classList.add('mg-lift', cls);
+    const bg = pic(ctx, game, 'bildHintergrund', params);
+    if (bg) F.area.style.background = `url("${bg}") center / cover`;
+    const svg = sv('svg', { viewBox: vb || '0 -22 200 222', class: 'mg-lift-svg' });
+    const root = sv('g', {});
+    svg.appendChild(root);
+    root.appendChild(sv('ellipse', { cx: 100, cy: 196, rx: 46, ry: 5, class: 'mg-lift-shadow' }));
+    const fig = pic(ctx, game, 'bildFigur', params);
+    let head = null;
+    if (fig) root.appendChild(sv('image', { href: fig, x: 40, y: 22, width: 120, height: 176, preserveAspectRatio: 'xMidYMax meet' }));
+    else {
+      root.appendChild(sv('path', { d: 'M86 138 L82 194 L96 194 L100 150 L104 194 L118 194 L114 138 Z', class: 'mg-lift-pants' }));
+      root.appendChild(sv('path', { d: 'M80 70 Q100 62 120 70 L118 140 L82 140 Z', class: 'mg-lift-shirt' }));
+      root.appendChild(sv('rect', { x: 95, y: 56, width: 10, height: 12, class: 'mg-lift-skin' }));
+      head = sv('circle', { cx: 100, cy: 46, r: 13, class: 'mg-lift-skin mg-lift-head' });
+      root.appendChild(head);
+      root.appendChild(sv('path', { d: 'M87 43 Q88 31 100 31 Q112 31 113 43 Q106 37 100 38 Q93 37 87 43 Z', class: 'mg-lift-hair' }));
+    }
+    F.area.appendChild(svg);
+    // Arm mit Ellbogen (zwei Glieder), Ellbogen zeigt nach außen/unten
+    const arm = (sx, sy, hx, hy, side) => {
+      const a = 36, dx = hx - sx, dy = hy - sy;
+      const d = Math.min(a * 2 - 0.01, Math.max(1, Math.hypot(dx, dy)));
+      const al = Math.acos(Math.min(1, d / (2 * a))), base = Math.atan2(dy, dx);
+      const cand = [base + al, base - al].map((t) => [sx + Math.cos(t) * a, sy + Math.sin(t) * a]);
+      const [ex, ey] = cand.sort((p, q) => (q[0] * side + q[1] * 0.6) - (p[0] * side + p[1] * 0.6))[0];
+      return `M${sx} ${sy} L${ex.toFixed(2)} ${ey.toFixed(2)} L${hx.toFixed(2)} ${hy.toFixed(2)}`;
+    };
+    // Anstrengung färbt den Kopf rötlich
+    const strain = (e) => { if (head) head.style.fill = `color-mix(in srgb, var(--g-haut, #f1c29b), #e0484d ${Math.round(e * 45)}%)`; };
+    return { sv, svg, root, arm, strain };
+  };
   const SYMBOLS = ['🔑', '💎', '🍄', '🌙', '⭐', '🔥', '🍀', '🐉', '🎲', '🎭', '🦉', '🍎'];
 
   VNPlugin.register({
     id: ID,
     name: 'Minispiele',
-    version: '1.5',
-    description: 'Neun Minispiele mit Ergebnis (0–100 % oder geschafft/nicht geschafft): Klick-Reflex, Memory, Puzzle, Kochen & Brauen, Münzwurf, Blütenblätter, Quicktime-Kreis, Tresor, Rohre.',
+    version: '1.6',
+    description: 'Elf Minispiele mit Ergebnis (0–100 % oder geschafft/nicht geschafft): Klick-Reflex, Memory, Puzzle, Kochen & Brauen, Münzwurf, Blütenblätter, Quicktime-Kreis, Tresor, Rohre, Langhantel, Kurzhanteln.',
     // Aussehen je Minispiel (Design → Spielsysteme, oder Rechtsklick aufs Fenster im Probelauf)
     designs: {
       reflex: { label: 'Klick-Reflex', icon: '🎯', images: [['bildZiel', 'Ziel'], ['bildFalle', 'Falle']] },
@@ -124,13 +160,20 @@
       tresor: { label: 'Tresor / Zahlenschloss', icon: '🔐', images: [['bildTuer', 'Tresortür'], ['bildRad', 'Drehrad'], ['bildInnen', 'Im offenen Tresor'], ['bildTastenfeld', 'Tastenfeld (Hintergrund)'], ['bildTaste', 'Taste'], ['bildSchloss', 'Zahlenschloss (Hintergrund)']],
         colors: [['gehaeuse', 'Gehäuse', '#4a4f57'], ['tuer', 'Tür', '#6b727c'], ['rad', 'Drehrad', '#1c1e22'], ['zahlen', 'Zahlen auf dem Rad', '#e9edf2'], ['marke', 'Markierung', '#e8a43a'], ['anzeige', 'Ziffern der Anzeige', '#7dff8a'], ['anzeigeBg', 'Hintergrund der Anzeige', '#0b0c0e'], ['taste', 'Tasten', '#4a4f57'], ['tasteText', 'Schrift auf Tasten', '#f0f0f0'], ['schloss', 'Zahlenschloss', '#c9a24a']] },
       rohre: { label: 'Rohre verbinden', icon: '🚰', images: [['bildHintergrund', 'Hintergrund'], ['bildGerade', 'Gerade (oben–unten)'], ['bildKurve', 'Kurve (oben–rechts)'], ['bildT', 'T-Stück (oben–rechts–unten)'], ['bildKreuz', 'Kreuzung'], ['bildQuelle', 'Anfang der Leitung'], ['bildZiel', 'Ende der Leitung']],
-        colors: [['rohr', 'Rohr / Kabel', '#8b97a3'], ['leer', 'Innen (leer)', '#1b2229'], ['fluss', 'Gefüllt (Wasser, Strom …)', '#3fa9ff'], ['feld', 'Felder', '#ffffff']] }
+        colors: [['rohr', 'Rohr / Kabel', '#8b97a3'], ['leer', 'Innen (leer)', '#1b2229'], ['fluss', 'Gefüllt (Wasser, Strom …)', '#3fa9ff'], ['feld', 'Felder', '#ffffff']] },
+      langhantel: { label: 'Langhantel', icon: '🏋', images: [['bildHintergrund', 'Hintergrund'], ['bildFigur', 'Figur (Körper ohne Arme)'], ['bildHantel', 'Langhantel']],
+        colors: [['figur', 'Shirt', '#3d6fd8'], ['hose', 'Hose', '#2a2e38'], ['haut', 'Haut', '#f1c29b'], ['haare', 'Haare', '#3b2a20'], ['stange', 'Stange', '#c9ced6'], ['scheiben', 'Gewichtsscheiben', '#30343c'], ['ziel', 'Ziellinie', '#6fe39a'], ['balken', 'Kraftbalken', '#e8a43a']] },
+      kurzhanteln: { label: 'Kurzhanteln', icon: '💪', images: [['bildHintergrund', 'Hintergrund'], ['bildFigur', 'Figur (Körper ohne Arme)'], ['bildHantel', 'Kurzhantel']],
+        colors: [['figur', 'Shirt', '#3d6fd8'], ['hose', 'Hose', '#2a2e38'], ['haut', 'Haut', '#f1c29b'], ['haare', 'Haare', '#3b2a20'], ['hantel', 'Hanteln', '#30343c'], ['ziel', 'Zielzone', '#6fe39a'], ['perfekt', 'Perfekt-Treffer', '#ffd23f']] }
     },
     // Perks für Skilltrees und Ausrüstung (Spielsysteme → Skilltrees / Gegenstand „Boni, solange getragen“)
     skillEffects: {
       zeigerZone: { cat: 'minigame', label: 'Quicktime-Kreis: größere Trefferfläche', params: [['pct', '+ %', 'number', 20]], key: () => 'minispiele.zeiger.zone', mode: 'pct', value: (e) => Number(e.pct) || 0, text: (e, l) => '+' + (Number(e.pct) || 0) * l + ' % Trefferfläche (Quicktime-Kreis)' },
       zeigerLangsam: { cat: 'minigame', label: 'Quicktime-Kreis: Zeiger langsamer', params: [['pct', '− %', 'number', 15]], key: () => 'minispiele.zeiger.tempo', mode: 'pct', value: (e) => -(Number(e.pct) || 0), text: (e, l) => '−' + (Number(e.pct) || 0) * l + ' % Zeiger-Tempo (Quicktime-Kreis)' },
       rohreZeit: { cat: 'minigame', label: 'Rohre: mehr Zeit', params: [['pct', '+ %', 'number', 25]], key: () => 'minispiele.rohre.zeit', mode: 'pct', value: (e) => Number(e.pct) || 0, text: (e, l) => '+' + (Number(e.pct) || 0) * l + ' % Zeit (Rohre)' },
+      langhantelKraft: { cat: 'minigame', label: 'Langhantel: mehr Kraft pro Druck', params: [['pct', '+ %', 'number', 15]], key: () => 'minispiele.langhantel.kraft', mode: 'pct', value: (e) => Number(e.pct) || 0, text: (e, l) => '+' + (Number(e.pct) || 0) * l + ' % Kraft (Langhantel)' },
+      kurzhantelZone: { cat: 'minigame', label: 'Kurzhanteln: größere Zielzone', params: [['pct', '+ %', 'number', 20]], key: () => 'minispiele.kurzhantel.zone', mode: 'pct', value: (e) => Number(e.pct) || 0, text: (e, l) => '+' + (Number(e.pct) || 0) * l + ' % Zielzone (Kurzhanteln)' },
+      kurzhantelFehler: { cat: 'minigame', label: 'Kurzhanteln: mehr Fehler erlaubt', params: [['amount', '+', 'number', 1]], key: () => 'minispiele.kurzhantel.fehler', mode: 'add', value: (e) => Number(e.amount) || 0, text: (e, l) => '+' + (Number(e.amount) || 0) * l + ' Fehler erlaubt (Kurzhanteln)' },
       zeigerFehler: { cat: 'minigame', label: 'Quicktime-Kreis: mehr Fehlversuche', params: [['amount', '+', 'number', 1]], key: () => 'minispiele.zeiger.fehler', mode: 'add', value: (e) => Number(e.amount) || 0, text: (e, l) => '+' + (Number(e.amount) || 0) * l + ' Fehlversuch(e) (Quicktime-Kreis)' }
     },
     actions: {
@@ -1041,6 +1084,260 @@
             refresh();
           });
         }
+      },
+
+      // ---------- Langhantel ----------
+      // Taste so schnell wie möglich drücken – jeder Druck stemmt die Hantel ein Stück hoch, das Gewicht zieht sie wieder runter.
+      langhantel: {
+        label: 'Langhantel (Taste hämmern)', minigame: true,
+        params: [
+          { key: 'schwierigkeit', label: 'Schwierigkeit', type: 'select', options: [['leicht', 'Leicht'], ['mittel', 'Mittel'], ['schwer', 'Schwer'], ['extrem', 'Extrem']], default: 'mittel' },
+          { key: 'wiederholungen', label: 'Wiederholungen', type: 'number', default: 1 },
+          { key: 'zeitlimit', label: 'Zeit in Sekunden (0 = wie Schwierigkeit)', type: 'number', default: 0 },
+          { key: 'gewicht', label: 'Gewicht zur Anzeige (z. B. 80 kg)', type: 'text', default: '' },
+          { key: 'hilfe', label: 'Mit Gegenstand leichter', type: 'item', default: '' },
+          { key: 'hilfeProzent', label: 'Gegenstand: Kraft + %', type: 'number', default: 30 },
+          { key: 'titel', label: 'Titel (leer = „Hantel hoch!“)', type: 'text', default: '' },
+          { key: 'bildHintergrund', label: 'Bild Hintergrund', type: 'image', default: '' },
+          { key: 'bildFigur', label: 'Bild Figur (Körper ohne Arme)', type: 'image', default: '' },
+          { key: 'bildHantel', label: 'Bild Langhantel', type: 'image', default: '' },
+          { key: 'tonDruck', label: 'Ton bei jedem Druck', type: 'audio', default: '' },
+          resultParam
+        ],
+        run(params, ctx) {
+          return new Promise((resolve) => {
+            const F = frame(ctx, params.titel || 'Hantel hoch!', '46%', 'langhantel');
+            const el = F.el;
+            const D = { leicht: { lift: 0.07, sink: 0.11, t: 10 }, mittel: { lift: 0.045, sink: 0.14, t: 12 }, schwer: { lift: 0.035, sink: 0.16, t: 14 }, extrem: { lift: 0.032, sink: 0.17, t: 15 } }[params.schwierigkeit] || { lift: 0.045, sink: 0.14, t: 12 };
+            const B = (k, base) => (ctx.bonus ? ctx.bonus(k, base) : base);
+            const helper = params.hilfe && ctx.items && ctx.items.count(params.hilfe) > 0;
+            const hp = helper ? Math.max(0, Math.min(200, Number(params.hilfeProzent) || 0)) / 100 : 0;
+            const lift = B('minispiele.langhantel.kraft', D.lift) * (1 + hp);
+            const need = Math.max(1, Math.round(Number(params.wiederholungen) || 1));
+            const limit = (Number(params.zeitlimit) > 0 ? Number(params.zeitlimit) : D.t * need + (need - 1) * 1.5) * 1000;
+            const s = liftScene(ctx, F, 'langhantel', params, 'mg-lift-lh');
+            const { sv, svg, root } = s;
+            // Hantel (oben = Ziel)
+            const Y0 = 64, Y1 = 4;
+            root.appendChild(sv('line', { x1: 14, y1: Y1, x2: 186, y2: Y1, class: 'mg-lift-goal' }));
+            const gtx = sv('text', { x: 186, y: Y1 - 4, class: 'mg-lift-goaltx', 'text-anchor': 'end' }); gtx.textContent = T('Ziel'); root.appendChild(gtx);
+            const meterBg = sv('rect', { x: 186, y: 50, width: 8, height: 130, rx: 3, class: 'mg-lift-meter' });
+            const meter = sv('rect', { x: 186, y: 180, width: 8, height: 0, rx: 3, class: 'mg-lift-meterfill' });
+            root.append(meterBg, meter);
+            const arms = [sv('path', { class: 'mg-lift-arm' }), sv('path', { class: 'mg-lift-arm' })];
+            root.append(...arms);
+            const bar = sv('g', { class: 'mg-lift-bb' });
+            const im = pic(ctx, 'langhantel', 'bildHantel', params);
+            if (im) bar.appendChild(sv('image', { href: im, x: 26, y: -18, width: 148, height: 36, preserveAspectRatio: 'xMidYMid meet' }));
+            else {
+              bar.appendChild(sv('line', { x1: 24, y1: 0, x2: 176, y2: 0, class: 'mg-lift-bar' }));
+              for (const x of [34, 154]) bar.appendChild(sv('rect', { x, y: -17, width: 12, height: 34, rx: 2.5, class: 'mg-lift-plate' }));
+              for (const x of [46, 147]) bar.appendChild(sv('rect', { x, y: -11, width: 7, height: 22, rx: 2, class: 'mg-lift-plate' }));
+              if (params.gewicht) { const w = sv('text', { x: 40, y: -21, class: 'mg-lift-kg' }); w.textContent = params.gewicht; bar.appendChild(w); }
+            }
+            root.appendChild(bar);
+            const tbar = el('div', { class: 'mg-timebar' }, el('span'));
+            F.o.el.insertBefore(tbar, F.area);
+            F.area.appendChild(el('div', { class: 'mg-qt-hint' }, T('Leertaste hämmern (oder klicken)')));
+            const flash = el('div', { class: 'mg-qt-flash' }); F.area.appendChild(flash);
+            let pos = 0, v = 0, reps = 0, done = false, lowering = 0, presses = 0, used = 0;
+            const taps = [];
+            let last = performance.now();
+            const upd = () => { F.info.textContent = (need > 1 ? TF('Wiederholung {a} / {b}', { a: Math.min(need, reps + 1), b: need }) + '   ·   ' : '') + TF('Drücke: {n}', { n: presses }) + (helper ? '   ·   ' + T('🔧 Hilfe aktiv') : ''); };
+            const pop = (txt, cls) => { flash.textContent = txt; flash.className = 'mg-qt-flash ' + cls; void flash.offsetWidth; flash.classList.add('show'); };
+            const end = (ok) => {
+              done = true;
+              window.removeEventListener('keydown', onKey, true);
+              const score = ok ? Math.min(1, 0.6 + 0.4 * Math.max(0, 1 - used / limit) * 1.4) : Math.min(0.49, (reps + pos) / need * 0.49);
+              if (!ok) { const p0 = pos; const t1 = performance.now(); const drop = (now) => { const f = Math.min(1, (now - t1) / 350); pos = p0 * (1 - f * f); draw(0); if (f < 1) requestAnimationFrame(drop); }; requestAnimationFrame(drop); }
+              F.finish({ score, ok }, ok ? (used < limit * 0.5 ? T('Wie eine Feder!') : T('Geschafft!')) : T('Zu schwer …'), resolve, params.ergebnis);
+            };
+            const press = () => {
+              if (done || lowering) return;
+              presses++; taps.push(performance.now());
+              v += lift * 6;
+              if (params.tonDruck && ctx.sound) ctx.sound(params.tonDruck, 50); else clack(0.25, 900 + pos * 900);
+              upd();
+            };
+            const onKey = (e) => {
+              if (e.key !== ' ' && e.key !== 'Enter') return;
+              e.preventDefault(); e.stopPropagation();
+              if (!e.repeat) press();
+            };
+            window.addEventListener('keydown', onKey, true);
+            F.area.addEventListener('mousedown', (e) => { e.stopPropagation(); press(); });
+            const draw = (effort) => {
+              const by = Y0 + (Y1 - Y0) * pos;
+              bar.setAttribute('transform', `translate(0 ${by.toFixed(2)})`);
+              arms[0].setAttribute('d', s.arm(84, 72, 62, by, -1));
+              arms[1].setAttribute('d', s.arm(116, 72, 138, by, 1));
+              s.strain(effort);
+              const h = 130 * effort;
+              meter.setAttribute('y', (180 - h).toFixed(1)); meter.setAttribute('height', h.toFixed(1));
+            };
+            const tick = (now) => {
+              if (done) return;
+              const dt = Math.min(0.05, (now - last) / 1000); last = now;
+              while (taps.length && now - taps[0] > 1000) taps.shift();
+              const effort = Math.min(1, taps.length / 9);
+              if (lowering) {
+                lowering -= dt;
+                pos = Math.max(0, lowering / 0.7);
+                if (lowering <= 0) { lowering = 0; pos = 0; v = 0; }
+              } else {
+                used += dt * 1000;
+                pos += v * dt;
+                v *= Math.exp(-6 * dt);
+                pos -= D.sink * (0.8 + 0.4 * pos) * dt;
+                if (pos <= 0) { pos = 0; v = Math.max(0, v); }
+                if (pos >= 1) {
+                  pos = 1; reps++; upd();
+                  ctx.sound && ctx.sound('sfx_schloss_klick', 60);
+                  if (reps >= need) { draw(effort); return end(true); }
+                  pop(T('Hoch!'), 'hit');
+                  lowering = 0.7; v = 0;
+                }
+                tbar.firstChild.style.width = Math.max(0, 100 - used / limit * 100) + '%';
+                if (used >= limit) { draw(effort); return end(false); }
+              }
+              draw(effort);
+              requestAnimationFrame(tick);
+            };
+            draw(0); upd();
+            requestAnimationFrame(tick);
+          });
+        }
+      },
+
+      // ---------- Kurzhanteln ----------
+      // Linke und rechte Hantel gehen in eigenem Takt auf und ab. Oben in der Zielzone A (links) bzw. D (rechts) drücken.
+      kurzhanteln: {
+        label: 'Kurzhanteln (Rhythmus)', minigame: true,
+        params: [
+          { key: 'schwierigkeit', label: 'Schwierigkeit', type: 'select', options: [['leicht', 'Leicht'], ['mittel', 'Mittel'], ['schwer', 'Schwer'], ['extrem', 'Extrem']], default: 'mittel' },
+          { key: 'muster', label: 'Takt', type: 'select', options: [['wechsel', 'Abwechselnd (gleichmäßig)'], ['asymmetrisch', 'Asymmetrisch (eigener Takt je Arm)'], ['zufall', 'Unregelmäßig (Tempo wechselt)']], default: 'asymmetrisch' },
+          { key: 'treffer', label: 'Treffer nötig', type: 'number', default: 12 },
+          { key: 'fehler', label: 'Fehler erlaubt', type: 'number', default: 3 },
+          { key: 'tempo', label: 'Sekunden pro Wiederholung (0 = wie Schwierigkeit)', type: 'number', default: 0 },
+          { key: 'steigend', label: 'Wird schneller', type: 'select', options: [['ja', 'Ja'], ['nein', 'Nein']], default: 'ja' },
+          { key: 'tasteLinks', label: 'Taste links', type: 'text', default: 'A' },
+          { key: 'tasteRechts', label: 'Taste rechts', type: 'text', default: 'D' },
+          { key: 'hilfe', label: 'Mit Gegenstand leichter', type: 'item', default: '' },
+          { key: 'hilfeProzent', label: 'Gegenstand: Zielzone + %', type: 'number', default: 30 },
+          { key: 'titel', label: 'Titel (leer = „Im Takt bleiben!“)', type: 'text', default: '' },
+          { key: 'bildHintergrund', label: 'Bild Hintergrund', type: 'image', default: '' },
+          { key: 'bildFigur', label: 'Bild Figur (Körper ohne Arme)', type: 'image', default: '' },
+          { key: 'bildHantel', label: 'Bild Kurzhantel', type: 'image', default: '' },
+          { key: 'tonTreffer', label: 'Ton bei Treffer', type: 'audio', default: '' },
+          resultParam
+        ],
+        run(params, ctx) {
+          return new Promise((resolve) => {
+            const F = frame(ctx, params.titel || 'Im Takt bleiben!', '46%', 'kurzhanteln');
+            const D = { leicht: { P: 2.4, zone: 0.24 }, mittel: { P: 1.9, zone: 0.18 }, schwer: { P: 1.5, zone: 0.14 }, extrem: { P: 1.15, zone: 0.11 } }[params.schwierigkeit] || { P: 1.9, zone: 0.18 };
+            const B = (k, base) => (ctx.bonus ? ctx.bonus(k, base) : base);
+            const helper = params.hilfe && ctx.items && ctx.items.count(params.hilfe) > 0;
+            const hp = helper ? Math.max(0, Math.min(200, Number(params.hilfeProzent) || 0)) / 100 : 0;
+            const zone = Math.max(0.05, Math.min(0.6, B('minispiele.kurzhantel.zone', D.zone) * (1 + hp)));
+            let P = Math.max(0.5, Number(params.tempo) || D.P);
+            const need = Math.max(1, Math.round(Number(params.treffer) || 12));
+            const allowed = Math.max(0, Math.round(B('minispiele.kurzhantel.fehler', Math.max(0, Number(params.fehler) || 0))));
+            const muster = ['wechsel', 'asymmetrisch', 'zufall'].includes(params.muster) ? params.muster : 'asymmetrisch';
+            const keyName = (k, d) => String(k || d).trim().slice(0, 12) || d;
+            const kL = keyName(params.tasteLinks, 'A'), kR = keyName(params.tasteRechts, 'D');
+            const s = liftScene(ctx, F, 'kurzhanteln', params, 'mg-lift-kh', '6 18 188 188');
+            const { sv, root } = s;
+            const im = pic(ctx, 'kurzhanteln', 'bildHantel', params);
+            const YB = 150, YT = 76, ylvl = (h) => YB + (YT - YB) * h;
+            const mkArm = (side, key, ex) => {
+              const a = { side, key, ex, ph: 0, dur: P, hit: false, wasIn: false, h: 0 };
+              const yz = ylvl(1 - zone);
+              a.zone = sv('rect', { x: ex - 17, y: YT - 9, width: 34, height: yz - YT + 18, rx: 6, class: 'mg-lift-zone' });
+              a.perf = sv('line', { x1: ex - 17, x2: ex + 17, y1: YT, y2: YT, class: 'mg-lift-perf' });
+              a.arm = sv('path', { class: 'mg-lift-arm' });
+              a.db = sv('g', { class: 'mg-lift-dbg' });
+              if (im) a.db.appendChild(sv('image', { href: im, x: -16, y: -9, width: 32, height: 18, preserveAspectRatio: 'xMidYMid meet' }));
+              else {
+                a.db.appendChild(sv('rect', { x: -13, y: -1.6, width: 26, height: 3.2, rx: 1.5, class: 'mg-lift-dbbar' }));
+                for (const x of [-15, 8]) a.db.appendChild(sv('rect', { x, y: -6.5, width: 7, height: 13, rx: 2, class: 'mg-lift-dbw' }));
+              }
+              a.cap = sv('g', { transform: `translate(${ex} 184)` });
+              a.capR = sv('rect', { x: -12, y: -10, width: 24, height: 20, rx: 4, class: 'mg-lift-key' });
+              const tx = sv('text', { x: 0, y: 4, class: 'mg-lift-keytx' }); tx.textContent = key.length > 3 ? key.slice(0, 3) : key.toUpperCase();
+              a.cap.append(a.capR, tx);
+              a.fx = sv('text', { x: ex + side * 12, y: 56, class: 'mg-lift-fx' });
+              root.append(a.zone, a.perf, a.arm, a.db, a.cap, a.fx);
+              return a;
+            };
+            const L = mkArm(-1, kL, 62), R = mkArm(1, kR, 138);
+            // Startversatz und Takt je Arm
+            if (muster === 'wechsel') { R.ph = 0.5; L.ph = 0; L.dur = R.dur = P; } else { L.dur = P; R.dur = P * 1.37; R.ph = 0.22; }
+            const newDur = (a) => (muster === 'zufall' ? P * rnd(0.7, 1.35) : muster === 'asymmetrisch' ? P * (a === R ? 1.37 : 1) : P);
+            if (muster === 'zufall') { L.dur = newDur(L); R.dur = newDur(R); }
+            F.area.appendChild(F.el('div', { class: 'mg-qt-hint top' }, TF('{a} = links · {b} = rechts – drücken, wenn die Hantel oben in der Zone ist', { a: kL.toUpperCase(), b: kR.toUpperCase() })));
+            let hits = 0, miss = 0, perfect = 0, combo = 0, best = 0, done = false, last = performance.now();
+            const upd = () => { F.info.textContent = TF('Treffer: {a} / {b}', { a: hits, b: need }) + '   ·   ' + TF('Fehler: {a} / {b}', { a: miss, b: allowed }) + (combo > 1 ? '   ·   ' + TF('Combo ×{n}', { n: combo }) : '') + (helper ? '   ·   ' + T('🔧 Hilfe aktiv') : ''); };
+            const fx = (a, txt, cls) => { a.fx.textContent = txt; a.fx.setAttribute('class', 'mg-lift-fx ' + cls); void a.fx.getBBox(); requestAnimationFrame(() => a.fx.classList.add('show')); };
+            const end = (ok) => {
+              done = true;
+              window.removeEventListener('keydown', onKey, true);
+              const acc = hits ? (perfect + (hits - perfect) * 0.55) / hits : 0;
+              const score = ok ? Math.max(0.6, Math.min(1, 0.6 + 0.4 * acc - miss * 0.03)) : Math.min(0.49, hits / need * 0.49);
+              F.finish({ score, ok }, ok ? (!miss && perfect === hits ? T('Perfekter Rhythmus!') : !miss ? T('Kein einziger Fehler!') : T('Satz geschafft!')) : TF('Aus dem Takt … {a} von {b}', { a: hits, b: need }), resolve, params.ergebnis);
+            };
+            const fail = (a, txt) => {
+              miss++; combo = 0;
+              fx(a, txt, 'miss'); clack(0.3, 260);
+              upd();
+              if (miss > allowed) end(false);
+            };
+            const press = (a) => {
+              if (done) return;
+              a.capR.classList.add('on'); setTimeout(() => a.capR.classList.remove('on'), 120);
+              const inZ = a.h >= 1 - zone;
+              if (a.hit || !inZ) return fail(a, a.hit ? T('Doppelt!') : a.ph < 0.5 ? T('Zu früh!') : T('Zu spät!'));
+              a.hit = true; hits++; combo++; best = Math.max(best, combo);
+              const perf = a.h >= 1 - zone * 0.35;
+              if (perf) perfect++;
+              fx(a, perf ? T('Perfekt!') : T('Gut!'), perf ? 'perfect' : 'good');
+              if (params.tonTreffer && ctx.sound) ctx.sound(params.tonTreffer, 60); else clack(0.35, perf ? 2600 : 1700);
+              a.zone.classList.add('hit');
+              if (params.steigend !== 'nein' && hits % 4 === 0) { P *= 0.95; if (muster !== 'zufall') { L.dur = newDur(L); R.dur = newDur(R); } }
+              upd();
+              if (hits >= need) end(true);
+            };
+            const onKey = (e) => {
+              const k = (e.key || '').toLowerCase();
+              const a = k === kL.toLowerCase() || e.key === 'ArrowLeft' ? L : k === kR.toLowerCase() || e.key === 'ArrowRight' ? R : null;
+              if (!a) return;
+              e.preventDefault(); e.stopPropagation();
+              if (!e.repeat) press(a);
+            };
+            window.addEventListener('keydown', onKey, true);
+            F.area.addEventListener('mousedown', (e) => { e.stopPropagation(); const r = F.area.getBoundingClientRect(); press(e.clientX < r.left + r.width / 2 ? L : R); });
+            const step = (a, dt) => {
+              a.ph += dt / a.dur;
+              if (a.ph >= 1) { a.ph -= 1; a.hit = false; a.zone.classList.remove('hit'); if (muster === 'zufall') a.dur = newDur(a); }
+              a.h = (1 - Math.cos(2 * Math.PI * a.ph)) / 2;
+              const inZ = a.h >= 1 - zone;
+              if (a.wasIn && !inZ && !a.hit && a.ph > 0.5 && !done) fail(a, T('Verpasst!'));
+              a.wasIn = inZ;
+              a.zone.classList.toggle('in', inZ && !a.hit);
+              const hx = a.ex + a.side * -3 * Math.sin(Math.PI * a.h), hy = ylvl(a.h);
+              a.arm.setAttribute('d', `M${a.ex - a.side * 18} 70 L${a.ex - a.side * 2} 112 L${hx.toFixed(2)} ${hy.toFixed(2)}`);
+              a.db.setAttribute('transform', `translate(${hx.toFixed(2)} ${hy.toFixed(2)})`);
+            };
+            const tick = (now) => {
+              if (done) return;
+              const dt = Math.min(0.05, (now - last) / 1000); last = now;
+              step(L, dt); if (!done) step(R, dt);
+              s.strain(Math.min(1, combo / 12));
+              requestAnimationFrame(tick);
+            };
+            step(L, 0); step(R, 0); upd();
+            requestAnimationFrame(tick);
+          });
+        }
       }
 
     },
@@ -1070,9 +1367,11 @@
           ['bluete', '🌼', '„Liebt mich, liebt mich nicht“ – die Blattzahl sorgt für ein echtes 50:50.', 'Zufall, eigene Texte, Bilder für Blatt und Mitte'],
           ['tresor', '🔐', 'Tresor mit Drehrad, Tastenfeld oder Zahlenschloss mit Rädchen. Der Code kann fest sein, aus einer Variable kommen (dann findet man ihn in der Geschichte) oder zufällig – auch zufällig in eine Variable, die du später im Text zeigst.', 'Art, Code, Zahlen auf dem Rad, Hilfe (Klicken abhören oder Farben), Versuche, Zeitlimit, Hilfs-Gegenstand, Bilder für Tür, Rad und Inhalt'],
           ['rohre', '🚰', 'Teile drehen, bis die Leitung von links nach rechts durchgeht – als Rohre mit Wasser, Kabel mit Strom oder magische Runen. Jedes Feld ist zufällig und immer lösbar.', 'Größe, Aussehen, Zeitdruck, Drehungen, eigene Bilder für die Teile'],
+          ['langhantel', '🏋', 'Fitness: Leertaste so schnell wie möglich drücken – jeder Druck stemmt die Hantel ein Stück hoch, das Gewicht zieht sie wieder runter. Oben an der Ziellinie ist die Wiederholung geschafft.', 'Schwierigkeit, Wiederholungen, Zeit, angezeigtes Gewicht, Hilfs-Gegenstand, Bilder für Figur, Hantel und Hintergrund, alle Farben'],
+          ['kurzhanteln', '💪', 'Fitness als Rhythmusspiel: Linke und rechte Hantel gehen in eigenem Takt auf und ab. Erreicht eine Hantel oben die Zone, A (links) bzw. D (rechts) drücken – zu früh, zu spät oder verpasst zählt als Fehler.', 'Schwierigkeit, Takt (abwechselnd, asymmetrisch, unregelmäßig), Treffer, Fehler, Tempo, schneller werden, eigene Tasten, Hilfs-Gegenstand, Bilder, alle Farben'],
           ['zeiger', '⏱', 'Ein Zeiger dreht sich – im richtigen Moment drücken, wenn er in der markierten Fläche steht. Die Fläche springt nach jedem Treffer weiter. Leichter durch Skilltree-Perks, Ausrüstung oder einen Hilfs-Gegenstand.', 'Schwierigkeit, Tempo, Größe der Fläche, Treffer, Fehlversuche, schneller werden, Richtungswechsel, Zeitlimit, Hilfs-Gegenstand, eigene Bilder']
         ];
-        body.appendChild(el('p', { class: 'muted' }, 'Neun Minispiele. Du startest sie über „+ Aktion“ → „Minispiele: …“ – in einer Antwort, an einem Hub-Objekt, in einem Dialog oder als Minispiel eines Jobs. Einstellungen und Bilder wählst du direkt an der Aktion. Jedes Spiel liefert ein Ergebnis von 0–100 % (Feld „Ergebnis in“ → Variable).'));
+        body.appendChild(el('p', { class: 'muted' }, 'Elf Minispiele. Du startest sie über „+ Aktion“ → „Minispiele: …“ – in einer Antwort, an einem Hub-Objekt, in einem Dialog oder als Minispiel eines Jobs. Einstellungen und Bilder wählst du direkt an der Aktion. Jedes Spiel liefert ein Ergebnis von 0–100 % (Feld „Ergebnis in“ → Variable).'));
         const grid = el('div', { class: 'mg-cards' });
         for (const [key, icon, desc, opts] of GAMES) {
           const a = self && self.actions[key];

@@ -1002,6 +1002,48 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Tresor, Rohre (immer lösbar) und Blackjack (Werte, Tipps)');
   } catch (e) { general.push('Tresor/Rohre/Blackjack: ' + e.message); }
 
+  // 17. Fitness: Langhantel (Taste hämmern) und Kurzhanteln (Rhythmus) – mit echten Tastendrücken gespielt
+  try {
+    const r = JSON.parse(await js(`(async () => {
+      const out = [], M = VNPlugin.plugins.minispiele;
+      const play = (key, params, bot) => new Promise((done) => {
+        const def = VNPlugin.actionDef('minispiele.' + key);
+        if (!def) { out.push('Aktion ' + key + ' fehlt'); return done(null); }
+        const host = document.createElement('div'); host.className = 'shop-preview-host'; document.body.appendChild(host);
+        const ctx = VNPlugin.makeCtx(VN.newRunState());
+        ctx.overlay = (o = {}) => { const p = document.createElement('div'); p.className = 'plugin-panel'; host.appendChild(p); return { el: p, root: host, close: () => p.remove() }; };
+        ctx.vars.set = () => {}; ctx.sound = () => {};
+        const P = {}; for (const pa of def.params) P[pa.key] = pa.default; Object.assign(P, params);
+        const kd = (k) => window.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+        const iv = setInterval(() => bot(kd, host), 15);
+        const to = setTimeout(() => { clearInterval(iv); host.remove(); out.push(key + ' hängt'); done(null); }, 20000);
+        Promise.resolve(def.run(P, ctx)).then((res) => { clearTimeout(to); clearInterval(iv); host.remove(); done(VNPlugin.result(res)); });
+      });
+      // Langhantel: schnell hämmern = geschafft, nichts tun = nicht geschafft
+      let n = 0;
+      const a = await play('langhantel', { schwierigkeit: 'leicht', wiederholungen: 2 }, (kd) => { if (n++ % 4 === 0) kd(' '); });
+      if (a && !a.ok) out.push('Langhantel trotz Hämmern nicht geschafft');
+      const b = await play('langhantel', { zeitlimit: 1 }, () => {});
+      if (b && (b.ok || b.score > 0.05)) out.push('Langhantel ohne Drücken geschafft');
+      // Kurzhanteln: Bot drückt oben am höchsten Punkt
+      const c = await play('kurzhanteln', { schwierigkeit: 'leicht', treffer: 4, fehler: 0, tasteLinks: 'J', tasteRechts: 'L' }, (kd, host) => {
+        host.querySelectorAll('.mg-lift-dbg').forEach((g, i) => {
+          const y = parseFloat(g.getAttribute('transform').split(' ')[1]);
+          const z = host.querySelectorAll('.mg-lift-zone')[i];
+          if (y < 78.5 && !z.classList.contains('hit')) kd(i ? 'l' : 'j');
+        });
+      });
+      if (c && (!c.ok || c.score < 0.9)) out.push('Kurzhanteln: Bot nicht perfekt (' + JSON.stringify(c) + ')');
+      // Kurzhanteln: wild drücken = Fehler = verloren
+      const d = await play('kurzhanteln', { fehler: 2 }, (kd) => { kd('j'); });
+      if (d && d.ok) out.push('Kurzhanteln: Dauerdrücken geschafft');
+      if (!M.skillEffects || !M.skillEffects.kurzhantelZone || !M.designs.langhantel.colors) out.push('Perks/Designs fehlen');
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Fitness: ' + r.join(', '));
+    else log('✓ Fitness: Langhantel und Kurzhanteln (gewinnen und verlieren mit Tastendruck)');
+  } catch (e) { general.push('Fitness: ' + e.message); }
+
   // 14. Neu in 0.9.16: GIF-Encoder, Formeln/Code, Ordner im Puppen-Modus
   try {
     const r = JSON.parse(await js(`(async () => {

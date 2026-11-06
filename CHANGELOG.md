@@ -2,6 +2,16 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.18 – Fitness minigames: barbell and dumbbells
+- **Barbell:** mash the space bar – every press lifts the bar a little, the weight pulls it back down. Reaching the
+  goal line completes a rep. Difficulty, repetitions, time, displayed weight (e.g. “80 kg”). A power bar shows how
+  fast you press; the figure’s face turns red with effort.
+- **Dumbbells:** a rhythm game. Left and right dumbbells go up and down to their own beat. When one is up in the
+  zone, press A (left) or D (right) – perfect, good, too early, too late or missed, with combos. Rhythm alternating,
+  asymmetric or irregular; optional speed-up; keys can be changed (arrow keys always work).
+- Both: helper item, perks for skill trees and equipment (more power, larger target zone, more mistakes allowed), own
+  images for figure, weights and background, every colour (shirt, trousers, skin, hair, weights, target …) adjustable.
+
 ## 0.9.17 – Arcade: darts, pool, blackjack and slot machine · safe and pipes
 - New bundled plugin **Arcade** (switch it on under Game systems → Overview). Three minigames that, like the others,
   end in a win or a loss (scene afterwards, result in a variable):
