@@ -25,6 +25,7 @@
     stats: { icon: '📊', name: 'Werte', color: '#5c7cfa', on: () => !!(VN.Extras && VN.Extras.statsOn()) },
     log: { icon: '🕘', name: 'Verlauf', color: '#8a8f9c', on: () => true },
     idle: { icon: '🏗', name: 'Aufbau', color: '#b07a4a', on: () => !!(VN.Idle && VN.Idle.on()) },
+    web: { icon: '🌐', name: 'Browser', color: '#2f7de1', on: () => !!(DV.webOn && DV.webOn()) },
     social: { icon: '📸', name: 'Social Media', color: '#e1306c', on: () => !!(DV.socialOn && DV.socialOn()) },
     app: { icon: '⭐', name: 'Eigene App', color: '#9b59b6', on: () => true }
   };
@@ -65,6 +66,14 @@
     // Social Media (0.9.21): Beiträge von Kontakten, erscheinen per Bedingung oder Aktion
     p.social = VN.fill(p.social, { name: 'Pixgram', notify: true, posts: [] });
     p.social.look = VN.fill(p.social.look, DV.SOC_LOOK);
+    // Websites (0.9.22): Seiten mit frei platzierten Elementen, im Browser des Geräts
+    p.web = VN.fill(p.web, { sites: [] });
+    if (!Array.isArray(p.web.sites)) p.web.sites = [];
+    for (const w of p.web.sites) {
+      VN.fill(w, { id: VN.uid('ws'), name: VN.t('Neue Website'), domain: 'meine-seite.de', hidden: false, conds: [], pages: [] });
+      if (!w.pages.length) w.pages.push(DV.newPage(''));
+      for (const g of w.pages) { VN.fill(g, { id: VN.uid('wp'), path: '', title: '', bg: '#ffffff', bgImg: '', height: 140, els: [] }); for (const e of g.els) DV.fixEl(e); }
+    }
     if (!Array.isArray(p.social.posts)) p.social.posts = [];
     for (const s of p.social.posts) {
       VN.fill(s, { id: VN.uid('sp'), author: '', text: '', image: '', likes: 0, when: '', mode: 'auto', conds: [], comments: [], replies: [], likeActions: [] });
@@ -108,6 +117,31 @@
     const n = Math.max(0, DV.sst(rs).seq - (DV.sst(rs).shown[s.id] || 0));
     return n === 0 ? tp('gerade eben') : n <= 2 ? tp('vor kurzem') : tp('früher');
   };
+
+  // ---------- Websites (0.9.22) ----------
+  DV.web = () => (P() && P().web) || { sites: [] };
+  DV.sites = () => DV.web().sites || [];
+  DV.webOn = () => !!(P() && P().devices && P().devices.enabled && DV.sites().length);
+  DV.EL = { kind: 'text', x: 10, y: 10, w: 40, h: 8, text: '', image: '', color: '#1c1e24', bg: '', size: 4, bold: false, align: 'left', font: '', radius: 0, border: '', link: '', actions: [], conds: [], mode: 'password', answer: '', place: '', fail: '', okLink: '', okActions: [], results: [] };
+  DV.fixEl = (e) => { VN.fill(e, Object.assign({ id: VN.uid('we') }, JSON.parse(JSON.stringify(DV.EL)))); return e; };
+  DV.newPage = (path) => ({ id: VN.uid('wp'), path: path || '', title: '', bg: '#ffffff', bgImg: '', height: 140, els: [] });
+  DV.newSite = () => { const w = { id: VN.uid('ws'), name: VN.t('Neue Website'), domain: 'meine-seite.de', hidden: false, conds: [], pages: [DV.newPage('')] }; w.pages[0].els.push(DV.fixEl({ kind: 'text', x: 8, y: 8, w: 84, h: 12, text: VN.t('Willkommen!'), size: 7, bold: true }), DV.fixEl({ kind: 'text', x: 8, y: 24, w: 84, h: 20, text: VN.t('Hier steht der Text deiner Seite.'), size: 3.6 })); return w; };
+  const normAddr = (a) => String(a || '').trim().toLowerCase().replace(/^[a-z]+:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '');
+  DV.addrOf = (w, g) => normAddr(w.domain) + (g && g.path ? '/' + normAddr(g.path) : '');
+  // Adresse → { site, page } (Groß/klein, „www.“ und „https://“ egal)
+  DV.findPage = (addr) => {
+    const a = normAddr(addr);
+    for (const w of DV.sites()) {
+      const d = normAddr(w.domain);
+      if (a === d || a.startsWith(d + '/')) {
+        const path = a.slice(d.length + 1);
+        const g = w.pages.find((x) => normAddr(x.path) === path) || (!path ? w.pages[0] : null);
+        return g ? { site: w, page: g } : null;
+      }
+    }
+    return null;
+  };
+  DV.wst = (rs) => { rs.web = VN.fill(rs.web, { ok: {}, visited: {} }); return rs.web; };
 
   // ---------- Namen und Bilder ----------
   DV.appName = (a) => (a.name ? tr(a.id + ':name', a.name) : a.type === 'social' && P().social && P().social.name ? tr('social:name', P().social.name) : tp((DV.BUILTIN[a.type] || DV.BUILTIN.app).name));
@@ -289,6 +323,7 @@
       if (d) row.appendChild(sel(a.app || '', [['', 'Startbildschirm'], ...d.apps.map((x) => [x.id, DV.appIcon(x) + ' ' + DV.appName(x)])], (v) => VN.mutate(() => { a.app = v; })));
       const ap = d && d.apps.find((x) => x.id === a.app);
       if (ap && ap.type === 'messages') row.appendChild(sel(a.contact || '', [['', '— Liste —'], ...DV.contacts().map((c) => [c.id, c.name])], (v) => VN.mutate(() => { a.contact = v; })));
+      if (ap && ap.type === 'web') row.appendChild(sel(a.contact || '', [['', '— Startseite —'], ...pageOpts().slice(1)], (v) => VN.mutate(() => { a.contact = v; })));
     }
   });
   VN.registerCond('devOpen', {
@@ -366,6 +401,20 @@
       row.appendChild(sel(c.cmp || '>=', [['>=', 'mindestens'], ['<', 'weniger als']], (v) => VN.mutate(() => { c.cmp = v; })));
       row.appendChild(el('input', { type: 'number', value: c.value != null ? c.value : 0, style: { width: '90px' }, onchange: (e) => VN.mutate(() => { c.value = Number(e.target.value) || 0; }) }));
     }
+  });
+  const pageOpts = () => [['', '— Seite —'], ...DV.sites().flatMap((w) => w.pages.map((g) => [DV.addrOf(w, g), '🌐 ' + DV.addrOf(w, g) + (g.title ? ' · ' + g.title : '')]))];
+  VN.registerCond('webVisited', {
+    label: '🌐 Webseite besucht', on: DV.webOn, make: () => ({ addr: '' }),
+    check: (c, rs) => !!DV.wst(rs).visited[normAddr(c.addr)],
+    text: (c) => '🌐 ' + (c.addr || '?') + ' ' + VN.t('besucht'),
+    problem: (c) => (DV.findPage(c.addr) ? null : 'Seite fehlt'),
+    row: (row, c, sel) => row.appendChild(sel(normAddr(c.addr), pageOpts(), (v) => VN.mutate(() => { c.addr = v; })))
+  });
+  VN.registerCond('webUnlocked', {
+    label: '🔑 Passwort eingegeben', on: DV.webOn, make: () => ({ el: '' }),
+    check: (c, rs) => !!DV.wst(rs).ok[c.el],
+    text: (c) => '🔑 ' + VN.t('Passwort richtig') + ' (' + (c.el || '?') + ')',
+    row: (row, c, sel) => row.appendChild(sel(c.el || '', [['', '— Eingabefeld —'], ...DV.sites().flatMap((w) => w.pages.flatMap((g) => g.els.filter((e) => e.kind === 'input' && e.mode === 'password').map((e) => [e.id, DV.addrOf(w, g) + ' · ' + (e.place || VN.t('Passwort'))])))], (v) => VN.mutate(() => { c.el = v; })))
   });
   VN.registerCond('social', {
     label: '📸 Beitrag', on: DV.socialOn, make: () => ({ post: (DV.posts()[0] || {}).id || '', state: 'shown' }),
@@ -619,6 +668,85 @@
       a.text ? fmtText(el('div', { class: 'dv-page-t' }), XF(tr(a.id + ':text', a.text))) : null);
     const hasPage = (a) => !!(a.title || a.text || a.pic);
 
+    // Browser: Websites aus dem Projekt, Adresszeile, Zurück, Lesezeichen
+    const webView = (a, onBack, start) => {
+      const box = el('div', { class: 'dv-web' });
+      const W = DV.wst(rs);
+      const hist = [];
+      let cur = start || '';   // '' = Startseite (Lesezeichen), '?…' = Suchergebnis
+      let results = null, msg = {};
+      const bar = el('div', { class: 'dv-web-bar' });
+      const addr = el('input', { class: 'dv-web-addr', type: 'text', spellcheck: false, onkeydown: (e) => { e.stopPropagation(); if (e.key === 'Enter') go(addr.value); } });
+      const view = el('div', { class: 'dv-web-view' });
+      bar.append(
+        el('button', { class: 'dv-web-btn', title: tp('Zurück'), onclick: (e) => { e.stopPropagation(); if (hist.length) { cur = hist.pop(); results = null; draw(); } else if (onBack) onBack(); } }, '‹'),
+        el('button', { class: 'dv-web-btn', title: tp('Startseite'), onclick: (e) => { e.stopPropagation(); nav(''); } }, '⌂'),
+        addr,
+        el('button', { class: 'dv-web-btn', onclick: (e) => { e.stopPropagation(); go(addr.value); } }, '→'));
+      box.append(bar, view);
+      const nav = (to) => { if (to !== cur) hist.push(cur); cur = to; results = null; msg = {}; snd('click'); draw(); view.scrollTop = 0; };
+      const go = (to) => { const t = String(to || '').trim(); nav(t ? (DV.findPage(t) ? normAddr(t) : '!' + t) : ''); };
+      const runActs = (list, key) => { if (!o.preview && H.apply && (list || []).length) { const x = H.apply(list, key); if (x && x.close) { close(); return true; } } return false; };
+      const usable = (w) => VN.checkConds(w.conds || [], rs);
+      const click = (e) => { if (runActs(e.actions, e.id)) return; if (e.link) go(e.link); else if ((e.actions || []).length) draw(); };
+      const pageEl = (w, g, e) => {
+        const H0 = Math.max(10, Number(g.height) || 140);
+        const st = { left: e.x + '%', top: (e.y / H0 * 100) + '%', width: e.w + '%', height: (e.h / H0 * 100) + '%', color: e.color || '', background: e.bg || '', fontSize: (Number(e.size) || 4) + 'cqw', fontWeight: e.bold ? '700' : '', textAlign: e.align || 'left', borderRadius: (Number(e.radius) || 0) / 10 + 'cqw', border: e.border ? '0.25cqw solid ' + e.border : '' };
+        if (e.font) st.fontFamily = window.Theme && Theme.fontCss ? Theme.fontCss(e.font) : e.font;
+        const clickable = !!(e.link || (e.actions || []).length);
+        if (e.kind === 'image') return el('div', { class: 'dv-web-el img' + (clickable ? ' link' : ''), style: Object.assign(st, { backgroundImage: e.image && VN.assetUrl(e.image) ? `url("${VN.assetUrl(e.image)}")` : '' }), onclick: clickable ? (ev) => { ev.stopPropagation(); click(e); } : null });
+        if (e.kind === 'box') return el('div', { class: 'dv-web-el box', style: st });
+        if (e.kind === 'input') {
+          const done = e.mode === 'password' && W.ok[e.id];
+          const inp = el('input', { type: e.mode === 'password' ? 'password' : 'text', placeholder: XF(tr(e.id + ':place', e.place || (e.mode === 'password' ? tp('Passwort') : tp('Suchen …')))), disabled: !!done, onkeydown: (ev) => { ev.stopPropagation(); if (ev.key === 'Enter') submit(); } });
+          const submit = () => {
+            const v = inp.value.trim().toLowerCase();
+            if (e.mode === 'password') {
+              const ans = String(XF(e.answer || '')).trim().toLowerCase();
+              if (ans && v === ans) { W.ok[e.id] = 1; snd('click'); if (runActs(e.okActions, e.id + ':ok')) return; if (e.okLink) { go(e.okLink); return; } msg[e.id] = ''; draw(); }
+              else { msg[e.id] = XF(tr(e.id + ':fail', e.fail || tp('Falsches Passwort.'))); draw(); }
+              return;
+            }
+            const words = v.split(/\s+/).filter(Boolean);
+            results = { q: inp.value.trim(), list: (e.results || []).filter((r) => words.some((x) => String(r.word || '').toLowerCase().split(/[,\s]+/).some((k) => k && (k.includes(x) || x.includes(k))))) };
+            hist.push(cur); cur = '?' + results.q; snd('click'); draw(); view.scrollTop = 0;
+          };
+          return el('div', { class: 'dv-web-el input', style: st },
+            el('div', { class: 'dv-web-in' }, inp, el('button', { disabled: !!done, onclick: (ev) => { ev.stopPropagation(); submit(); } }, done ? '✓' : '→')),
+            msg[e.id] ? el('div', { class: 'dv-web-msg' }, msg[e.id]) : null);
+        }
+        const node = el('div', { class: 'dv-web-el ' + (e.kind === 'button' ? 'btn' : 'text') + (clickable ? ' link' : ''), style: st, onclick: clickable ? (ev) => { ev.stopPropagation(); click(e); } : null });
+        fmtText(node, XF(tr(e.id, e.text || '')));
+        return node;
+      };
+      const draw = () => {
+        view.innerHTML = '';
+        addr.value = cur.startsWith('?') ? tp('Suche: ') + cur.slice(1) : cur.startsWith('!') ? cur.slice(1) : cur ? 'www.' + cur : '';
+        addr.placeholder = tp('Adresse eingeben …');
+        if (!cur) {
+          const list = DV.sites().filter((w) => !w.hidden && usable(w));
+          view.appendChild(el('div', { class: 'dv-web-home' }, el('div', { class: 'dv-web-h' }, tp('Lesezeichen')),
+            ...(list.length ? list.map((w) => el('button', { class: 'dv-web-bm', onclick: (e) => { e.stopPropagation(); go(DV.addrOf(w, w.pages[0])); } }, el('strong', null, tr(w.id + ':name', w.name)), el('span', null, 'www.' + normAddr(w.domain)))) : [el('div', { class: 'dv-empty' }, tp('Keine Lesezeichen.'))])));
+          return;
+        }
+        if (cur.startsWith('?')) {
+          const r = results || { q: cur.slice(1), list: [] };
+          view.appendChild(el('div', { class: 'dv-web-home' }, el('div', { class: 'dv-web-h' }, tp('Ergebnisse für') + ' „' + r.q + '“'),
+            ...(r.list.length ? r.list.map((x) => el('button', { class: 'dv-web-bm', onclick: (e) => { e.stopPropagation(); go(x.addr); } }, el('strong', null, XF(x.label || x.addr)), el('span', null, 'www.' + normAddr(x.addr)))) : [el('div', { class: 'dv-empty' }, tp('Keine Treffer.'))])));
+          return;
+        }
+        const f = cur.startsWith('!') ? null : DV.findPage(cur);
+        if (!f || !usable(f.site)) { view.appendChild(el('div', { class: 'dv-web-404' }, el('div', { class: 'dv-web-h' }, '404'), tp('Diese Seite gibt es nicht.'))); return; }
+        W.visited[normAddr(cur)] = 1;
+        const g = f.page;
+        const page = el('div', { class: 'dv-web-page', style: { aspectRatio: '100 / ' + Math.max(10, Number(g.height) || 140), background: g.bg || '#fff', backgroundImage: g.bgImg && VN.assetUrl(g.bgImg) ? `url("${VN.assetUrl(g.bgImg)}")` : '' } });
+        for (const e of g.els) if (VN.checkConds(e.conds || [], rs)) page.appendChild(pageEl(f.site, g, e));
+        view.appendChild(page);
+      };
+      draw();
+      return box;
+    };
+
     // Social Media: Feed, Profile, Likes und Kommentare des Spielers
     const socialView = (a, onBack) => {
       const box = el('div', { class: 'dv-soc' });
@@ -753,6 +881,9 @@
       } else if (a.type === 'social') {
         main.classList.add('app');
         main.appendChild(socialView(a, home));
+      } else if (a.type === 'web') {
+        main.classList.add('app');
+        main.appendChild(webView(a, home, view.addr));
       } else {
         main.classList.add('app');
         main.append(el('div', { class: 'dv-head' }, el('button', { class: 'dv-back-btn', onclick: (e) => { e.stopPropagation(); home(); } }, '‹'), el('div', { class: 'dv-head-t' }, el('strong', null, DV.appName(a)))), pageView(a));
@@ -789,8 +920,8 @@
       const had = wins.find((w) => w.app === a);
       if (had) { front(had); return had; }
       const n = wins.length;
-      const msg = a.type === 'messages', soc = a.type === 'social';
-      const w = { app: a, z: ++zTop, x: (soc ? 30 : 20) + n * 4, y: (soc ? 4 : 6) + n * 4, cw: msg ? 62 : soc ? 40 : 46, ch: msg ? 72 : soc ? 84 : 62 };
+      const msg = a.type === 'messages', soc = a.type === 'social', web = a.type === 'web';
+      const w = { app: a, z: ++zTop, x: (soc ? 30 : web ? 14 : 20) + n * 4, y: (soc || web ? 4 : 6) + n * 4, cw: msg ? 62 : soc ? 40 : web ? 70 : 46, ch: msg ? 72 : soc || web ? 84 : 62 };
       const content = el('div', { class: 'dv-win-body' });
       const bar = el('div', { class: 'dv-win-bar' }, el('span', null, DV.appIcon(a) + ' ' + DV.appName(a)), el('button', { class: 'dv-win-x', title: tp('Schließen'), onclick: (e) => { e.stopPropagation(); closeWin(w); } }, '✕'));
       w.el = el('div', { class: 'dv-win', style: { left: w.x + '%', top: w.y + '%', width: w.cw + '%', height: w.ch + '%', zIndex: w.z }, onmousedown: () => front(w), onclick: (e) => e.stopPropagation() }, bar, content);
@@ -811,6 +942,7 @@
           content.append(el('div', { class: 'dv-split' }, chatList((cid) => { w.chat = cid; w.fill(); }, w.chat), cv));
           setTimeout(refreshBadges, 0);
         } else if (a.type === 'social') content.appendChild(socialView(a, null));
+        else if (a.type === 'web') content.appendChild(webView(a, null, w.addr));
         else content.appendChild(pageView(a));
       };
       w.fill();
@@ -828,8 +960,8 @@
         else { view = { app: a, chat: contact || null }; phoneDraw(); }
         return;
       }
-      if (a.type === 'social') {
-        if (desk) openWin(a); else { view = { app: a, chat: null }; phoneDraw(); }
+      if (a.type === 'social' || a.type === 'web') {
+        if (desk) { const w = openWin(a); if (contact && a.type === 'web') { w.addr = contact; w.fill(); } } else { view = { app: a, chat: null, addr: a.type === 'web' ? contact : null }; phoneDraw(); }
         return;
       }
       if (a.type === 'app') {

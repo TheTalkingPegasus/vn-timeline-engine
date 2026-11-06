@@ -1002,6 +1002,29 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Tresor, Rohre (immer lösbar) und Blackjack (Werte, Tipps)');
   } catch (e) { general.push('Tresor/Rohre/Blackjack: ' + e.message); }
 
+  // 21. Websites: Adressen finden, Seiten, Bedingungen
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [], p = VN.project, DV = VN.Devices;
+      const keep = JSON.stringify({ d: p.devices, w: p.web });
+      p.devices.enabled = true;
+      const w = DV.newSite(); w.domain = 'gildenmarkt.ra'; w.pages.push(DV.newPage('Login'));
+      p.web = { sites: [w] }; VN.migrate(p);
+      if (!DV.webOn() || !DV.BUILTIN.web.on()) out.push('Browser nicht verfügbar');
+      const a = DV.findPage('https://www.GildenMarkt.ra/'), b = DV.findPage('gildenmarkt.ra/login'), c = DV.findPage('gildenmarkt.ra/gibtsnicht');
+      if (!a || a.page !== w.pages[0]) out.push('Startseite');
+      if (!b || b.page !== w.pages[1]) out.push('Unterseite (' + JSON.stringify(w.pages.map((g) => g.path)) + ')');
+      if (c) out.push('falsche Seite gefunden');
+      if (DV.addrOf(w, w.pages[1]) !== 'gildenmarkt.ra/login') out.push('Adresse ' + DV.addrOf(w, w.pages[1]));
+      const rs = VN.newRunState(); DV.wst(rs).visited['gildenmarkt.ra/login'] = 1; DV.wst(rs).ok.x = 1;
+      if (!VN.checkConds([{ type: 'webVisited', addr: 'www.gildenmarkt.ra/login' }], rs) || !VN.checkConds([{ type: 'webUnlocked', el: 'x' }], rs)) out.push('Bedingungen');
+      const t = JSON.parse(keep); p.devices = t.d; p.web = t.w; VN.migrate(p);
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Websites: ' + r.join(', '));
+    else log('✓ Websites: Adressen, Unterseiten, Bedingungen');
+  } catch (e) { general.push('Websites: ' + e.message); }
+
   // 20. Social Media: Beiträge per Bedingung und Aktion, löschen, Likes mit Aktion nur einmal
   try {
     const r = JSON.parse(await js(`(() => {

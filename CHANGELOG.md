@@ -2,6 +2,19 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.22 – Browser with your own websites
+- New device app **Browser** for phone and computer: address bar, back, home page with bookmarks, 404 page.
+- **Websites** (Game systems → Websites): every site has an address (e.g. www.gildenmarkt.ra), any number of pages,
+  and can be secret (only reachable by address, link or search) or locked by conditions.
+- **Free page editor** like the menu designer: texts, images, buttons, shapes and input fields placed and resized
+  freely with the mouse; background color or image, page length (scrolls in the game), colors, fonts, size, bold,
+  alignment, corners and border per element; layer order, duplicate.
+- **Links and actions:** texts, images and buttons link to other pages or run actions (buy, start scene …).
+- **Password fields** (answer fixed or from a variable, message when wrong, page and actions when right) and **search
+  fields** (terms → results). Conditions “🌐 Web page visited” and “🔑 Password entered”; elements can be shown by
+  condition. “📱 Open device” can jump straight to a page.
+- Newcomer help: tip box and 💡 guide with examples (secret mailbox, search engine, shop).
+
 ## 0.9.21 – Social media app
 - New device app **Social media** (name freely chosen, e.g. “Pixgram”): contacts post text and pictures, other
   characters like and comment. Feed, profiles with bio and followers, notification with click-to-open.

@@ -2345,3 +2345,47 @@ img[src*="px_"] { image-rendering: pixelated; }
 .dv-soc-rich > span { white-space: pre-wrap; }
 .dv-soc-at, .dv-soc-tag { color: var(--soc-acc, var(--dv-acc, #3d8bfd)); font-weight: 600; cursor: pointer; text-decoration: none; }
 .dv-soc-at:hover, .dv-soc-tag:hover { text-decoration: underline; }
+/* Browser im Gerät (0.9.22) */
+.dv-web { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #e9ebf0; color: #1c1e24; }
+.dv-web-bar { display: flex; align-items: center; gap: 0.6cqh; padding: 0.8cqh 1cqh; background: #f7f8fa; border-bottom: 0.15cqh solid #d4d7de; flex: none; }
+.dv-web-btn { background: none; border: none; font-size: 2.4cqh; color: #3b4150; cursor: pointer; padding: 0.2cqh 0.8cqh; border-radius: 0.8cqh; }
+.dv-web-btn:hover { background: #e3e6ec; }
+.dv-web-addr { flex: 1; min-width: 0; background: #eceef2; border: 0.15cqh solid #d4d7de; border-radius: 2cqh; padding: 0.7cqh 1.4cqh; font: inherit; font-size: 1.7cqh; color: #1c1e24; outline: none; }
+.dv-web-addr:focus { border-color: #2f7de1; background: #fff; }
+.dv-web-view { flex: 1; overflow-y: auto; min-height: 0; }
+.dv-web-page { position: relative; width: 100%; container-type: inline-size; background-size: cover; background-position: center top; overflow: hidden; }
+.dv-web-el { position: absolute; box-sizing: border-box; overflow: hidden; line-height: 1.3; padding: 0.4cqw 0.6cqw; white-space: pre-wrap; }
+.dv-web-el.img { background: center / cover no-repeat; padding: 0; }
+.dv-web-el.box { padding: 0; }
+.dv-web-el.btn { display: flex; align-items: center; justify-content: center; background: #2f7de1; color: #fff; border-radius: 1cqw; }
+.dv-web-el.link { cursor: pointer; }
+.dv-web-el.text.link { text-decoration: underline; }
+.dv-web-el.link:hover { filter: brightness(1.08); }
+.dv-web-el.input { padding: 0; overflow: visible; }
+.dv-web-in { display: flex; height: 100%; border: 0.25cqw solid #b9bec9; border-radius: 1cqw; background: #fff; overflow: hidden; }
+.dv-web-in input { flex: 1; min-width: 0; border: none; outline: none; font: inherit; font-size: inherit; padding: 0 1.2cqw; background: transparent; color: #1c1e24; }
+.dv-web-in button { border: none; background: #2f7de1; color: #fff; font-size: inherit; padding: 0 2cqw; cursor: pointer; }
+.dv-web-msg { position: absolute; top: 100%; left: 0; margin-top: 0.6cqw; color: #d23c3c; font-size: 0.8em; }
+.dv-web-home, .dv-web-404 { padding: 2.4cqh 2cqh; display: flex; flex-direction: column; gap: 1cqh; }
+.dv-web-404 { align-items: center; text-align: center; padding-top: 10cqh; }
+.dv-web-h { font-size: 2.4cqh; font-weight: 700; margin-bottom: 0.6cqh; }
+.dv-web-404 .dv-web-h { font-size: 6cqh; color: #9aa0ad; }
+.dv-web-bm { display: flex; flex-direction: column; align-items: flex-start; gap: 0.3cqh; background: #fff; border: 0.15cqh solid #d4d7de; border-radius: 1.2cqh; padding: 1.2cqh 1.6cqh; cursor: pointer; color: inherit; font: inherit; text-align: left; }
+.dv-web-bm:hover { border-color: #2f7de1; }
+.dv-web-bm strong { font-size: 1.9cqh; color: #1a56b0; }
+.dv-web-bm span { font-size: 1.5cqh; color: #3a8a4a; }
+.dv-win-body .dv-web { height: 100%; }
+/* Website-Editor (0.9.22) */
+.web-ed { display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+.web-ed-left { flex: 1 1 340px; min-width: 300px; max-width: 420px; }
+.web-ed-right { flex: 1 1 260px; min-width: 260px; }
+.web-ed-frame { max-height: 70vh; overflow-y: auto; border: 1px solid var(--line2); border-radius: 8px; background: #2a2d36; }
+.web-ed-page { position: relative; width: 100%; container-type: inline-size; background-size: cover; background-position: center top; overflow: hidden; user-select: none; }
+.web-ed-el { cursor: move; outline: 1px dashed rgba(127,127,127,0.35); }
+.web-ed-el.sel { outline: 2px solid #e8a43a; z-index: 5; }
+.web-ed-el.empty { display: flex; align-items: center; justify-content: center; background: rgba(127,127,127,0.18); font-size: 6cqw; }
+.web-ed-el .dv-web-in input { pointer-events: none; }
+.web-ed-rs { position: absolute; right: 0; bottom: 0; width: 12px; height: 12px; background: #e8a43a; cursor: nwse-resize; border-radius: 2px 0 0 0; }
+.web-ed-badge { position: absolute; top: 1px; right: 2px; font-size: 11px; pointer-events: none; }
+.web-ed-props { display: flex; flex-direction: column; gap: 6px; }
+.web-ed-props .logic-row span.muted.small { width: auto !important; }
