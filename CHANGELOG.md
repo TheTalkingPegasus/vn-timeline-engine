@@ -2,7 +2,7 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
-## 0.9.25 – Mouth & lip line (in progress)
+## 0.9.25 – Mouth & lip line (side and POV)
 - **Mouth for cutscene figures** (simple PNG, also images with bones): set upper lip, lower lip and jaw joint.
   An object linked to the mouth (straw, spoon, carrot …) is **invisible behind the lips** and the **lower jaw opens exactly as far as
   the object is wide** at that point – the width is measured automatically from the object's image along its axis (grip → tip).

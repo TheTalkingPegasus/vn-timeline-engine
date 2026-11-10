@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.24
+VN Timeline Engine · Prototyp 0.9.25
 ====================================
 (English: see README.txt)
 
@@ -14,7 +14,7 @@ Ohne Installation (ZIP):
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
 
-IN ARBEIT 0.9.25 · Mund & Lippenlinie
+NEU IN 0.9.25 · Mund & Lippenlinie (seitlich und POV)
 - Mund für Figuren in Zwischensequenzen (einfaches PNG, auch Bilder mit Bones): Oberlippe, Unterlippe und Kiefergelenk setzen.
   Ein mit dem Mund verknüpftes Objekt (Strohhalm, Löffel, Karotte …) ist hinter den Lippen unsichtbar, und der Unterkiefer klappt
   genau so weit auf, wie das Objekt an dieser Stelle breit ist – die Breite misst die Engine selbst aus dem Bild (Griff → Spitze).
