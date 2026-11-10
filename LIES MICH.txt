@@ -14,6 +14,15 @@ Ohne Installation (ZIP):
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
 
+IN ARBEIT 0.9.25 · Mund & Lippenlinie
+- Mund für Figuren in Zwischensequenzen (einfaches PNG, auch Bilder mit Bones): Oberlippe, Unterlippe und Kiefergelenk setzen.
+  Ein mit dem Mund verknüpftes Objekt (Strohhalm, Löffel, Karotte …) ist hinter den Lippen unsichtbar, und der Unterkiefer klappt
+  genau so weit auf, wie das Objekt an dieser Stelle breit ist – die Breite misst die Engine selbst aus dem Bild (Griff → Spitze).
+  Hinter dem offenen Kiefer: Bild oder Farbe für das Mund-Innere, nur innerhalb der Figur. Kiefer-Größe, -Bereich und maximale
+  Öffnung einstellbar; mit Bones folgt die Lippenlinie einem Knochen (Idle, Kopfbewegung).
+- Zwei Ansichten: seitlich (Profil) – der Unterkiefer klappt um das Gelenk – und von vorn (POV) – beide Mundwinkel und das Kinn
+  setzen; der Kiefer senkt sich so weit, wie das Objekt breit ist, und was schon im Mund ist, sieht man nur durch die Öffnung.
+
 NEU IN 0.9.24 · Feedback-Pakete 1 + 2: Follower als Spielmechanik, Live-Chat, Ausdauer, Masken, Design-Vorlagen, Asset-Bibliothek u. v. m.
 Paket 2:
 - Follower als Spielmechanik: Wachstum pro Tag, pro Woche oder an einem Wochentag (% mit Zinseszins oder feste Zahl), mit

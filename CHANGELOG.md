@@ -2,6 +2,15 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.25 – Mouth & lip line (in progress)
+- **Mouth for cutscene figures** (simple PNG, also images with bones): set upper lip, lower lip and jaw joint.
+  An object linked to the mouth (straw, spoon, carrot …) is **invisible behind the lips** and the **lower jaw opens exactly as far as
+  the object is wide** at that point – the width is measured automatically from the object's image along its axis (grip → tip).
+  Behind the open jaw: a mouth-inside image or color, only within the figure. Jaw size, area and maximum opening adjustable;
+  with bones the lip line follows a bone (idle, head movement).
+- Two views: **side (profile)** – the lower jaw swings around the joint – and **front (POV)** – set both mouth corners and the chin;
+  the jaw drops as far as the object is wide, and the part already in the mouth is only visible through the opening.
+
 ## 0.9.24 – Feedback packages 1 + 2: followers as a mechanic, live chat, stamina, masks, design templates, asset library and more
 
 ### Package 2
