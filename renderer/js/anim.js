@@ -61,10 +61,12 @@
     extraFnFor(clip, holder) {
       return (now) => {
         let out = {};
+        let off = null; // ganze Figur bewegen (Zeile „Bewegung“, 0.9.24)
         const idle = clip.idleAnim ? Anim.get(clip.idleAnim) : null;
         if (idle && idle.actors && idle.actors[0]) {
           const d = Math.max(0.1, idle.dur || 2);
           out = Anim.angles(idle.actors[0], ((now % d) + d) % d);
+          off = Anim.moveOf(idle.actors[0], ((now % d) + d) % d);
         }
         const g = holder._gesture;
         if (g && g.anim && g.anim.actors && g.anim.actors[0]) {
@@ -76,10 +78,33 @@
             const ga = Anim.angles(g.anim.actors[0], Math.min(lt, d));
             const keys = new Set([...Object.keys(out), ...Object.keys(ga)]);
             for (const k of keys) out[k] = (out[k] || 0) * (1 - w) + (ga[k] || 0) * w;
+            const go = Anim.moveOf(g.anim.actors[0], Math.min(lt, d));
+            if (go || off) { const A = off || Anim.REST, B = go || Anim.REST; off = {}; for (const f of Object.keys(Anim.REST)) off[f] = A[f] * (1 - w) + B[f] * w; }
           }
         }
+        Anim.applyMove(holder, off);
         return out;
       };
+    },
+    // Bewegung der ganzen Figur in Idle/Geste: Abweichung von der Ruhelage (x 50, y 0, Größe 100 …)
+    REST: { x: 50, y: 0, scale: 100, rot: 0, opacity: 100 },
+    moveOf(actor, t) { return actor && actor.move && actor.move.length ? Anim.place(actor, t) : null; },
+    applyMove(holder, off) {
+      if (!holder || !holder.querySelector) return;
+      if (!off && !holder._mvOn) return;
+      const cv = holder._mvEl && holder._mvEl.isConnected ? holder._mvEl : (holder._mvEl = holder.querySelector('canvas'));
+      if (!cv) return;
+      if (!off) { holder._mvOn = false; cv.style.translate = cv.style.rotate = cv.style.scale = cv.style.opacity = ''; return; }
+      holder._mvOn = true;
+      cv.style.transformOrigin = '50% 100%';
+      const now = performance.now();
+      if (!holder._mvH || now - (holder._mvHt || 0) > 600) { holder._mvH = holder.offsetHeight || cv.offsetHeight || 0; holder._mvHt = now; }
+      // Werte wie im Editor: X/Y in % der Bühne (16:9), Figur = 88 % der Bühnenhöhe
+      const fh = holder._mvH, sh = fh / 0.88;
+      cv.style.translate = ((off.x - 50) / 100 * sh * 16 / 9).toFixed(1) + 'px ' + (-off.y / 100 * sh).toFixed(1) + 'px';
+      cv.style.rotate = off.rot ? off.rot.toFixed(2) + 'deg' : '';
+      cv.style.scale = Math.abs(off.scale - 100) > 0.01 ? (off.scale / 100).toFixed(3) : '';
+      cv.style.opacity = off.opacity < 99.9 ? (off.opacity / 100).toFixed(3) : '';
     },
     // o: { blendIn, blendOut (Sekunden), hold: am Ende stehen bleiben (z. B. K.O.) }
     gesture(holder, animId, o = {}) { const a = Anim.get(animId); if (a) holder._gesture = { anim: a, t0: performance.now() / 1000, bi: o.blendIn, bo: o.blendOut, hold: !!o.hold }; return a; },

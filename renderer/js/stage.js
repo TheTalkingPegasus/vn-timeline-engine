@@ -206,7 +206,14 @@
         Theme.styleBubble(box, B, { speakerColor: clip.color, tailX: opts.tailX });
         if (B.portrait && opts.portrait) {
           box.classList.add('has-portrait');
-          box.insertBefore(el('div', { class: 'dlg-portrait', style: { backgroundImage: `url("${opts.portrait}")`, borderColor: B.border } }), box.firstChild);
+          const sz = Number(B.porSize) || 16, sh = Number(B.porShadow) || 0;
+          box.classList.toggle('por-right', B.porSide === 'right');
+          box.style.setProperty('--por-size', sz + 'cqh');
+          box.insertBefore(el('div', { class: 'dlg-portrait', style: {
+            backgroundImage: `url("${opts.portrait}")`, borderColor: B.border, borderStyle: B.porBorder === false ? 'none' : '',
+            width: sz + 'cqh', height: sz + 'cqh',
+            borderRadius: B.porShape === 'circle' ? '50%' : B.porShape === 'square' ? '0' : (B.porRadius != null ? B.porRadius : 1.4) + 'cqh',
+            boxShadow: sh ? `${(sh * 0.15).toFixed(2)}cqh ${(sh * 0.25).toFixed(2)}cqh ${(sh * 0.6).toFixed(2)}cqh rgba(0,0,0,0.55)` : '' } }), box.firstChild);
         }
       }
       return box;

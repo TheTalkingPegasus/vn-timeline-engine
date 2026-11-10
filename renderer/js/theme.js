@@ -62,7 +62,8 @@
   const BUBBLE_BASE = {
     bg: '#0e0e14', alpha: 86, border: '#2f2f37', borderW: 0.15, radius: 1.6, text: '#ffffff', nameBg: '', nameText: '', arrow: '#e8a43a',
     font: 'sans', size: 3.6, lineH: 1.45, align: 'left', pad: 2.4, glow: false, shadow: 'none', tail: false, italic: false,
-    frame: '', slice: [25, 25, 25, 25], frameW: 2.4, frameMode: 'stretch', nameFrame: '', arrowImg: '', minH: 24
+    frame: '', slice: [25, 25, 25, 25], frameW: 2.4, frameMode: 'stretch', nameFrame: '', arrowImg: '', minH: 24,
+    portrait: false, porShape: 'rounded', porRadius: 1.4, porSize: 16, porShadow: 0, porBorder: true, porSide: 'left'
   };
   const PRESETS = {
     hell: { label: 'Hell', bg: '#f7f5f0', alpha: 96, border: '#d6cfbf', borderW: 0.25, radius: 2, text: '#1d1b18', nameBg: '#e8a43a', nameText: '#1d1404', arrow: '#b07a1e', shadow: 'soft' },
@@ -178,13 +179,23 @@
       const s = box.style;
       const frame = B.frame ? Theme.src(B.frame) : '';
       const pad = Number(B.pad != null ? B.pad : 2.4);
-      if (frame) {
+      s.clipPath = ''; s.backgroundImage = ''; s.filter = '';
+      if (frame && B.frameMode === 'fill') {
+        // Bild füllt die Blase: Ecken, Rand und Form-Regler wirken wie bei einer Farbfläche
+        s.background = `${VN.hexA(B.bg, (B.alpha != null ? B.alpha : 86) / 100)} url("${frame}") center / cover no-repeat`;
+        s.border = (B.borderW != null ? B.borderW : 0.15) + 'cqh solid ' + (B.border || 'transparent');
+        s.borderImage = 'none';
+        s.borderRadius = (B.radius != null ? B.radius : 1.6) + 'cqh';
+        s.padding = pad + 'cqh ' + (pad * 1.25) + 'cqh';
+      } else if (frame) {
         const sl = (B.slice || [25, 25, 25, 25]).map((v) => v + '%').join(' ');
         s.background = 'transparent';
         s.borderStyle = 'solid';
         s.borderWidth = (B.frameW || 2.4) + 'cqh';
         s.borderImage = `url("${frame}") ${sl} fill / ${B.frameW || 2.4}cqh ${B.frameMode === 'round' ? 'round' : B.frameMode === 'repeat' ? 'repeat' : 'stretch'}`;
         s.borderRadius = '0';
+        // Rahmenbilder (9-Slice) kennen keine abgerundeten Ecken – mit „Ecken“ > 0 wird die Blase rund zugeschnitten
+        if (Number(B.radius) > 0 && !(B.tail && o.tailX != null)) s.clipPath = `inset(0 round ${B.radius}cqh)`;
         s.padding = Math.max(0.4, pad - (B.frameW || 2.4) * 0.5) + 'cqh ' + Math.max(0.6, pad * 1.25 - (B.frameW || 2.4) * 0.5) + 'cqh';
       } else {
         s.background = VN.hexA(B.bg, (B.alpha != null ? B.alpha : 86) / 100);
@@ -199,7 +210,8 @@
       if (B.shadow === 'soft') sh.push('0 1cqh 3cqh rgba(0,0,0,0.45)');
       if (B.shadow === 'hard') sh.push('0.8cqh 0.8cqh 0 rgba(0,0,0,0.85)');
       if (B.shadow === 'inner') sh.push('inset 0 0 3.4cqh rgba(110,0,0,0.55)');
-      s.boxShadow = sh.join(', ');
+      // Zugeschnittene Blasen: Schatten als Filter, sonst würde er mit abgeschnitten
+      if (s.clipPath && sh.length) { s.boxShadow = ''; } else s.boxShadow = sh.join(', ');
       s.fontFamily = Theme.fontCss(B.font) || '';
       s.color = B.text || '#fff';
       const nameEl = box.querySelector('.dlg-name');

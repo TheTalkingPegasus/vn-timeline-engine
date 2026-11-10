@@ -1025,6 +1025,67 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Websites: Adressen, Unterseiten, Bedingungen');
   } catch (e) { general.push('Websites: ' + e.message); }
 
+  // 22. Paket 1 (0.9.24): Transkript mit Apps/Websites, Mischmodus + Weichzeichner, Minispiel-Belohnung, Keyframes kopieren, Darsteller doppeln, Hub-Idle
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [], p = VN.project, DV = VN.Devices;
+      const keep = JSON.stringify({ d: p.devices, w: p.web, c: p.chats, s: p.social, v: p.vars, an: p.anims });
+      p.devices.enabled = true;
+      p.chats.contacts = [{ id: 'cT', name: 'Tess', bio: 'Hallo #welt' }];
+      p.social = { name: 'Pixgram', posts: [{ id: 'spT', author: 'cT', text: 'Mein Beitrag', comments: [{ id: 'scT', author: 'cT', text: 'Kommentar' }], replies: [{ id: 'srT', text: 'Antwort' }] }] };
+      const w = DV.newSite(); w.domain = 'test.ra'; p.web = { sites: [w] }; VN.migrate(p);
+      const e = w.pages[0].els[0]; e.text = 'Seitentext';
+      const img = DV.fixEl({ kind: 'image', blur: 8, blend: 'multiply', blurHint: 'Gesperrt', blurConds: [{ type: 'webVisited', addr: 'test.ra' }] });
+      w.pages[0].els.push(img);
+      const ids = new Set(VN.collectTexts().map((x) => x.id));
+      for (const id of ['spT', 'scT', 'srT', 'cT:bio', 'social:name', e.id, w.id + ':name', img.id + ':hint']) if (!ids.has(id)) out.push('Transkript ohne ' + id);
+      const rs = VN.newRunState();
+      const st = DV.elStyle(img, 140, rs);
+      if (!/blur\\(/.test(st.filter || '')) out.push('kein Weichzeichner');
+      if (st.mixBlendMode !== 'multiply') out.push('Mischmodus');
+      DV.wst(rs).visited['test.ra'] = 1;
+      if (/blur\\(/.test(DV.elStyle(img, 140, rs).filter || '')) out.push('Weichzeichner bleibt trotz Bedingung');
+      if (!/blur\\(/.test(DV.elStyle(img, 140).filter || '')) out.push('Editor zeigt nicht verschwommen');
+      // Minispiel-Belohnung
+      VNPlugin.plugins.tstmg = { id: 'tstmg', name: 'T', actions: { w: { minigame: true, run: () => ({ score: 1, ok: true }) }, l: { minigame: true, run: () => ({ score: 0, ok: false }) } } };
+      p.vars.push({ id: 'v_rew', name: 'rew', type: 'number', value: 0 });
+      const rs2 = VN.newRunState();
+      VN.applyActions([{ type: 'plugin', ref: 'tstmg.w', winActs: [{ type: 'addVar', var: 'v_rew', value: 5 }], loseActs: [{ type: 'addVar', var: 'v_rew', value: 100 }] }], rs2, 'x');
+      VN.applyActions([{ type: 'plugin', ref: 'tstmg.l', winActs: [{ type: 'addVar', var: 'v_rew', value: 1000 }], loseActs: [{ type: 'addVar', var: 'v_rew', value: 2 }] }], rs2, 'y');
+      const got = rs2.vars ? rs2.vars.v_rew : null;
+      if (got !== 7) out.push('Belohnung ' + JSON.stringify(got));
+      delete VNPlugin.plugins.tstmg;
+      // Keyframes kopieren / einfügen, Darsteller doppeln
+      const an = { id: 'an_t', name: 'T', type: 'scene', dur: 3, actors: [{ id: 'ac_t', asset: null, x: 50, y: 0, scale: 100, bones: { Kopf: [{ t: 0, a: 0, e: 'ease-in-out' }, { t: 0.5, a: 10, e: 'ease-in-out' }] }, move: [] }], cam: [] };
+      p.anims.push(an);
+      VN.ui.animSel = 'an_t'; VN.ui.animActor = 'ac_t';
+      VN.ui.animKeys = [{ row: 'bone:Kopf', t: 0 }, { row: 'bone:Kopf', t: 0.5 }];
+      if (!AnimEd.copyKeys()) out.push('Kopieren');
+      VN.ui.animT = 1;
+      AnimEd.pasteKeys();
+      const ks = p.anims.find((x) => x.id === 'an_t').actors[0].bones.Kopf.map((k) => k.t + ':' + k.a).join(',');
+      if (ks !== '0:0,0.5:10,1:0,1.5:10') out.push('Einfügen ' + ks);
+      AnimEd.dupActor(p.anims.find((x) => x.id === 'an_t'), p.anims.find((x) => x.id === 'an_t').actors[0]);
+      const A2 = p.anims.find((x) => x.id === 'an_t').actors;
+      if (A2.length !== 2 || A2[0].id === A2[1].id || JSON.stringify(A2[0].bones) !== JSON.stringify(A2[1].bones)) out.push('Doppeln');
+      // Figur bewegen in Idle/Geste
+      const hold = document.createElement('div'); hold.appendChild(document.createElement('canvas')); document.body.appendChild(hold); hold.style.height = '100px';
+      Anim.applyMove(hold, { x: 60, y: 10, scale: 110, rot: 5, opacity: 100 });
+      const cs = hold.firstChild.style;
+      if (!cs.translate || parseFloat(cs.rotate) !== 5 || parseFloat(cs.scale) !== 1.1) out.push('Figur bewegen ' + cs.translate + '/' + cs.rotate + '/' + cs.scale);
+      Anim.applyMove(hold, null); if (hold.firstChild.style.translate) out.push('Bewegung nicht zurückgesetzt'); hold.remove();
+      // Hub-Idle
+      const wr = VN.hubIdleWrap({ id: 'o1', idle: 'float', idleSpeed: 2 }, document.createElement('img'));
+      if (wr.length !== 1 || !wr[0].classList.contains('hi-float') || wr[0].style.getPropertyValue('--hi-dur') !== '2s') out.push('Hub-Idle');
+      if (VN.hubIdleWrap({ id: 'o2' }, 'x')[0] !== 'x') out.push('Hub ohne Idle');
+      const t = JSON.parse(keep); p.devices = t.d; p.web = t.w; p.chats = t.c; p.social = t.s; p.vars = t.v; p.anims = t.an; VN.migrate(p);
+      VN.ui.animKeys = []; VN.ui.animSel = null;
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Paket 1: ' + r.join(', '));
+    else log('✓ Transkript (Apps/Websites), Mischmodus + Weichzeichner, Minispiel-Belohnung, Keyframes kopieren, Doppeln, Hub-Idle');
+  } catch (e) { general.push('Paket 1: ' + e.message); }
+
   // 20. Social Media: Beiträge per Bedingung und Aktion, löschen, Likes mit Aktion nur einmal
   try {
     const r = JSON.parse(await js(`(() => {

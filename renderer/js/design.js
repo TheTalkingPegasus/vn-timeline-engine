@@ -174,6 +174,13 @@
         field('Schatten', sel(B.shadow, [['none', 'Keiner'], ['soft', 'Weich'], ['hard', 'Hart (Comic)'], ['inner', 'Innen (düster)']], (v) => set('shadow', v))),
         row(check('Leuchten (Neon)', B.glow, (v) => set('glow', v)), check('Spitze zum Sprecher', B.tail, (v) => set('tail', v))),
         row(check('Sprecher-Porträt in der Blase', B.portrait, (v) => set('portrait', v)))));
+      if (B.portrait) box.appendChild(sec('Porträt',
+        field('Form', sel(B.porShape || 'rounded', [['rounded', 'Eckig mit Rundung'], ['square', 'Quadratisch'], ['circle', 'Rund']], (v) => set('porShape', v))),
+        el('div', { class: 'grid2' },
+          B.porShape === 'rounded' || !B.porShape ? rng('Ecken', B.porRadius != null ? B.porRadius : 1.4, 0, 8, 0.1, (v) => v + ' cqh', (v) => set('porRadius', v)) : null,
+          rng('Größe', B.porSize || 16, 8, 30, 0.5, (v) => v + ' cqh', (v) => set('porSize', v)),
+          rng('Schlagschatten', B.porShadow || 0, 0, 10, 0.5, (v) => (v ? v : 'aus'), (v) => set('porShadow', v))),
+        row(check('Rand in Randfarbe', B.porBorder !== false, (v) => set('porBorder', v)), sel(B.porSide || 'left', [['left', 'links'], ['right', 'rechts']], (v) => set('porSide', v)))));
 
       box.appendChild(sec('Text',
         field('Schrift', sel(B.font, Theme.fontOptions(), (v) => set('font', v))),
@@ -189,7 +196,8 @@
           sliceEditor(B.frame, B.slice, (v) => set('slice', v)),
           el('div', { class: 'grid2' },
             rng('Randbreite', B.frameW, 0.4, 8, 0.1, (v) => v + ' cqh', (v) => set('frameW', v)),
-            field('Ränder', sel(B.frameMode, [['stretch', 'Strecken'], ['round', 'Kacheln'], ['repeat', 'Wiederholen']], (v) => set('frameMode', v)))));
+            field('Ränder', sel(B.frameMode, [['stretch', 'Strecken'], ['round', 'Kacheln'], ['repeat', 'Wiederholen'], ['fill', 'Bild füllt die Blase']], (v) => set('frameMode', v)))),
+          el('div', { class: 'muted small' }, B.frameMode === 'fill' ? 'Das Bild füllt die ganze Blase; Ecken, Randstärke und Rand wirken wie ohne Bild.' : 'Rahmen-Bild als 9-Slice. „Ecken“ (oben bei Form) rundet die Blase trotzdem ab; für ein Hintergrundbild ohne Rahmen „Bild füllt die Blase“ wählen.'));
       }
       frameSec.append(
         textureField('Namensschild-Bild (optional)', B.nameFrame, (v) => set('nameFrame', v), { placeholder: 'Standard', hint: Theme.sizeHint(18, 6) }),

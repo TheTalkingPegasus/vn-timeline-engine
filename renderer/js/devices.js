@@ -123,7 +123,7 @@
   DV.sites = () => DV.web().sites || [];
   DV.webOn = () => !!(P() && P().devices && P().devices.enabled && DV.sites().length);
   // Stil eines Elements (Spiel und Editor gleich): Position, Farben, Schatten, Transparenz
-  DV.elStyle = (e, H0) => {
+  DV.elStyle = (e, H0, rs) => {
     const bg = e.bg ? (Number(e.alpha) < 100 && e.alpha != null ? `color-mix(in srgb, ${e.bg} ${Math.max(0, Number(e.alpha) || 0)}%, transparent)` : e.bg) : '';
     const st = { left: e.x + '%', top: (e.y / H0 * 100) + '%', width: e.w + '%', height: (e.h / H0 * 100) + '%', color: e.color || '', backgroundColor: bg, fontSize: (Number(e.size) || 4) + 'cqw', fontWeight: e.bold ? '700' : '', textAlign: e.align || 'left', borderRadius: (Number(e.radius) || 0) / 10 + 'cqw', border: e.border ? '0.25cqw solid ' + e.border : '' };
     if (e.font) st.fontFamily = window.Theme && Theme.fontCss ? Theme.fontCss(e.font) : e.font;
@@ -135,9 +135,15 @@
       else if (e.kind === 'image') st.filter = `drop-shadow(${o}cqw ${o}cqw ${b}cqw ${c})`;
       else st.boxShadow = `${o}cqw ${o}cqw ${b}cqw ${c}`;
     }
+    // Mischmodus (Multiplizieren, Negativ multiplizieren, Addieren …)
+    if (e.blend && e.blend !== 'normal') st.mixBlendMode = e.blend;
+    // Weichzeichnen – optional nur, bis Bedingungen erfüllt sind (z. B. „Bild freischalten“)
+    if (DV.elBlurred(e, rs)) st.filter = ((st.filter || '') + ` blur(${(Number(e.blur) * 0.15).toFixed(2)}cqw)`).trim();
     return st;
   };
-  DV.EL = { kind: 'text', x: 10, y: 10, w: 40, h: 8, text: '', image: '', color: '#1c1e24', bg: '', size: 4, bold: false, align: 'left', font: '', radius: 0, border: '', shadow: 0, shadowColor: '#000000', alpha: 100, link: '', actions: [], conds: [], mode: 'password', answer: '', place: '', fail: '', okLink: '', okActions: [], results: [] };
+  DV.elBlurred = (e, rs) => Number(e.blur) > 0 && !(rs && (e.blurConds || []).length && VN.checkConds(e.blurConds, rs));
+  DV.BLENDS = [['normal', 'Normal'], ['multiply', 'Multiplizieren'], ['screen', 'Negativ multiplizieren'], ['plus-lighter', 'Addieren'], ['overlay', 'Ineinanderkopieren'], ['soft-light', 'Weiches Licht'], ['hard-light', 'Hartes Licht'], ['darken', 'Abdunkeln'], ['lighten', 'Aufhellen'], ['color-dodge', 'Farbig abwedeln'], ['color-burn', 'Farbig nachbelichten'], ['difference', 'Differenz (Subtrahieren)'], ['exclusion', 'Ausschluss'], ['hue', 'Farbton'], ['saturation', 'Sättigung'], ['color', 'Farbe'], ['luminosity', 'Luminanz']];
+  DV.EL = { kind: 'text', x: 10, y: 10, w: 40, h: 8, text: '', image: '', color: '#1c1e24', bg: '', size: 4, bold: false, align: 'left', font: '', radius: 0, border: '', shadow: 0, shadowColor: '#000000', alpha: 100, blend: 'normal', blur: 0, blurConds: [], blurHint: '', link: '', actions: [], conds: [], mode: 'password', answer: '', place: '', fail: '', okLink: '', okActions: [], results: [] };
   DV.fixEl = (e) => { VN.fill(e, Object.assign({ id: VN.uid('we') }, JSON.parse(JSON.stringify(DV.EL)))); return e; };
   DV.newPage = (path) => ({ id: VN.uid('wp'), path: path || '', title: '', bg: '#ffffff', bgImg: '', height: 140, els: [], guides: { x: [], y: [] } });
   DV.newSite = () => { const w = { id: VN.uid('ws'), name: VN.t('Neue Website'), domain: 'meine-seite.de', hidden: false, conds: [], pages: [DV.newPage('')] }; w.pages[0].els.push(DV.fixEl({ kind: 'text', x: 8, y: 8, w: 84, h: 12, text: VN.t('Willkommen!'), size: 7, bold: true }), DV.fixEl({ kind: 'text', x: 8, y: 24, w: 84, h: 20, text: VN.t('Hier steht der Text deiner Seite.'), size: 3.6 })); return w; };
@@ -506,6 +512,34 @@
       for (const m of t.msgs || []) if (m.text) out.push({ id: m.id + ':text', area: 'Nachrichten', where: t.name, who: m.from === 'me' ? 'Ich' : (c ? c.name : '?'), text: m.text, set: (v) => { m.text = v; } });
       for (const r of t.replies || []) if (r.text) out.push({ id: r.id + ':text', area: 'Nachrichten', where: t.name, who: 'Antwort', text: r.text, set: (v) => { r.text = v; } });
     }
+    for (const d of DV.list()) if (d.name) out.push({ id: d.id + ':name', area: 'Geräte', where: d.name, who: 'Gerät', text: d.name, set: (v) => { d.name = v; } });
+    for (const c of DV.contacts()) {
+      if (c.status) out.push({ id: c.id + ':status', area: 'Kontakte', where: c.name || '?', who: 'Status', text: c.status, set: (v) => { c.status = v; } });
+      if (c.bio) out.push({ id: c.id + ':bio', area: 'Social Media', where: c.name || '?', who: 'Profil', text: c.bio, set: (v) => { c.bio = v; } });
+    }
+    const so = P().social;
+    if (so && so.name) out.push({ id: 'social:name', area: 'Social Media', where: 'App', who: 'Name', text: so.name, set: (v) => { so.name = v; } });
+    for (const s of DV.posts()) {
+      const au = DV.contact(s.author);
+      const where = (au ? au.name : '') + (s.text ? ': ' + s.text.slice(0, 30) : '');
+      if (s.text) out.push({ id: s.id, area: 'Social Media', where, who: au ? au.name : 'Beitrag', text: s.text, set: (v) => { s.text = v; } });
+      if (s.when) out.push({ id: s.id + ':when', area: 'Social Media', where, who: 'Zeit', text: s.when, set: (v) => { s.when = v; } });
+      for (const cm of s.comments || []) if (cm.text) { const ca = DV.contact(cm.author); out.push({ id: cm.id, area: 'Social Media', where, who: 'Kommentar' + (ca ? ' · ' + ca.name : ''), text: cm.text, set: (v) => { cm.text = v; } }); }
+      for (const r of s.replies || []) if (r.text) out.push({ id: r.id, area: 'Social Media', where, who: 'Antwort', text: r.text, set: (v) => { r.text = v; } });
+    }
+    for (const w of DV.sites()) {
+      if (w.name) out.push({ id: w.id + ':name', area: 'Websites', where: w.domain || w.name, who: 'Name', text: w.name, set: (v) => { w.name = v; } });
+      for (const pg of w.pages || []) {
+        const where = (w.domain || w.name || '') + '/' + (pg.path || '');
+        for (const e of pg.els || []) {
+          if (e.text) out.push({ id: e.id, area: 'Websites', where, who: e.link ? 'Link' : 'Text', text: e.text, set: (v) => { e.text = v; } });
+          if (e.place) out.push({ id: e.id + ':place', area: 'Websites', where, who: 'Platzhalter', text: e.place, set: (v) => { e.place = v; } });
+          for (const x of e.results || []) if (x.label) out.push({ id: e.id + ':r:' + x.addr, area: 'Websites', where, who: 'Suchtreffer', text: x.label, set: (v) => { x.label = v; } });
+          if (e.blurHint) out.push({ id: e.id + ':hint', area: 'Websites', where, who: 'Hinweis', text: e.blurHint, set: (v) => { e.blurHint = v; } });
+          if (e.fail) out.push({ id: e.id + ':fail', area: 'Websites', where, who: 'Fehlermeldung', text: e.fail, set: (v) => { e.fail = v; } });
+        }
+      }
+    }
     return out;
   };
 
@@ -706,9 +740,17 @@
       const click = (e) => { if (runActs(e.actions, e.id)) return; if (e.link) go(e.link); else if ((e.actions || []).length) draw(); };
       const pageEl = (w, g, e) => {
         const H0 = Math.max(10, Number(g.height) || 140);
-        const st = DV.elStyle(e, H0);
+        const st = DV.elStyle(e, H0, rs);
         const clickable = !!(e.link || (e.actions || []).length);
-        if (e.kind === 'image') return el('div', { class: 'dv-web-el img' + (clickable ? ' link' : ''), style: Object.assign(st, { backgroundImage: e.image && VN.assetUrl(e.image) ? `url("${VN.assetUrl(e.image)}")` : '' }), onclick: clickable ? (ev) => { ev.stopPropagation(); click(e); } : null });
+        if (e.kind === 'image') {
+          const img = el('div', { class: 'dv-web-el img' + (clickable ? ' link' : ''), style: Object.assign(st, { backgroundImage: e.image && VN.assetUrl(e.image) ? `url("${VN.assetUrl(e.image)}")` : '' }), onclick: clickable ? (ev) => { ev.stopPropagation(); click(e); } : null });
+          if (!(e.blurHint && DV.elBlurred(e, rs))) return img;
+          // Verschwommenes Bild mit Hinweis („🔒 Erst freischalten“) – der Hinweis bleibt scharf
+          const wrap = el('div', { class: 'dv-web-el dv-web-blurwrap', style: { left: st.left, top: st.top, width: st.width, height: st.height, borderRadius: st.borderRadius || '', mixBlendMode: st.mixBlendMode || '' } });
+          Object.assign(img.style, { left: '0', top: '0', width: '100%', height: '100%', mixBlendMode: '' });
+          wrap.append(img, el('div', { class: 'dv-web-blurhint' }, XF(tr(e.id + ':hint', e.blurHint))));
+          return wrap;
+        }
         if (e.kind === 'box') return el('div', { class: 'dv-web-el box', style: st });
         if (e.kind === 'input') {
           const done = e.mode === 'password' && W.ok[e.id];
@@ -722,7 +764,7 @@
               return;
             }
             const words = v.split(/\s+/).filter(Boolean);
-            results = { q: inp.value.trim(), list: (e.results || []).filter((r) => words.some((x) => String(r.word || '').toLowerCase().split(/[,\s]+/).some((k) => k && (k.includes(x) || x.includes(k))))) };
+            results = { q: inp.value.trim(), list: (e.results || []).map((x) => Object.assign({}, x, { label: x.label ? tr(e.id + ':r:' + x.addr, x.label) : '' })).filter((r) => words.some((x) => String(r.word || '').toLowerCase().split(/[,\s]+/).some((k) => k && (k.includes(x) || x.includes(k))))) };
             hist.push(cur); cur = '?' + results.q; snd('click'); draw(); view.scrollTop = 0;
           };
           return el('div', { class: 'dv-web-el input', style: st },

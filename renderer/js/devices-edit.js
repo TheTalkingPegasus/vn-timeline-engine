@@ -394,9 +394,14 @@
     const canvas = el('div', { class: 'web-ed-page', style: { aspectRatio: '100 / ' + H0, backgroundColor: page.bg || '#fff', backgroundImage: page.bgImg && VN.assetUrl(page.bgImg) ? `url("${VN.assetUrl(page.bgImg)}")` : '' }, onmousedown: (e) => { if (e.target === canvas && VN.ui.webEl) { VN.ui.webEl = null; VN.render(); } } });
     for (const e of page.els) {
       const st = DV().elStyle(e, H0);
-      if (e.kind === 'image') Object.assign(st, { backgroundImage: e.image && VN.assetUrl(e.image) ? `url("${VN.assetUrl(e.image)}")` : '' });
+      // Bild + Filter (Weichzeichner, Schatten) in eine innere Fläche, damit Auswahl-Griffe scharf bleiben
+      let fill = null;
+      if (e.kind === 'image') {
+        fill = el('div', { class: 'web-ed-imgfill', style: { backgroundImage: e.image && VN.assetUrl(e.image) ? `url("${VN.assetUrl(e.image)}")` : '', filter: st.filter || '', borderRadius: st.borderRadius || '' } });
+        st.filter = '';
+      }
       const n = el('div', { class: 'dv-web-el ' + ({ image: 'img', box: 'box', button: 'btn', input: 'input', text: 'text' }[e.kind] || 'text') + ' web-ed-el' + (e === elSel ? ' sel' : '') + (e.kind === 'image' && !e.image ? ' empty' : ''), style: st },
-        e.kind === 'input' ? el('div', { class: 'dv-web-in' }, el('input', { disabled: true, placeholder: e.place || (e.mode === 'password' ? VN.t('Passwort') : VN.t('Suchen …')) }), el('button', null, '→')) : e.kind === 'image' ? (e.image ? null : '🖼') : e.kind === 'box' ? null : (e.text || ''),
+        e.kind === 'input' ? el('div', { class: 'dv-web-in' }, el('input', { disabled: true, placeholder: e.place || (e.mode === 'password' ? VN.t('Passwort') : VN.t('Suchen …')) }), el('button', null, '→')) : e.kind === 'image' ? (e.image ? fill : '🖼') : e.kind === 'box' ? null : (e.text || ''),
         (e.link || (e.actions || []).length) ? el('span', { class: 'web-ed-badge' }, e.link ? '🔗' : '⚡') : null,
         e === elSel ? el('span', { class: 'web-ed-rs' }) : null);
       n.addEventListener('mousedown', (ev) => {
@@ -532,6 +537,17 @@
       el('input', { type: 'range', min: 0, max: 20, value: Number(e.shadow) || 0, style: { width: '90px' }, title: VN.t('0 = kein Schatten'), onchange: (ev) => VN.mutate(() => { e.shadow = Number(ev.target.value); }) }),
       el('span', { class: 'muted small' }, String(Number(e.shadow) || 0)),
       Number(e.shadow) ? el('label', { class: 'check' }, col(e.shadowColor || '#000000', (v) => { e.shadowColor = v; }), VN.t('Farbe')) : null));
+    box.appendChild(row('Mischmodus', sel(e.blend || 'normal', DV().BLENDS, (v) => { e.blend = v; }, { width: '170px' })));
+    e.blurConds = e.blurConds || [];
+    box.appendChild(el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } },
+      el('span', { class: 'muted small' }, VN.t('Weichzeichnen')),
+      el('input', { type: 'range', min: 0, max: 20, value: Number(e.blur) || 0, style: { width: '90px' }, title: VN.t('0 = scharf'), onchange: (ev) => VN.mutate(() => { e.blur = Number(ev.target.value); }) }),
+      el('span', { class: 'muted small' }, String(Number(e.blur) || 0)),
+      Number(e.blur) ? condBtn(e.blurConds, 'Scharf zeigen, sobald …', '🔓 ' + VN.t('Scharf wenn')) : null));
+    if (Number(e.blur)) {
+      box.appendChild(el('div', { class: 'muted small' }, e.blurConds.length ? VN.t('Bleibt verschwommen, bis die Bedingungen erfüllt sind – dann wird es sanft scharf.') : VN.t('Immer verschwommen. Mit „Scharf wenn“ wird es z. B. erst nach einem Kauf oder Passwort scharf.')));
+      if (e.kind === 'image') box.appendChild(row('Hinweis darauf', txt(e.blurHint, (v) => { e.blurHint = v; }, 'z. B. 🔒 Nur für Mitglieder')));
+    }
     if (e.kind !== 'input' && e.kind !== 'box') {
       box.appendChild(el('div', { class: 'sec-title', style: { marginTop: '6px' } }, VN.t('Beim Klick')));
       box.appendChild(row('Link zu Seite', sel(allPages.some((x) => x[0] === e.link) ? e.link : '', allPages, (v) => { e.link = v; }, { width: '170px' })));

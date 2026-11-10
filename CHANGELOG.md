@@ -2,6 +2,23 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.24 – Feedback package 1: bubbles, portraits, transcript, website images, minigame rewards, keyframes, hub idle
+- **Fix:** speech bubbles with your own background keep their **rounded corners**, and the shape sliders work again.
+  New option “Image fills the bubble” for a background picture without a 9-slice frame.
+- **Portraits in bubbles:** square, rounded or round, corner radius, size, drop shadow, border, left or right.
+- **Transcript** now lists texts from apps, contacts, social media (posts, comments, replies, bios) and websites
+  (texts, placeholders, error messages, search results, hints), so they can be translated.
+- **Website images:** blend modes (multiply, screen, add, overlay, difference …) and **blur** –
+  optionally blurred until conditions are met (e.g. unlock a picture), with a label on top.
+- **Minigame rewards:** every minigame action gets “Reward on win” and “Consequence on loss” –
+  any actions: items, money, relationship, followers, variables …
+- **Animation editor:** drag a box over keyframes, Shift/Ctrl-click to add, move many keys at once,
+  **Ctrl+C / Ctrl+V** (paste at the playhead, or onto another selected bone/part), Del deletes.
+  Move the **whole figure** in idle and gesture animations too (also in the game); Alt + drag works over bone handles.
+  **Duplicate actors** with their animation, and move actors forward/backward.
+- **Hub objects can idle:** float, bounce, breathe, sway, blow in the wind, glow, flicker, shake, spin –
+  with duration and strength. Images with bones can breathe/jiggle and play an idle animation.
+
 ## 0.9.23 – Website editor: bigger canvas, rulers and guides, shadows, transparency
 - The canvas of the page editor can be made **bigger or smaller** with the bar next to it (up to 1400 px).
 - **Rulers** on top and left: click or drag to add guides; guides can be moved or dragged off to delete.

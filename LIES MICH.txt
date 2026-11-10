@@ -14,6 +14,23 @@ Ohne Installation (ZIP):
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
 
+NEU IN 0.9.24 · Feedback-Paket 1: Sprechblasen, Porträts, Transkript, Website-Bilder, Minispiel-Belohnungen, Keyframes, Hub-Idle
+- Fix: Sprechblasen mit eigenem Hintergrund behalten ihre abgerundeten Ecken, die Form-Regler wirken wieder.
+  Neu: „Bild füllt die Blase“ für ein Hintergrundbild ohne 9-Slice-Rahmen.
+- Porträts in Sprechblasen: eckig, abgerundet oder rund, Eckenradius, Größe, Schlagschatten, Rand, links oder rechts.
+- Das Transkript zeigt jetzt auch Texte aus Apps, Kontakten, Social Media (Beiträge, Kommentare, Antworten, Profile)
+  und Websites (Texte, Platzhalter, Fehlermeldungen, Suchtreffer, Hinweise) – alles übersetzbar.
+- Website-Bilder: Mischmodi (Multiplizieren, Negativ multiplizieren, Addieren, Ineinanderkopieren, Differenz …) und
+  Weichzeichnen – auf Wunsch verschwommen, bis Bedingungen erfüllt sind (Bild freischalten), mit Hinweis darauf.
+- Minispiel-Belohnungen: jede Minispiel-Aktion hat „Belohnung bei Sieg“ und „Folge bei Niederlage“ – beliebige
+  Aktionen: Gegenstände, Geld, Beziehung, Follower, Variablen …
+- Animations-Editor: Rahmen über Keyframes ziehen, Umschalt/Strg-Klick ergänzt, mehrere Keys gemeinsam verschieben,
+  Strg+C / Strg+V (an der Abspielposition, oder auf einen anderen gewählten Knochen/Teil), Entf löscht.
+  Die ganze Figur lässt sich auch in Idle- und Gesten-Animationen bewegen (auch im Spiel); Alt + Ziehen geht über Knochen-Griffen.
+  Darsteller samt Animation doppeln, Darsteller nach vorne/hinten.
+- Hub-Objekte können idlen: schweben, hüpfen, atmen, schwanken, im Wind wehen, leuchten, flackern, zittern, drehen –
+  mit Dauer und Stärke. Bilder mit Bones atmen/wackeln und spielen auf Wunsch eine Idle-Animation.
+
 NEU IN 0.9.23 · Website-Editor: größere Fläche, Lineal und Hilfslinien, Schatten, Transparenz
 - Die Arbeitsfläche des Seiten-Editors lässt sich mit dem Balken daneben größer oder kleiner ziehen (bis 1400 px).
 - Lineale oben und links: anklicken oder ziehen setzt Hilfslinien; Linien lassen sich verschieben oder aus der Fläche
