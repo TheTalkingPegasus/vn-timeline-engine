@@ -1,0 +1,1070 @@
+{
+ "version": 1,
+ "name": {
+  "de": "Starter-Pack",
+  "en": "Starter pack",
+  "es": "Pack de inicio",
+  "ja": "スターターパック"
+ },
+ "license": "CC0-1.0",
+ "categories": {
+  "money": {
+   "de": "Geld",
+   "en": "Money",
+   "es": "Dinero",
+   "ja": "お金"
+  },
+  "flowers": {
+   "de": "Blumen & Pflanzen",
+   "en": "Flowers & plants",
+   "es": "Flores y plantas",
+   "ja": "花と植物"
+  },
+  "food": {
+   "de": "Essen",
+   "en": "Food",
+   "es": "Comida",
+   "ja": "食べ物"
+  },
+  "drinks": {
+   "de": "Getränke",
+   "en": "Drinks",
+   "es": "Bebidas",
+   "ja": "飲み物"
+  },
+  "everyday": {
+   "de": "Alltag",
+   "en": "Everyday",
+   "es": "Cotidiano",
+   "ja": "日用品"
+  },
+  "gifts": {
+   "de": "Geschenke",
+   "en": "Gifts",
+   "es": "Regalos",
+   "ja": "プレゼント"
+  },
+  "phones": {
+   "de": "Handys",
+   "en": "Phones",
+   "es": "Móviles",
+   "ja": "スマホ"
+  }
+ },
+ "items": [
+  {
+   "id": "pack:banknote",
+   "file": "images/money/banknote.png",
+   "kind": "image",
+   "cat": "money",
+   "name": {
+    "de": "Geldschein",
+    "en": "Banknote",
+    "es": "Billete",
+    "ja": "お札"
+   },
+   "size": 32060
+  },
+  {
+   "id": "pack:money_stack",
+   "file": "images/money/money_stack.png",
+   "kind": "image",
+   "cat": "money",
+   "name": {
+    "de": "Geldbündel",
+    "en": "Stack of money",
+    "es": "Fajo de billetes",
+    "ja": "札束"
+   },
+   "size": 37394
+  },
+  {
+   "id": "pack:coin_gold",
+   "file": "images/money/coin_gold.png",
+   "kind": "image",
+   "cat": "money",
+   "name": {
+    "de": "Goldmünze",
+    "en": "Gold coin",
+    "es": "Moneda de oro",
+    "ja": "金貨"
+   },
+   "size": 40754
+  },
+  {
+   "id": "pack:coin_silver",
+   "file": "images/money/coin_silver.png",
+   "kind": "image",
+   "cat": "money",
+   "name": {
+    "de": "Silbermünze",
+    "en": "Silver coin",
+    "es": "Moneda de plata",
+    "ja": "銀貨"
+   },
+   "size": 41607
+  },
+  {
+   "id": "pack:coin_stack",
+   "file": "images/money/coin_stack.png",
+   "kind": "image",
+   "cat": "money",
+   "name": {
+    "de": "Münzstapel",
+    "en": "Coin stack",
+    "es": "Pila de monedas",
+    "ja": "コインの山"
+   },
+   "size": 50739
+  },
+  {
+   "id": "pack:wallet",
+   "file": "images/money/wallet.png",
+   "kind": "image",
+   "cat": "money",
+   "name": {
+    "de": "Geldbörse",
+    "en": "Wallet",
+    "es": "Cartera",
+    "ja": "財布"
+   },
+   "size": 34510
+  },
+  {
+   "id": "pack:credit_card",
+   "file": "images/money/credit_card.png",
+   "kind": "image",
+   "cat": "money",
+   "name": {
+    "de": "Bankkarte",
+    "en": "Bank card",
+    "es": "Tarjeta bancaria",
+    "ja": "カード"
+   },
+   "size": 27748
+  },
+  {
+   "id": "pack:piggy_bank",
+   "file": "images/money/piggy_bank.png",
+   "kind": "image",
+   "cat": "money",
+   "name": {
+    "de": "Sparschwein",
+    "en": "Piggy bank",
+    "es": "Hucha",
+    "ja": "貯金箱"
+   },
+   "size": 28675
+  },
+  {
+   "id": "pack:gem",
+   "file": "images/money/gem.png",
+   "kind": "image",
+   "cat": "money",
+   "name": {
+    "de": "Edelstein",
+    "en": "Gemstone",
+    "es": "Gema",
+    "ja": "宝石"
+   },
+   "size": 26002
+  },
+  {
+   "id": "pack:rose",
+   "file": "images/flowers/rose.png",
+   "kind": "image",
+   "cat": "flowers",
+   "name": {
+    "de": "Rose",
+    "en": "Rose",
+    "es": "Rosa",
+    "ja": "バラ"
+   },
+   "size": 32052
+  },
+  {
+   "id": "pack:bouquet",
+   "file": "images/flowers/bouquet.png",
+   "kind": "image",
+   "cat": "flowers",
+   "name": {
+    "de": "Blumenstrauß",
+    "en": "Bouquet",
+    "es": "Ramo de flores",
+    "ja": "花束"
+   },
+   "size": 45478
+  },
+  {
+   "id": "pack:tulip",
+   "file": "images/flowers/tulip.png",
+   "kind": "image",
+   "cat": "flowers",
+   "name": {
+    "de": "Tulpe",
+    "en": "Tulip",
+    "es": "Tulipán",
+    "ja": "チューリップ"
+   },
+   "size": 30881
+  },
+  {
+   "id": "pack:sunflower",
+   "file": "images/flowers/sunflower.png",
+   "kind": "image",
+   "cat": "flowers",
+   "name": {
+    "de": "Sonnenblume",
+    "en": "Sunflower",
+    "es": "Girasol",
+    "ja": "ひまわり"
+   },
+   "size": 39508
+  },
+  {
+   "id": "pack:potted_plant",
+   "file": "images/flowers/potted_plant.png",
+   "kind": "image",
+   "cat": "flowers",
+   "name": {
+    "de": "Topfpflanze",
+    "en": "Potted plant",
+    "es": "Planta en maceta",
+    "ja": "鉢植え"
+   },
+   "size": 29029
+  },
+  {
+   "id": "pack:cactus",
+   "file": "images/flowers/cactus.png",
+   "kind": "image",
+   "cat": "flowers",
+   "name": {
+    "de": "Kaktus",
+    "en": "Cactus",
+    "es": "Cactus",
+    "ja": "サボテン"
+   },
+   "size": 21200
+  },
+  {
+   "id": "pack:cherry_branch",
+   "file": "images/flowers/cherry_branch.png",
+   "kind": "image",
+   "cat": "flowers",
+   "name": {
+    "de": "Kirschblütenzweig",
+    "en": "Cherry blossom branch",
+    "es": "Rama de cerezo",
+    "ja": "桜の枝"
+   },
+   "size": 37142
+  },
+  {
+   "id": "pack:apple",
+   "file": "images/food/apple.png",
+   "kind": "image",
+   "cat": "food",
+   "name": {
+    "de": "Apfel",
+    "en": "Apple",
+    "es": "Manzana",
+    "ja": "りんご"
+   },
+   "size": 28806
+  },
+  {
+   "id": "pack:banana",
+   "file": "images/food/banana.png",
+   "kind": "image",
+   "cat": "food",
+   "name": {
+    "de": "Banane",
+    "en": "Banana",
+    "es": "Plátano",
+    "ja": "バナナ"
+   },
+   "size": 22428
+  },
+  {
+   "id": "pack:bread",
+   "file": "images/food/bread.png",
+   "kind": "image",
+   "cat": "food",
+   "name": {
+    "de": "Brotlaib",
+    "en": "Loaf of bread",
+    "es": "Pan",
+    "ja": "パン"
+   },
+   "size": 28913
+  },
+  {
+   "id": "pack:croissant",
+   "file": "images/food/croissant.png",
+   "kind": "image",
+   "cat": "food",
+   "name": {
+    "de": "Croissant",
+    "en": "Croissant",
+    "es": "Cruasán",
+    "ja": "クロワッサン"
+   },
+   "size": 23753
+  },
+  {
+   "id": "pack:onigiri",
+   "file": "images/food/onigiri.png",
+   "kind": "image",
+   "cat": "food",
+   "name": {
+    "de": "Onigiri",
+    "en": "Onigiri",
+    "es": "Onigiri",
+    "ja": "おにぎり"
+   },
+   "size": 16465
+  },
+  {
+   "id": "pack:burger",
+   "file": "images/food/burger.png",
+   "kind": "image",
+   "cat": "food",
+   "name": {
+    "de": "Burger",
+    "en": "Burger",
+    "es": "Hamburguesa",
+    "ja": "ハンバーガー"
+   },
+   "size": 25555
+  },
+  {
+   "id": "pack:pizza",
+   "file": "images/food/pizza.png",
+   "kind": "image",
+   "cat": "food",
+   "name": {
+    "de": "Pizzastück",
+    "en": "Slice of pizza",
+    "es": "Porción de pizza",
+    "ja": "ピザ"
+   },
+   "size": 34242
+  },
+  {
+   "id": "pack:donut",
+   "file": "images/food/donut.png",
+   "kind": "image",
+   "cat": "food",
+   "name": {
+    "de": "Donut",
+    "en": "Donut",
+    "es": "Dónut",
+    "ja": "ドーナツ"
+   },
+   "size": 45080
+  },
+  {
+   "id": "pack:cake",
+   "file": "images/food/cake.png",
+   "kind": "image",
+   "cat": "food",
+   "name": {
+    "de": "Erdbeerkuchen",
+    "en": "Strawberry cake",
+    "es": "Pastel de fresa",
+    "ja": "ショートケーキ"
+   },
+   "size": 37841
+  },
+  {
+   "id": "pack:ice_cream",
+   "file": "images/food/ice_cream.png",
+   "kind": "image",
+   "cat": "food",
+   "name": {
+    "de": "Eistüte",
+    "en": "Ice cream cone",
+    "es": "Cucurucho de helado",
+    "ja": "アイスクリーム"
+   },
+   "size": 25586
+  },
+  {
+   "id": "pack:fried_egg",
+   "file": "images/food/fried_egg.png",
+   "kind": "image",
+   "cat": "food",
+   "name": {
+    "de": "Spiegelei",
+    "en": "Fried egg",
+    "es": "Huevo frito",
+    "ja": "目玉焼き"
+   },
+   "size": 24745
+  },
+  {
+   "id": "pack:cheese",
+   "file": "images/food/cheese.png",
+   "kind": "image",
+   "cat": "food",
+   "name": {
+    "de": "Käse",
+    "en": "Cheese",
+    "es": "Queso",
+    "ja": "チーズ"
+   },
+   "size": 27116
+  },
+  {
+   "id": "pack:strawberry",
+   "file": "images/food/strawberry.png",
+   "kind": "image",
+   "cat": "food",
+   "name": {
+    "de": "Erdbeere",
+    "en": "Strawberry",
+    "es": "Fresa",
+    "ja": "いちご"
+   },
+   "size": 30297
+  },
+  {
+   "id": "pack:bento",
+   "file": "images/food/bento.png",
+   "kind": "image",
+   "cat": "food",
+   "name": {
+    "de": "Bento-Box",
+    "en": "Bento box",
+    "es": "Caja bento",
+    "ja": "お弁当"
+   },
+   "size": 16967
+  },
+  {
+   "id": "pack:ramen",
+   "file": "images/food/ramen.png",
+   "kind": "image",
+   "cat": "food",
+   "name": {
+    "de": "Ramen",
+    "en": "Ramen",
+    "es": "Ramen",
+    "ja": "ラーメン"
+   },
+   "size": 37010
+  },
+  {
+   "id": "pack:chocolate",
+   "file": "images/food/chocolate.png",
+   "kind": "image",
+   "cat": "food",
+   "name": {
+    "de": "Schokolade",
+    "en": "Chocolate bar",
+    "es": "Chocolate",
+    "ja": "チョコレート"
+   },
+   "size": 33260
+  },
+  {
+   "id": "pack:coffee",
+   "file": "images/drinks/coffee.png",
+   "kind": "image",
+   "cat": "drinks",
+   "name": {
+    "de": "Kaffeebecher",
+    "en": "Coffee to go",
+    "es": "Café para llevar",
+    "ja": "コーヒー"
+   },
+   "size": 15576
+  },
+  {
+   "id": "pack:tea_cup",
+   "file": "images/drinks/tea_cup.png",
+   "kind": "image",
+   "cat": "drinks",
+   "name": {
+    "de": "Teetasse",
+    "en": "Teacup",
+    "es": "Taza de té",
+    "ja": "ティーカップ"
+   },
+   "size": 31257
+  },
+  {
+   "id": "pack:water_bottle",
+   "file": "images/drinks/water_bottle.png",
+   "kind": "image",
+   "cat": "drinks",
+   "name": {
+    "de": "Wasserflasche",
+    "en": "Water bottle",
+    "es": "Botella de agua",
+    "ja": "ペットボトル"
+   },
+   "size": 23342
+  },
+  {
+   "id": "pack:milk",
+   "file": "images/drinks/milk.png",
+   "kind": "image",
+   "cat": "drinks",
+   "name": {
+    "de": "Milchtüte",
+    "en": "Milk carton",
+    "es": "Cartón de leche",
+    "ja": "牛乳パック"
+   },
+   "size": 23792
+  },
+  {
+   "id": "pack:soda_can",
+   "file": "images/drinks/soda_can.png",
+   "kind": "image",
+   "cat": "drinks",
+   "name": {
+    "de": "Getränkedose",
+    "en": "Soda can",
+    "es": "Lata de refresco",
+    "ja": "缶ジュース"
+   },
+   "size": 27309
+  },
+  {
+   "id": "pack:juice",
+   "file": "images/drinks/juice.png",
+   "kind": "image",
+   "cat": "drinks",
+   "name": {
+    "de": "Orangensaft",
+    "en": "Orange juice",
+    "es": "Zumo de naranja",
+    "ja": "オレンジジュース"
+   },
+   "size": 22548
+  },
+  {
+   "id": "pack:bubble_tea",
+   "file": "images/drinks/bubble_tea.png",
+   "kind": "image",
+   "cat": "drinks",
+   "name": {
+    "de": "Bubble Tea",
+    "en": "Bubble tea",
+    "es": "Té de burbujas",
+    "ja": "タピオカミルクティー"
+   },
+   "size": 27465
+  },
+  {
+   "id": "pack:book",
+   "file": "images/everyday/book.png",
+   "kind": "image",
+   "cat": "everyday",
+   "name": {
+    "de": "Buch",
+    "en": "Book",
+    "es": "Libro",
+    "ja": "本"
+   },
+   "size": 36628
+  },
+  {
+   "id": "pack:notebook",
+   "file": "images/everyday/notebook.png",
+   "kind": "image",
+   "cat": "everyday",
+   "name": {
+    "de": "Notizbuch",
+    "en": "Notebook",
+    "es": "Cuaderno",
+    "ja": "ノート"
+   },
+   "size": 42080
+  },
+  {
+   "id": "pack:pencil",
+   "file": "images/everyday/pencil.png",
+   "kind": "image",
+   "cat": "everyday",
+   "name": {
+    "de": "Bleistift",
+    "en": "Pencil",
+    "es": "Lápiz",
+    "ja": "鉛筆"
+   },
+   "size": 24188
+  },
+  {
+   "id": "pack:letter",
+   "file": "images/everyday/letter.png",
+   "kind": "image",
+   "cat": "everyday",
+   "name": {
+    "de": "Brief",
+    "en": "Letter",
+    "es": "Carta",
+    "ja": "手紙"
+   },
+   "size": 30272
+  },
+  {
+   "id": "pack:love_letter",
+   "file": "images/gifts/love_letter.png",
+   "kind": "image",
+   "cat": "gifts",
+   "name": {
+    "de": "Liebesbrief",
+    "en": "Love letter",
+    "es": "Carta de amor",
+    "ja": "ラブレター"
+   },
+   "size": 30584
+  },
+  {
+   "id": "pack:glasses",
+   "file": "images/everyday/glasses.png",
+   "kind": "image",
+   "cat": "everyday",
+   "name": {
+    "de": "Brille",
+    "en": "Glasses",
+    "es": "Gafas",
+    "ja": "メガネ"
+   },
+   "size": 20584
+  },
+  {
+   "id": "pack:watch",
+   "file": "images/everyday/watch.png",
+   "kind": "image",
+   "cat": "everyday",
+   "name": {
+    "de": "Armbanduhr",
+    "en": "Wristwatch",
+    "es": "Reloj",
+    "ja": "腕時計"
+   },
+   "size": 30147
+  },
+  {
+   "id": "pack:backpack",
+   "file": "images/everyday/backpack.png",
+   "kind": "image",
+   "cat": "everyday",
+   "name": {
+    "de": "Rucksack",
+    "en": "Backpack",
+    "es": "Mochila",
+    "ja": "リュック"
+   },
+   "size": 20562
+  },
+  {
+   "id": "pack:umbrella",
+   "file": "images/everyday/umbrella.png",
+   "kind": "image",
+   "cat": "everyday",
+   "name": {
+    "de": "Regenschirm",
+    "en": "Umbrella",
+    "es": "Paraguas",
+    "ja": "傘"
+   },
+   "size": 29896
+  },
+  {
+   "id": "pack:key",
+   "file": "images/everyday/key.png",
+   "kind": "image",
+   "cat": "everyday",
+   "name": {
+    "de": "Schlüssel",
+    "en": "Key",
+    "es": "Llave",
+    "ja": "鍵"
+   },
+   "size": 30723
+  },
+  {
+   "id": "pack:headphones",
+   "file": "images/everyday/headphones.png",
+   "kind": "image",
+   "cat": "everyday",
+   "name": {
+    "de": "Kopfhörer",
+    "en": "Headphones",
+    "es": "Auriculares",
+    "ja": "ヘッドホン"
+   },
+   "size": 24348
+  },
+  {
+   "id": "pack:lipstick",
+   "file": "images/everyday/lipstick.png",
+   "kind": "image",
+   "cat": "everyday",
+   "name": {
+    "de": "Lippenstift",
+    "en": "Lipstick",
+    "es": "Pintalabios",
+    "ja": "口紅"
+   },
+   "size": 19664
+  },
+  {
+   "id": "pack:candle",
+   "file": "images/everyday/candle.png",
+   "kind": "image",
+   "cat": "everyday",
+   "name": {
+    "de": "Kerze",
+    "en": "Candle",
+    "es": "Vela",
+    "ja": "ろうそく"
+   },
+   "size": 18487
+  },
+  {
+   "id": "pack:lightbulb",
+   "file": "images/everyday/lightbulb.png",
+   "kind": "image",
+   "cat": "everyday",
+   "name": {
+    "de": "Glühbirne",
+    "en": "Light bulb",
+    "es": "Bombilla",
+    "ja": "電球"
+   },
+   "size": 27117
+  },
+  {
+   "id": "pack:camera",
+   "file": "images/everyday/camera.png",
+   "kind": "image",
+   "cat": "everyday",
+   "name": {
+    "de": "Kamera",
+    "en": "Camera",
+    "es": "Cámara",
+    "ja": "カメラ"
+   },
+   "size": 33177
+  },
+  {
+   "id": "pack:gift_box",
+   "file": "images/gifts/gift_box.png",
+   "kind": "image",
+   "cat": "gifts",
+   "name": {
+    "de": "Geschenk",
+    "en": "Gift box",
+    "es": "Regalo",
+    "ja": "プレゼント"
+   },
+   "size": 28242
+  },
+  {
+   "id": "pack:chocolate_box",
+   "file": "images/gifts/chocolate_box.png",
+   "kind": "image",
+   "cat": "gifts",
+   "name": {
+    "de": "Pralinenschachtel",
+    "en": "Box of chocolates",
+    "es": "Caja de bombones",
+    "ja": "チョコの箱"
+   },
+   "size": 34323
+  },
+  {
+   "id": "pack:ring_box",
+   "file": "images/gifts/ring_box.png",
+   "kind": "image",
+   "cat": "gifts",
+   "name": {
+    "de": "Ringschachtel",
+    "en": "Ring box",
+    "es": "Estuche de anillo",
+    "ja": "指輪ケース"
+   },
+   "size": 20306
+  },
+  {
+   "id": "pack:teddy",
+   "file": "images/gifts/teddy.png",
+   "kind": "image",
+   "cat": "gifts",
+   "name": {
+    "de": "Teddybär",
+    "en": "Teddy bear",
+    "es": "Osito de peluche",
+    "ja": "テディベア"
+   },
+   "size": 45926
+  },
+  {
+   "id": "pack:phone_navy_vorne",
+   "file": "images/phones/phone_navy_vorne.png",
+   "kind": "image",
+   "cat": "phones",
+   "name": {
+    "de": "Handy Navy – vorne",
+    "en": "Phone Navy – front",
+    "es": "Móvil Azul marino – frontal",
+    "ja": "スマホ（ネイビー・正面）"
+   },
+   "size": 14990
+  },
+  {
+   "id": "pack:phone_navy_hinten",
+   "file": "images/phones/phone_navy_hinten.png",
+   "kind": "image",
+   "cat": "phones",
+   "name": {
+    "de": "Handy Navy – hinten",
+    "en": "Phone Navy – back",
+    "es": "Móvil Azul marino – trasera",
+    "ja": "スマホ（ネイビー・背面）"
+   },
+   "size": 15356
+  },
+  {
+   "id": "pack:phone_navy_seite",
+   "file": "images/phones/phone_navy_seite.png",
+   "kind": "image",
+   "cat": "phones",
+   "name": {
+    "de": "Handy Navy – Seite",
+    "en": "Phone Navy – side",
+    "es": "Móvil Azul marino – lateral",
+    "ja": "スマホ（ネイビー・側面）"
+   },
+   "size": 3868
+  },
+  {
+   "id": "pack:phone_navy_schraeg_vorne",
+   "file": "images/phones/phone_navy_schraeg_vorne.png",
+   "kind": "image",
+   "cat": "phones",
+   "name": {
+    "de": "Handy Navy – schräg vorne",
+    "en": "Phone Navy – angled front",
+    "es": "Móvil Azul marino – frontal inclinado",
+    "ja": "スマホ（ネイビー・斜め正面）"
+   },
+   "size": 33399
+  },
+  {
+   "id": "pack:phone_navy_schraeg_hinten",
+   "file": "images/phones/phone_navy_schraeg_hinten.png",
+   "kind": "image",
+   "cat": "phones",
+   "name": {
+    "de": "Handy Navy – schräg hinten",
+    "en": "Phone Navy – angled back",
+    "es": "Móvil Azul marino – trasera inclinada",
+    "ja": "スマホ（ネイビー・斜め背面）"
+   },
+   "size": 30371
+  },
+  {
+   "id": "pack:phone_black_vorne",
+   "file": "images/phones/phone_black_vorne.png",
+   "kind": "image",
+   "cat": "phones",
+   "name": {
+    "de": "Handy Schwarz – vorne",
+    "en": "Phone Black – front",
+    "es": "Móvil Negro – frontal",
+    "ja": "スマホ（ブラック・正面）"
+   },
+   "size": 14196
+  },
+  {
+   "id": "pack:phone_black_hinten",
+   "file": "images/phones/phone_black_hinten.png",
+   "kind": "image",
+   "cat": "phones",
+   "name": {
+    "de": "Handy Schwarz – hinten",
+    "en": "Phone Black – back",
+    "es": "Móvil Negro – trasera",
+    "ja": "スマホ（ブラック・背面）"
+   },
+   "size": 14060
+  },
+  {
+   "id": "pack:phone_black_seite",
+   "file": "images/phones/phone_black_seite.png",
+   "kind": "image",
+   "cat": "phones",
+   "name": {
+    "de": "Handy Schwarz – Seite",
+    "en": "Phone Black – side",
+    "es": "Móvil Negro – lateral",
+    "ja": "スマホ（ブラック・側面）"
+   },
+   "size": 3479
+  },
+  {
+   "id": "pack:phone_black_schraeg_vorne",
+   "file": "images/phones/phone_black_schraeg_vorne.png",
+   "kind": "image",
+   "cat": "phones",
+   "name": {
+    "de": "Handy Schwarz – schräg vorne",
+    "en": "Phone Black – angled front",
+    "es": "Móvil Negro – frontal inclinado",
+    "ja": "スマホ（ブラック・斜め正面）"
+   },
+   "size": 29587
+  },
+  {
+   "id": "pack:phone_black_schraeg_hinten",
+   "file": "images/phones/phone_black_schraeg_hinten.png",
+   "kind": "image",
+   "cat": "phones",
+   "name": {
+    "de": "Handy Schwarz – schräg hinten",
+    "en": "Phone Black – angled back",
+    "es": "Móvil Negro – trasera inclinada",
+    "ja": "スマホ（ブラック・斜め背面）"
+   },
+   "size": 26168
+  },
+  {
+   "id": "pack:phone_white_vorne",
+   "file": "images/phones/phone_white_vorne.png",
+   "kind": "image",
+   "cat": "phones",
+   "name": {
+    "de": "Handy Weiß – vorne",
+    "en": "Phone White – front",
+    "es": "Móvil Blanco – frontal",
+    "ja": "スマホ（ホワイト・正面）"
+   },
+   "size": 15423
+  },
+  {
+   "id": "pack:phone_white_hinten",
+   "file": "images/phones/phone_white_hinten.png",
+   "kind": "image",
+   "cat": "phones",
+   "name": {
+    "de": "Handy Weiß – hinten",
+    "en": "Phone White – back",
+    "es": "Móvil Blanco – trasera",
+    "ja": "スマホ（ホワイト・背面）"
+   },
+   "size": 15382
+  },
+  {
+   "id": "pack:phone_white_seite",
+   "file": "images/phones/phone_white_seite.png",
+   "kind": "image",
+   "cat": "phones",
+   "name": {
+    "de": "Handy Weiß – Seite",
+    "en": "Phone White – side",
+    "es": "Móvil Blanco – lateral",
+    "ja": "スマホ（ホワイト・側面）"
+   },
+   "size": 4243
+  },
+  {
+   "id": "pack:phone_white_schraeg_vorne",
+   "file": "images/phones/phone_white_schraeg_vorne.png",
+   "kind": "image",
+   "cat": "phones",
+   "name": {
+    "de": "Handy Weiß – schräg vorne",
+    "en": "Phone White – angled front",
+    "es": "Móvil Blanco – frontal inclinado",
+    "ja": "スマホ（ホワイト・斜め正面）"
+   },
+   "size": 36394
+  },
+  {
+   "id": "pack:phone_white_schraeg_hinten",
+   "file": "images/phones/phone_white_schraeg_hinten.png",
+   "kind": "image",
+   "cat": "phones",
+   "name": {
+    "de": "Handy Weiß – schräg hinten",
+    "en": "Phone White – angled back",
+    "es": "Móvil Blanco – trasera inclinada",
+    "ja": "スマホ（ホワイト・斜め背面）"
+   },
+   "size": 31137
+  },
+  {
+   "id": "pack:phone_rose_vorne",
+   "file": "images/phones/phone_rose_vorne.png",
+   "kind": "image",
+   "cat": "phones",
+   "name": {
+    "de": "Handy Rosé – vorne",
+    "en": "Phone Rose – front",
+    "es": "Móvil Rosa – frontal",
+    "ja": "スマホ（ローズ・正面）"
+   },
+   "size": 15427
+  },
+  {
+   "id": "pack:phone_rose_hinten",
+   "file": "images/phones/phone_rose_hinten.png",
+   "kind": "image",
+   "cat": "phones",
+   "name": {
+    "de": "Handy Rosé – hinten",
+    "en": "Phone Rose – back",
+    "es": "Móvil Rosa – trasera",
+    "ja": "スマホ（ローズ・背面）"
+   },
+   "size": 16480
+  },
+  {
+   "id": "pack:phone_rose_seite",
+   "file": "images/phones/phone_rose_seite.png",
+   "kind": "image",
+   "cat": "phones",
+   "name": {
+    "de": "Handy Rosé – Seite",
+    "en": "Phone Rose – side",
+    "es": "Móvil Rosa – lateral",
+    "ja": "スマホ（ローズ・側面）"
+   },
+   "size": 4181
+  },
+  {
+   "id": "pack:phone_rose_schraeg_vorne",
+   "file": "images/phones/phone_rose_schraeg_vorne.png",
+   "kind": "image",
+   "cat": "phones",
+   "name": {
+    "de": "Handy Rosé – schräg vorne",
+    "en": "Phone Rose – angled front",
+    "es": "Móvil Rosa – frontal inclinado",
+    "ja": "スマホ（ローズ・斜め正面）"
+   },
+   "size": 36404
+  },
+  {
+   "id": "pack:phone_rose_schraeg_hinten",
+   "file": "images/phones/phone_rose_schraeg_hinten.png",
+   "kind": "image",
+   "cat": "phones",
+   "name": {
+    "de": "Handy Rosé – schräg hinten",
+    "en": "Phone Rose – angled back",
+    "es": "Móvil Rosa – trasera inclinada",
+    "ja": "スマホ（ローズ・斜め背面）"
+   },
+   "size": 33552
+  }
+ ]
+}

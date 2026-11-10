@@ -5083,7 +5083,13 @@ window.VN_I18N_EN = {
 "Danach wieder (%)": "Afterwards back to (%)",
 "Aufwachen: Ohne Ziel bleibt das Spiel, wo es ist. Mit einem Hub oder Hub-Dialog (z. B. „Schlafzimmer“) wacht die Figur dort auf.": "Waking up: without a target the game stays where it is. With a hub or hub dialog (e.g. “Bedroom”) the character wakes up there.",
 "Ausdauer & Müdigkeit": "Stamina & tiredness",
-"Auswahl, Minispiele und Reisen kosten Kraft. Balken oder Symbole, müde Augen, Gähnen, Einschlafen und Aufwachen.": "Choices, minigames and trips cost strength. Bar or icons, tired eyes, yawning, falling asleep and waking up."
+"Auswahl, Minispiele und Reisen kosten Kraft. Balken oder Symbole, müde Augen, Gähnen, Einschlafen und Aufwachen.": "Choices, minigames and trips cost strength. Bar or icons, tired eyes, yawning, falling asleep and waking up.",
+"Alles": "All",
+"Meine Dateien": "My files",
+"Starter-Pack": "Starter pack",
+"Mitgelieferte Bilder (CC0) – frei nutzbar, auch in verkauften Spielen, ohne Namensnennung": "Included images (CC0) – free to use, even in games you sell, no credit needed",
+"Das Starter-Pack gehört zur Engine und kann nicht gelöscht werden.": "The starter pack is part of the engine and can’t be deleted.",
+"{n} Dateien ins Projekt geholt": "{n} files added to the project"
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",
