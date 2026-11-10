@@ -14,6 +14,10 @@ It uses or ships the following third-party components. Their licenses stay with 
 All example images, sounds and texts in the example, tutorial and learning projects were made for this
 project and fall under the project’s MIT License.
 
+The images of the **starter pack** (`starter-assets/`, shown in the asset library) were made for this project
+and are dedicated to the public domain under **CC0 1.0** (`starter-assets/LICENSE.txt`): use, change and sell
+them in your games without asking and without credit.
+
 ## Games made with VN Timeline Engine
 
 A Windows game exported by the engine contains Electron/Chromium and parts of the engine.

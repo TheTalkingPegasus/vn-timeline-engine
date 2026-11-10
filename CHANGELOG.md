@@ -2,7 +2,7 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
-## 0.9.25 – Mouth & lip line (side and POV)
+## 0.9.26 – Mouth & lip line (side and POV)
 - **Mouth for cutscene figures** (simple PNG, also images with bones): set upper lip, lower lip and jaw joint.
   An object linked to the mouth (straw, spoon, carrot …) is **invisible behind the lips** and the **lower jaw opens exactly as far as
   the object is wide** at that point – the width is measured automatically from the object's image along its axis (grip → tip).
@@ -10,6 +10,21 @@ All notable changes. German details: `LIES MICH.txt`.
   with bones the lip line follows a bone (idle, head movement).
 - Two views: **side (profile)** – the lower jaw swings around the joint – and **front (POV)** – set both mouth corners and the chin;
   the jaw drops as far as the object is wide, and the part already in the mouth is only visible through the opening.
+
+## 0.9.25 – Starter pack: 78 free images in the asset library
+
+- **Starter pack** in the 📚 asset library: 78 ready-made images (256 × 256, transparent PNG) in an anime look with
+  clean outlines and cel shading – free to use under **CC0**, even in games you sell, no credit needed.
+  - **Phones:** 4 colors (navy, black, white, rose) × 5 views (front, back, side, angled front, angled back).
+  - **58 everyday items:** money (banknote, money stack, gold and silver coins, coin stack, wallet, bank card,
+    piggy bank, gemstone), flowers & plants (rose, bouquet, tulip, sunflower, potted plant, cactus, cherry blossom branch),
+    food (apple, banana, bread, croissant, onigiri, burger, pizza, donut, strawberry cake, ice cream, fried egg, cheese,
+    strawberry, bento box, ramen, chocolate), drinks (coffee to go, teacup, water bottle, milk carton, soda can, orange juice,
+    bubble tea), everyday (book, notebook, pencil, letter, glasses, wristwatch, backpack, umbrella, key, headphones,
+    lipstick, candle, light bulb, camera) and gifts (gift box, love letter, box of chocolates, ring box, teddy bear).
+- Filter **All / My files / ⭐ Starter pack** and folders per category; names and folders follow the interface language
+  (English, German, Spanish, Japanese). One click fetches them into the project (folder “Library/Starter pack/…”).
+- The pack ships with the engine (desktop and web version) and can't be deleted by accident.
 
 ## 0.9.24 – Feedback packages 1 + 2: followers as a mechanic, live chat, stamina, masks, design templates, asset library and more
 

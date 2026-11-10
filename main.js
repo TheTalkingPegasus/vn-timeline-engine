@@ -122,7 +122,22 @@ const libFiles = () => path.join(libDir(), 'files');
 const libIndex = () => { try { const j = JSON.parse(fs.readFileSync(path.join(libDir(), 'index.json'), 'utf8')); return Array.isArray(j) ? j : []; } catch (e) { return []; } };
 const libSave = (list) => { fs.mkdirSync(libDir(), { recursive: true }); const tmp = path.join(libDir(), 'index.json.tmp'); fs.writeFileSync(tmp, JSON.stringify(list, null, 1), 'utf8'); fs.renameSync(tmp, path.join(libDir(), 'index.json')); };
 const libClean = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f]/g, '').slice(0, n || 120);
-ipcMain.handle('lib:list', async () => (gameMode ? [] : libIndex()));
+// Mitgeliefertes Starter-Pack (0.9.25): CC0-Bilder im Engine-Ordner, nur lesen, Namen in allen Sprachen
+const packDir = () => path.join(__dirname, 'starter-assets');
+let packCache = null;
+const packIndex = () => {
+  if (packCache) return packCache;
+  try {
+    const j = JSON.parse(fs.readFileSync(path.join(packDir(), 'index.json'), 'utf8'));
+    const cats = j.categories || {}, pn = j.name || {};
+    packCache = (Array.isArray(j.items) ? j.items : []).filter((x) => x && typeof x.id === 'string' && x.id.startsWith('pack:') && typeof x.file === 'string')
+      .map((x) => ({ id: x.id, name: x.name, kind: x.kind || 'image', file: x.file, cat: x.cat, catName: cats[x.cat] || {}, packName: pn, size: x.size || 0, builtin: true }));
+  } catch (e) { packCache = []; }
+  return packCache;
+};
+const packLoc = (o, fb) => (o && typeof o === 'object' ? o[uiLang] || o.en || o.de || fb : (o || fb));
+const libAll = (list) => (gameMode ? [] : (list || libIndex()).concat(packIndex()));
+ipcMain.handle('lib:list', async () => libAll());
 ipcMain.handle('lib:add', async (_e, { items, folder }) => {
   if (gameMode || !projectDir || !Array.isArray(items)) return { added: 0, list: libIndex() };
   const list = libIndex();
@@ -140,12 +155,12 @@ ipcMain.handle('lib:add', async (_e, { items, folder }) => {
     added++;
   }
   libSave(list);
-  return { added, list };
+  return { added, list: libAll(list) };
 });
 ipcMain.handle('lib:update', async (_e, { id, name, folder }) => {
   const list = libIndex(), x = list.find((y) => y.id === id);
   if (x) { if (name != null) x.name = libClean(name); if (folder != null) x.folder = libClean(folder); libSave(list); }
-  return list;
+  return libAll(list);
 });
 ipcMain.handle('lib:remove', async (_e, { ids }) => {
   const set = new Set(Array.isArray(ids) ? ids : []);
@@ -153,7 +168,7 @@ ipcMain.handle('lib:remove', async (_e, { ids }) => {
   for (const x of list) if (set.has(x.id)) { try { fs.unlinkSync(path.join(libFiles(), path.basename(x.file))); } catch (e) { /* schon weg */ } }
   const rest = list.filter((x) => !set.has(x.id));
   libSave(rest);
-  return rest;
+  return libAll(rest);
 });
 // Ins Projekt holen: Kopie in assets/ (mit dem Namen aus der Bibliothek)
 ipcMain.handle('lib:import', async (_e, { ids }) => {
@@ -161,9 +176,12 @@ ipcMain.handle('lib:import', async (_e, { ids }) => {
   const want = new Set(Array.isArray(ids) ? ids : []), out = [];
   const assetsDir = path.join(projectDir, 'assets');
   fs.mkdirSync(assetsDir, { recursive: true });
-  for (const x of libIndex()) {
-    if (!want.has(x.id)) continue;
-    const src = path.join(libFiles(), path.basename(x.file));
+  for (const x0 of libIndex().concat(packIndex())) {
+    if (!want.has(x0.id)) continue;
+    // Starter-Pack: Datei aus dem Engine-Ordner, Name und Ordner in der Sprache der Oberfläche
+    const x = x0.builtin ? { name: packLoc(x0.name, 'Bild'), kind: x0.kind, folder: packLoc(x0.packName, 'Starter-Pack') + '/' + packLoc(x0.catName, x0.cat || '') } : x0;
+    const src = x0.builtin ? path.resolve(packDir(), x0.file) : path.join(libFiles(), path.basename(x0.file));
+    if (x0.builtin && !insideReal(packDir(), src)) continue;
     if (!fs.existsSync(src)) continue;
     const ext = path.extname(src), base = (x.name || 'datei').replace(/[\\/:*?"<>|]+/g, '_').slice(0, 80) || 'datei';
     let name = base + ext, i = 1;
@@ -180,6 +198,12 @@ function registerAssetProtocol() {
       const url = new URL(req.url);
       let rel = decodeURIComponent(url.pathname).replace(/^\/+/, '');
       // Bibliothek: vnasset://library/<datei>
+      // Starter-Pack: vnasset://pack/images/<kategorie>/<datei>
+      if (url.hostname === 'pack' && !gameMode) {
+        const full = path.resolve(packDir(), rel);
+        if (!insideReal(packDir(), full) || !fs.existsSync(full)) return new Response('nicht gefunden', { status: 404 });
+        return new Response(fs.readFileSync(full), { headers: { 'Content-Type': MIME[path.extname(full).slice(1).toLowerCase()] || 'application/octet-stream' } });
+      }
       if (url.hostname === 'library' && !gameMode) {
         const full = path.join(libFiles(), path.basename(rel));
         if (!fs.existsSync(full)) return new Response('nicht gefunden', { status: 404 });

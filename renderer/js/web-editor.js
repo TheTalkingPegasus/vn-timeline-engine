@@ -421,12 +421,22 @@
     // Asset-Bibliothek (0.9.24): im Browser in IndexedDB, für alle Browser-Projekte
     library: (() => {
       const L = idbFs('__library'), urls = new Map();
-      const list = async () => { const b = await L.read('index.json'); try { return b ? JSON.parse(await b.text()) : []; } catch (e) { return []; } };
+      const own = async () => { const b = await L.read('index.json'); try { return b ? JSON.parse(await b.text()) : []; } catch (e) { return []; } };
+      // Mitgeliefertes Starter-Pack (0.9.25): liegt neben der Web-Version unter starter-assets/
+      let packP = null;
+      const pack = () => packP || (packP = fetch('starter-assets/index.json').then((r) => (r.ok ? r.json() : null)).then((j) => {
+        if (!j || !Array.isArray(j.items)) return [];
+        const cats = j.categories || {};
+        return j.items.filter((x) => x && String(x.id).startsWith('pack:')).map((x) => ({ id: x.id, name: x.name, kind: x.kind || 'image', file: x.file, cat: x.cat, catName: cats[x.cat] || {}, packName: j.name || {}, size: x.size || 0, builtin: true }));
+      }).catch(() => []));
+      const loc = (o, fb) => { const l = (window.VN && VN.lang) || 'en'; return o && typeof o === 'object' ? o[l] || o.en || o.de || fb : (o || fb); };
+      const withPack = async (x) => x.concat(await pack());
+      const list = async () => withPack(await own());
       const save = async (x) => L.write('index.json', new Blob([JSON.stringify(x)], { type: 'application/json' }));
       return {
         list,
         async add(items, folder) {
-          const x = await list(); let added = 0;
+          const x = await own(); let added = 0;
           for (const it of items || []) {
             const b = cur.fs && it && it.file ? await cur.fs.read(it.file) : null;
             if (!b || !kindOf(it.file)) continue;
@@ -437,16 +447,26 @@
             added++;
           }
           await save(x);
-          return { added, list: x };
+          return { added, list: await withPack(x) };
         },
-        async update(id, f) { const x = await list(), y = x.find((z) => z.id === id); if (y) { if (f.name != null) y.name = String(f.name).slice(0, 120); if (f.folder != null) y.folder = String(f.folder).slice(0, 120); await save(x); } return x; },
-        async remove(ids) { const set = new Set(ids || []); const x = await list(); for (const y of x) if (set.has(y.id)) await L.remove('files/' + y.file); const rest = x.filter((y) => !set.has(y.id)); await save(rest); return rest; },
+        async update(id, f) { const x = await own(), y = x.find((z) => z.id === id); if (y) { if (f.name != null) y.name = String(f.name).slice(0, 120); if (f.folder != null) y.folder = String(f.folder).slice(0, 120); await save(x); } return withPack(x); },
+        async remove(ids) { const set = new Set(ids || []); const x = await own(); for (const y of x) if (set.has(y.id)) await L.remove('files/' + y.file); const rest = x.filter((y) => !set.has(y.id)); await save(rest); return withPack(rest); },
         async import(ids) {
           const want = new Set(ids || []), files = [];
-          for (const y of await list()) { if (!want.has(y.id)) continue; const b = await L.read('files/' + y.file); if (b) files.push(new File([b], (y.name || 'datei').replace(/[\\/:*?"<>|]+/g, '_') + '.' + extOf(y.file), { type: b.type })); }
-          return importFiles(files);
+          const folders = new Map();
+          for (const y of await list()) {
+            if (!want.has(y.id)) continue;
+            let b = null;
+            if (y.builtin) { try { const r = await fetch('starter-assets/' + y.file); if (r.ok) b = await r.blob(); } catch (e) { b = null; } } else b = await L.read('files/' + y.file);
+            const nm = y.builtin ? loc(y.name, 'Bild') : (y.name || 'datei');
+            if (b) { const f = new File([b], String(nm).replace(/[\\/:*?"<>|]+/g, '_') + '.' + extOf(y.file), { type: b.type }); files.push(f); folders.set(f, y.builtin ? loc(y.packName, 'Starter-Pack') + '/' + loc(y.catName, y.cat || '') : (y.folder || '')); }
+          }
+          const res = await importFiles(files);
+          // Ordner mitgeben (wie in der Desktop-Version)
+          res.forEach((r, i) => { if (files[i] && folders.get(files[i])) r.folder = folders.get(files[i]); });
+          return res;
         },
-        url(y) { if (urls.has(y.file)) return urls.get(y.file); const p = L.read('files/' + y.file).then((b) => (b ? URL.createObjectURL(typed(b, y.file)) : '')); urls.set(y.file, ''); p.then((u) => { urls.set(y.file, u); document.querySelectorAll('[data-lib="' + y.file + '"]').forEach((n) => { if (n.tagName === 'AUDIO') n.src = u; else n.style.backgroundImage = 'url("' + u + '")'; }); }); return ''; }
+        url(y) { if (y && y.builtin) return 'starter-assets/' + String(y.file).split('/').map(encodeURIComponent).join('/'); if (urls.has(y.file)) return urls.get(y.file); const p = L.read('files/' + y.file).then((b) => (b ? URL.createObjectURL(typed(b, y.file)) : '')); urls.set(y.file, ''); p.then((u) => { urls.set(y.file, u); document.querySelectorAll('[data-lib="' + y.file + '"]').forEach((n) => { if (n.tagName === 'AUDIO') n.src = u; else n.style.backgroundImage = 'url("' + u + '")'; }); }); return ''; }
       };
     })(),
     // Dateien des Projekts: Blob-Adressen. Plugins bekommen ein „#“, damit ein angehängtes „?t=…“ nicht stört

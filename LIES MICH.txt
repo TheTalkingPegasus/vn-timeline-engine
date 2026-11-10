@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.25
+VN Timeline Engine · Prototyp 0.9.26
 ====================================
 (English: see README.txt)
 
@@ -14,7 +14,7 @@ Ohne Installation (ZIP):
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
 
-NEU IN 0.9.25 · Mund & Lippenlinie (seitlich und POV)
+NEU IN 0.9.26 · Mund & Lippenlinie (seitlich und POV)
 - Mund für Figuren in Zwischensequenzen (einfaches PNG, auch Bilder mit Bones): Oberlippe, Unterlippe und Kiefergelenk setzen.
   Ein mit dem Mund verknüpftes Objekt (Strohhalm, Löffel, Karotte …) ist hinter den Lippen unsichtbar, und der Unterkiefer klappt
   genau so weit auf, wie das Objekt an dieser Stelle breit ist – die Breite misst die Engine selbst aus dem Bild (Griff → Spitze).
@@ -22,6 +22,16 @@ NEU IN 0.9.25 · Mund & Lippenlinie (seitlich und POV)
   Öffnung einstellbar; mit Bones folgt die Lippenlinie einem Knochen (Idle, Kopfbewegung).
 - Zwei Ansichten: seitlich (Profil) – der Unterkiefer klappt um das Gelenk – und von vorn (POV) – beide Mundwinkel und das Kinn
   setzen; der Kiefer senkt sich so weit, wie das Objekt breit ist, und was schon im Mund ist, sieht man nur durch die Öffnung.
+
+NEU IN 0.9.25 · Starter-Pack: 78 freie Bilder in der Asset-Bibliothek
+- Starter-Pack in der 📚 Asset-Bibliothek: 78 fertige Bilder (256 × 256, transparentes PNG) im Anime-Look mit klaren
+  Konturen und Cel-Shading – frei nutzbar unter CC0, auch in verkauften Spielen, ohne Namensnennung.
+- Handys: 4 Farben (Navy, Schwarz, Weiß, Rosé) × 5 Ansichten (vorne, hinten, Seite, schräg vorne, schräg hinten).
+- 58 Alltagsgegenstände: Geld (Geldschein, Geldbündel, Gold- und Silbermünze, Münzstapel, Geldbörse, Bankkarte, Sparschwein,
+  Edelstein), Blumen & Pflanzen, Essen (u. a. Onigiri, Bento-Box, Ramen, Erdbeerkuchen), Getränke (u. a. Bubble Tea),
+  Alltag (Buch, Brille, Uhr, Rucksack, Schlüssel, Kamera …) und Geschenke (Geschenk, Liebesbrief, Pralinen, Ringschachtel, Teddy).
+- Filter „Alles / Meine Dateien / ⭐ Starter-Pack“ und Ordner pro Kategorie; Namen in der Sprache der Oberfläche.
+  Mit einem Klick ins Projekt holen (Ordner „Bibliothek/Starter-Pack/…“). Das Pack lässt sich nicht versehentlich löschen.
 
 NEU IN 0.9.24 · Feedback-Pakete 1 + 2: Follower als Spielmechanik, Live-Chat, Ausdauer, Masken, Design-Vorlagen, Asset-Bibliothek u. v. m.
 Paket 2:
