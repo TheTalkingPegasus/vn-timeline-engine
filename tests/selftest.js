@@ -1137,6 +1137,12 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
       if (!DV.PRESETS || DV.PRESETS.PHONE.length < 6 || !DV.WEB_TPL || DV.WEB_TPL.length < 6) out.push('Vorlagen fehlen');
       for (const t of DV.WEB_TPL || []) { const pg = t.make(); if (!pg.els.length || pg.els.some((e) => !e.id || e.x == null)) out.push('Vorlage ' + t.id); }
       if (!(VN.api && VN.api.library && VN.api.library.list)) out.push('Bibliothek fehlt');
+      // Mund (0.9.25): Kreuzung Objekt ↔ Lippenlinie, Breite, Kiefer-Bereich
+      const scM = { items: [{ actor: { id: 'pm', mouthProp: { target: 'fm', back: [0, 0.5], tip: [1, 0.5], thick: 10 } }, _geo: { mat: [1, 0, 0, 1, 0, 0], toLocal: (u, v) => [u * 100, v * 100] } }] };
+      const cr = Anim.Mouth.crossing(scM, { id: 'fm' }, [50, 40], [50, 60], [1, 0]);
+      if (!cr || Math.abs(cr.s - 0.5) > 0.01 || Math.abs(cr.width - 10) > 0.01) out.push('Mund-Kreuzung ' + JSON.stringify(cr));
+      if (Anim.Mouth.crossing(scM, { id: 'fm' }, [50, 40], [50, 60], [-1, 0])) out.push('Mund: Spitze auf der falschen Seite zählt');
+      if (Anim.Mouth.crossing(scM, { id: 'fm' }, [50, 70], [50, 90], [1, 0])) out.push('Mund: neben der Linie zählt');
       const t = JSON.parse(keep); p.devices = t.d; p.chats = t.c; p.social = t.s; p.currencies = t.cur; p.time = t.t; p.liveChats = t.lc; p.stamina = t.st; VN.migrate(p);
       return JSON.stringify(out);
     })()`));
