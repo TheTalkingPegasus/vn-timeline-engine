@@ -4,10 +4,15 @@
   const KIND = { image: ['🖼', 'Bilder'], audio: ['🔊', 'Audio'], video: ['🎬', 'Video'], font: ['🔤', 'Schriften'] };
   const Lib = (window.Library = {
     api: () => VN.api && VN.api.library,
-    st: { tab: 'lib', kind: '', folder: '', q: '', sel: new Set(), addSel: new Set(), addFolder: '' },
+    st: { tab: 'lib', kind: '', folder: '', q: '', src: '', sel: new Set(), addSel: new Set(), addFolder: '' },
+    // Starter-Pack (0.9.25): Namen und Ordner kommen in allen Sprachen mit – hier in der Sprache der Oberfläche
+    loc(o, fb) { const l = VN.lang || 'en'; return o && typeof o === 'object' ? o[l] || o.en || o.de || fb : (o || fb); },
+    fix(L) {
+      return (L || []).map((x) => (x && x.builtin ? Object.assign({}, x, { name: Lib.loc(x.name, '?'), folder: Lib.loc(x.packName, 'Starter-Pack') + '/' + Lib.loc(x.catName, x.cat || '') }) : x));
+    },
     async open() {
       if (!Lib.api()) { VN.toast(VN.t('Die Bibliothek ist hier nicht verfügbar.')); return; }
-      Lib.list = await Lib.api().list();
+      Lib.list = Lib.fix(await Lib.api().list());
       const back = el('div', { class: 'modal-back', onclick: (e) => { if (e.target === back) Lib.close(); } });
       const card = el('div', { class: 'modal lib-modal' });
       back.appendChild(card);
@@ -39,14 +44,15 @@
         el('button', { class: 'btn', onclick: () => Lib.close() }, VN.t('Schließen'))));
       if (S.tab === 'add') return Lib.drawAdd(card);
       const L = Lib.list || [];
-      const folders = [...new Set(L.map((x) => x.folder).filter(Boolean))].sort();
-      const vis = L.filter((x) => (!S.kind || x.kind === S.kind) && (!S.folder || x.folder === S.folder) && (!S.q || (x.name + ' ' + x.folder).toLowerCase().includes(S.q.toLowerCase())));
+      const folders = [...new Set(L.filter((x) => !S.src || (S.src === 'pack') === !!x.builtin).map((x) => x.folder).filter(Boolean))].sort();
+      const vis = L.filter((x) => (!S.src || (S.src === 'pack') === !!x.builtin) && (!S.kind || x.kind === S.kind) && (!S.folder || x.folder === S.folder) && (!S.q || (x.name + ' ' + x.folder).toLowerCase().includes(S.q.toLowerCase())));
       const fsel = el('select', { class: 'small-input', onchange: (e) => { S.folder = e.target.value; Lib.draw(); } }, el('option', { value: '' }, VN.t('Alle Ordner')), ...folders.map((f) => { const o = el('option', { value: f }, f); if (f === S.folder) o.selected = true; return o; }));
       const q = el('input', { type: 'search', class: 'small-input', placeholder: VN.t('Suchen …'), value: S.q, oninput: (e) => { S.q = e.target.value; clearTimeout(Lib._qt); Lib._qt = setTimeout(() => { Lib.draw(); const n = Lib.card.querySelector('input[type=search]'); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }, 200); } });
       card.append(el('div', { class: 'row gap8', style: { flexWrap: 'wrap', marginBottom: '8px' } },
         el('div', { class: 'seg' }, el('button', { class: !S.kind ? 'active' : '', onclick: () => { S.kind = ''; Lib.draw(); } }, VN.t('Alle')), ...Object.entries(KIND).map(([k, [i, l]]) => el('button', { class: S.kind === k ? 'active' : '', onclick: () => { S.kind = k; Lib.draw(); } }, i + ' ' + VN.t(l)))),
-        fsel, q, el('span', { class: 'muted small' }, VN.tf('{n} Dateien', { n: L.length }))));
-      if (!L.length) {
+        el('div', { class: 'seg' }, ...[['', 'Alles'], ['own', 'Meine Dateien'], ['pack', 'Starter-Pack']].map(([k, l]) => el('button', { class: S.src === k ? 'active' : '', title: k === 'pack' ? VN.t('Mitgelieferte Bilder (CC0) – frei nutzbar, auch in verkauften Spielen, ohne Namensnennung') : '', onclick: () => { S.src = k; S.folder = ''; Lib.draw(); } }, (k === 'pack' ? '⭐ ' : '') + VN.t(l)))),
+        fsel, q, el('span', { class: 'muted small' }, VN.tf('{n} Dateien', { n: vis.length }))));
+      if (!L.some((x) => !x.builtin) && S.src === 'own') {
         card.appendChild(el('div', { class: 'hint-box' }, VN.t('Noch leer. Unter „Aus diesem Projekt hinzufügen“ legst du Bilder und Sounds ab – danach kannst du sie in jedem Projekt mit einem Klick holen.')));
         return;
       }
@@ -56,9 +62,9 @@
         const thumb = x.kind === 'image' ? el('div', { class: 'lib-thumb', 'data-lib': x.file, style: { backgroundImage: Lib.api().url(x) ? `url("${Lib.api().url(x)}")` : '' } })
           : x.kind === 'audio' ? el('div', { class: 'lib-thumb snd' }, el('button', { class: 'btn tiny lib-play', onclick: (e) => { e.stopPropagation(); Lib.play(x, e.currentTarget); } }, '▶'))
             : el('div', { class: 'lib-thumb other' }, KIND[x.kind] ? KIND[x.kind][0] : '📄');
-        const nm = el('div', { class: 'lib-name', title: VN.t('Doppelklick = umbenennen'), ondblclick: async (e) => { e.stopPropagation(); const v = prompt(VN.t('Name'), x.name); if (v != null && v.trim()) { Lib.list = await Lib.api().update(x.id, { name: v.trim() }); Lib.draw(); } } }, x.name);
+        const nm = el('div', { class: 'lib-name', title: x.builtin ? x.name : VN.t('Doppelklick = umbenennen'), ondblclick: async (e) => { e.stopPropagation(); if (x.builtin) return; const v = prompt(VN.t('Name'), x.name); if (v != null && v.trim()) { Lib.list = Lib.fix(await Lib.api().update(x.id, { name: v.trim() })); Lib.draw(); } } }, x.name);
         grid.appendChild(el('div', { class: 'lib-card' + (on ? ' on' : ''), onclick: () => { if (on) S.sel.delete(x.id); else S.sel.add(x.id); Lib.draw(); } },
-          thumb, nm, el('div', { class: 'lib-meta' }, (x.folder ? '📁 ' + x.folder : '') + (x.size ? ' · ' + Math.max(1, Math.round(x.size / 1024)) + ' KB' : '')), on ? el('span', { class: 'lib-check' }, '✓') : null));
+          thumb, nm, el('div', { class: 'lib-meta' }, (x.builtin ? '⭐ ' + Lib.loc(x.catName, '') : x.folder ? '📁 ' + x.folder : '') + (x.size ? ' · ' + Math.max(1, Math.round(x.size / 1024)) + ' KB' : '')), on ? el('span', { class: 'lib-check' }, '✓') : null));
       }
       card.appendChild(grid);
       const n = [...S.sel].filter((id) => L.some((x) => x.id === id)).length;
@@ -66,8 +72,8 @@
         el('button', { class: 'btn tiny', onclick: () => { for (const x of vis) S.sel.add(x.id); Lib.draw(); } }, VN.t('Alle sichtbaren wählen')),
         n ? el('button', { class: 'btn tiny', onclick: () => { S.sel.clear(); Lib.draw(); } }, VN.t('Auswahl aufheben')) : null,
         el('div', { class: 'spacer' }),
-        n ? el('button', { class: 'btn tiny', onclick: async () => { const f = prompt(VN.t('Ordner in der Bibliothek'), ''); if (f == null) return; for (const id of S.sel) Lib.list = await Lib.api().update(id, { folder: f.trim() }); Lib.draw(); } }, '📁 ' + VN.t('Ordner')) : null,
-        n ? el('button', { class: 'btn tiny danger', onclick: async () => { if (!confirm(VN.tf('{n} Dateien aus der Bibliothek löschen? (Projekte, die sie schon benutzen, behalten ihre Kopie.)', { n }))) return; Lib.list = await Lib.api().remove([...S.sel]); S.sel.clear(); Lib.draw(); } }, VN.t('Löschen')) : null,
+        n ? el('button', { class: 'btn tiny', onclick: async () => { const f = prompt(VN.t('Ordner in der Bibliothek'), ''); if (f == null) return; for (const id of S.sel) { if (String(id).startsWith('pack:')) continue; Lib.list = Lib.fix(await Lib.api().update(id, { folder: f.trim() })); } Lib.draw(); } }, '📁 ' + VN.t('Ordner')) : null,
+        n ? el('button', { class: 'btn tiny danger', onclick: async () => { const own = [...S.sel].filter((id) => !String(id).startsWith('pack:')); if (!own.length) { VN.toast(VN.t('Das Starter-Pack gehört zur Engine und kann nicht gelöscht werden.')); return; } if (!confirm(VN.tf('{n} Dateien aus der Bibliothek löschen? (Projekte, die sie schon benutzen, behalten ihre Kopie.)', { n: own.length }))) return; Lib.list = Lib.fix(await Lib.api().remove(own)); S.sel.clear(); Lib.draw(); } }, VN.t('Löschen')) : null,
         el('button', { class: 'btn primary', disabled: !n || !VN.dir, onclick: () => Lib.importSel() }, '⬇ ' + (n ? VN.tf('{n} ins Projekt holen', { n }) : VN.t('Ins Projekt holen')))));
     },
     async importSel() {
@@ -79,6 +85,7 @@
       // Ordner aus der Bibliothek übernehmen (Dateiliste bleibt aufgeräumt)
       if (added.length) VN.mutate(() => { for (const a of added) { const r = res.find((y) => y.file === a.file); const f = (r && r.folder) || fol.get(a.name); if (f) a.folder = 'Bibliothek/' + f; } });
       if (window.App && App.renderAssets) App.renderAssets();
+      if (added.length) VN.toast(VN.tf('{n} Dateien ins Projekt geholt', { n: added.length }));
       Lib.st.sel.clear();
       Lib.draw();
     },
@@ -107,7 +114,7 @@
         el('button', { class: 'btn primary', disabled: !n, onclick: async () => {
           const items = assets.filter((a) => S.addSel.has(a.id)).map((a) => ({ file: a.file, name: a.name, folder: S.addFolder || a.folder || '' }));
           const r = await Lib.api().add(items, S.addFolder);
-          Lib.list = r.list; S.addSel.clear();
+          Lib.list = Lib.fix(r.list); S.addSel.clear();
           VN.toast(VN.tf('{n} Dateien in der Bibliothek gespeichert', { n: r.added }));
           S.tab = 'lib'; Lib.draw();
         } }, '📚 ' + (n ? VN.tf('{n} in die Bibliothek', { n }) : VN.t('In die Bibliothek')))));

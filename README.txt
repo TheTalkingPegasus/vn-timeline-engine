@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototype 0.9.24
+VN Timeline Engine · Prototype 0.9.25
 ====================================
 (Deutsch: siehe LIES MICH.txt)
 
@@ -15,6 +15,8 @@ Without installing (ZIP):
    isn't signed: "More info" → "Run anyway".
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
+
+NEW IN 0.9.25 · Starter pack: 78 free CC0 images (anime style, 256 px) in the asset library – phones in 4 colors × 5 views and 58 everyday items (money, flowers, food, drinks, everyday things, gifts)
 
 NEW IN 0.9.24 · Feedback packages 1 + 2: followers as a game mechanic (growth, currency link), live chat for stream scenes, stamina & tiredness, keyframable masks per actor, phone/computer design templates and website page templates, cross-project asset library; rounded custom bubbles, portrait styles, full transcript (apps, social, websites), blend modes and unlockable blur for website images, minigame rewards, keyframe box-select + copy/paste, duplicate actors, hub object idle motion
 

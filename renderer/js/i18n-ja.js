@@ -5166,7 +5166,13 @@ window.VN_I18N_JA = {
 "Danach wieder (%)": "その後の値（%）",
 "Aufwachen: Ohne Ziel bleibt das Spiel, wo es ist. Mit einem Hub oder Hub-Dialog (z. B. „Schlafzimmer“) wacht die Figur dort auf.": "目覚め：指定なしならその場のまま。ハブやハブ会話（例：「寝室」）を指定するとそこで目覚めます。",
 "Ausdauer & Müdigkeit": "スタミナと疲労",
-"Auswahl, Minispiele und Reisen kosten Kraft. Balken oder Symbole, müde Augen, Gähnen, Einschlafen und Aufwachen.": "選択肢・ミニゲーム・移動で体力を消費。バーまたはアイコン、眠い目、あくび、眠りと目覚め。"
+"Auswahl, Minispiele und Reisen kosten Kraft. Balken oder Symbole, müde Augen, Gähnen, Einschlafen und Aufwachen.": "選択肢・ミニゲーム・移動で体力を消費。バーまたはアイコン、眠い目、あくび、眠りと目覚め。",
+"Alles": "すべて",
+"Meine Dateien": "自分のファイル",
+"Starter-Pack": "スターターパック",
+"Mitgelieferte Bilder (CC0) – frei nutzbar, auch in verkauften Spielen, ohne Namensnennung": "同梱の画像（CC0）– 販売するゲームでも自由に使え、クレジット表記も不要",
+"Das Starter-Pack gehört zur Engine und kann nicht gelöscht werden.": "スターターパックはエンジンの一部なので削除できません。",
+"{n} Dateien ins Projekt geholt": "{n}個のファイルをプロジェクトに追加しました"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

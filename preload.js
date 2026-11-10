@@ -55,7 +55,7 @@ contextBridge.exposeInMainWorld('vnApi', {
     update: (id, fields) => ipcRenderer.invoke('lib:update', Object.assign({ id }, fields || {})),
     remove: (ids) => ipcRenderer.invoke('lib:remove', { ids }),
     import: (ids) => ipcRenderer.invoke('lib:import', { ids }),
-    url: (x) => 'vnasset://library/' + encodeURIComponent(x.file)
+    url: (x) => (x.builtin ? 'vnasset://pack/' + String(x.file).split('/').map(encodeURIComponent).join('/') : 'vnasset://library/' + encodeURIComponent(x.file))
   },
   fileUrl: (dir, rel) => 'vnasset://project/' + rel.split(/[\\/]/).map(encodeURIComponent).join('/'),
   // Pfad einer wirklich hineingezogenen Datei. Nur echte Dateien aus Ziehen & Ablegen haben einen Pfad –

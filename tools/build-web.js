@@ -52,6 +52,8 @@ copy(path.join(root, 'LICENSE'), path.join(out, 'LICENSE.txt'));
 copy(path.join(root, 'node_modules', 'jszip', 'dist', 'jszip.min.js'), path.join(out, 'vendor', 'jszip.min.js'));
 copy(path.join(root, 'node_modules', 'jszip', 'LICENSE.markdown'), path.join(out, 'vendor', 'jszip-LICENSE.md'));
 fs.writeFileSync(path.join(out, '.nojekyll'), '');
+// Mitgeliefertes Starter-Pack (CC0-Bilder für die Asset-Bibliothek)
+if (fs.existsSync(path.join(root, 'starter-assets'))) copyDir(path.join(root, 'starter-assets'), path.join(out, 'starter-assets'));
 
 // 4. Beispielprojekte (wie „Beispielprojekt“, „Tutorial“ und „Lernen“ in der Desktop-Version)
 const { createDemoProject } = require(path.join(root, 'demo.js'));

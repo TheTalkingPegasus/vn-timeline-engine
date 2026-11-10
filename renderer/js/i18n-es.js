@@ -5166,7 +5166,13 @@ window.VN_I18N_ES = {
 "Danach wieder (%)": "Después de nuevo (%)",
 "Aufwachen: Ohne Ziel bleibt das Spiel, wo es ist. Mit einem Hub oder Hub-Dialog (z. B. „Schlafzimmer“) wacht die Figur dort auf.": "Despertar: sin destino el juego sigue donde está. Con un hub o diálogo de hub (p. ej. «Dormitorio») el personaje despierta allí.",
 "Ausdauer & Müdigkeit": "Resistencia y cansancio",
-"Auswahl, Minispiele und Reisen kosten Kraft. Balken oder Symbole, müde Augen, Gähnen, Einschlafen und Aufwachen.": "Elecciones, minijuegos y viajes cuestan fuerzas. Barra o iconos, ojos cansados, bostezos, dormirse y despertar."
+"Auswahl, Minispiele und Reisen kosten Kraft. Balken oder Symbole, müde Augen, Gähnen, Einschlafen und Aufwachen.": "Elecciones, minijuegos y viajes cuestan fuerzas. Barra o iconos, ojos cansados, bostezos, dormirse y despertar.",
+"Alles": "Todo",
+"Meine Dateien": "Mis archivos",
+"Starter-Pack": "Pack de inicio",
+"Mitgelieferte Bilder (CC0) – frei nutzbar, auch in verkauften Spielen, ohne Namensnennung": "Imágenes incluidas (CC0): uso libre, también en juegos que vendas, sin atribución",
+"Das Starter-Pack gehört zur Engine und kann nicht gelöscht werden.": "El pack de inicio forma parte del motor y no se puede borrar.",
+"{n} Dateien ins Projekt geholt": "{n} archivos añadidos al proyecto"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",
