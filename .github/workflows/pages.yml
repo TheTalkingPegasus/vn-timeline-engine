@@ -4,7 +4,7 @@ name: Web-Version (GitHub Pages)
 on:
   push:
     branches: [main]
-    paths: ['renderer/**', 'templates/**', 'demo.js', 'tutorial.js', 'project-lang.js', 'main.js', 'tools/build-web.js', 'LICENSE', '.github/workflows/pages.yml']
+    paths: ['renderer/**', 'templates/**', 'demo.js', 'tutorial.js', 'project-lang.js', 'main.js', 'tools/build-web.js', 'starter-assets/**', 'LICENSE', '.github/workflows/pages.yml']
   workflow_dispatch:
 permissions:
   contents: read
