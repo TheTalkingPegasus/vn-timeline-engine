@@ -679,6 +679,7 @@
       hud.appendChild(chip);
     }
     if (VN.Life && VN.Life.hudExtra) VN.Life.hudExtra(hud, run.rs);
+    for (const f of VN.hudHooks || []) { try { f(hud, run.rs); } catch (e) { console.error(e); } }
     if (window.VNPlugin) for (const n of VNPlugin.hudItems(run.rs)) hud.appendChild(n);
     if (VN.Extras) for (const v of VN.Extras.stats()) if (v.hud) hud.appendChild(el('span', { class: 'money-chip st-chip' }, v.icon && VN.assetUrl(v.icon) ? el('span', { class: 'mc-ico', style: { backgroundImage: `url("${VN.assetUrl(v.icon)}")` } }) : el('span', { class: 'mc-dot', style: { background: v.color || '#e8a43a' } }), VN.tr(v.id + ':name', v.name) + ' ' + (Number(run.rs.vars[v.id]) || 0)));
     if (!p.inventory.hudMoney) return;
@@ -1711,6 +1712,7 @@
     quicksave,
 
     close(silent) {
+      if (VN.LiveChat) VN.LiveChat.stop();
       if (!session && !silent) return;
       if (VN.gameMode && !silent) { showMainMenu(); return; }
       if (splashStop) splashStop();

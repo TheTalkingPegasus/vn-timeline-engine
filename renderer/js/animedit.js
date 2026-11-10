@@ -211,6 +211,7 @@
       const m = (AnimEd._maps || []).find((x) => x.it.actor === actor);
       if (!m) return;
       const NS = 'http://www.w3.org/2000/svg';
+      if (ui().animMaskEd && actor.mask && actor.mask.on) { AnimEd.drawMask(svg, a, actor); return; }
       const [bx, by] = m.base;
       const mk = (tag, at) => { const n = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(at)) n.setAttribute(k, v); svg.appendChild(n); return n; };
       if (a.type === 'scene') mk('circle', { cx: bx, cy: by, r: 7, fill: 'none', stroke: '#8fc3f0', 'stroke-width': 2, 'stroke-dasharray': '3 2' });
@@ -237,6 +238,7 @@
         const kx = (svg.viewBox.baseVal && svg.viewBox.baseVal.width ? svg.viewBox.baseVal.width / r.width : 1);
         const px = (e.clientX - r.left) * kx, py = (e.clientY - r.top) * kx;
         const actor = actorOf(a);
+        if (ui().animMaskEd && actor && actor.mask && actor.mask.on && AnimEd.maskDown(e, px, py, svg, r, kx, a, actor)) return;
         if (ui().animSew && actor && actor.puppet) { AnimEd.sewDown(e, svg, r, kx, a, actor); return; }
         if (actor && actor.puppet && AnimEd.pupDown(e, px, py, r, kx, a, actor)) return;
         const hit = (AnimEd._joints || []).slice().reverse().find((j) => Math.hypot(j.tx - px, j.ty - py) < 12);
@@ -285,6 +287,90 @@
           VN.mutate(() => { ac.move = after; ui().animKey = { row: 'move', t }; });
         });
       };
+    },
+
+    // ---------- Masken (0.9.24) ----------
+    // Bühne (Prozent) ↔ Canvas-Pixel, mit Kamera
+    maskM() { const c = (AnimEd._maps && AnimEd._maps.cam) || [1, 0, 0, 1, 0, 0]; return c; },
+    toPx(xp, yp, svg) { const W = svg.viewBox.baseVal.width, H = svg.viewBox.baseVal.height, [a, b, c, d, e, f] = AnimEd.maskM(); const x = xp / 100 * W, y = yp / 100 * H; return [a * x + c * y + e, b * x + d * y + f]; },
+    toPct(px, py, svg) { const W = svg.viewBox.baseVal.width, H = svg.viewBox.baseVal.height, [a, b, c, d, e, f] = AnimEd.maskM(); const det = a * d - b * c || 1; const x = (d * (px - e) - c * (py - f)) / det, y = (-b * (px - e) + a * (py - f)) / det; return [x / W * 100, y / H * 100]; },
+    maskSet(actor, t, fields) {
+      const m = actor.mask;
+      m.keys = m.keys || [];
+      if (!m.keys.length) { Object.assign(m, fields); return; }
+      const near = m.keys.find((k) => Math.abs(k.t - t) < 0.03);
+      if (near) Object.assign(near, fields);
+      else { const b = Anim.maskAt(actor, t); m.keys.push(Object.assign({ t: Math.round(t * 100) / 100, e: 'ease-in-out', x: b.x, y: b.y, w: b.w, h: b.h, rot: b.rot }, fields)); m.keys.sort((x, y) => x.t - y.t); }
+    },
+    maskCorners(b) {
+      const r = (b.rot || 0) * Math.PI / 180, cs = Math.cos(r), sn = Math.sin(r), cx = b.x + b.w / 2, cy = b.y + b.h / 2;
+      return (u, v) => { const lx = (u - 0.5) * b.w, ly = (v - 0.5) * b.h; return [cx + lx * cs - ly * sn, cy + lx * sn + ly * cs]; };
+    },
+    drawMask(svg, a, actor) {
+      const NS = 'http://www.w3.org/2000/svg';
+      const mk = (tag, at) => { const n = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(at)) n.setAttribute(k, v); svg.appendChild(n); return n; };
+      const b = Anim.maskAt(actor, ui().animT || 0), U = AnimEd.maskCorners(b);
+      const P = (u, v) => { const [x, y] = U(u, v); return AnimEd.toPx(x, y, svg); };
+      const pts = b.shape === 'poly' && b.pts.length ? b.pts : b.shape === 'ellipse' ? Array.from({ length: 48 }, (_, i) => [0.5 + 0.5 * Math.cos(i / 48 * Math.PI * 2), 0.5 + 0.5 * Math.sin(i / 48 * Math.PI * 2)]) : [[0, 0], [1, 0], [1, 1], [0, 1]];
+      const d = pts.map((p, i) => (i ? 'L' : 'M') + P(p[0], p[1]).join(' ')).join(' ') + (pts.length >= 3 ? ' Z' : '');
+      mk('path', { d, fill: 'rgba(95,208,192,0.12)', stroke: '#5fd0c0', 'stroke-width': 2, 'stroke-dasharray': '6 4' });
+      // Rahmen des Kastens (gestrichelt, dünn) und Griffe
+      mk('path', { d: [[0, 0], [1, 0], [1, 1], [0, 1]].map((p, i) => (i ? 'L' : 'M') + P(p[0], p[1]).join(' ')).join(' ') + ' Z', fill: 'none', stroke: 'rgba(255,255,255,0.35)', 'stroke-width': 1 });
+      const [rx, ry] = P(1, 1); mk('rect', { x: rx - 6, y: ry - 6, width: 12, height: 12, fill: '#5fd0c0', stroke: '#fff', 'stroke-width': 2 });
+      const [tx, ty] = P(0.5, 0); const [ox, oy] = P(0.5, -0.12); mk('line', { x1: tx, y1: ty, x2: ox, y2: oy, stroke: '#5fd0c0', 'stroke-width': 2 }); mk('circle', { cx: ox, cy: oy, r: 6, fill: '#2b2e38', stroke: '#5fd0c0', 'stroke-width': 2 });
+      if (b.shape === 'poly') for (const p of b.pts) { const [x, y] = P(p[0], p[1]); mk('circle', { cx: x, cy: y, r: 5, fill: '#fff', stroke: '#5fd0c0', 'stroke-width': 2 }); }
+    },
+    // Ziehen: Fläche = verschieben, Ecke = Größe, Kreis = drehen, Punkt = Punkt; Umschalt + Klick = Punkt hinzufügen (freie Form)
+    maskDown(e, px, py, svg, r, kx, a, actor) {
+      const t = ui().animT || 0, m = actor.mask, b0 = Anim.maskAt(actor, t), U = AnimEd.maskCorners(b0);
+      const P = (u, v) => { const [x, y] = U(u, v); return AnimEd.toPx(x, y, svg); };
+      const near = (q, d) => Math.hypot(q[0] - px, q[1] - py) < (d || 10);
+      const before = JSON.stringify(m);
+      const pct = (ev) => AnimEd.toPct((ev.clientX - r.left) * kx, (ev.clientY - r.top) * kx, svg);
+      const inv = (xp, yp) => { const rr = -(b0.rot || 0) * Math.PI / 180, cx = b0.x + b0.w / 2, cy = b0.y + b0.h / 2, dx = xp - cx, dy = yp - cy; return [(dx * Math.cos(rr) - dy * Math.sin(rr)) / (b0.w || 1) + 0.5, (dx * Math.sin(rr) + dy * Math.cos(rr)) / (b0.h || 1) + 0.5]; };
+      const finish = () => { const after = JSON.stringify(m); actor.mask = JSON.parse(before); VN.mutate(() => { actor.mask = JSON.parse(after); }); };
+      e.preventDefault();
+      const [mx0, my0] = AnimEd.toPct(px, py, svg);
+      if (m.shape === 'poly') {
+        const i = (m.pts || []).findIndex((p) => near(P(p[0], p[1]), 8));
+        if (i >= 0 && e.altKey) { m.pts.splice(i, 1); finish(); return true; }
+        if (i >= 0) { VN.drag(e, (dx, dy, ev) => { const [xp, yp] = pct(ev); m.pts[i] = inv(xp, yp).map((v) => Math.round(v * 1000) / 1000); }, (dx, dy, moved) => { if (moved) finish(); else VN.render(); }); return true; }
+        if (e.shiftKey || (m.pts || []).length < 3) { m.pts = m.pts || []; m.pts.push(inv(mx0, my0).map((v) => Math.round(v * 1000) / 1000)); finish(); return true; }
+      }
+      if (near(P(1, 1), 12)) {
+        VN.drag(e, (dx, dy, ev) => { const [xp, yp] = pct(ev); const [u, v] = inv(xp, yp); AnimEd.maskSet(actor, t, { w: Math.max(1, Math.round(b0.w * u * 10) / 10), h: Math.max(1, Math.round(b0.h * v * 10) / 10), x: b0.x, y: b0.y }); }, (dx, dy, moved) => { if (moved) finish(); });
+        return true;
+      }
+      if (near(P(0.5, -0.12), 10)) {
+        const cx = b0.x + b0.w / 2, cy = b0.y + b0.h / 2;
+        VN.drag(e, (dx, dy, ev) => { const [xp, yp] = pct(ev); const W = svg.viewBox.baseVal.width, H = svg.viewBox.baseVal.height; const ang = Math.atan2((yp - cy) * H, (xp - cx) * W) * 180 / Math.PI + 90; AnimEd.maskSet(actor, t, { rot: Math.round(ang) }); }, (dx, dy, moved) => { if (moved) finish(); });
+        return true;
+      }
+      const [u, v] = inv(mx0, my0);
+      if (u >= 0 && u <= 1 && v >= 0 && v <= 1) {
+        VN.drag(e, (dx, dy, ev) => { const [xp, yp] = pct(ev); AnimEd.maskSet(actor, t, { x: Math.round((b0.x + xp - mx0) * 10) / 10, y: Math.round((b0.y + yp - my0) * 10) / 10 }); }, (dx, dy, moved) => { if (moved) finish(); });
+        return true;
+      }
+      return false;
+    },
+    maskCard(a, actor, t) {
+      const m = actor.mask;
+      const box = el('div', { class: 'opt-card', style: { marginTop: '8px' } }, el('div', { class: 'sec-title' }, '✂ ' + VN.t('Maske')));
+      box.appendChild(el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!(m && m.on), onchange: (e) => VN.mutate(() => { actor.mask = Object.assign(actor.mask || { shape: 'rect', invert: false, pts: [], keys: [] }, Object.assign({}, Anim.MASK0, actor.mask || {}), { on: e.target.checked }); ui().animMaskEd = e.target.checked; }) }), VN.t('Darsteller ausschneiden')));
+      if (!m || !m.on) { box.appendChild(el('div', { class: 'muted small' }, VN.t('Zeigt den Darsteller nur innerhalb (oder außerhalb) einer Form – z. B. ein Arm, der hinter einer anderen Figur verschwindet.'))); return box; }
+      const sel = (v, opts, fn) => { const s = el('select', { class: 'small-input', onchange: (e) => VN.mutate(() => fn(e.target.value)) }); for (const [k, l] of opts) { const o = el('option', { value: k }, VN.t(l)); if (k === v) o.selected = true; s.appendChild(o); } return s; };
+      box.append(
+        el('div', { class: 'row gap8', style: { flexWrap: 'wrap' } },
+          sel(m.shape || 'rect', [['rect', 'Rechteck'], ['ellipse', 'Ellipse'], ['poly', 'Freie Form']], (v) => { m.shape = v; if (v === 'poly' && !(m.pts || []).length) m.pts = [[0.1, 0.1], [0.9, 0.05], [0.95, 0.9], [0.1, 0.95]]; }),
+          el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!m.invert, onchange: (e) => VN.mutate(() => { m.invert = e.target.checked; }) }), VN.t('umkehren (Form schneidet weg)'))),
+        el('div', { class: 'row gap8', style: { flexWrap: 'wrap', marginTop: '6px' } },
+          el('button', { class: 'btn tiny' + (ui().animMaskEd ? ' primary' : ''), onclick: () => { ui().animMaskEd = !ui().animMaskEd; VN.render(); } }, '✏ ' + VN.t('Maske bearbeiten')),
+          el('button', { class: 'btn tiny', title: VN.t('Keyframe der Maske an der Abspielposition – danach bewegt sie sich mit'), onclick: () => VN.mutate(() => { const b = Anim.maskAt(actor, t); m.keys = m.keys || []; AnimEd.setKey(m.keys, t, { x: b.x, y: b.y, w: b.w, h: b.h, rot: b.rot }); }) }, '◆ ' + VN.t('Keyframe')),
+          m.shape === 'poly' ? el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { m.pts = []; ui().animMaskEd = true; }) }, VN.t('Form neu zeichnen')) : null),
+        el('div', { class: 'muted small', style: { marginTop: '4px' } }, m.shape === 'poly'
+          ? VN.t('Bearbeiten: Fläche ziehen = verschieben · Ecke = Größe · Kreis = drehen · Punkte ziehen · Umschalt + Klick = Punkt hinzufügen · Alt + Klick auf Punkt = löschen')
+          : VN.t('Bearbeiten: Fläche ziehen = verschieben · Ecke unten rechts = Größe · Kreis oben = drehen. Mit Keyframes bewegt sich die Maske mit.')));
+      return box;
     },
 
     // Darsteller doppeln (0.9.24): gleiche Figur, gleiche Animation – direkt davor eingereiht
@@ -393,6 +479,7 @@
     // ---------- Timeline ----------
     // Werte einer Zeile (für Inspektor und Graph)
     fields(row) {
+      if (row.id === 'mask') return [['x', 'X %'], ['y', 'Y %'], ['w', 'Breite %'], ['h', 'Höhe %'], ['rot', 'Drehung °']];
       return row.id === 'move' ? [['x', 'X %'], ['y', 'Höhe %'], ['scale', 'Größe %'], ['rot', 'Drehung °'], ['opacity', 'Deckkraft']] : row.id === 'cam' ? [['zoom', 'Zoom %'], ['panX', 'Schwenk X'], ['panY', 'Schwenk Y'], ['rot', 'Drehung °']] : row.part ? [['r', 'Drehung °'], ['x', 'Versatz X'], ['y', 'Versatz Y']] : [['a', 'Winkel °']];
     },
     rows(a) {
@@ -408,6 +495,7 @@
         const names = rig ? rig.bones.map((b) => b.name) : Object.keys(actor.bones || {});
         for (const n of names) rows.push({ id: 'bone:' + n, label: n, keys: (actor.bones || {})[n] || [], bone: n, color: '#e8a43a' });
       }
+      if (actor && actor.mask && actor.mask.on) rows.splice(1, 0, { id: 'mask', label: VN.t('Maske'), keys: actor.mask.keys || (actor.mask.keys = []), color: '#5fd0c0' });
       if (a.type === 'scene') rows.push({ id: 'cam', label: 'Kamera', keys: a.cam || (a.cam = []), color: '#b39cf0' });
       return rows;
     },
@@ -914,6 +1002,7 @@
             el('label', { class: 'check', style: { alignSelf: 'flex-end' } }, el('input', { type: 'checkbox', checked: !!actor.flip, onchange: (e) => VN.mutate(() => { actor.flip = e.target.checked; }) }), 'Spiegeln')),
           !rig && !actor.puppet ? el('div', { class: 'muted small' }, 'Diese Figur hat noch keine Bones. ', el('button', { class: 'btn tiny', onclick: () => App.openBones(actor.asset) }, 'Bones einrichten')) : null);
         if (actor.puppet && Puppet.get(actor.puppet)) acCard.appendChild(AnimEd.puppetCard(a, actor, t));
+        if (a.type === 'scene') acCard.appendChild(AnimEd.maskCard(a, actor, t));
       }
       box.appendChild(acCard);
       if (a.type === 'scene' && actor && actor.puppet && a.actors.filter((x) => x.puppet).length >= 2) box.appendChild(AnimEd.seamCard(a, actor));

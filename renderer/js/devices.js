@@ -98,7 +98,9 @@
   DV.newPost = (author) => ({ id: VN.uid('sp'), author: author || '', text: VN.t('Was für ein Tag! ✨'), image: '', likes: 12, when: '', mode: 'auto', conds: [], comments: [], replies: [], likeActions: [] });
   DV.sst = (rs) => { rs.social = VN.fill(rs.social, { seq: 0, shown: {}, hidden: {}, liked: {}, rep: {}, seen: 0, fol: {} }); return rs.social; };
   // Follower: Grundwert am Kontakt + Änderungen im Spielstand (Aktion „Follower ändern“)
-  DV.followers = (c, rs) => { if (!c) return 0; const base = Math.max(0, Math.round(Number(c.followers) || 0)); const f = rs ? DV.sst(rs).fol[c.id] : null; return Math.max(0, f && f.set != null ? f.set + (f.add || 0) : base + ((f && f.add) || 0)); };
+  // Follower als Währung (0.9.24): dann ist die Zahl der Kontostand dieser Währung (auch im Idler nutzbar)
+  DV.folCur = (c) => (c && c.folCur && VN.project.currencies.find((x) => x.id === c.folCur)) || null;
+  DV.followers = (c, rs) => { if (!c) return 0; const cur = DV.folCur(c); if (cur) return Math.max(0, Math.round(rs ? (rs.money || {})[cur.id] || 0 : Number(cur.start) || 0)); const base = Math.max(0, Math.round(Number(c.followers) || 0)); const f = rs ? DV.sst(rs).fol[c.id] : null; return Math.max(0, f && f.set != null ? f.set + (f.add || 0) : base + ((f && f.add) || 0)); };
   // Beiträge, deren Bedingungen jetzt stimmen, erscheinen (einmal; danach bleiben sie, bis sie gelöscht werden)
   DV.socialSync = (rs) => {
     if (!rs || !DV.socialOn()) return [];
@@ -135,6 +137,9 @@
       else if (e.kind === 'image') st.filter = `drop-shadow(${o}cqw ${o}cqw ${b}cqw ${c})`;
       else st.boxShadow = `${o}cqw ${o}cqw ${b}cqw ${c}`;
     }
+    if (Number(e.ls)) st.letterSpacing = (Number(e.ls) * 0.1).toFixed(2) + 'cqw';
+    // Verlauf aus einer Vorlage (statt Fläche)
+    if (e.grad && e.kind !== 'image' && e.kind !== 'text') st.backgroundImage = e.grad;
     // Mischmodus (Multiplizieren, Negativ multiplizieren, Addieren …)
     if (e.blend && e.blend !== 'normal') st.mixBlendMode = e.blend;
     // Weichzeichnen – optional nur, bis Bedingungen erfüllt sind (z. B. „Bild freischalten“)
@@ -143,7 +148,7 @@
   };
   DV.elBlurred = (e, rs) => Number(e.blur) > 0 && !(rs && (e.blurConds || []).length && VN.checkConds(e.blurConds, rs));
   DV.BLENDS = [['normal', 'Normal'], ['multiply', 'Multiplizieren'], ['screen', 'Negativ multiplizieren'], ['plus-lighter', 'Addieren'], ['overlay', 'Ineinanderkopieren'], ['soft-light', 'Weiches Licht'], ['hard-light', 'Hartes Licht'], ['darken', 'Abdunkeln'], ['lighten', 'Aufhellen'], ['color-dodge', 'Farbig abwedeln'], ['color-burn', 'Farbig nachbelichten'], ['difference', 'Differenz (Subtrahieren)'], ['exclusion', 'Ausschluss'], ['hue', 'Farbton'], ['saturation', 'Sättigung'], ['color', 'Farbe'], ['luminosity', 'Luminanz']];
-  DV.EL = { kind: 'text', x: 10, y: 10, w: 40, h: 8, text: '', image: '', color: '#1c1e24', bg: '', size: 4, bold: false, align: 'left', font: '', radius: 0, border: '', shadow: 0, shadowColor: '#000000', alpha: 100, blend: 'normal', blur: 0, blurConds: [], blurHint: '', link: '', actions: [], conds: [], mode: 'password', answer: '', place: '', fail: '', okLink: '', okActions: [], results: [] };
+  DV.EL = { kind: 'text', x: 10, y: 10, w: 40, h: 8, text: '', image: '', color: '#1c1e24', bg: '', size: 4, bold: false, align: 'left', font: '', radius: 0, border: '', shadow: 0, shadowColor: '#000000', alpha: 100, blend: 'normal', blur: 0, blurConds: [], blurHint: '', grad: '', ls: 0, link: '', actions: [], conds: [], mode: 'password', answer: '', place: '', fail: '', okLink: '', okActions: [], results: [] };
   DV.fixEl = (e) => { VN.fill(e, Object.assign({ id: VN.uid('we') }, JSON.parse(JSON.stringify(DV.EL)))); return e; };
   DV.newPage = (path) => ({ id: VN.uid('wp'), path: path || '', title: '', bg: '#ffffff', bgImg: '', height: 140, els: [], guides: { x: [], y: [] } });
   DV.newSite = () => { const w = { id: VN.uid('ws'), name: VN.t('Neue Website'), domain: 'meine-seite.de', hidden: false, conds: [], pages: [DV.newPage('')] }; w.pages[0].els.push(DV.fixEl({ kind: 'text', x: 8, y: 8, w: 84, h: 12, text: VN.t('Willkommen!'), size: 7, bold: true }), DV.fixEl({ kind: 'text', x: 8, y: 24, w: 84, h: 20, text: VN.t('Hier steht der Text deiner Seite.'), size: 3.6 })); return w; };
@@ -396,14 +401,36 @@
     problem: (a) => (DV.post(a.post) ? null : 'Beitrag fehlt'),
     row: (row, a, sel) => row.appendChild(sel(a.post || '', postOpts(), (v) => VN.mutate(() => { a.post = v; })))
   });
+  // Follower ändern: op 'add' | 'pct' | 'set' – mit Währung verknüpft → Kontostand
+  DV.changeFollowers = (c, rs, op, amount) => {
+    if (!c || !rs) return 0;
+    const n = Math.round(Number(amount) || 0), now = DV.followers(c, rs);
+    const delta = op === 'set' ? Math.max(0, n) - now : op === 'pct' ? Math.round(now * (Number(amount) || 0) / 100) : n;
+    const cur = DV.folCur(c);
+    if (cur) { rs.money = rs.money || {}; rs.money[cur.id] = Math.max(0, now + delta); return delta; }
+    const f = DV.sst(rs).fol[c.id] = DV.sst(rs).fol[c.id] || { add: 0 };
+    if (op === 'set') { f.set = Math.max(0, n); f.add = 0; } else f.add = (f.add || 0) + delta;
+    return delta;
+  };
+  // Wachstum über die Zeit: c.folGrow = [{ when: 'day'|'week'|'weekday', wd, mode: 'pct'|'add', amount, conds }]
+  DV.growFollowers = (rs, day) => {
+    if (!DV.on()) return;
+    const L = VN.Life, wd = L && L.weekday ? ((Number(VN.project.time.startDay) || 0) + (day - 1)) % Math.max(1, VN.project.time.days.length) : 0;
+    for (const c of DV.contacts()) for (const g of c.folGrow || []) {
+      const due = g.when === 'week' ? (day - 1) % 7 === 0 : g.when === 'weekday' ? wd === (Number(g.wd) || 0) : true;
+      if (!due || !VN.checkConds(g.conds || [], rs)) continue;
+      const d = DV.changeFollowers(c, rs, g.mode === 'add' ? 'add' : 'pct', g.amount);
+      if (d) { const S = DV.sst(rs); S.folDay = S.folDay || {}; const prev = S.folDay[c.id]; S.folDay[c.id] = { d: day, n: (prev && prev.d === day ? prev.n : 0) + d }; }
+    }
+  };
+  // „+12 heute“ hinter der Follower-Zahl
+  DV.folToday = (c, rs) => { const S = rs && DV.sst(rs), f = S && S.folDay && S.folDay[c.id]; if (!f || !f.n || !rs.time || f.d !== rs.time.day) return ''; return ' (' + (f.n > 0 ? '+' : '') + f.n.toLocaleString() + ' ' + tp('heute') + ')'; };
+  VN.dayHooks = VN.dayHooks || [];
+  VN.dayHooks.push(DV.growFollowers);
   const ctOpts = () => [['', '— Kontakt —'], ...DV.contacts().map((c) => [c.id, c.name])];
   VN.registerAction('socialFollowers', {
     label: '👥 Follower ändern', on: DV.socialOn, make: () => ({ contact: (DV.contacts()[0] || {}).id || '', op: 'add', amount: 100 }),
-    apply: (a, rs) => {
-      const S = DV.sst(rs), n = Math.round(Number(a.amount) || 0);
-      const f = S.fol[a.contact] = S.fol[a.contact] || { add: 0 };
-      if (a.op === 'set') { f.set = Math.max(0, n); f.add = 0; } else if (a.op === 'pct') f.add = (f.add || 0) + Math.round(DV.followers(DV.contact(a.contact), rs) * n / 100); else f.add = (f.add || 0) + n;
-    },
+    apply: (a, rs) => DV.changeFollowers(DV.contact(a.contact), rs, a.op, a.amount),
     text: (a) => { const c = DV.contact(a.contact); const n = Number(a.amount) || 0; return '👥 ' + (c ? c.name : '?') + ' ' + (a.op === 'set' ? '= ' + n : a.op === 'pct' ? (n >= 0 ? '+' : '') + n + ' %' : (n >= 0 ? '+' : '') + n) + ' ' + VN.t('Follower'); },
     problem: (a) => (DV.contact(a.contact) ? null : 'Kontakt fehlt'),
     row: (row, a, sel) => {
@@ -583,11 +610,17 @@
     root.style.setProperty('--dv-size', (Number(L.size) || 88) + '%');
     root.style.setProperty('--dv-inset', (Number(L.inset) || 0) + '%');
     if (L.font) root.style.setProperty('--dv-font', window.Theme && Theme.fontCss ? Theme.fontCss(L.font) : L.font);
+    // Design-Vorlagen (0.9.24): Verlauf als Hintergrund, Gehäusefarbe, Glas-Flächen, Symbol-Stil, Blasen-Rundung
+    if (L.bezel) root.style.setProperty('--dv-bezel', L.bezel);
+    if (L.bubR != null && L.bubR !== '') root.style.setProperty('--dv-bubr', Number(L.bubR) + 'cqh');
+    if (L.glass) root.classList.add('dv-glass');
+    if (L.icoStyle && L.icoStyle !== 'solid') root.classList.add('ico-' + L.icoStyle);
     root.addEventListener('click', (e) => { e.stopPropagation(); if (e.target === root && !desk) close(); });
     root.addEventListener('wheel', (e) => e.stopPropagation());
     const screen = el('div', { class: 'dv-screen shape-' + (L.iconShape || 'round') });
     const wp = d.wallpaper && VN.assetUrl(d.wallpaper);
     if (wp) screen.style.backgroundImage = `url("${wp}")`;
+    else if (L.wall) screen.style.background = L.wall;
     const frame = d.frame && VN.assetUrl(d.frame);
     const body = el('div', { class: desk ? 'dv-desk' + (frame ? ' has-frame' : '') : 'dv-phone' + (frame ? ' has-frame' : '') }, screen, frame ? el('img', { class: 'dv-frame', src: frame, alt: '' }) : null);
     root.appendChild(body);
@@ -859,7 +892,7 @@
         if (prof) {
           const c = DV.contact(prof);
           list.appendChild(el('div', { class: 'dv-soc-prof' }, DV.avatar(c, 'xl'),
-            el('div', null, el('strong', null, name(c)), el('div', { class: 'dv-soc-stat' }, (feed.length === 1 ? tp('1 Beitrag') : VN.tf('{n} Beiträge', { n: feed.length })) + (c && (c.followers || DV.sst(rs).fol[c.id]) ? ' · ' + VN.tf('{n} Follower', { n: DV.followers(c, rs).toLocaleString() }) : '')),
+            el('div', null, el('strong', null, name(c)), el('div', { class: 'dv-soc-stat' }, (feed.length === 1 ? tp('1 Beitrag') : VN.tf('{n} Beiträge', { n: feed.length })) + (c && (c.followers || DV.sst(rs).fol[c.id] || DV.folCur(c) || (c.folGrow || []).length) ? ' · ' + VN.tf('{n} Follower', { n: DV.followers(c, rs).toLocaleString() }) + DV.folToday(c, rs) : '')),
               c && c.bio ? el('div', { class: 'dv-soc-bio' }, rich(XF(tr(c.id + ':bio', c.bio)))) : null)));
         }
         if (!feed.length) list.appendChild(el('div', { class: 'dv-empty' }, tp('Noch keine Beiträge.')));

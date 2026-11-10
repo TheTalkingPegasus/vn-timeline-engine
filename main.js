@@ -116,11 +116,76 @@ function fileStream(full, start, end) {
   return require('stream').Readable.toWeb(fs.createReadStream(full, { start, end, highWaterMark: 256 * 1024 }));
 }
 
+// ---------- Asset-Bibliothek (0.9.24): Bilder und Töne für alle Projekte, im Benutzerordner ----------
+const libDir = () => path.join(app.getPath('userData'), 'library');
+const libFiles = () => path.join(libDir(), 'files');
+const libIndex = () => { try { const j = JSON.parse(fs.readFileSync(path.join(libDir(), 'index.json'), 'utf8')); return Array.isArray(j) ? j : []; } catch (e) { return []; } };
+const libSave = (list) => { fs.mkdirSync(libDir(), { recursive: true }); const tmp = path.join(libDir(), 'index.json.tmp'); fs.writeFileSync(tmp, JSON.stringify(list, null, 1), 'utf8'); fs.renameSync(tmp, path.join(libDir(), 'index.json')); };
+const libClean = (v, n) => String(v == null ? '' : v).replace(/[\u0000-\u001f]/g, '').slice(0, n || 120);
+ipcMain.handle('lib:list', async () => (gameMode ? [] : libIndex()));
+ipcMain.handle('lib:add', async (_e, { items, folder }) => {
+  if (gameMode || !projectDir || !Array.isArray(items)) return { added: 0, list: libIndex() };
+  const list = libIndex();
+  fs.mkdirSync(libFiles(), { recursive: true });
+  let added = 0;
+  for (const it of items.slice(0, 2000)) {
+    const src = it && typeof it.file === 'string' ? inProject(it.file) : null;
+    if (!src || !fs.existsSync(src) || !kindOf(src)) continue;
+    const size = fs.statSync(src).size, name = libClean(it.name || path.parse(src).name);
+    if (list.some((x) => x.name === name && x.size === size && x.kind === kindOf(src))) continue; // schon da
+    const id = 'lib' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    const file = id + path.extname(src).toLowerCase();
+    fs.copyFileSync(src, path.join(libFiles(), file));
+    list.push({ id, name, kind: kindOf(src), file, folder: libClean(folder || it.folder || ''), size, added: Date.now() });
+    added++;
+  }
+  libSave(list);
+  return { added, list };
+});
+ipcMain.handle('lib:update', async (_e, { id, name, folder }) => {
+  const list = libIndex(), x = list.find((y) => y.id === id);
+  if (x) { if (name != null) x.name = libClean(name); if (folder != null) x.folder = libClean(folder); libSave(list); }
+  return list;
+});
+ipcMain.handle('lib:remove', async (_e, { ids }) => {
+  const set = new Set(Array.isArray(ids) ? ids : []);
+  const list = libIndex();
+  for (const x of list) if (set.has(x.id)) { try { fs.unlinkSync(path.join(libFiles(), path.basename(x.file))); } catch (e) { /* schon weg */ } }
+  const rest = list.filter((x) => !set.has(x.id));
+  libSave(rest);
+  return rest;
+});
+// Ins Projekt holen: Kopie in assets/ (mit dem Namen aus der Bibliothek)
+ipcMain.handle('lib:import', async (_e, { ids }) => {
+  if (gameMode || !projectDir) return [];
+  const want = new Set(Array.isArray(ids) ? ids : []), out = [];
+  const assetsDir = path.join(projectDir, 'assets');
+  fs.mkdirSync(assetsDir, { recursive: true });
+  for (const x of libIndex()) {
+    if (!want.has(x.id)) continue;
+    const src = path.join(libFiles(), path.basename(x.file));
+    if (!fs.existsSync(src)) continue;
+    const ext = path.extname(src), base = (x.name || 'datei').replace(/[\\/:*?"<>|]+/g, '_').slice(0, 80) || 'datei';
+    let name = base + ext, i = 1;
+    while (fs.existsSync(path.join(assetsDir, name))) name = base + '_' + (i++) + ext;
+    fs.copyFileSync(src, path.join(assetsDir, name));
+    out.push({ name: x.name, kind: x.kind, file: 'assets/' + name, folder: x.folder || '' });
+  }
+  return out;
+});
+
 function registerAssetProtocol() {
   protocol.handle('vnasset', async (req) => {
     try {
       const url = new URL(req.url);
-      const rel = decodeURIComponent(url.pathname).replace(/^\/+/, '');
+      let rel = decodeURIComponent(url.pathname).replace(/^\/+/, '');
+      // Bibliothek: vnasset://library/<datei>
+      if (url.hostname === 'library' && !gameMode) {
+        const full = path.join(libFiles(), path.basename(rel));
+        if (!fs.existsSync(full)) return new Response('nicht gefunden', { status: 404 });
+        const ext = path.extname(full).slice(1).toLowerCase();
+        return new Response(fs.readFileSync(full), { headers: { 'Content-Type': ({ png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif', svg: 'image/svg+xml', mp3: 'audio/mpeg', ogg: 'audio/ogg', wav: 'audio/wav', m4a: 'audio/mp4', mp4: 'video/mp4', webm: 'video/webm', ttf: 'font/ttf', otf: 'font/otf', woff: 'font/woff', woff2: 'font/woff2' })[ext] || 'application/octet-stream' } });
+      }
       if (!projectDir) return new Response('kein Projekt', { status: 404 });
       // Gepacktes Spiel: Datei aus dem Paket – oder, wenn Mods erlaubt sind, ein Ersatz aus dem Mod-Ordner
       let full = null, entry = null;
@@ -766,14 +831,14 @@ async function exportWebTo(dest, data, files) {
   if (!packed) fs.unlinkSync(path.join(dest, 'project.json'));
   const rd = path.join(__dirname, 'renderer');
   fs.mkdirSync(path.join(dest, 'engine'), { recursive: true });
-  const engineFiles = ['style.css', 'js/web-boot.js', 'js/vnpak.js', 'js/i18n-en.js', 'js/i18n-es.js', 'js/i18n-ja.js', 'js/core.js', 'js/i18n.js', 'js/audioout.js', 'js/logic.js', 'js/formula.js', 'js/life.js', 'js/extras.js', 'js/did.js', 'js/equip.js', 'js/world.js', 'js/quests.js', 'js/skills.js', 'js/combat.js', 'js/idle.js', 'js/devices.js', 'js/theme.js', 'js/a11y.js', 'js/uipresets.js', 'js/uidesign.js', 'js/perf.js', 'js/fx.js', 'js/lights.js', 'js/smear.js', 'js/gif.js', 'js/pixel.js', 'js/stage.js', 'js/systems.js', 'js/rig.js', 'js/anim.js', 'js/puppet.js', 'js/blink.js', 'js/plugins.js', 'js/menu.js', 'js/player-audio.js', 'js/player-menus.js', 'js/player-extras.js', 'js/player-world.js', 'js/relmsg.js', 'js/player-notify.js', 'js/player-skills.js', 'js/player-combat.js', 'js/player-idle.js', 'js/player.js', 'js/schema.js'];
+  const engineFiles = ['style.css', 'js/web-boot.js', 'js/vnpak.js', 'js/i18n-en.js', 'js/i18n-es.js', 'js/i18n-ja.js', 'js/core.js', 'js/i18n.js', 'js/audioout.js', 'js/logic.js', 'js/formula.js', 'js/life.js', 'js/extras.js', 'js/did.js', 'js/equip.js', 'js/world.js', 'js/quests.js', 'js/skills.js', 'js/combat.js', 'js/idle.js', 'js/devices.js', 'js/livechat.js', 'js/stamina.js', 'js/theme.js', 'js/a11y.js', 'js/uipresets.js', 'js/uidesign.js', 'js/perf.js', 'js/fx.js', 'js/lights.js', 'js/smear.js', 'js/gif.js', 'js/pixel.js', 'js/stage.js', 'js/systems.js', 'js/rig.js', 'js/anim.js', 'js/puppet.js', 'js/blink.js', 'js/plugins.js', 'js/menu.js', 'js/player-audio.js', 'js/player-menus.js', 'js/player-extras.js', 'js/player-world.js', 'js/relmsg.js', 'js/player-notify.js', 'js/player-skills.js', 'js/player-combat.js', 'js/player-idle.js', 'js/player.js', 'js/schema.js'];
   for (const f of engineFiles) await fs.promises.copyFile(path.join(rd, f), path.join(dest, 'engine', path.basename(f)));
   if (!packed) fs.writeFileSync(path.join(dest, 'engine', 'game-data.js'), 'window.VN_GAME = ' + JSON.stringify(data) + ';', 'utf8');
   try { fs.copyFileSync(path.join(__dirname, 'LICENSE'), path.join(dest, 'engine', 'LICENSE.txt')); } catch (e) { /* Lizenzdatei fehlt in der Entwicklung */ }
   const plugins = Object.entries(data.plugins || {}).filter(([, v]) => v && v.enabled).map(([k]) => k);
   const esc = (t) => String(t).replace(/[<&>]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]));
   const html = `<!doctype html>\n<html lang="${((l) => (/^[a-z]{2,3}(-[a-z0-9]{2,8})*$/i.test(l) ? l : 'de'))(String((data.languages && data.languages[0]) || 'de'))}">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>${esc(data.title || 'Spiel')}</title>\n<link rel="stylesheet" href="engine/style.css">\n<style>html,body{background:#000;overflow:hidden}</style>\n</head>\n<body>\n<div id="player"></div><div id="toast"></div><div id="ctxmenu" hidden></div>\n` +
-    ['game-data.js', 'web-boot.js', 'vnpak.js', 'i18n-en.js', 'i18n-es.js', 'i18n-ja.js', 'core.js', 'i18n.js', 'audioout.js', 'logic.js', 'formula.js', 'life.js', 'extras.js', 'did.js', 'equip.js', 'world.js', 'quests.js', 'skills.js', 'combat.js', 'idle.js', 'devices.js', 'theme.js', 'a11y.js', 'uipresets.js', 'uidesign.js', 'perf.js', 'fx.js', 'lights.js', 'smear.js', 'gif.js', 'pixel.js', 'stage.js', 'systems.js', 'rig.js', 'anim.js', 'puppet.js', 'blink.js', 'plugins.js', 'menu.js', 'player-audio.js', 'player-menus.js', 'player-extras.js', 'player-world.js', 'relmsg.js', 'player-notify.js', 'player-skills.js', 'player-combat.js', 'player-idle.js', 'schema.js'].filter((f) => !(packed && f === 'game-data.js')).map((f) => `<script src="engine/${f}"></script>`).join('\n') + '\n' +
+    ['game-data.js', 'web-boot.js', 'vnpak.js', 'i18n-en.js', 'i18n-es.js', 'i18n-ja.js', 'core.js', 'i18n.js', 'audioout.js', 'logic.js', 'formula.js', 'life.js', 'extras.js', 'did.js', 'equip.js', 'world.js', 'quests.js', 'skills.js', 'combat.js', 'idle.js', 'devices.js', 'livechat.js', 'stamina.js', 'theme.js', 'a11y.js', 'uipresets.js', 'uidesign.js', 'perf.js', 'fx.js', 'lights.js', 'smear.js', 'gif.js', 'pixel.js', 'stage.js', 'systems.js', 'rig.js', 'anim.js', 'puppet.js', 'blink.js', 'plugins.js', 'menu.js', 'player-audio.js', 'player-menus.js', 'player-extras.js', 'player-world.js', 'relmsg.js', 'player-notify.js', 'player-skills.js', 'player-combat.js', 'player-idle.js', 'schema.js'].filter((f) => !(packed && f === 'game-data.js')).map((f) => `<script src="engine/${f}"></script>`).join('\n') + '\n' +
     plugins.map((f) => `<script>VNPlugin._current = ${JSON.stringify(f)};</script><script src="plugins/${encodeURIComponent(f)}"></script>`).join('\n') + '\n<script src="engine/player.js"></script>\n<script>' + (packed ? 'VNWeb.startPacked("data.vnpak");' : 'VNWeb.start();') + '</script>\n</body>\n</html>\n';
   fs.writeFileSync(path.join(dest, 'index.html'), html, 'utf8');
   const localDe = packed ? 'Lokal testen: Gepackte Spiele brauchen einen Webserver (z. B. itch.io oder "npx serve" in diesem Ordner); per Doppelklick auf index.html startet das Spiel nicht.' : 'Lokal testen: index.html im Browser öffnen. Manche Browser blockieren dabei Bones-Animationen; auf itch.io oder einem Webserver funktioniert alles.';

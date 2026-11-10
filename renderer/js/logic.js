@@ -273,6 +273,8 @@
         const def = VNPlugin.actionDef(a.ref);
         if (!def) { console.warn('Plugin-Aktion fehlt: ' + a.ref); continue; }
         try {
+          // Ausdauer (0.9.24): jedes Minispiel kostet Kraft
+          if (def.minigame && VN.Stamina && VN.Stamina.on() && Number(VN.Stamina.cfg().costMinigame)) VN.Stamina.add(rs, -Number(VN.Stamina.cfg().costMinigame), gains);
           let r = def.run(Object.assign({}, a.params || {}), VNPlugin.makeCtx(rs, def.plugin.id));
           // Minispiele (0.8.0): gewonnen / verloren → eigene Szene, Hub oder Game-Over-Bildschirm
           // Belohnung (0.9.24): eigene Aktionen bei Sieg / Niederlage – Gegenstand, Geld, Beziehung, Follower …

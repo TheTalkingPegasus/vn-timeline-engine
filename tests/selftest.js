@@ -1086,6 +1086,64 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Transkript (Apps/Websites), Mischmodus + Weichzeichner, Minispiel-Belohnung, Keyframes kopieren, Doppeln, Hub-Idle');
   } catch (e) { general.push('Paket 1: ' + e.message); }
 
+  // 23. Paket 2 (0.9.24): Follower-Wachstum und Währung, Live-Chat, Ausdauer, Masken, Vorlagen, Bibliothek
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [], p = VN.project, DV = VN.Devices;
+      const keep = JSON.stringify({ d: p.devices, c: p.chats, s: p.social, cur: p.currencies, t: p.time, lc: p.liveChats, st: p.stamina });
+      p.devices.enabled = true; p.time.enabled = true;
+      p.chats.contacts = [{ id: 'cF', name: 'Fia', followers: 1000, folGrow: [{ when: 'day', mode: 'pct', amount: 10, conds: [] }, { when: 'weekday', wd: 6, mode: 'add', amount: 500, conds: [] }] }];
+      p.social = { name: 'P', posts: [{ id: 'spF', author: 'cF', text: 'x' }] }; VN.migrate(p);
+      const rs = VN.newRunState(); VN.Life.initRun(rs);
+      VN.Life.advance(rs, { mode: 'nextDay' });
+      const f1 = DV.followers(DV.contact('cF'), rs);
+      if (f1 !== 1100) out.push('Wachstum Tag ' + f1);
+      // Als Währung: Zahl = Kontostand, Aktion ändert die Währung
+      p.currencies.push({ id: 'cur_fol', name: 'Follower', start: 50 }); p.chats.contacts[0].folCur = 'cur_fol';
+      const rs2 = VN.newRunState();
+      if (DV.followers(DV.contact('cF'), rs2) !== 50) out.push('Währung Start ' + DV.followers(DV.contact('cF'), rs2));
+      VN.applyActions([{ type: 'socialFollowers', contact: 'cF', op: 'add', amount: 25 }], rs2, 'x');
+      if (rs2.money.cur_fol !== 75) out.push('Währung Aktion ' + rs2.money.cur_fol);
+      if (!VN.checkConds([{ type: 'socialFollowers', contact: 'cF', cmp: '>=', value: 70 }], rs2)) out.push('Bedingung');
+      // Live-Chat: Daten, Texte, Bedingung
+      const LC = VN.LiveChat, c = LC.newChat(); c.msgs = [{ id: 'lmT', user: c.users[0].id, text: 'Hallo Chat', gap: 1 }]; c.replies = [{ id: 'lrT', text: 'Hi!', at: 0 }]; p.liveChats = [c]; VN.migrate(p);
+      const ids = new Set(VN.collectTexts().map((x) => x.id));
+      if (!ids.has('lmT') || !ids.has('lrT')) out.push('Live-Chat im Transkript');
+      const rs3 = VN.newRunState(); LC.st(rs3).replied.lrT = 1;
+      if (!VN.checkConds([{ type: 'liveChatReplied', reply: 'lrT' }], rs3)) out.push('Live-Chat Bedingung');
+      if (LC.color(c, c.users[0]) !== LC.color(c, c.users[0]) || !/^#/.test(LC.color(c, c.users[0]))) out.push('Chat-Farbe');
+      // Ausdauer
+      const ST = VN.Stamina; p.stamina.enabled = true; p.stamina.max = 50; p.stamina.start = 40; p.stamina.empty.mode = 'none'; p.stamina.costMinigame = 5;
+      const rs4 = VN.newRunState();
+      VN.applyActions([{ type: 'stamina', op: 'add', amount: -15 }], rs4, 'y');
+      if (ST.get(rs4) !== 25) out.push('Ausdauer ' + ST.get(rs4));
+      if (VN.checkConds([{ type: 'stamina', cmp: '>=', value: 30 }], rs4)) out.push('Ausdauer-Bedingung');
+      VN.applyActions([{ type: 'stamina', op: 'add', amount: -999 }], rs4, 'y');
+      if (ST.get(rs4) !== 0) out.push('Ausdauer unter 0');
+      p.stamina.below = 20; p.stamina.tired.below = 50; ST.set(rs4, 20);
+      if (!ST.tired(rs4)) out.push('müde');
+      ST.set(rs4, 10); VN.Life.initRun(rs4); VN.Life.advance(rs4, { mode: 'nextDay' });
+      if (ST.get(rs4) !== 50) out.push('neuer Tag nicht voll ' + ST.get(rs4));
+      // Maske schneidet aus
+      const cv = document.createElement('canvas'); cv.width = 100; cv.height = 100; const g = cv.getContext('2d');
+      const act = { mask: { on: true, shape: 'rect', x: 0, y: 0, w: 50, h: 100, rot: 0, keys: [{ t: 0, x: 0, y: 0, w: 50, h: 100, rot: 0 }, { t: 1, x: 50, y: 0, w: 50, h: 100, rot: 0 }] } };
+      g.save(); Anim.clipMask(g, act, 0, 100, 100); g.fillStyle = '#f00'; g.fillRect(0, 0, 100, 100); g.restore();
+      const px = (x) => g.getImageData(x, 50, 1, 1).data[3];
+      if (!(px(20) > 0 && px(80) === 0)) out.push('Maske t=0');
+      const mid = Anim.maskAt(act, 0.5); if (Math.abs(mid.x - 25) > 0.5) out.push('Maske Keyframe ' + mid.x);
+      act.mask.invert = true; g.clearRect(0, 0, 100, 100); g.save(); Anim.clipMask(g, act, 0, 100, 100); g.fillRect(0, 0, 100, 100); g.restore();
+      if (!(px(20) === 0 && px(80) > 0)) out.push('Maske umgekehrt');
+      // Vorlagen
+      if (!DV.PRESETS || DV.PRESETS.PHONE.length < 6 || !DV.WEB_TPL || DV.WEB_TPL.length < 6) out.push('Vorlagen fehlen');
+      for (const t of DV.WEB_TPL || []) { const pg = t.make(); if (!pg.els.length || pg.els.some((e) => !e.id || e.x == null)) out.push('Vorlage ' + t.id); }
+      if (!(VN.api && VN.api.library && VN.api.library.list)) out.push('Bibliothek fehlt');
+      const t = JSON.parse(keep); p.devices = t.d; p.chats = t.c; p.social = t.s; p.currencies = t.cur; p.time = t.t; p.liveChats = t.lc; p.stamina = t.st; VN.migrate(p);
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Paket 2: ' + r.join(', '));
+    else log('✓ Follower (Wachstum, Währung), Live-Chat, Ausdauer, Masken, Design-Vorlagen, Bibliothek');
+  } catch (e) { general.push('Paket 2: ' + e.message); }
+
   // 20. Social Media: Beiträge per Bedingung und Aktion, löschen, Likes mit Aktion nur einmal
   try {
     const r = JSON.parse(await js(`(() => {

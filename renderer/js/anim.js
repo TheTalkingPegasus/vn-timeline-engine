@@ -51,6 +51,32 @@
       const g = (f, d) => { const v = sample(mv, t, f); return v != null ? v : (actor[f] != null ? actor[f] : d); };
       return { x: g('x', 50), y: g('y', 0), scale: g('scale', 100), rot: g('rot', 0), opacity: g('opacity', 100) };
     },
+    // Maske zur Zeit t: Kasten { x, y, w, h, rot } in % der Bühne; freie Form = Punkte (0…1) im Kasten
+    MASK0: { x: 30, y: 20, w: 40, h: 60, rot: 0 },
+    maskAt(actor, t) {
+      const m = actor && actor.mask;
+      if (!m) return null;
+      const ks = sorted(m.keys);
+      const g = (f) => { const v = sample(ks, t, f); return v != null ? v : (m[f] != null ? m[f] : Anim.MASK0[f]); };
+      return { x: g('x'), y: g('y'), w: g('w'), h: g('h'), rot: g('rot'), shape: m.shape || 'rect', pts: m.pts || [], invert: !!m.invert };
+    },
+    maskPath(ctx, b, W, H) {
+      const cx = (b.x + b.w / 2) / 100 * W, cy = (b.y + b.h / 2) / 100 * H, w = b.w / 100 * W, h = b.h / 100 * H;
+      const r = (b.rot || 0) * Math.PI / 180, cs = Math.cos(r), sn = Math.sin(r);
+      const P = (u, v) => { const lx = (u - 0.5) * w, ly = (v - 0.5) * h; return [cx + lx * cs - ly * sn, cy + lx * sn + ly * cs]; };
+      if (b.shape === 'ellipse') { ctx.ellipse(cx, cy, Math.abs(w / 2), Math.abs(h / 2), r, 0, Math.PI * 2); return; }
+      const pts = b.shape === 'poly' && b.pts.length >= 3 ? b.pts : [[0, 0], [1, 0], [1, 1], [0, 1]];
+      pts.forEach((p, i) => { const [x, y] = P(p[0], p[1]); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
+      ctx.closePath();
+    },
+    clipMask(ctx, actor, t, W, H) {
+      const b = Anim.maskAt(actor, t);
+      if (!b) return;
+      ctx.beginPath();
+      if (b.invert) { ctx.rect(-W, -H, W * 3, H * 3); }
+      Anim.maskPath(ctx, b, W, H);
+      ctx.clip(b.invert ? 'evenodd' : 'nonzero');
+    },
     cam(anim, t) {
       const ks = sorted(anim.cam);
       const g = (f, d) => { const v = sample(ks, t, f); return v != null ? v : d; };
@@ -200,6 +226,8 @@
         const baseX = pl.x / 100 * W, baseY = H - pl.y / 100 * H;
         ctx.save();
         ctx.globalAlpha = (opts.alpha != null ? opts.alpha : 1) * pl.opacity / 100;
+        // Maske (0.9.24): schneidet den Darsteller aus – Rechteck, Ellipse oder freie Form, keyframebar
+        if (a.mask && a.mask.on && !opts.noMask) Anim.clipMask(ctx, a, t, W, H);
         ctx.translate(baseX, baseY);
         ctx.rotate(pl.rot * Math.PI / 180);
         if (a.flip) ctx.scale(-1, 1);

@@ -2,7 +2,26 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
-## 0.9.24 – Feedback package 1: bubbles, portraits, transcript, website images, minigame rewards, keyframes, hub idle
+## 0.9.24 – Feedback packages 1 + 2: followers as a mechanic, live chat, stamina, masks, design templates, asset library and more
+
+### Package 2
+- **Followers as a game mechanic:** growth per day, per week or on a weekday (% that compounds, or a fixed number), with conditions;
+  negative values make followers drop. Link a contact's followers to a **currency** – then they can be spent, produced in the idler
+  and shown in the HUD; idler and social media share the same number. Profiles show “+12 today”.
+- **Live chat for stream scenes:** a chat bar with prepared messages that appear at different gaps (with some randomness),
+  chatters in colors (random or fixed), viewer count, clickable replies with actions, “many at once” paste (Name: text),
+  preview; action “📺 Live chat” start/stop and condition “Replied in live chat”.
+- **Stamina & tiredness** (optional system): bar or icons, own icon image, costs for minigames and trips, action and condition,
+  recovery per time of day or full on a new day. Tired effect: eyes briefly close, blurry edges, yawn sound.
+  Empty: eyes close, optional text, time passes, wake up in a hub or hub dialog.
+- **Masks per actor** in cutscenes: rectangle, ellipse or free shape (pen points), invert, keyframable (move, size, rotate) –
+  e.g. an arm that disappears behind another figure.
+- **Design templates:** 8 phone and 6 computer looks (gradients, glass panels, icon styles, fonts, bubble shapes) and
+  6 website page templates (shop, blog, profile, news, guild with watchword, login portal).
+- **Asset library:** store images, sounds, videos and fonts once (📚 next to “Import”) with folders and search,
+  and fetch them into any project with one click. Desktop: in your user folder; web version: in the browser.
+
+### Package 1
 - **Fix:** speech bubbles with your own background keep their **rounded corners**, and the shape sliders work again.
   New option “Image fills the bubble” for a background picture without a 9-slice frame.
 - **Portraits in bubbles:** square, rounded or round, corner radius, size, drop shadow, border, left or right.

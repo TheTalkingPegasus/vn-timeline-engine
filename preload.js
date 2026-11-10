@@ -49,6 +49,14 @@ contextBridge.exposeInMainWorld('vnApi', {
   },
   writeAsset: (dir, rel, bytes) => ipcRenderer.invoke('asset:write', { dir, rel, bytes }),
   // Projektdateien laufen über das eigene Protokoll vnasset://
+  library: {
+    list: () => ipcRenderer.invoke('lib:list'),
+    add: (items, folder) => ipcRenderer.invoke('lib:add', { items, folder }),
+    update: (id, fields) => ipcRenderer.invoke('lib:update', Object.assign({ id }, fields || {})),
+    remove: (ids) => ipcRenderer.invoke('lib:remove', { ids }),
+    import: (ids) => ipcRenderer.invoke('lib:import', { ids }),
+    url: (x) => 'vnasset://library/' + encodeURIComponent(x.file)
+  },
   fileUrl: (dir, rel) => 'vnasset://project/' + rel.split(/[\\/]/).map(encodeURIComponent).join('/'),
   // Pfad einer wirklich hineingezogenen Datei. Nur echte Dateien aus Ziehen & Ablegen haben einen Pfad –
   // der Hauptprozess merkt ihn sich und kopiert später nur solche Dateien (Schutz vor Plugins).

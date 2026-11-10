@@ -16,7 +16,7 @@ Without installing (ZIP):
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
 
-NEW IN 0.9.24 · Feedback package 1: rounded custom bubbles, portrait styles, full transcript (apps, social, websites), blend modes and unlockable blur for website images, minigame rewards, keyframe box-select + copy/paste, duplicate actors, hub object idle motion
+NEW IN 0.9.24 · Feedback packages 1 + 2: followers as a game mechanic (growth, currency link), live chat for stream scenes, stamina & tiredness, keyframable masks per actor, phone/computer design templates and website page templates, cross-project asset library; rounded custom bubbles, portrait styles, full transcript (apps, social, websites), blend modes and unlockable blur for website images, minigame rewards, keyframe box-select + copy/paste, duplicate actors, hub object idle motion
 
 NEW IN 0.9.23 · Website editor: resizable canvas, rulers and snapping guides, drop shadows, transparent shapes
 
