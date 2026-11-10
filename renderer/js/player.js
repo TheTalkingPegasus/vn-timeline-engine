@@ -679,6 +679,7 @@
       hud.appendChild(chip);
     }
     if (VN.Life && VN.Life.hudExtra) VN.Life.hudExtra(hud, run.rs);
+    for (const f of VN.hudHooks || []) { try { f(hud, run.rs); } catch (e) { console.error(e); } }
     if (window.VNPlugin) for (const n of VNPlugin.hudItems(run.rs)) hud.appendChild(n);
     if (VN.Extras) for (const v of VN.Extras.stats()) if (v.hud) hud.appendChild(el('span', { class: 'money-chip st-chip' }, v.icon && VN.assetUrl(v.icon) ? el('span', { class: 'mc-ico', style: { backgroundImage: `url("${VN.assetUrl(v.icon)}")` } }) : el('span', { class: 'mc-dot', style: { background: v.color || '#e8a43a' } }), VN.tr(v.id + ':name', v.name) + ' ' + (Number(run.rs.vars[v.id]) || 0)));
     if (!p.inventory.hudMoney) return;
@@ -851,12 +852,16 @@
       const hovUrl = o.hoverAsset ? VN.assetUrl(o.hoverAsset) : '';
       // Unsichtbare Klickfläche (0.8.0): nichts zu sehen, nur anklickbar
       const inv = !!o.invisible;
-      const look = inv ? el('span') : url ? el('img', { src: url, draggable: 'false', class: hovUrl ? 'base' : null }) : el('div', { class: 'ph' }, VN.tr(o.id + ':name', o.name || 'Objekt'));
+      let look = inv ? el('span') : url ? el('img', { src: url, draggable: 'false', class: hovUrl ? 'base' : null }) : el('div', { class: 'ph' }, VN.tr(o.id + ':name', o.name || 'Objekt'));
+      // Bild mit Bones (0.9.24): atmet, wackelt und spielt optional eine Idle-Animation
+      if (!inv && url && o.bones && window.Rig && Rig.has(o.asset)) {
+        try { const clip = { idleAnim: o.idleAnim || undefined, boneAmp: o.boneAmp != null ? o.boneAmp : 100 }, hold = {}; const cv = Rig.canvasFor(o.asset, clip, window.Anim ? { extraFn: Anim.extraFnFor(clip, hold) } : {}); cv.classList.add('pl-hcv'); if (hovUrl) cv.classList.add('base'); look = cv; } catch (er) { console.error('Hub-Objekt mit Bones', er); }
+      }
       if (!inv) VN.applyLook(look, o);
       const node = el('div', {
         class: 'pl-hobj' + (!inv && (o.hover || 'glow') !== 'none' ? ' hover-' + (o.hover || 'glow') : '') + (hovUrl && !inv ? ' has-hov' : '') + (inv ? ' invisible' : ''),
         style: { left: o.x + '%', top: o.y + '%', width: o.w + '%', height: o.h + '%', transform: 'rotate(' + (o.rot || 0) + 'deg)', pointerEvents: 'none' }
-      }, look, hovUrl && !inv ? el('img', { src: hovUrl, draggable: 'false', class: 'hov' }) : null, o.name && !inv ? el('div', { class: 'tip' }, VN.tr(o.id + ':name', o.name)) : null);
+      }, ...(inv ? [look] : VN.hubIdleWrap(o, look, hovUrl ? el('img', { src: hovUrl, draggable: 'false', class: 'hov' }) : null)), o.name && !inv ? el('div', { class: 'tip' }, VN.tr(o.id + ':name', o.name)) : null);
       if (o.glowColor) node.style.setProperty('--glow', o.glowColor);
       const hit = el('div', {
         style: { position: 'absolute', inset: '0', borderRadius: o.shape === 'ellipse' ? '50%' : '0', pointerEvents: 'auto', cursor: window.Theme ? Theme.cursor('hub', 'pointer') : 'pointer' },
@@ -1707,6 +1712,7 @@
     quicksave,
 
     close(silent) {
+      if (VN.LiveChat) VN.LiveChat.stop();
       if (!session && !silent) return;
       if (VN.gameMode && !silent) { showMainMenu(); return; }
       if (splashStop) splashStop();

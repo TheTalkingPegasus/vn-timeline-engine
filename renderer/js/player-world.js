@@ -21,6 +21,7 @@
       if (!r || !W().isLoc(id)) return;
       const st = W().state(r.rs);
       const from = st.here;
+      if (id !== from && VN.Stamina && VN.Stamina.on() && Number(VN.Stamina.cfg().costTravel)) VN.Stamina.add(r.rs, -Number(VN.Stamina.cfg().costTravel));
       if (id !== from && !opts.noTime && VN.Life && VN.Life.timeOn()) {
         const pin = opts.pin;
         let cost = pin && pin.cost != null && pin.cost !== '' ? Number(pin.cost) : Number(W().cfg().travel) || 0;

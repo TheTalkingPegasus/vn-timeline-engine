@@ -35,6 +35,37 @@
   const condBtn = (list, title, label) => el('button', { class: 'btn tiny' + (list.length ? ' primary' : ''), title: VN.t(title), onclick: () => modal(VN.t(title), (c) => c.appendChild(VN.condEditor(list, VN.t('Nur wenn')))) }, (label || '🔒') + (list.length ? ' ' + list.length : ''));
   const actBtn = (list, title) => el('button', { class: 'btn tiny' + (list.length ? ' primary' : ''), title: VN.t(title), onclick: () => modal(VN.t(title), (c) => c.appendChild(VN.actionEditor(list, VN.t('Dann ausführen')))) }, '⚡' + (list.length ? ' ' + list.length : ''));
 
+  // ---------- Follower als Spielmechanik (0.9.24) ----------
+  const folPanel = (c) => modal(VN.t('Follower als Spielmechanik') + ' · ' + (c.name || '?'), (card) => {
+    c.folGrow = c.folGrow || [];
+    const T = VN.project.time || {};
+    card.appendChild(el('div', { class: 'muted small' }, VN.t('Follower können wachsen, Belohnung sein (Aktion „👥 Follower ändern“, z. B. als Quest- oder Minispiel-Belohnung) und Bedingung (z. B. ein Schwarm mag nur jemanden mit Reichweite).')));
+    // Als Währung
+    const curs = VN.project.currencies || [];
+    card.appendChild(el('div', { class: 'sec-title' }, VN.t('Als Währung')));
+    card.appendChild(el('div', { class: 'logic-row' }, sel(c.folCur || '', [['', '— keine (eigene Zahl) —'], ...curs.map((x) => [x.id, (x.icon ? x.icon + ' ' : '') + x.name])], (v) => {
+      const cur = curs.find((x) => x.id === v);
+      // Startwert übernehmen, damit nichts verloren geht
+      if (cur && !c.folCur && c.followers && !Number(cur.start)) cur.start = c.followers;
+      c.folCur = v;
+    }, { width: '220px' }),
+      curs.length ? null : el('span', { class: 'muted small' }, VN.t('Lege zuerst unter „Währungen“ eine Währung an (z. B. „Follower“).'))));
+    card.appendChild(el('div', { class: 'muted small' }, VN.t('Mit Währung: Follower lassen sich ausgeben, im Idler erzeugen (Gebäude produziert Follower) und im HUD anzeigen. Idler und Social Media nutzen dieselbe Zahl.')));
+    // Wachstum
+    card.appendChild(el('div', { class: 'sec-title' }, VN.t('Wachstum über die Zeit')));
+    if (!T.enabled) card.appendChild(el('div', { class: 'hint-box' }, VN.t('Wachstum läuft mit dem Kalender. Schalte unter „Lebenssimulation“ die Tageszeit ein – jeder neue Tag wendet die Regeln an.')));
+    c.folGrow.forEach((g, i) => card.appendChild(el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } },
+      sel(g.when || 'day', [['day', 'jeden Tag'], ['week', 'jede Woche'], ['weekday', 'an einem Wochentag']], (v) => { g.when = v; }),
+      g.when === 'weekday' ? sel(String(g.wd || 0), (T.days || []).map((d, j) => [String(j), d]), (v) => { g.wd = Number(v); }) : null,
+      num(g.amount != null ? g.amount : 2, (v) => { g.amount = v; }, { width: '70px' }),
+      sel(g.mode || 'pct', [['pct', '% (wächst mit)'], ['add', 'Anzahl']], (v) => { g.mode = v; }),
+      condBtn(g.conds = g.conds || [], 'Nur wenn … (z. B. Variable „postet täglich“ an)', '🔒 ' + VN.t('Nur wenn')),
+      el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { c.folGrow.splice(i, 1); }) }, '×'))));
+    card.appendChild(el('div', { class: 'row gap8' },
+      el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { c.folGrow.push({ when: 'day', mode: 'pct', amount: 2, conds: [] }); }) }, '+ ' + VN.t('Regel')),
+      el('span', { class: 'muted small' }, VN.t('Negativ = Follower gehen verloren (z. B. −5 % pro Woche ohne Beiträge).'))));
+  });
+
   // ---------- Vorschau ----------
   const preview = (d, opts) => {
     const host = el('div', { class: 'dv-prev' });
@@ -86,6 +117,7 @@
       K.on ? el('div', { class: 'muted small' }, VN.t('Prüfen mit der Bedingung „🔓 Gerät entsperrt“. Findet der Spieler den Code in der Story, kann die Aktion „🔓 Gerät entsperren“ ihn auch direkt freischalten.')) : null));
     // Aussehen
     const desk = d.kind === 'desktop';
+    if (DV().presetsUI) left.appendChild(DV().presetsUI(d));
     left.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, VN.t('Aussehen')),
       row('Hintergrundbild', sel(d.wallpaper, imgOpts('— nur Farbe —'), (v) => { d.wallpaper = v; }), thumb(d.wallpaper)),
       row(desk ? 'Monitor-Rahmen (Bild)' : 'Handy-Rahmen (Bild)', sel(d.frame, imgOpts('— eingebaut —'), (v) => { d.frame = v; }), thumb(d.frame)),
@@ -287,7 +319,9 @@
     const pr = el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, VN.t('Profile')));
     for (const c of C.contacts) pr.appendChild(el('div', { class: 'logic-row' }, DV().avatar(c, 'sm'), el('strong', { style: { width: '120px' } }, c.name || '?'),
       txt(c.bio, (v) => { c.bio = v; }, 'Profiltext (z. B. „Diebin. Katzen. Chaos.“)', { flex: '1', minWidth: '180px' }),
-      el('span', { class: 'muted small', title: VN.t('Startwert – im Spiel ändern Aktionen „👥 Follower ändern“ die Zahl (z. B. nach einer Entscheidung oder einem Ereignis)') }, VN.t('Follower')), num(c.followers || 0, (v) => { c.followers = Math.max(0, Math.round(v)); }, { width: '80px' })));
+      el('span', { class: 'muted small', title: VN.t('Startwert – im Spiel ändern Aktionen „👥 Follower ändern“ die Zahl (z. B. nach einer Entscheidung oder einem Ereignis)') }, VN.t('Follower')),
+      DV().folCur(c) ? el('span', { class: 'chip', title: VN.t('Die Follower sind der Kontostand dieser Währung – Startwert und Höchstwert stellst du bei der Währung ein.') }, '💰 ' + DV().folCur(c).name) : num(c.followers || 0, (v) => { c.followers = Math.max(0, Math.round(v)); }, { width: '80px' }),
+      el('button', { class: 'btn tiny' + ((c.folGrow || []).length || c.folCur ? ' primary' : ''), title: VN.t('Follower als Spielmechanik: Wachstum pro Tag/Woche, als Währung nutzen'), onclick: () => folPanel(c) }, '📈 ' + ((c.folGrow || []).length ? VN.tf('{n} Regeln', { n: c.folGrow.length }) : VN.t('Mechanik')))));
     body.appendChild(pr);
     // Beiträge
     const cOpts = (none) => [['', none || '— Kontakt —'], ...C.contacts.map((x) => [x.id, x.name])];
@@ -376,7 +410,8 @@
     const page = site.pages.find((g) => g.id === VN.ui.webPage) || site.pages[0];
     body.appendChild(el('div', { class: 'row gap8', style: { flexWrap: 'wrap', margin: '4px 0 8px' } }, el('span', { class: 'muted small' }, VN.t('Seiten')),
       ...site.pages.map((g) => el('button', { class: 'dv-pill' + (g === page ? ' on' : ''), onclick: () => { VN.ui.webPage = g.id; VN.ui.webEl = null; VN.render(); } }, '/' + (g.path || ''))),
-      el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { let n = site.pages.length, path = 'seite' + n; while (site.pages.some((g) => g.path === path)) path = 'seite' + (++n); const g = DV().newPage(path); g.bg = page.bg; site.pages.push(g); VN.ui.webPage = g.id; }) }, '+ ' + VN.t('Seite'))));
+      el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { let n = site.pages.length, path = 'seite' + n; while (site.pages.some((g) => g.path === path)) path = 'seite' + (++n); const g = DV().newPage(path); g.bg = page.bg; site.pages.push(g); VN.ui.webPage = g.id; }) }, '+ ' + VN.t('Seite')),
+      DV().webTemplates ? el('button', { class: 'btn tiny', title: VN.t('Fertige Seiten-Layouts (Shop, Blog, Profil, Nachrichten, Gilde, Login)'), onclick: () => DV().webTemplates(site, page) }, '✨ ' + VN.t('Vorlagen')) : null));
     const addr = DV().addrOf(site, page);
     body.appendChild(el('div', { class: 'opt-card' },
       el('div', { class: 'logic-row' },
@@ -394,9 +429,14 @@
     const canvas = el('div', { class: 'web-ed-page', style: { aspectRatio: '100 / ' + H0, backgroundColor: page.bg || '#fff', backgroundImage: page.bgImg && VN.assetUrl(page.bgImg) ? `url("${VN.assetUrl(page.bgImg)}")` : '' }, onmousedown: (e) => { if (e.target === canvas && VN.ui.webEl) { VN.ui.webEl = null; VN.render(); } } });
     for (const e of page.els) {
       const st = DV().elStyle(e, H0);
-      if (e.kind === 'image') Object.assign(st, { backgroundImage: e.image && VN.assetUrl(e.image) ? `url("${VN.assetUrl(e.image)}")` : '' });
+      // Bild + Filter (Weichzeichner, Schatten) in eine innere Fläche, damit Auswahl-Griffe scharf bleiben
+      let fill = null;
+      if (e.kind === 'image') {
+        fill = el('div', { class: 'web-ed-imgfill', style: { backgroundImage: e.image && VN.assetUrl(e.image) ? `url("${VN.assetUrl(e.image)}")` : '', filter: st.filter || '', borderRadius: st.borderRadius || '' } });
+        st.filter = '';
+      }
       const n = el('div', { class: 'dv-web-el ' + ({ image: 'img', box: 'box', button: 'btn', input: 'input', text: 'text' }[e.kind] || 'text') + ' web-ed-el' + (e === elSel ? ' sel' : '') + (e.kind === 'image' && !e.image ? ' empty' : ''), style: st },
-        e.kind === 'input' ? el('div', { class: 'dv-web-in' }, el('input', { disabled: true, placeholder: e.place || (e.mode === 'password' ? VN.t('Passwort') : VN.t('Suchen …')) }), el('button', null, '→')) : e.kind === 'image' ? (e.image ? null : '🖼') : e.kind === 'box' ? null : (e.text || ''),
+        e.kind === 'input' ? el('div', { class: 'dv-web-in' }, el('input', { disabled: true, placeholder: e.place || (e.mode === 'password' ? VN.t('Passwort') : VN.t('Suchen …')) }), el('button', null, '→')) : e.kind === 'image' ? (e.image ? fill : '🖼') : e.kind === 'box' ? null : (e.text || ''),
         (e.link || (e.actions || []).length) ? el('span', { class: 'web-ed-badge' }, e.link ? '🔗' : '⚡') : null,
         e === elSel ? el('span', { class: 'web-ed-rs' }) : null);
       n.addEventListener('mousedown', (ev) => {
@@ -532,6 +572,18 @@
       el('input', { type: 'range', min: 0, max: 20, value: Number(e.shadow) || 0, style: { width: '90px' }, title: VN.t('0 = kein Schatten'), onchange: (ev) => VN.mutate(() => { e.shadow = Number(ev.target.value); }) }),
       el('span', { class: 'muted small' }, String(Number(e.shadow) || 0)),
       Number(e.shadow) ? el('label', { class: 'check' }, col(e.shadowColor || '#000000', (v) => { e.shadowColor = v; }), VN.t('Farbe')) : null));
+    if (e.grad) box.appendChild(el('div', { class: 'logic-row' }, el('span', { class: 'muted small' }, VN.t('Verlauf aus Vorlage')), el('span', { class: 'mini-thumb', style: { backgroundImage: e.grad } }), el('button', { class: 'btn tiny', title: VN.t('Verlauf entfernen – dann gilt die Farbe'), onclick: () => VN.mutate(() => { e.grad = ''; }) }, '×')));
+    box.appendChild(row('Mischmodus', sel(e.blend || 'normal', DV().BLENDS, (v) => { e.blend = v; }, { width: '170px' })));
+    e.blurConds = e.blurConds || [];
+    box.appendChild(el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } },
+      el('span', { class: 'muted small' }, VN.t('Weichzeichnen')),
+      el('input', { type: 'range', min: 0, max: 20, value: Number(e.blur) || 0, style: { width: '90px' }, title: VN.t('0 = scharf'), onchange: (ev) => VN.mutate(() => { e.blur = Number(ev.target.value); }) }),
+      el('span', { class: 'muted small' }, String(Number(e.blur) || 0)),
+      Number(e.blur) ? condBtn(e.blurConds, 'Scharf zeigen, sobald …', '🔓 ' + VN.t('Scharf wenn')) : null));
+    if (Number(e.blur)) {
+      box.appendChild(el('div', { class: 'muted small' }, e.blurConds.length ? VN.t('Bleibt verschwommen, bis die Bedingungen erfüllt sind – dann wird es sanft scharf.') : VN.t('Immer verschwommen. Mit „Scharf wenn“ wird es z. B. erst nach einem Kauf oder Passwort scharf.')));
+      if (e.kind === 'image') box.appendChild(row('Hinweis darauf', txt(e.blurHint, (v) => { e.blurHint = v; }, 'z. B. 🔒 Nur für Mitglieder')));
+    }
     if (e.kind !== 'input' && e.kind !== 'box') {
       box.appendChild(el('div', { class: 'sec-title', style: { marginTop: '6px' } }, VN.t('Beim Klick')));
       box.appendChild(row('Link zu Seite', sel(allPages.some((x) => x[0] === e.link) ? e.link : '', allPages, (v) => { e.link = v; }, { width: '170px' })));

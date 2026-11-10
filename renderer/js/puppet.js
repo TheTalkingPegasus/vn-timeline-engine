@@ -512,14 +512,21 @@
     const clip = it.clip || {};
     const idle = clip.idleAnim && window.Anim ? Anim.get(clip.idleAnim) : null;
     const ac = idle && idle.actors && idle.actors.find((x) => x.puppet === pup.id);
-    if (ac) { const d = Math.max(0.1, idle.dur || 2); pose = P.poseAt(ac, ((t % d) + d) % d); }
+    let off = null; // ganze Figur bewegen (Zeile „Bewegung“, 0.9.24)
+    if (ac) { const d = Math.max(0.1, idle.dur || 2), tt = ((t % d) + d) % d; pose = P.poseAt(ac, tt); off = window.Anim && Anim.moveOf ? Anim.moveOf(ac, tt) : null; }
     const g = it.holder && it.holder._gesture;
     if (g && g.anim) {
       const ga = (g.anim.actors || []).find((x) => x.puppet === pup.id);
       const lt = now() - g.t0, d = g.anim.dur || 1, bi = g.bi != null ? g.bi : 0.2, bo = g.bo != null ? g.bo : 0.3;
       if (!ga || (lt > d + bo && !g.hold)) it.holder._gesture = null;
-      else pose = P.addPose(pose, P.poseAt(ga, Math.min(lt, d)), g.hold && lt > d ? 1 : Math.max(0, Math.min(1, bi > 0 ? lt / bi : 1, bo > 0 ? (d + bo - lt) / bo : (lt <= d ? 1 : 0))));
+      else {
+        const w = g.hold && lt > d ? 1 : Math.max(0, Math.min(1, bi > 0 ? lt / bi : 1, bo > 0 ? (d + bo - lt) / bo : (lt <= d ? 1 : 0)));
+        pose = P.addPose(pose, P.poseAt(ga, Math.min(lt, d)), w);
+        const go = window.Anim && Anim.moveOf ? Anim.moveOf(ga, Math.min(lt, d)) : null;
+        if (go || off) { const A = off || Anim.REST, B = go || Anim.REST; off = {}; for (const f of Object.keys(Anim.REST)) off[f] = A[f] * (1 - w) + B[f] * w; }
+      }
     }
+    if (it.holder && window.Anim && Anim.applyMove && !it.static) Anim.applyMove(it.holder, off);
     it.mats = P.draw(ctx, pup, it.res, base, it.static ? 0 : t, it.static ? 0 : dt, pose, it.st);
   };
   const now = () => performance.now() / 1000;

@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.23
+VN Timeline Engine · Prototyp 0.9.24
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,40 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.24 · Feedback-Pakete 1 + 2: Follower als Spielmechanik, Live-Chat, Ausdauer, Masken, Design-Vorlagen, Asset-Bibliothek u. v. m.
+Paket 2:
+- Follower als Spielmechanik: Wachstum pro Tag, pro Woche oder an einem Wochentag (% mit Zinseszins oder feste Zahl), mit
+  Bedingungen; negative Werte lassen Follower sinken. Follower eines Kontakts lassen sich mit einer Währung verknüpfen – dann
+  kann man sie ausgeben, im Idler erzeugen und im HUD zeigen; Idler und Social Media nutzen dieselbe Zahl. Profile zeigen „+12 heute“.
+- Live-Chat für Stream-Szenen: Chatleiste mit vorgefertigten Nachrichten in unterschiedlichen Abständen (mit etwas Zufall),
+  Chatter in Farben (bunt oder fest), Zuschauerzahl, anklickbare Antworten mit Aktionen, „Viele auf einmal“ (Name: Text),
+  Vorschau; Aktion „📺 Live-Chat“ starten/beenden und Bedingung „Im Live-Chat geantwortet“.
+- Ausdauer & Müdigkeit (optionales System): Balken oder Symbole, eigenes Symbolbild, Kosten für Minispiele und Reisen, Aktion und
+  Bedingung, Erholung pro Tageszeit oder voll am neuen Tag. Müdigkeit: Augen fallen kurz zu, Ränder unscharf, Gähn-Sound.
+  Leer: Augen zu, optional Text, Zeit vergeht, Aufwachen in einem Hub oder Hub-Dialog.
+- Masken pro Darsteller in Zwischensequenzen: Rechteck, Ellipse oder freie Form (Punkte), umkehrbar, keyframebar (verschieben,
+  Größe, Drehung) – z. B. ein Arm, der hinter einer anderen Figur verschwindet.
+- Design-Vorlagen: 8 Handy- und 6 Computer-Looks (Verläufe, Glas-Flächen, Symbol-Stile, Schriften, Blasenformen) und 6 Seiten-
+  Vorlagen für Websites (Shop, Blog, Profil, Nachrichten, Gilde mit Losungswort, Login-Portal).
+- Asset-Bibliothek: Bilder, Sounds, Videos und Schriften einmal speichern (📚 neben „Importieren“), mit Ordnern und Suche, und in
+  jedes Projekt mit einem Klick holen. Desktop: im Benutzerordner; Web-Version: im Browser.
+Paket 1:
+- Fix: Sprechblasen mit eigenem Hintergrund behalten ihre abgerundeten Ecken, die Form-Regler wirken wieder.
+  Neu: „Bild füllt die Blase“ für ein Hintergrundbild ohne 9-Slice-Rahmen.
+- Porträts in Sprechblasen: eckig, abgerundet oder rund, Eckenradius, Größe, Schlagschatten, Rand, links oder rechts.
+- Das Transkript zeigt jetzt auch Texte aus Apps, Kontakten, Social Media (Beiträge, Kommentare, Antworten, Profile)
+  und Websites (Texte, Platzhalter, Fehlermeldungen, Suchtreffer, Hinweise) – alles übersetzbar.
+- Website-Bilder: Mischmodi (Multiplizieren, Negativ multiplizieren, Addieren, Ineinanderkopieren, Differenz …) und
+  Weichzeichnen – auf Wunsch verschwommen, bis Bedingungen erfüllt sind (Bild freischalten), mit Hinweis darauf.
+- Minispiel-Belohnungen: jede Minispiel-Aktion hat „Belohnung bei Sieg“ und „Folge bei Niederlage“ – beliebige
+  Aktionen: Gegenstände, Geld, Beziehung, Follower, Variablen …
+- Animations-Editor: Rahmen über Keyframes ziehen, Umschalt/Strg-Klick ergänzt, mehrere Keys gemeinsam verschieben,
+  Strg+C / Strg+V (an der Abspielposition, oder auf einen anderen gewählten Knochen/Teil), Entf löscht.
+  Die ganze Figur lässt sich auch in Idle- und Gesten-Animationen bewegen (auch im Spiel); Alt + Ziehen geht über Knochen-Griffen.
+  Darsteller samt Animation doppeln, Darsteller nach vorne/hinten.
+- Hub-Objekte können idlen: schweben, hüpfen, atmen, schwanken, im Wind wehen, leuchten, flackern, zittern, drehen –
+  mit Dauer und Stärke. Bilder mit Bones atmen/wackeln und spielen auf Wunsch eine Idle-Animation.
 
 NEU IN 0.9.23 · Website-Editor: größere Fläche, Lineal und Hilfslinien, Schatten, Transparenz
 - Die Arbeitsfläche des Seiten-Editors lässt sich mit dem Balken daneben größer oder kleiner ziehen (bis 1400 px).

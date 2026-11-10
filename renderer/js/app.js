@@ -440,6 +440,14 @@
       if (e.key.toLowerCase() === 'c') { if (VN.ui.sel) Story.copySelection(VN.curScene()); else Story.copyBeat(VN.curScene(), VN.ui.beat); } else Story.pasteClips(VN.curScene(), VN.ui.beat);
       return;
     }
+    // Animations-Editor (0.9.24): Keyframes kopieren, einfügen, löschen, alle markieren
+    if (VN.ui.view === 'anim' && window.AnimEd) {
+      const k = e.key.toLowerCase();
+      if (mod && k === 'c' && AnimEd.copyKeys()) { e.preventDefault(); return; }
+      if (mod && k === 'v' && AnimEd.pasteKeys()) { e.preventDefault(); return; }
+      if ((e.key === 'Delete' || e.key === 'Backspace') && AnimEd.deleteKeys()) { e.preventDefault(); return; }
+      if (e.key === 'Escape' && (VN.ui.animKeys || []).length) { VN.ui.animKeys = []; VN.render(); return; }
+    }
     if (VN.ui.view === 'bones') {
       if ((e.key === 'Delete' || e.key === 'Backspace') && VN.ui.boneSel) { e.preventDefault(); Bones.deleteBone(VN.ui.boneAsset, VN.ui.boneSel); }
       if (e.key === 'Enter' && VN.ui.boneTool === 'chain') { e.preventDefault(); Bones.finishChain(VN.ui.boneAsset); }

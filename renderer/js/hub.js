@@ -122,7 +122,8 @@
       const url = VN.assetUrl(o.asset);
       const look = url ? el('img', { src: url, draggable: 'false' }) : el('div', { class: 'ph' }, o.name || 'Objekt');
       VN.applyLook(look, o);
-      node.appendChild(look);
+      node.append(...(VN.ui.hubIdleOff ? [look] : VN.hubIdleWrap(o, look)));
+      if (o.bones && window.Rig && Rig.has(o.asset)) node.appendChild(el('div', { class: 'cond-badge', style: { top: 'auto', bottom: '2px' }, title: VN.t('Im Spiel mit Bones animiert') }, '🦴'));
       if (o.conds && o.conds.length) node.appendChild(el('div', { class: 'cond-badge', title: o.conds.map(VN.condText).join(' und ') }, 'Bedingung'));
       if (VN.ui.showHitboxes) {
         const t = VN.scene(o.target);

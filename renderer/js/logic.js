@@ -231,6 +231,22 @@
     ['money', 'Geld + / −'], ['loot', 'Loot-Tabelle würfeln']
   ];
   // Führt Aktionen aus, gibt die erhaltenen Dinge für die Fundmeldung zurück
+  // Kleines Bearbeiten-Fenster, das sich bei jeder Änderung neu zeichnet (z. B. Aktionslisten)
+  VN.popupEdit = (title, draw, onClose) => {
+    const done = () => { back.remove(); if (onClose) onClose(); VN.render(); };
+    const back = el('div', { class: 'modal-back', onclick: (e) => { if (e.target === back) done(); } });
+    const card = el('div', { class: 'modal', style: { width: '640px', maxHeight: '84vh', overflow: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' } });
+    const redraw = () => {
+      card.innerHTML = '';
+      card.appendChild(el('div', { class: 'row gap8' }, el('strong', { style: { flex: '1', fontSize: '16px' } }, title), el('button', { class: 'btn primary', onclick: done }, VN.t('Fertig'))));
+      draw(card);
+    };
+    redraw();
+    back.appendChild(card);
+    document.body.appendChild(back);
+    const orig = VN.render;
+    VN.render = function () { orig.apply(this, arguments); if (back.isConnected) redraw(); else VN.render = orig; };
+  };
   VN.applyActions = (list, rs, sourceKey) => {
     const gains = [];
     gains.pending = [];
@@ -257,10 +273,23 @@
         const def = VNPlugin.actionDef(a.ref);
         if (!def) { console.warn('Plugin-Aktion fehlt: ' + a.ref); continue; }
         try {
+          // Ausdauer (0.9.24): jedes Minispiel kostet Kraft
+          if (def.minigame && VN.Stamina && VN.Stamina.on() && Number(VN.Stamina.cfg().costMinigame)) VN.Stamina.add(rs, -Number(VN.Stamina.cfg().costMinigame), gains);
           let r = def.run(Object.assign({}, a.params || {}), VNPlugin.makeCtx(rs, def.plugin.id));
           // Minispiele (0.8.0): gewonnen / verloren → eigene Szene, Hub oder Game-Over-Bildschirm
-          if (def.minigame && (a.onWin || a.onLose)) {
-            const go = (res) => { const t = res && res.ok ? a.onWin : a.onLose; if (t && window.Player && Player.setJump && !(VN.Idle && VN.Idle._sim)) Player.setJump(t); return res; };
+          // Belohnung (0.9.24): eigene Aktionen bei Sieg / Niederlage – Gegenstand, Geld, Beziehung, Follower …
+          const rew = (res) => { const l = res && res.ok ? a.winActs : a.loseActs; return l && l.length ? l : null; };
+          if (def.minigame && (a.onWin || a.onLose || (a.winActs || []).length || (a.loseActs || []).length)) {
+            const sim = !!(VN.Idle && VN.Idle._sim);
+            const jump = (res) => { const t = res && res.ok ? a.onWin : a.onLose; if (t && window.Player && Player.setJump && !sim) Player.setJump(t); return res; };
+            const go = (res) => {
+              const l = rew(res);
+              if (!l) return jump(res);
+              const key = (sourceKey || 'minispiel') + '|' + (res.ok ? 'win' : 'lose');
+              if (!sim && window.Player && Player.running && Player.state && Player.state.rs === rs) return Promise.resolve(Player.runActions(l, key)).then(() => jump(res), () => jump(res));
+              VN.applyActions(l, rs, key);
+              return jump(res);
+            };
             r = r && typeof r.then === 'function' ? r.then(go) : go(r);
           }
           if (r && typeof r.then === 'function') gains.pending.push(r);
@@ -328,6 +357,21 @@
     node.style.filter = VN.styleFilter(obj.styles);
     node.style.mixBlendMode = obj.blend && obj.blend !== 'normal' ? obj.blend : '';
     if (obj.opacity != null && obj.opacity !== 100) node.style.opacity = obj.opacity / 100;
+  };
+
+  // ---------- Hub-Objekte: Idle-Bewegung (0.9.24) ----------
+  VN.HUB_IDLE = [['', 'Keine'], ['float', 'Schweben'], ['bob', 'Hüpfen'], ['breathe', 'Atmen'], ['sway', 'Schwanken'], ['wind', 'Im Wind wehen'], ['pulse', 'Leuchten / Pulsieren'], ['flicker', 'Flackern (Licht, Feuer)'], ['shake', 'Zittern'], ['spin', 'Drehen']];
+  // Hüllt das Aussehen eines Hub-Objekts in eine bewegte Ebene. Phase pro Objekt verschieden, damit nicht alles im Gleichtakt läuft
+  VN.hubIdleWrap = (o, ...kids) => {
+    if (!o.idle) return kids;
+    const dur = Math.max(0.2, Number(o.idleSpeed) || 3), amt = Math.max(0, Number(o.idleAmt != null ? o.idleAmt : 5));
+    let h = 0; for (const ch of String(o.id || '')) h = (h * 31 + ch.charCodeAt(0)) % 997;
+    const w = el('div', { class: 'pl-hidle hi-' + o.idle });
+    w.style.setProperty('--hi-dur', dur + 's');
+    w.style.setProperty('--hi-a', String(amt));
+    w.style.animationDelay = (-(h / 997) * dur).toFixed(2) + 's';
+    w.append(...kids.filter(Boolean));
+    return [w];
   };
 
   // ---------- Übersetzungen ----------
@@ -482,6 +526,16 @@
           row.appendChild(sel(a.onWin || '', opts, (v) => VN.mutate(() => { if (v) a.onWin = v; else delete a.onWin; })));
           row.appendChild(el('span', { class: 'muted small' }, VN.t('Verloren →')));
           row.appendChild(sel(a.onLose || '', opts, (v) => VN.mutate(() => { if (v) a.onLose = v; else delete a.onLose; })));
+          // Belohnung / Strafe als normale Aktionen (Gegenstand, Geld, Beziehung, Follower, Variable …)
+          const rewBtn = (k, icon, title) => {
+            const n = (a[k] || []).length;
+            return el('button', { class: 'btn tiny' + (n ? ' primary' : ''), title: VN.t(title), onclick: () => {
+              a[k] = a[k] || [];
+              VN.popupEdit(VN.t(title), (c) => c.append(el('p', { class: 'muted small' }, VN.t('Wird ausgeführt, sobald das Minispiel vorbei ist – vor dem Sprung.')), VN.actionEditor(a[k], VN.t('Dann ausführen'))), () => { if (!a[k].length) delete a[k]; });
+            } }, icon + ' ' + (n ? VN.tf('{n} Aktionen', { n }) : VN.t(title === 'Belohnung bei Sieg' ? 'Belohnung' : 'Strafe')));
+          };
+          row.appendChild(rewBtn('winActs', '🎁', 'Belohnung bei Sieg'));
+          row.appendChild(rewBtn('loseActs', '💢', 'Folge bei Niederlage'));
         }
       }
       if (VN.ext.actions[a.type]) { try { VN.ext.actions[a.type].row(row, a, sel, inp); } catch (e) { console.error(e); } }

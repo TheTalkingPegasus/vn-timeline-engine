@@ -38,7 +38,7 @@
         try {
           const ids = new Set(list.map((m) => m.id));
           const keys = await req((await store('files')).getAllKeys());
-          const orphan = new Set(keys.map((k) => String(k).split('/')[0]).filter((id) => !ids.has(id)));
+          const orphan = new Set(keys.map((k) => String(k).split('/')[0]).filter((id) => !ids.has(id) && id !== '__library'));
           for (const id of orphan) { const st = await store('files', 'readwrite'); await req(st.delete(IDBKeyRange.bound(id + '/', id + '/\uffff'))); }
         } catch (e) { /* Aufräumen ist nur ein Extra */ }
       }
@@ -418,6 +418,37 @@
     },
     async exportWindows() { return { ok: false, msg: T('Die Windows-Version eines Spiels lässt sich nur mit der Desktop-Version der Engine bauen. Im Browser: Web-Export (ZIP, z. B. für itch.io).') }; },
     exportWeb: (payload) => exportWeb(payload),
+    // Asset-Bibliothek (0.9.24): im Browser in IndexedDB, für alle Browser-Projekte
+    library: (() => {
+      const L = idbFs('__library'), urls = new Map();
+      const list = async () => { const b = await L.read('index.json'); try { return b ? JSON.parse(await b.text()) : []; } catch (e) { return []; } };
+      const save = async (x) => L.write('index.json', new Blob([JSON.stringify(x)], { type: 'application/json' }));
+      return {
+        list,
+        async add(items, folder) {
+          const x = await list(); let added = 0;
+          for (const it of items || []) {
+            const b = cur.fs && it && it.file ? await cur.fs.read(it.file) : null;
+            if (!b || !kindOf(it.file)) continue;
+            if (x.some((y) => y.name === it.name && y.size === b.size && y.kind === kindOf(it.file))) continue;
+            const id = 'lib' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), file = id + '.' + extOf(it.file);
+            await L.write('files/' + file, b);
+            x.push({ id, name: String(it.name || 'Datei').slice(0, 120), kind: kindOf(it.file), file, folder: String(folder || it.folder || '').slice(0, 120), size: b.size, added: Date.now() });
+            added++;
+          }
+          await save(x);
+          return { added, list: x };
+        },
+        async update(id, f) { const x = await list(), y = x.find((z) => z.id === id); if (y) { if (f.name != null) y.name = String(f.name).slice(0, 120); if (f.folder != null) y.folder = String(f.folder).slice(0, 120); await save(x); } return x; },
+        async remove(ids) { const set = new Set(ids || []); const x = await list(); for (const y of x) if (set.has(y.id)) await L.remove('files/' + y.file); const rest = x.filter((y) => !set.has(y.id)); await save(rest); return rest; },
+        async import(ids) {
+          const want = new Set(ids || []), files = [];
+          for (const y of await list()) { if (!want.has(y.id)) continue; const b = await L.read('files/' + y.file); if (b) files.push(new File([b], (y.name || 'datei').replace(/[\\/:*?"<>|]+/g, '_') + '.' + extOf(y.file), { type: b.type })); }
+          return importFiles(files);
+        },
+        url(y) { if (urls.has(y.file)) return urls.get(y.file); const p = L.read('files/' + y.file).then((b) => (b ? URL.createObjectURL(typed(b, y.file)) : '')); urls.set(y.file, ''); p.then((u) => { urls.set(y.file, u); document.querySelectorAll('[data-lib="' + y.file + '"]').forEach((n) => { if (n.tagName === 'AUDIO') n.src = u; else n.style.backgroundImage = 'url("' + u + '")'; }); }); return ''; }
+      };
+    })(),
     // Dateien des Projekts: Blob-Adressen. Plugins bekommen ein „#“, damit ein angehängtes „?t=…“ nicht stört
     fileUrl(dir, rel) { const u = cur.urls.get(String(rel || '').replace(/\\/g, '/')); return u ? (rel.startsWith('plugins/') ? u + '#' : u) : ''; }
   };

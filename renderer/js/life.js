@@ -66,10 +66,14 @@
     advance(rs, a) {
       const T = VN.project.time, n = T.slots.length;
       Life.initRun(rs);
-      const t = rs.time, day0 = t.day;
+      const t = rs.time, day0 = t.day, abs0 = t.day * n + t.slot;
       if (a.mode === 'nextDay') { t.day += 1; t.slot = Number(a.slot) || 0; }
       else if (a.mode === 'to') { const s = Math.max(0, Math.min(n - 1, Number(a.slot) || 0)); if (s <= t.slot) t.day += 1; t.slot = s; }
       else { const k = t.slot + Math.max(0, Number(a.amount) || 1); t.day += Math.floor(k / n); t.slot = k % n; }
+      const passed = t.day * n + t.slot - abs0;
+      if (passed > 0) for (const h of VN.timeHooks || []) { try { h(rs, passed); } catch (e) { console.error(e); } }
+      // Neue Tage: Wachstum usw. (Follower, 0.9.24)
+      for (let d = day0 + 1; d <= t.day; d++) for (const h of VN.dayHooks || []) { try { h(rs, d); } catch (e) { console.error(e); } }
       if (t.day !== day0 && window.VNPlugin) setTimeout(() => VNPlugin.hook('onDayEnd', day0, t.day, VNPlugin.makeCtx(rs)), 0);
       if (window.VNPlugin) setTimeout(() => VNPlugin.hook('onTime', VNPlugin.makeCtx(rs)), 0);
     },
