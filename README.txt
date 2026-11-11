@@ -16,6 +16,8 @@ Without installing (ZIP):
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
 
+NEW IN 0.9.28 · Soft physics: drag an ellipse mask around part of a character image, pick a preset (chest, hair, skirt, belly, ears, jelly …) and it bounces, sways and breathes along with the figure's movement – image not cut, outside of the mask stays still; optional own layer, test mode, action “Nudge soft physics”
+
 NEW IN 0.9.27 · Idle layouts (cards, list, clicker, map/village), full screen, advisor character with speech bubble, selectable price/profit curves with presets (AdVenture Capitalist, Cookie Clicker …); Mouth & lip line tool (0.9.26) removed again – projects using it still open and play normally
 
 NEW IN 0.9.26 · Mouth & lip line for cutscene figures (side and POV): objects are hidden behind the lips, the jaw opens as far as the object is wide (measured from its image), mouth-inside image or color

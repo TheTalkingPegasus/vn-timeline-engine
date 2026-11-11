@@ -1,7 +1,7 @@
 // Bereich „Figuren“: Bones & Blinzeln, Ebenen-Figuren (Ausdrücke, Outfits), Lippensync (Mund markieren)
 (function () {
   const { el } = VN;
-  const SUBS = [['bones', 'Bones & Blinzeln'], ['layers', 'Ebenen & Outfits'], ['puppet', 'Gliederpuppen'], ['mouth', 'Lippensync']];
+  const SUBS = [['bones', 'Bones & Blinzeln'], ['layers', 'Ebenen & Outfits'], ['puppet', 'Gliederpuppen'], ['mouth', 'Lippensync'], ['soft', 'Weich-Physik']];
 
   const Figures = (window.Figures = {
     render(center) {
@@ -10,6 +10,7 @@
       if (sub === 'bones') Bones.render(center);
       else if (sub === 'layers') Figures.renderLayers(center);
       else if (sub === 'puppet') PupEd.render(center);
+      else if (sub === 'soft' && window.SoftEd) SoftEd.render(center);
       else Figures.renderMouth(center);
       const seg = el('div', { class: 'seg fig-seg' }, ...SUBS.map(([k, l]) => el('button', { class: k === sub ? 'active' : '', onclick: () => { VN.ui.figSub = k; VN.render(); } }, l)));
       center.insertBefore(el('div', { class: 'fig-tabs' }, el('strong', { style: { fontSize: '15px' } }, 'Figuren'), seg), center.firstChild);
@@ -18,6 +19,7 @@
       const sub = VN.ui.figSub || 'bones';
       if (sub === 'bones') return Bones.inspector();
       if (sub === 'puppet') return PupEd.inspector();
+      if (sub === 'soft' && window.SoftEd) return SoftEd.inspector();
       if (sub === 'layers') return el('div', { class: 'insp' }, el('div', null, el('h3', null, 'Figuren'), el('div', { class: 'insp-title' }, 'Ebenen & Outfits')),
         el('div', { class: 'hint-box' }, el('strong', null, 'So geht’s'), el('br'),
           '1. Figur anlegen. 2. Ebenen hinzufügen, z. B. Körper, Gesicht, Kleidung, Accessoire (unten nach oben). 3. Jede Ebene bekommt Varianten: alle Bilder gleich groß, mit transparentem Hintergrund.', el('br'), el('br'),

@@ -14,6 +14,18 @@ Ohne Installation (ZIP):
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
 
+NEU IN 0.9.28 · Weich-Physik (Wackel-Vorlagen für maskierte Bereiche)
+- Figuren → Weich-Physik: Eine Ellipse um eine Stelle des Figuren-Bilds ziehen und eine Vorlage wählen – Brust, Po, Bauch/Atmen,
+  Haare, Stoff/Rock, Ohren/Schwanz, Wangen, Gelee – dann wippt, schwingt und atmet die Stelle mit, wenn sich die Figur bewegt.
+  Das PNG wird nicht zerschnitten: Ein feines Gitter liegt über dem ganzen Bild, nur die Punkte in der Maske bewegen sich (weicher Rand),
+  außerhalb bleibt alles ruhig. Die Maske gehört zum Bild und folgt der Figur überall.
+- Pro Bereich: Stärke, Federhärte, Dämpfung, seitlich, Stauchen, weicher Rand, „Über den Rand“ (Bewegung darf über die Maske hinaus),
+  Anker (oben/unten/links/rechts fest) und Ruhebewegung (Atmen, Schwanken, Welle). „Als eigene Ebene“ legt den Bereich als Kopie
+  oben drauf, so kann er über den Körper schwingen. „↔ Gespiegelt kopieren“ für die zweite Seite.
+- Testen im Editor: Hüpfen, Schütteln, Gehen, Anstoßen oder die Figur mit der Maus herumziehen.
+- Wirkt bei einfachen Bild-Figuren in Story-Szenen (auch mit Blinzeln) und in Zwischensequenzen; reagiert auf jede Bewegung der Figur
+  (Keyframes, Schritte, Sprünge, Wackeln). Neue Aktion „〰 Weich-Physik anstoßen“ für einen gezielten Stoß.
+
 NEU IN 0.9.27 · Aufbau-Layouts, Vollbild, Berater; Mund-Werkzeug entfernt
 - Aufbau (Idle) mit wählbarem Layout: Karten (wie bisher), Liste (eine Zeile pro Gebäude mit Arbeits-Balken und Kaufen ×1 / ×10 / Max –
   wie AdVenture Capitalist), Klicker (großes Objekt zum Klicken, Laden daneben – wie Cookie Clicker) und Karte / Dorf (Gebäude frei auf

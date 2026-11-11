@@ -131,10 +131,13 @@
         const inner = el('span', { class: 'char-inner' }, el('img', { src: url, draggable: 'false' }));
         if (clip.flip) inner.style.transform = 'scaleX(-1)';
         Blink.attach(inner, clip.asset);
+        if (window.Soft && Soft.cfg(clip.asset)) Soft.attach(inner, clip.asset);
         box.appendChild(inner);
       } else if (url) {
         const inner = el('span', { class: 'char-inner' }, el('img', { src: url, draggable: 'false' }));
         if (clip.flip) inner.style.transform = 'scaleX(-1)';
+        // Weich-Physik (0.9.28): Bereiche wippen und schwingen nach
+        if (window.Soft && Soft.cfg(clip.asset)) Soft.attach(inner, clip.asset);
         box.appendChild(inner);
       } else {
         box.appendChild(el('div', { class: 'placeholder', style: { position: 'relative', width: '30cqh', height: '100%' } }, 'Figur ohne Bild'));

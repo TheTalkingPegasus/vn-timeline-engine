@@ -683,7 +683,7 @@ code { font-family: Consolas, "JetBrains Mono", monospace; background: var(--bg3
 #asset-tabs button { padding: 6px 2px; font-size: 12px; }
 /* Figuren */
 .fig-tabs { display: flex; align-items: center; gap: 14px; padding: 10px 14px 0; }
-.fig-seg { max-width: 480px; flex: 1; }
+.fig-seg { max-width: 600px; flex: 1; }
 .fig-body .loot-ed { min-width: 420px; }
 .fig-layer-card.over { border-color: var(--accent); }
 .fig-opts { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -2637,3 +2637,35 @@ img[src*="px_"] { image-rendering: pixelated; }
 .id-chart { width: 100%; max-width: 620px; height: auto; background: rgba(0,0,0,.25); border-radius: 8px; margin-top: 6px; }
 .id-chart-leg { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; margin-top: 4px; }
 .id-boostn { font-size: 1.7cqh; font-weight: 700; color: #f0c26a; background: rgba(240,194,106,0.12); border-radius: 0.8cqh; padding: 0.1cqh 0.8cqh; }
+
+/* Weich-Physik (0.9.28) */
+.char-inner > .soft-canvas { position: absolute; pointer-events: none; display: none; }
+.char-inner.soft-on > .soft-canvas { display: block; }
+.char-inner.soft-on > img:first-child { visibility: hidden; }
+.soft-body { display: flex; gap: 14px; padding: 12px 14px; min-height: 0; flex: 1; overflow: auto; }
+.soft-stage { position: relative; flex: 1; min-width: 320px; height: 620px; background: repeating-conic-gradient(#1a1b20 0 25%, #141519 0 50%) 0 0 / 20px 20px; border-radius: 10px; border: 1px solid var(--line); overflow: hidden; display: flex; align-items: center; justify-content: center; user-select: none; container-type: size; }
+.soft-stage > .soft-imgwrap { position: relative; height: 94%; }
+.soft-stage > .soft-imgwrap > img { height: 100%; display: block; }
+.soft-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.soft-svg .sr { fill: rgba(232,164,58,0.18); stroke: #e8a43a; stroke-width: 2; vector-effect: non-scaling-stroke; cursor: move; }
+.soft-svg .sr.sel { fill: rgba(90,180,255,0.22); stroke: #5ab4ff; }
+.soft-svg .sr-h { fill: #fff; stroke: #5ab4ff; stroke-width: 2; vector-effect: non-scaling-stroke; cursor: nwse-resize; }
+.soft-svg .sr-rot { fill: #5ab4ff; cursor: grab; }
+.soft-svg .sr-lbl { fill: #fff; paint-order: stroke; stroke: rgba(0,0,0,0.75); stroke-width: 4px; font-weight: 600; pointer-events: none; }
+.soft-side { width: 300px; flex: 0 0 300px; display: flex; flex-direction: column; gap: 10px; }
+.soft-list { display: flex; flex-direction: column; gap: 4px; }
+.soft-item { display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 6px; background: var(--bg2); border: 1px solid var(--line2); cursor: pointer; }
+.soft-item.active { border-color: var(--accent); }
+.soft-item .grow { flex: 1; }
+.soft-sl { display: grid; grid-template-columns: 112px 1fr 38px; align-items: center; gap: 6px; font-size: 12px; }
+.soft-sl input[type=range] { width: 100%; }
+.soft-test { position: absolute; inset: 0; }
+.soft-test .char { position: absolute; bottom: 3%; height: 94%; left: 50%; transform: translateX(-50%); cursor: grab; }
+.soft-btns { position: absolute; left: 10px; bottom: 10px; display: flex; gap: 6px; flex-wrap: wrap; z-index: 2; }
+@keyframes softHop { 0%,100% { translate: 0 0; } 30% { translate: 0 -9%; } 55% { translate: 0 0; } 70% { translate: 0 -3%; } 85% { translate: 0 0; } }
+@keyframes softShake { 0%,100% { translate: 0 0; } 15% { translate: -4% 0; } 35% { translate: 4% 0; } 55% { translate: -3% 0; } 75% { translate: 2% 0; } }
+@keyframes softWalk { 0%,50%,100% { translate: 0 0; } 25%,75% { translate: 0 -1.6%; } }
+.soft-test .char.hop { animation: softHop 0.9s ease-out; }
+.soft-test .char.shake { animation: softShake 0.6s ease-in-out; }
+.soft-test .char.walk { animation: softWalk 0.55s ease-in-out infinite; }
+.view-head .seg button { white-space: nowrap; }
