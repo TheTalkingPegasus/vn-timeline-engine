@@ -14,17 +14,20 @@
     hair: { label: 'Haare', k: 28, c: 3.2, inert: 1.2, xs: 1, ys: 0.4, anchor: 'top', anchorAmt: 1, idle: 'sway', idleAmp: 0.7, idleSpeed: 0.8, squash: 0, feather: 0.35, strength: 1, over: 0 },
     cloth: { label: 'Stoff / Rock', k: 38, c: 3.6, inert: 1, xs: 1, ys: 0.5, anchor: 'top', anchorAmt: 1, idle: 'wave', idleAmp: 0.5, idleSpeed: 1.1, squash: 0, feather: 0.35, strength: 1, over: 0 },
     ears: { label: 'Ohren / Schwanz', k: 45, c: 3, inert: 1.1, xs: 1, ys: 0.6, anchor: 'bottom', anchorAmt: 1, idle: 'sway', idleAmp: 0.5, idleSpeed: 1.2, squash: 0, feather: 0.3, strength: 1, over: 0 },
+    tail: { label: 'Schwanz / Zopf (Pendeln)', k: 30, c: 2.6, inert: 1.2, xs: 1, ys: 1, anchor: 'pin', anchorAmt: 0.7, pendulum: true, idle: 'sway', idleAmp: 0.6, idleSpeed: 0.9, squash: 0, feather: 0.25, strength: 1, over: 0 },
     cheeks: { label: 'Wangen', k: 220, c: 9, inert: 0.7, xs: 0.4, ys: 1, anchor: '', anchorAmt: 0, idle: '', idleAmp: 0, idleSpeed: 1, squash: 0.4, feather: 0.5, strength: 0.6, over: 0 },
     jelly: { label: 'Gelee / Schleim', k: 60, c: 2, inert: 1.2, xs: 1, ys: 1, anchor: 'bottom', anchorAmt: 0.6, idle: 'breathe', idleAmp: 0.6, idleSpeed: 2, squash: 1, feather: 0.45, strength: 1.2, over: 0 }
   };
-  const ANCHORS = [['', 'Frei schwebend'], ['top', 'Oben fest'], ['bottom', 'Unten fest'], ['left', 'Links fest'], ['right', 'Rechts fest']];
+  const ANCHORS = [['', 'Frei schwebend'], ['top', 'Oben fest'], ['bottom', 'Unten fest'], ['left', 'Links fest'], ['right', 'Rechts fest'], ['pin', '📍 Ankerpunkt (frei gesetzt)']];
   const IDLES = [['', 'Keine'], ['breathe', 'Atmen (auf & ab)'], ['sway', 'Schwanken (seitlich)'], ['wave', 'Welle (wehen)']];
   const PAD = 0.08; // Rand um das Bild, damit Bereiche über die Bildkante schwingen dürfen
   const GRID = 46;  // Gitterpunkte über die Bildbreite
   const ACC = 0.25; // wie stark Beschleunigung der Figur auf die Bereiche wirkt
 
+  // alle Schlüssel, die eine Vorlage setzen kann (zum Zurücksetzen)
+  const PKEYS = [...new Set(Object.values(PRESETS).flatMap((x) => Object.keys(x)))].filter((k) => k !== 'label');
   const Soft = (window.Soft = {
-    PRESETS, ANCHORS, IDLES, PAD,
+    PRESETS, ANCHORS, IDLES, PAD, PKEYS,
 
     data(assetId) { const s = VN.project && VN.project.softs && VN.project.softs[assetId]; return s || null; },
     cfg(assetId) {
@@ -156,25 +159,59 @@
       }
       return out;
     },
-    anchorW(P, lx, ly) {
+    // Ankerpunkt (0.9.28): frei gesetzter Pin. Ohne gesetzten Pin: Mitte oben am Rahmen
+    pinOf(r, aspect) {
+      if (r.pin && r.pin.length >= 2) return r.pin;
+      const b = Soft.box(r, aspect || 1);
+      return [b.cx, b.cy - b.ry];
+    },
+    // Abstand vom Pin, 0 am Pin … 1 am weitesten Punkt der Maske
+    pinQ(r, u, v, aspect) {
+      const pin = Soft.pinOf(r, aspect);
+      const key = aspect.toFixed(4) + JSON.stringify([pin, r.shape, r.pts, r.cx, r.cy, r.rx, r.ry, r.rot, r.smooth]);
+      let c = REACH.get(r);
+      if (!c || c.key !== key) {
+        const o = r.shape === 'poly' && r.pts && r.pts.length >= 3 ? Soft.outline(r) : Soft.toPoly(r, aspect, 24);
+        let m = 1e-3; for (const q of o) m = Math.max(m, Math.hypot((q[0] - pin[0]) * aspect, q[1] - pin[1]));
+        c = { key, reach: m }; REACH.set(r, c);
+      }
+      return Math.min(1, Math.hypot((u - pin[0]) * aspect, v - pin[1]) / c.reach);
+    },
+    // E = { r, u, v, aspect } für den Ankerpunkt (optional)
+    anchorW(P, lx, ly, E) {
       const amt = Math.max(0, Math.min(1, Number(P.anchorAmt) || 0));
       if (!P.anchor || !amt) return 1;
-      const g = P.anchor === 'top' ? (ly + 1) / 2 : P.anchor === 'bottom' ? (1 - ly) / 2 : P.anchor === 'left' ? (lx + 1) / 2 : (1 - lx) / 2;
+      let g;
+      if (P.anchor === 'pin') { if (!E) return 1; g = Soft.pinQ(E.r, E.u, E.v, E.aspect); }
+      else g = P.anchor === 'top' ? (ly + 1) / 2 : P.anchor === 'bottom' ? (1 - ly) / 2 : P.anchor === 'left' ? (lx + 1) / 2 : (1 - lx) / 2;
       const q = Math.max(0, Math.min(1, g));
       return 1 - amt + amt * q * q * (3 - 2 * q);
     },
-    weight(P, lx, ly, d) {
+    weight(P, lx, ly, d, E) {
       if (d == null) d = Math.hypot(lx, ly);
       const f = Math.max(0.02, Math.min(0.95, Number(P.feather) != null ? Number(P.feather) : 0.4));
       const over = Math.max(0, Number(P.over) || 0);
       const inner = 1 - f, outer = 1 + over;
       if (d >= outer) return 0;
       let w = d <= inner ? 1 : 1 - smooth((d - inner) / (outer - inner));
-      return w * Soft.anchorW(P, lx, ly);
+      // Pendeln: die Drehung um den Pin übernimmt die Abstufung
+      return P.pendulum ? w : w * Soft.anchorW(P, lx, ly, E);
     },
-    // Verschiebung eines Punkts durch einen Bereich (mit Stauchen und Welle)
-    disp(r, P, m, lx, ly, w, aspect) {
-      const aw = Soft.anchorW(P, lx, ly);
+    // Verschiebung eines Punkts durch einen Bereich (mit Stauchen und Welle, oder Pendeln um den Pin)
+    disp(r, P, m, lx, ly, w, aspect, E) {
+      if (P.pendulum && E) {
+        // echte Drehung um den Ankerpunkt; zur Spitze hin biegt es stärker (Anker-Stärke = Biegung)
+        const pin = Soft.pinOf(r, aspect), b = Soft.box(r, aspect);
+        let ax = (b.cx - pin[0]) * aspect, ay = b.cy - pin[1];
+        const al = Math.hypot(ax, ay) || 1e-4; ax /= al; ay /= al;
+        // Ausschlag quer zur Richtung Pin → Bereich ergibt den Winkel
+        const side = (m.dx * aspect) * -ay + m.dy * ax;
+        const q = Soft.pinQ(r, E.u, E.v, aspect), amt = Math.max(0, Math.min(1, Number(P.anchorAmt) || 0));
+        const th = Math.max(-1.2, Math.min(1.2, side * 3.5 / Math.max(0.05, al))) * (1 - amt + amt * q);
+        const px = (E.u - pin[0]) * aspect, py = E.v - pin[1], c = Math.cos(th), sn = Math.sin(th);
+        return [((px * c - py * sn) - px) / aspect * w, ((px * sn + py * c) - py) * w];
+      }
+      const aw = Soft.anchorW(P, lx, ly, E);
       let dx = m.dx * w, dy = m.dy * w;
       if (m.sq) { const b = Soft.box(r, aspect); dy += ly * b.ry * m.sq * w; dx -= lx * b.rx * m.sq * 0.5 * w; }
       if (m.wave) dx += Math.sin(m.t * m.sp * 1.3 - ly * 2.4) * m.wave * 0.8 * w * aw;
@@ -224,9 +261,10 @@
           let dx = 0, dy = 0;
           for (const { r, P, m } of moves) {
             const L = Soft.local(r, u, v, aspect);
-            const w = Soft.weight(P.layer ? Object.assign({}, P, { over: 0 }) : P, L[0], L[1], L[2]);
+            const E = { r, u, v, aspect };
+            const w = Soft.weight(P.layer ? Object.assign({}, P, { over: 0 }) : P, L[0], L[1], L[2], E);
             if (w <= 0) continue;
-            const d = Soft.disp(r, P, m, L[0], L[1], w, aspect);
+            const d = Soft.disp(r, P, m, L[0], L[1], w, aspect, E);
             dx += d[0]; dy += d[1];
           }
           pos[k * 2] = ox + (u + dx) * iw; pos[k * 2 + 1] = oy + (v + dy) * ih;
@@ -306,7 +344,7 @@
     }
     return (inside ? -1 : 1) * Math.sqrt(d);
   }
-  const GEO = new WeakMap();
+  const GEO = new WeakMap(), REACH = new WeakMap();
   function smooth(x) { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }
 
   // ---------- WebGL ----------
@@ -376,8 +414,9 @@
         d = Math.hypot(lx, ly);
       }
       const alpha = d >= 1 ? 0 : d <= 1 - f ? 1 : 1 - smooth((d - (1 - f)) / f);
-      const aw = Soft.anchorW(P, lx, ly);
-      const dd = Soft.disp(r, P, m, lx, ly, 1, aspect);
+      const E = { r, u, v, aspect };
+      const aw = P.pendulum ? 1 : Soft.anchorW(P, lx, ly, E);
+      const dd = Soft.disp(r, P, m, lx, ly, 1, aspect, E);
       // am Anker bleibt die Kopie stehen, weiter weg schwingt sie voll mit
       const dx = dd[0] * aw, dy = dd[1] * aw;
       uv[k * 2] = Math.max(0, Math.min(1, u)); uv[k * 2 + 1] = Math.max(0, Math.min(1, v));

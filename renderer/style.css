@@ -2675,3 +2675,7 @@ img[src*="px_"] { image-rendering: pixelated; }
 .soft-svg .sr-draft { fill: rgba(90,180,255,0.12); stroke-dasharray: 6 4; pointer-events: none; }
 .soft-svg .sr.off { opacity: 0.4; }
 .soft-tools button { white-space: nowrap; }
+.soft-svg .sr-pin circle { fill: rgba(232,64,90,0.35); stroke: #e8405a; stroke-width: 2; vector-effect: non-scaling-stroke; cursor: move; }
+.soft-svg .sr-pin circle.dot { fill: #e8405a; }
+.soft-svg .sr-pin.auto circle { stroke-dasharray: 4 3; }
+.soft-svg .sr-pinline { stroke: #e8405a; stroke-width: 1.5; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; pointer-events: none; }

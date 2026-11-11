@@ -5341,7 +5341,15 @@ window.VN_I18N_ES = {
 "Klick setzt eine Ecke, Klicken und Ziehen einen runden Punkt. Klick auf den ersten Punkt, Doppelklick oder Enter schließt die Form, Esc bricht ab.": "Un clic pone una esquina; clic y arrastrar, un punto redondo. Clic en el primer punto, doble clic o Enter cierra la forma; Esc cancela.",
 "✒ In freie Form umwandeln": "✒ Convertir en forma libre",
 "Umriss rund (Kurven statt gerader Linien)": "Contorno redondo (curvas en vez de líneas rectas)",
-"Punkte ziehen zum Anpassen · Doppelklick auf den Umriss fügt einen Punkt ein · Rechtsklick auf einen Punkt löscht ihn · Alt-Klick: Ecke ↔ rund": "Arrastra los puntos para ajustar · doble clic en el contorno añade un punto · clic derecho en un punto lo borra · Alt+clic: esquina ↔ redondo"
+"Punkte ziehen zum Anpassen · Doppelklick auf den Umriss fügt einen Punkt ein · Rechtsklick auf einen Punkt löscht ihn · Alt-Klick: Ecke ↔ rund": "Arrastra los puntos para ajustar · doble clic en el contorno añade un punto · clic derecho en un punto lo borra · Alt+clic: esquina ↔ redondo",
+"Schwanz / Zopf (Pendeln)": "Cola / coleta (péndulo)",
+"📍 Ankerpunkt (frei gesetzt)": "📍 Punto de anclaje (libre)",
+"Jetzt ins Bild klicken …": "Ahora haz clic en la imagen …",
+"📍 Ankerpunkt setzen": "📍 Poner punto de anclaje",
+"Pin im Bild ziehen zum Verschieben": "Arrastra el pin en la imagen para moverlo",
+"noch nicht gesetzt – Mitte oben": "aún no puesto: arriba al centro",
+"Pendeln (dreht sich um den Ankerpunkt)": "Péndulo (gira alrededor del punto de anclaje)",
+"Anker-Stärke = Biegung: 0 schwingt starr wie ein Schwert, 1 biegt sich zur Spitze wie ein Schwanz.": "Fuerza del ancla = flexión: 0 oscila rígido como una espada, 1 se dobla hacia la punta como una cola."
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

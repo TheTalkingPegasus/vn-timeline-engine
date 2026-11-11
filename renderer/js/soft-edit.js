@@ -88,7 +88,7 @@
       const pathOf = (pts, W, H, close) => pts.map((q, i) => (i ? 'L' : 'M') + (q[0] * W).toFixed(1) + ' ' + (q[1] * H).toFixed(1)).join(' ') + (close ? ' Z' : '');
       const stop = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
       // Zeichen-Werkzeuge zeichnen auch über bestehende Bereiche hinweg (Wählen nur mit „Auswählen“)
-      const drawing = () => (VN.ui.softTool || 'select') !== 'select';
+      const drawing = () => (VN.ui.softTool || 'select') !== 'select' || !!VN.ui.softPinMode;
       // Zeichenstift: Punkte in Arbeit (noch kein Bereich)
       let pen = [];
       SoftEd._pen = { finish: () => finishPen(), cancel: () => { pen = []; draw(); }, active: () => pen.length > 0 };
@@ -142,6 +142,23 @@
           }
           svg.appendChild(g);
         }
+        // Ankerpunkt des gewählten Bereichs (Pin), ziehbar
+        const sr = regs().find((x) => x.id === VN.ui.softSel);
+        if (sr && Soft.par(sr).anchor === 'pin') {
+          const pin = Soft.pinOf(sr, W / H), b = Soft.box(sr, W / H);
+          svg.appendChild(mk('line', { x1: pin[0] * W, y1: pin[1] * H, x2: b.cx * W, y2: b.cy * H, class: 'sr-pinline' }));
+          const pg = mk('g', { class: 'sr-pin' + (sr.pin ? '' : ' auto') });
+          pg.appendChild(mk('circle', { cx: pin[0] * W, cy: pin[1] * H, r: hs * 1.6 }));
+          pg.appendChild(mk('circle', { cx: pin[0] * W, cy: pin[1] * H, r: hs * 0.55, class: 'dot' }));
+          pg.addEventListener('mousedown', (ev) => {
+            if (drawing()) return; stop(ev);
+            const o = pin.slice(), [u0, v0] = toImg(ev);
+            VN.drag(ev, (dx, dy, e2) => { const [u, v] = toImg(e2); sr.pin = [o[0] + u - u0, o[1] + v - v0]; draw(); }, (dx, dy, moved) => {
+              if (!moved) return; const nv = [r4(sr.pin[0]), r4(sr.pin[1])]; sr.pin = o; VN.mutate(() => { sr.pin = nv; });
+            });
+          });
+          svg.appendChild(pg);
+        }
         // Zeichenstift in Arbeit
         if (pen.length) {
           const tmp = Soft.outline({ pts: pen, smooth: true });
@@ -163,11 +180,12 @@
       // Ziehen: verschieben, Größe, Drehung, Punkte – live ohne Neuaufbau, beim Loslassen speichern
       function drag(ev, r, mode, pi, changed) {
         const W = img.naturalWidth || 1000, H = img.naturalHeight || 1000;
-        const o = JSON.parse(JSON.stringify({ cx: r.cx, cy: r.cy, rx: r.rx, ry: r.ry, rot: r.rot || 0, pts: r.pts || null }));
+        const o = JSON.parse(JSON.stringify({ cx: r.cx, cy: r.cy, rx: r.rx, ry: r.ry, rot: r.rot || 0, pts: r.pts || null, pin: r.pin || null }));
         const [u0, v0] = toImg(ev);
         draw();
         VN.drag(ev, (dx, dy, e) => {
           const [u, v] = toImg(e);
+          if (mode === 'move' && o.pin) r.pin = [o.pin[0] + (u - u0), o.pin[1] + (v - v0)];
           if (mode === 'move' && isPoly(r)) r.pts = o.pts.map((q) => Object.assign(q.slice(), { 0: q[0] + (u - u0), 1: q[1] + (v - v0) }));
           else if (mode === 'pt') { r.pts[pi][0] = o.pts[pi][0] + (u - u0); r.pts[pi][1] = o.pts[pi][1] + (v - v0); }
           else if (mode === 'move') { r.cx = o.cx + (u - u0); r.cy = o.cy + (v - v0); }
@@ -181,7 +199,10 @@
         }, (dx, dy, moved) => {
           if (!moved) { if (changed || mode === 'pt') VN.render(); return; }
           const nv = isPoly(r) ? { pts: r.pts.map((q) => q.map((x, k) => (k < 2 ? r4(x) : x))) } : { cx: r4(r.cx), cy: r4(r.cy), rx: r4(r.rx), ry: r4(r.ry), rot: r.rot || 0 };
-          Object.assign(r, isPoly(r) ? { pts: o.pts } : o);
+          if (o.pin) nv.pin = [r4(r.pin[0]), r4(r.pin[1])];
+          const back = isPoly(r) ? { pts: o.pts } : { cx: o.cx, cy: o.cy, rx: o.rx, ry: o.ry, rot: o.rot };
+          if (o.pin) back.pin = o.pin;
+          Object.assign(r, back);
           VN.mutate(() => { Object.assign(r, nv); });
         });
       }
@@ -216,6 +237,13 @@
       stage.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
         e.preventDefault();
+        if (VN.ui.softPinMode) {
+          const r = regs().find((x) => x.id === VN.ui.softPinMode);
+          const [pu, pv] = toImg(e);
+          VN.ui.softPinMode = null;
+          if (r) VN.mutate(() => { r.pin = [r4(pu), r4(pv)]; r.anchor = 'pin'; }); else VN.render();
+          return;
+        }
         const tool = VN.ui.softTool || 'select';
         if (tool === 'select') { if (VN.ui.softSel) { VN.ui.softSel = null; SoftEd._pt = null; VN.render(); } return; }
         const [u0, v0] = toImg(e);
@@ -314,7 +342,7 @@
       const P = Soft.par(r);
       const poly = r.shape === 'poly' && r.pts && r.pts.length >= 3;
       const card = el('div', { class: 'opt-card' });
-      const ps = el('select', { onchange: (e) => VN.mutate(() => { for (const k of Object.keys(Soft.PRESETS.chest)) if (k !== 'label') delete r[k]; r.preset = e.target.value; }) });
+      const ps = el('select', { onchange: (e) => VN.mutate(() => { for (const k of Soft.PKEYS) delete r[k]; r.preset = e.target.value; }) });
       for (const [k, v] of Object.entries(Soft.PRESETS)) { const o = el('option', { value: k }, VN.t(v.label)); if (k === r.preset) o.selected = true; ps.appendChild(o); }
       const sel = (val, opts, commit) => { const s = el('select', { onchange: (e) => VN.mutate(() => commit(e.target.value)) }); for (const [v, l] of opts) { const o = el('option', { value: v }, VN.t(l)); if (v === (val || '')) o.selected = true; s.appendChild(o); } return s; };
       card.append(el('div', { class: 'sec-title' }, VN.t('Bereich')),
@@ -328,15 +356,20 @@
         card.appendChild(el('label', { class: 'soft-sl' }, el('span', null, VN.t(label)), inp, out));
       }
       card.append(
-        el('div', { class: 'logic-row' }, el('span', { class: 'muted small', style: { width: '112px' } }, VN.t('Anker')), sel(P.anchor, Soft.ANCHORS, (v) => { r.anchor = v; })),
+        el('div', { class: 'logic-row' }, el('span', { class: 'muted small', style: { width: '112px' } }, VN.t('Anker')), sel(P.anchor, Soft.ANCHORS, (v) => { r.anchor = v; if (v !== 'pin') r.pendulum = false; })),
+        P.anchor === 'pin' ? el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } },
+          el('button', { class: 'btn tiny' + (VN.ui.softPinMode === r.id ? ' primary' : ''), onclick: () => { VN.ui.softPinMode = VN.ui.softPinMode === r.id ? null : r.id; VN.render(); } }, VN.t(VN.ui.softPinMode === r.id ? 'Jetzt ins Bild klicken …' : '📍 Ankerpunkt setzen')),
+          el('span', { class: 'muted small' }, VN.t(r.pin ? 'Pin im Bild ziehen zum Verschieben' : 'noch nicht gesetzt – Mitte oben'))) : null,
+        el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!P.pendulum, onchange: (e) => VN.mutate(() => { r.pendulum = e.target.checked; if (e.target.checked && P.anchor !== 'pin') { r.anchor = 'pin'; if (r.anchorAmt == null) r.anchorAmt = 0.7; } }) }), VN.t('Pendeln (dreht sich um den Ankerpunkt)')),
+        P.pendulum ? el('div', { class: 'muted small' }, VN.t('Anker-Stärke = Biegung: 0 schwingt starr wie ein Schwert, 1 biegt sich zur Spitze wie ein Schwanz.')) : null,
         el('div', { class: 'logic-row' }, el('span', { class: 'muted small', style: { width: '112px' } }, VN.t('Ruhebewegung')), sel(P.idle, Soft.IDLES, (v) => { r.idle = v; })),
         poly ? el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: r.smooth !== false, onchange: (e) => VN.mutate(() => { r.smooth = e.target.checked; }) }), VN.t('Umriss rund (Kurven statt gerader Linien)')) : null,
         poly ? el('div', { class: 'muted small' }, VN.t('Punkte ziehen zum Anpassen · Doppelklick auf den Umriss fügt einen Punkt ein · Rechtsklick auf einen Punkt löscht ihn · Alt-Klick: Ecke ↔ rund')) : null,
         el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!P.layer, onchange: (e) => VN.mutate(() => { r.layer = e.target.checked; }) }), VN.t('Als eigene Ebene (darf über den Körper schwingen)')),
         el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } },
-          el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const c = JSON.parse(JSON.stringify(r)); c.id = VN.uid('sr'); if (poly) c.pts = r.pts.map((q) => [r4(1 - q[0]), q[1]].concat(q.slice(2))).reverse(); else { c.cx = r4(1 - r.cx); c.rot = -(r.rot || 0); } c.name = (r.name || '') + ' ↔'; regs.push(c); VN.ui.softSel = c.id; }) }, VN.t('↔ Gespiegelt kopieren')),
+          el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const c = JSON.parse(JSON.stringify(r)); c.id = VN.uid('sr'); if (poly) c.pts = r.pts.map((q) => [r4(1 - q[0]), q[1]].concat(q.slice(2))).reverse(); else { c.cx = r4(1 - r.cx); c.rot = -(r.rot || 0); } if (r.pin) c.pin = [r4(1 - r.pin[0]), r.pin[1]]; c.name = (r.name || '') + ' ↔'; regs.push(c); VN.ui.softSel = c.id; }) }, VN.t('↔ Gespiegelt kopieren')),
           !poly ? el('button', { class: 'btn tiny', onclick: () => { const im = new Image(); im.src = VN.assetUrl(id); const go = () => VN.mutate(() => { r.pts = Soft.toPoly(r, im.naturalWidth && im.naturalHeight ? im.naturalWidth / im.naturalHeight : 1); r.shape = 'poly'; r.smooth = true; }); if (im.complete && im.naturalWidth) go(); else im.onload = go; } }, VN.t('✒ In freie Form umwandeln')) : null,
-          el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { for (const k of Object.keys(Soft.PRESETS.chest)) if (k !== 'label') delete r[k]; }) }, VN.t('Vorlage zurücksetzen')),
+          el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { for (const k of Soft.PKEYS) delete r[k]; }) }, VN.t('Vorlage zurücksetzen')),
           el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { regs.splice(regs.indexOf(r), 1); VN.ui.softSel = null; if (!regs.length) delete p.softs[id]; }) }, VN.t('Entfernen'))));
       side.appendChild(card);
       return side;

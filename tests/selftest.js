@@ -1207,10 +1207,18 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
       if (!S.outline(rp).some((q) => Math.abs(q[0] - 0.7) < 1e-9 && Math.abs(q[1] - 0.3) < 1e-9)) out.push('Ecke');
       const ep = S.toPoly({ cx: 0.5, cy: 0.5, rx: 0.1, ry: 0.05, rot: 0 }, 0.5, 8);
       if (ep.length !== 8 || Math.abs(ep[0][0] - 0.6) > 1e-6) out.push('Ellipse → Form');
+      // Ankerpunkt und Pendeln: am Pin fest, an der Spitze voll; Pendeln dreht um den Pin
+      const rt = Object.assign(S.newRegion('tail', 0.5, 0.5, 0.1, 0.4), { pin: [0.5, 0.1] }), Pt = S.par(rt);
+      if (S.pinQ(rt, 0.5, 0.1, 1) !== 0 || Math.abs(S.pinQ(rt, 0.5, 0.9, 1) - 1) > 1e-6) out.push('Pin-Abstand');
+      const mt = { dx: 0.05, dy: 0, sq: 0, wave: 0, t: 0, sp: 1 };
+      const dPin = S.disp(rt, Pt, mt, 0, -0.9, 1, 1, { r: rt, u: 0.5, v: 0.12, aspect: 1 }), dTip = S.disp(rt, Pt, mt, 0, 0.9, 1, 1, { r: rt, u: 0.5, v: 0.86, aspect: 1 });
+      if (!(Math.hypot(dPin[0], dPin[1]) < Math.hypot(dTip[0], dTip[1]) * 0.1) || !(Math.abs(dTip[0]) > 0.01)) out.push('Pendeln ' + JSON.stringify([dPin, dTip]));
+      const Pa = Object.assign({}, Pt, { pendulum: false });
+      if (!(S.anchorW(Pa, 0, 0, { r: rt, u: 0.5, v: 0.15, aspect: 1 }) < S.anchorW(Pa, 0, 0, { r: rt, u: 0.5, v: 0.85, aspect: 1 }))) out.push('Pin-Anker');
       return JSON.stringify(out);
     })()`));
     if (r.length) general.push('Weich-Physik: ' + r.join(', '));
-    else log('✓ Weich-Physik: Masken-Gewicht, Anker, Feder, Trägheit, Bühne, Aktion, freie Formen');
+    else log('✓ Weich-Physik: Masken-Gewicht, Anker, Feder, Trägheit, Bühne, Aktion, freie Formen, Ankerpunkt, Pendeln');
   } catch (e) { general.push('Weich-Physik: ' + e.message); }
 
   // 20. Social Media: Beiträge per Bedingung und Aktion, löschen, Likes mit Aktion nur einmal

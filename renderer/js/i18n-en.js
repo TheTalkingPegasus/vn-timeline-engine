@@ -5259,7 +5259,15 @@ window.VN_I18N_EN = {
 "Klick setzt eine Ecke, Klicken und Ziehen einen runden Punkt. Klick auf den ersten Punkt, Doppelklick oder Enter schließt die Form, Esc bricht ab.": "A click sets a corner, click and drag a round point. Click the first point, double-click or press Enter to close the shape, Esc cancels.",
 "✒ In freie Form umwandeln": "✒ Convert to free shape",
 "Umriss rund (Kurven statt gerader Linien)": "Round outline (curves instead of straight lines)",
-"Punkte ziehen zum Anpassen · Doppelklick auf den Umriss fügt einen Punkt ein · Rechtsklick auf einen Punkt löscht ihn · Alt-Klick: Ecke ↔ rund": "Drag points to adjust · double-click the outline to add a point · right-click a point to delete it · Alt-click: corner ↔ round"
+"Punkte ziehen zum Anpassen · Doppelklick auf den Umriss fügt einen Punkt ein · Rechtsklick auf einen Punkt löscht ihn · Alt-Klick: Ecke ↔ rund": "Drag points to adjust · double-click the outline to add a point · right-click a point to delete it · Alt-click: corner ↔ round",
+"Schwanz / Zopf (Pendeln)": "Tail / ponytail (pendulum)",
+"📍 Ankerpunkt (frei gesetzt)": "📍 Anchor point (placed freely)",
+"Jetzt ins Bild klicken …": "Now click into the image …",
+"📍 Ankerpunkt setzen": "📍 Set anchor point",
+"Pin im Bild ziehen zum Verschieben": "Drag the pin in the image to move it",
+"noch nicht gesetzt – Mitte oben": "not set yet – top center",
+"Pendeln (dreht sich um den Ankerpunkt)": "Pendulum (rotates around the anchor point)",
+"Anker-Stärke = Biegung: 0 schwingt starr wie ein Schwert, 1 biegt sich zur Spitze wie ein Schwanz.": "Anchor strength = bending: 0 swings rigidly like a sword, 1 bends towards the tip like a tail."
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",

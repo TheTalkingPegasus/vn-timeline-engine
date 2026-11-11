@@ -5341,7 +5341,15 @@ window.VN_I18N_JA = {
 "Klick setzt eine Ecke, Klicken und Ziehen einen runden Punkt. Klick auf den ersten Punkt, Doppelklick oder Enter schließt die Form, Esc bricht ab.": "クリックで角、クリック＋ドラッグで丸い点。最初の点をクリック、ダブルクリックまたはEnterで閉じ、Escで中止。",
 "✒ In freie Form umwandeln": "✒ 自由形状に変換",
 "Umriss rund (Kurven statt gerader Linien)": "輪郭を丸く（直線ではなく曲線）",
-"Punkte ziehen zum Anpassen · Doppelklick auf den Umriss fügt einen Punkt ein · Rechtsklick auf einen Punkt löscht ihn · Alt-Klick: Ecke ↔ rund": "点をドラッグで調整 · 輪郭をダブルクリックで点を追加 · 点を右クリックで削除 · Alt＋クリック：角 ↔ 丸"
+"Punkte ziehen zum Anpassen · Doppelklick auf den Umriss fügt einen Punkt ein · Rechtsklick auf einen Punkt löscht ihn · Alt-Klick: Ecke ↔ rund": "点をドラッグで調整 · 輪郭をダブルクリックで点を追加 · 点を右クリックで削除 · Alt＋クリック：角 ↔ 丸",
+"Schwanz / Zopf (Pendeln)": "しっぽ／ポニーテール（振り子）",
+"📍 Ankerpunkt (frei gesetzt)": "📍 アンカーポイント（自由配置）",
+"Jetzt ins Bild klicken …": "画像をクリックしてください…",
+"📍 Ankerpunkt setzen": "📍 アンカーポイントを置く",
+"Pin im Bild ziehen zum Verschieben": "画像のピンをドラッグして移動",
+"noch nicht gesetzt – Mitte oben": "未設定 – 上部中央",
+"Pendeln (dreht sich um den Ankerpunkt)": "振り子（アンカーポイントを中心に回転）",
+"Anker-Stärke = Biegung: 0 schwingt starr wie ein Schwert, 1 biegt sich zur Spitze wie ein Schwanz.": "固定の強さ＝しなり：0は剣のように硬く揺れ、1はしっぽのように先端へ向かってしなる。"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

@@ -11,6 +11,9 @@ All notable changes. German details: `LIES MICH.txt`.
   (click = corner, click-drag = round point; close on the first point, double-click or Enter). Afterwards drag points,
   double-click the outline to add one, right-click or Del to delete, Alt-click to switch corner ↔ round; round outline on/off;
   convert an ellipse into a free shape to refine it. The soft edge follows the drawn outline.
+- **Anchor point & pendulum:** set a pin anywhere (also outside the mask, e.g. where a tail leaves the body) – the farther from
+  the pin, the more it swings, in any direction. **Pendulum** really rotates the area around the pin; the anchor strength sets
+  the bending (0 = rigid like a sword, 1 = bends towards the tip like a tail). New preset *Tail / ponytail (pendulum)*.
 - Per area: strength, stiffness, damping, sideways motion, squash, soft edge, **beyond the edge** (motion may spill past the mask),
   anchor (fixed at top/bottom/left/right) and idle motion (breathing, swaying, wave). **As its own layer** puts a copy of the area on top,
   so it can swing over the body. “↔ Copy mirrored” for the second side.

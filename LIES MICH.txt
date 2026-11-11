@@ -16,13 +16,16 @@ Ohne Installation (ZIP):
 
 NEU IN 0.9.28 · Weich-Physik (Wackel-Vorlagen für maskierte Bereiche)
 - Figuren → Weich-Physik: Eine Stelle des Figuren-Bilds maskieren und eine Vorlage wählen – Brust, Po, Bauch/Atmen,
-  Haare, Stoff/Rock, Ohren/Schwanz, Wangen, Gelee – dann wippt, schwingt und atmet die Stelle mit, wenn sich die Figur bewegt.
+  Haare, Stoff/Rock, Ohren/Schwanz, Schwanz/Zopf (Pendeln), Wangen, Gelee – dann wippt, schwingt und atmet die Stelle mit, wenn sich die Figur bewegt.
   Das PNG wird nicht zerschnitten: Ein feines Gitter liegt über dem ganzen Bild, nur die Punkte in der Maske bewegen sich (weicher Rand),
   außerhalb bleibt alles ruhig. Die Maske gehört zum Bild und folgt der Figur überall.
 - Masken-Werkzeuge wie in After Effects: Ellipse, Lasso (frei um die Stelle fahren, wird beim Loslassen geglättet) und
   Zeichenstift (Klick = Ecke, Klicken und Ziehen = runder Punkt; schließen mit Klick auf den ersten Punkt, Doppelklick oder Enter).
   Danach Punkte ziehen, Doppelklick auf den Umriss fügt einen Punkt ein, Rechtsklick oder Entf löscht, Alt-Klick wechselt Ecke ↔ rund;
   Umriss rund an/aus; eine Ellipse lässt sich zum Feinschliff in eine freie Form umwandeln. Der weiche Rand folgt dem gezeichneten Umriss.
+- Ankerpunkt & Pendeln: Einen Pin frei setzen (auch außerhalb der Maske, z. B. dort, wo ein Schwanz aus dem Körper kommt) – je weiter
+  vom Pin entfernt, desto stärker schwingt es, in jede Richtung. „Pendeln“ dreht den Bereich echt um den Pin; die Anker-Stärke
+  bestimmt die Biegung (0 = starr wie ein Schwert, 1 = biegt sich zur Spitze wie ein Schwanz). Neue Vorlage „Schwanz / Zopf (Pendeln)“.
 - Pro Bereich: Stärke, Federhärte, Dämpfung, seitlich, Stauchen, weicher Rand, „Über den Rand“ (Bewegung darf über die Maske hinaus),
   Anker (oben/unten/links/rechts fest) und Ruhebewegung (Atmen, Schwanken, Welle). „Als eigene Ebene“ legt den Bereich als Kopie
   oben drauf, so kann er über den Körper schwingen. „↔ Gespiegelt kopieren“ für die zweite Seite.
