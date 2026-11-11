@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.26
+VN Timeline Engine · Prototyp 0.9.27
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,21 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.27 · Aufbau-Layouts, Vollbild, Berater; Mund-Werkzeug entfernt
+- Aufbau (Idle) mit wählbarem Layout: Karten (wie bisher), Liste (eine Zeile pro Gebäude mit Arbeits-Balken und Kaufen ×1 / ×10 / Max –
+  wie AdVenture Capitalist), Klicker (großes Objekt zum Klicken, Laden daneben – wie Cookie Clicker) und Karte / Dorf (Gebäude frei auf
+  einem Hintergrundbild, Anklicken zum Ausbauen; im Editor per Ziehen platzieren).
+- Vollbild statt Fenster.
+- Kurven für Preise und Gewinne zum Auswählen: exponentiell (× pro Stufe), Potenz/quadratisch, sanft gebremst, linear; Gewinne
+  gleichmäßig, wachsend (Schneeball) oder abflachend; dazu Sprünge (Ertrag × ab Stufe 25, 50, 100 …). Vorlagen nach bekannten
+  Idle-Spielen – Klassisch, AdVenture Capitalist (×1,07–1,15, ×2 bei 25/50/100/200/300/400), Cookie Clicker (×1,15), Gemächlich,
+  Sanft gebremst, Story (linear), Schneeball – jedes Gebäude kann eine eigene Kurve haben. Ein Diagramm zeigt Preis, Ertrag und
+  Amortisation pro Stufe.
+- Berater: eine Figur in einem kleinen Fenster mit Sprechblase – Sätze fürs erste Öffnen, Öffnen, nach dem Bauen, wenn das Geld fehlt,
+  bei erreichten Zielen und zwischendurch; mit Bedingungen und „nur einmal“. Wird klein, wenn sie schweigt; Anklicken bringt den nächsten Tipp.
+- Mund & Lippenlinie für Figuren in Zwischensequenzen (0.9.26) ist wieder entfernt. Projekte, die es benutzt haben, öffnen und
+  laufen weiter; die Figur wird einfach normal gezeichnet und das Objekt nicht mehr abgeschnitten.
 
 NEU IN 0.9.26 · Mund & Lippenlinie (seitlich und POV)
 - Mund für Figuren in Zwischensequenzen (einfaches PNG, auch Bilder mit Bones): Oberlippe, Unterlippe und Kiefergelenk setzen.

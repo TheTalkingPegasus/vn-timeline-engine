@@ -211,7 +211,6 @@
       const m = (AnimEd._maps || []).find((x) => x.it.actor === actor);
       if (!m) return;
       const NS = 'http://www.w3.org/2000/svg';
-      if (ui().animMouthEd) { AnimEd.drawMouth(svg, a, actor); return; }
       if (ui().animMaskEd && actor.mask && actor.mask.on) { AnimEd.drawMask(svg, a, actor); return; }
       const [bx, by] = m.base;
       const mk = (tag, at) => { const n = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(at)) n.setAttribute(k, v); svg.appendChild(n); return n; };
@@ -239,7 +238,6 @@
         const kx = (svg.viewBox.baseVal && svg.viewBox.baseVal.width ? svg.viewBox.baseVal.width / r.width : 1);
         const px = (e.clientX - r.left) * kx, py = (e.clientY - r.top) * kx;
         const actor = actorOf(a);
-        if (ui().animMouthEd && actor && AnimEd.mouthDown(e, px, py, svg, r, kx, a, actor)) return;
         if (ui().animMaskEd && actor && actor.mask && actor.mask.on && AnimEd.maskDown(e, px, py, svg, r, kx, a, actor)) return;
         if (ui().animSew && actor && actor.puppet) { AnimEd.sewDown(e, svg, r, kx, a, actor); return; }
         if (actor && actor.puppet && AnimEd.pupDown(e, px, py, r, kx, a, actor)) return;
@@ -289,110 +287,6 @@
           VN.mutate(() => { ac.move = after; ui().animKey = { row: 'move', t }; });
         });
       };
-    },
-
-    // ---------- Mund & Lippenlinie (0.9.24) ----------
-    geoOf(actor) { const m = (AnimEd._maps || []).find((x) => x.it.actor === actor); return m && m.geo ? m.geo : null; },
-    // Normierter Bildpunkt ↔ Leinwand
-    nToPx(actor, p, bone) { const g = AnimEd.geoOf(actor); if (!g || !p) return null; const [lx, ly] = g.toLocal(p[0], p[1], bone); return Anim.Mouth.ap(g.mat, lx, ly); },
-    pxToN(actor, x, y, bone) { const g = AnimEd.geoOf(actor); if (!g) return null; const [a, b, c, d, e, f] = g.mat, det = a * d - b * c || 1; const lx = (d * (x - e) - c * (y - f)) / det, ly = (-b * (x - e) + a * (y - f)) / det; return g.fromLocal(lx, ly, bone).map((v) => Math.round(v * 10000) / 10000); },
-    mouthSteps(actor) { return actor.mouth && actor.mouth.on ? (actor.mouth.view === 'pov' ? [['up', 'Mundwinkel links'], ['lo', 'Mundwinkel rechts'], ['hinge', 'Kinn']] : [['up', 'Oberlippe'], ['lo', 'Unterlippe'], ['hinge', 'Kiefergelenk']]) : actor.mouthProp && actor.mouthProp.target ? [['back', 'Griff (hinteres Ende)'], ['tip', 'Spitze']] : []; },
-    drawMouth(svg, a, actor) {
-      const NS = 'http://www.w3.org/2000/svg';
-      const mk = (tag, at, txt) => { const n = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(at)) n.setAttribute(k, v); if (txt) n.textContent = txt; svg.appendChild(n); return n; };
-      if (actor.mouth && actor.mouth.on) {
-        const mo = actor.mouth, U = AnimEd.nToPx(actor, mo.up, mo.bone), L = AnimEd.nToPx(actor, mo.lo, mo.bone), H = AnimEd.nToPx(actor, mo.hinge, mo.bone);
-        if (U && L) mk('line', { x1: U[0], y1: U[1], x2: L[0], y2: L[1], stroke: '#ff7fa8', 'stroke-width': 3, 'stroke-linecap': 'round' });
-        if (mo.view === 'pov' && U && L && H) {
-          const M = [(U[0] + L[0]) / 2, (U[1] + L[1]) / 2], w = Math.hypot(L[0] - U[0], L[1] - U[1]) || 1, e = [(L[0] - U[0]) / w, (L[1] - U[1]) / w];
-          let dd = [-e[1], e[0]]; if ((H[0] - M[0]) * dd[0] + (H[1] - M[1]) * dd[1] < 0) dd = [-dd[0], -dd[1]];
-          const cd = Math.max(w * 0.3, (H[0] - M[0]) * dd[0] + (H[1] - M[1]) * dd[1]), jf = Math.max(0.5, Number(mo.jaw) || 2.2) / 2.2;
-          const jc = [M[0] + dd[0] * cd * 0.55, M[1] + dd[1] * cd * 0.55], rot = Math.atan2(e[1], e[0]) * 180 / Math.PI;
-          mk('ellipse', { cx: jc[0], cy: jc[1], rx: w * 0.95 * jf, ry: cd * 0.75 * jf, transform: `rotate(${rot} ${jc[0]} ${jc[1]})`, fill: 'rgba(255,127,168,0.10)', stroke: 'rgba(255,255,255,.35)', 'stroke-dasharray': '3 5' });
-          mk('line', { x1: M[0], y1: M[1], x2: H[0], y2: H[1], stroke: '#fff', 'stroke-width': 1.5, 'stroke-dasharray': '4 3' });
-        } else if (U && L && H) {
-          const M = [(U[0] + L[0]) / 2, (U[1] + L[1]) / 2];
-          mk('line', { x1: M[0], y1: M[1], x2: H[0], y2: H[1], stroke: '#fff', 'stroke-width': 1.5, 'stroke-dasharray': '4 3' });
-          // Pfeil: Einfuhrrichtung (dahinter unsichtbar)
-          let n = [H[0] - M[0], H[1] - M[1]]; const l = Math.hypot(...n) || 1; n = [n[0] / l, n[1] / l]; if (mo.flip) n = [-n[0], -n[1]];
-          const A = [M[0] - n[0] * 34, M[1] - n[1] * 34], B = [M[0] - n[0] * 8, M[1] - n[1] * 8];
-          mk('line', { x1: A[0], y1: A[1], x2: B[0], y2: B[1], stroke: '#4d7cff', 'stroke-width': 3 });
-          mk('circle', { cx: B[0], cy: B[1], r: 4, fill: '#4d7cff' });
-          const R = Math.hypot(L[0] - H[0], L[1] - H[1]) * Math.max(0.5, Number(mo.jaw) || 2.2);
-          const as = Math.atan2(M[1] - H[1], M[0] - H[0]); let dl = Math.atan2(L[1] - H[1], L[0] - H[0]) - as; while (dl > Math.PI) dl -= 2 * Math.PI; while (dl < -Math.PI) dl += 2 * Math.PI;
-          const sp = (Math.max(30, Math.min(175, Number(mo.span) || 140)) * Math.PI / 180) * (dl >= 0 ? 1 : -1);
-          const pts = [H]; for (let i = 0; i <= 24; i++) { const q = as + sp * i / 24; pts.push([H[0] + R * Math.cos(q), H[1] + R * Math.sin(q)]); }
-          mk('path', { d: pts.map((p, i) => (i ? 'L' : 'M') + p[0] + ' ' + p[1]).join(' ') + ' Z', fill: 'rgba(255,127,168,0.10)', stroke: 'rgba(255,255,255,.35)', 'stroke-dasharray': '3 5' });
-        }
-        for (const [p, c, lab] of (mo.view === 'pov' ? [[U, '#ff7fa8', 'L'], [L, '#ff7fa8', 'R'], [H, '#ffffff', 'K']] : [[U, '#ff7fa8', 'O'], [L, '#ff7fa8', 'U'], [H, '#ffffff', 'G']])) if (p) { mk('circle', { cx: p[0], cy: p[1], r: 7, fill: c, stroke: '#222', 'stroke-width': 2 }); mk('text', { x: p[0] + 10, y: p[1] - 8, fill: '#fff', 'font-size': 12, 'font-weight': 700, 'paint-order': 'stroke', stroke: '#000', 'stroke-width': 3 }, lab); }
-      }
-      if (actor.mouthProp && actor.mouthProp.target) {
-        const mp = actor.mouthProp, B = AnimEd.nToPx(actor, mp.back), T = AnimEd.nToPx(actor, mp.tip);
-        if (B && T) mk('line', { x1: B[0], y1: B[1], x2: T[0], y2: T[1], stroke: '#ffd43b', 'stroke-width': 2, 'stroke-dasharray': '6 4' });
-        if (B) mk('circle', { cx: B[0], cy: B[1], r: 7, fill: '#ffd43b', stroke: '#222', 'stroke-width': 2 });
-        if (T) mk('circle', { cx: T[0], cy: T[1], r: 7, fill: '#ff922b', stroke: '#222', 'stroke-width': 2 });
-      }
-      const st = ui().animMouthPick;
-      if (st && st.actor === actor.id) { const S = AnimEd.mouthSteps(actor)[st.i]; if (S) mk('text', { x: 12, y: 24, fill: '#fff', 'font-size': 15, 'font-weight': 700, 'paint-order': 'stroke', stroke: '#000', 'stroke-width': 4 }, '👆 ' + VN.t('Klicke:') + ' ' + VN.t(S[1])); }
-    },
-    // Klick setzt den nächsten Punkt (Assistent), sonst Punkte ziehen
-    mouthDown(e, px, py, svg, r, kx, a, actor) {
-      const steps = AnimEd.mouthSteps(actor);
-      if (!steps.length) return false;
-      const obj = actor.mouth && actor.mouth.on ? actor.mouth : actor.mouthProp, bone = actor.mouth && actor.mouth.on ? actor.mouth.bone : null;
-      const st = ui().animMouthPick;
-      e.preventDefault();
-      if (st && st.actor === actor.id && steps[st.i]) {
-        const nv = AnimEd.pxToN(actor, px, py, bone);
-        if (!nv) return true;
-        VN.mutate(() => { obj[steps[st.i][0]] = nv; st.i++; if (st.i >= steps.length) ui().animMouthPick = null; });
-        return true;
-      }
-      const hit = steps.find(([k]) => { const q = AnimEd.nToPx(actor, obj[k], bone); return q && Math.hypot(q[0] - px, q[1] - py) < 11; });
-      if (!hit) return false;
-      const before = JSON.stringify(obj);
-      VN.drag(e, (dx, dy, ev) => { const nv = AnimEd.pxToN(actor, (ev.clientX - r.left) * kx, (ev.clientY - r.top) * kx, bone); if (nv) obj[hit[0]] = nv; },
-        (dx, dy, moved) => { if (!moved) return; const after = JSON.stringify(obj); Object.assign(obj, JSON.parse(before)); VN.mutate(() => { Object.assign(obj, JSON.parse(after)); }); });
-      return true;
-    },
-    mouthCard(a, actor) {
-      const box = el('div', { class: 'opt-card', style: { marginTop: '8px' } }, el('div', { class: 'sec-title' }, '👄 ' + VN.t('Mund & Objekt')));
-      const sel = (v, opts, fn) => { const s = el('select', { class: 'small-input', onchange: (e) => VN.mutate(() => fn(e.target.value)) }); for (const [k, l] of opts) { const o = el('option', { value: k }, VN.t(l)); if (String(k) === String(v == null ? '' : v)) o.selected = true; s.appendChild(o); } return s; };
-      const rng = (label, v, mn, mx, fn, unit) => { const lab = el('span', { class: 'muted small' }, VN.t(label) + ': ' + v + (unit || '')); return el('div', { class: 'field' }, lab, el('input', { type: 'range', min: mn, max: mx, value: v, oninput: (e) => { lab.textContent = VN.t(label) + ': ' + e.target.value + (unit || ''); }, onchange: (e) => VN.mutate(() => fn(Number(e.target.value))) })); };
-      const editBtn = () => el('button', { class: 'btn tiny' + (ui().animMouthEd ? ' primary' : ''), onclick: () => { ui().animMouthEd = !ui().animMouthEd; VN.render(); } }, '✏ ' + VN.t('Punkte zeigen / ziehen'));
-      const pickBtn = (label) => el('button', { class: 'btn tiny', onclick: () => { ui().animMouthEd = true; ui().animMouthPick = { actor: actor.id, i: 0 }; VN.render(); } }, '👆 ' + VN.t(label));
-      const mo = actor.mouth, mp = actor.mouthProp;
-      const isProp = mp && mp.target;
-      if (!isProp) {
-        box.appendChild(el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!(mo && mo.on), onchange: (e) => VN.mutate(() => { actor.mouth = Object.assign(actor.mouth || { jaw: 2.2, max: 35, innerColor: '#4a1620' }, { on: e.target.checked }); if (e.target.checked && !actor.mouth.up) { ui().animMouthEd = true; ui().animMouthPick = { actor: actor.id, i: 0 }; } }) }), VN.t('Diese Figur hat einen Mund (Lippenlinie)')));
-        if (mo && mo.on) {
-          const rig = actor.asset && VN.project.rigs[actor.asset];
-          box.append(
-            el('div', { class: 'logic-row' }, el('span', { class: 'muted small' }, VN.t('Ansicht')), sel(mo.view || 'side', [['side', 'Seitlich (Profil)'], ['pov', 'Von vorn (POV)']], (v) => { mo.view = v; mo.up = mo.lo = mo.hinge = null; ui().animMouthEd = true; ui().animMouthPick = { actor: actor.id, i: 0 }; })),
-            el('div', { class: 'muted small' }, mo.view === 'pov'
-              ? VN.t('Setze linken und rechten Mundwinkel und das Kinn. Kommt ein Objekt auf die Mundmitte zu, senkt sich der Unterkiefer so weit, wie das Objekt dort breit ist. Was schon im Mund ist, sieht man nur noch durch die Öffnung.')
-              : VN.t('Setze Oberlippe, Unterlippe und Kiefergelenk. Kreuzt ein Objekt die Linie, klappt der Unterkiefer genau so weit auf, wie das Objekt an dieser Stelle breit ist. Dahinter ist das Objekt unsichtbar.')),
-            el('div', { class: 'row gap8', style: { flexWrap: 'wrap', margin: '6px 0' } }, pickBtn(mo.up ? 'Punkte neu setzen' : 'Punkte setzen'), editBtn(),
-              el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!mo.flip, onchange: (e) => VN.mutate(() => { mo.flip = e.target.checked; }) }), VN.t('Richtung umdrehen'))),
-            rig ? el('div', { class: 'logic-row' }, el('span', { class: 'muted small' }, VN.t('Folgt Knochen')), sel(mo.bone || '', [['', '— keiner —'], ...rig.bones.map((b) => [b.id, b.name])], (v) => { mo.bone = v; })) : null,
-            el('div', { class: 'logic-row' }, el('span', { class: 'muted small' }, VN.t('Mund-Inneres')), (() => { const s = VN.assetSelect('image', mo.inner, (v) => VN.mutate(() => { mo.inner = v; })); s.style.maxWidth = '150px'; return s; })(),
-              el('input', { type: 'color', value: mo.innerColor || '#4a1620', title: VN.t('Farbe, wenn kein Bild gewählt ist'), onchange: (e) => VN.mutate(() => { mo.innerColor = e.target.value; }) })),
-            el('div', { class: 'grid2' }, rng('Kiefer-Größe', Math.round((Number(mo.jaw) || 2.2) * 10) / 10, 0.5, 6, (v) => { mo.jaw = v; }), rng('Max. Öffnung', Number(mo.max) || 35, 5, 70, (v) => { mo.max = v; }, mo.view === 'pov' ? '' : '°')),
-            mo.view === 'pov' ? null : rng('Kiefer-Bereich', Number(mo.span) || 140, 30, 175, (v) => { mo.span = v; }, '°'),
-            el('div', { class: 'muted small' }, VN.t('Tipp: Kiefer-Größe und -Bereich so wählen, dass die rosa Fläche Unterlippe und Kinn umfasst – sie klappt beim Öffnen um das Gelenk.')));
-        }
-      }
-      // Objekt für einen Mund
-      const mouths = a.actors.filter((x) => x !== actor && x.mouth && x.mouth.on);
-      if (!(mo && mo.on) && mouths.length) {
-        box.appendChild(el('div', { class: 'logic-row', style: { marginTop: '6px' } }, el('span', { class: 'muted small' }, VN.t('Objekt für den Mund von')),
-          sel(isProp ? mp.target : '', [['', '— keinem —'], ...mouths.map((x) => [x.id, AnimEd.actorName ? AnimEd.actorName(x) : (VN.asset(x.asset) || {}).name || x.id])], (v) => { if (!v) { delete actor.mouthProp; return; } actor.mouthProp = Object.assign(actor.mouthProp || { thick: 12 }, { target: v }); if (!actor.mouthProp.back) { ui().animMouthEd = true; ui().animMouthPick = { actor: actor.id, i: 0 }; } })));
-        if (isProp) box.append(
-          el('div', { class: 'muted small' }, VN.t('Setze Griff und Spitze. Die Breite misst die Engine selbst aus dem Bild – an jeder Stelle des Objekts.')),
-          el('div', { class: 'row gap8', style: { flexWrap: 'wrap', margin: '6px 0' } }, pickBtn(mp.back ? 'Griff & Spitze neu setzen' : 'Griff & Spitze setzen'), editBtn()),
-          rng('Dicke, falls nicht messbar (%)', Number(mp.thick) || 12, 2, 60, (v) => { mp.thick = v; }, ' %'));
-      } else if (!(mo && mo.on) && !mouths.length) box.appendChild(el('div', { class: 'muted small' }, VN.t('Gegenstände (Strohhalm, Löffel, Stift …) verknüpfst du hier mit dem Mund einer anderen Figur – sobald eine Figur einen Mund hat.')));
-      return box;
     },
 
     // ---------- Masken (0.9.24) ----------
@@ -1109,7 +1003,6 @@
           !rig && !actor.puppet ? el('div', { class: 'muted small' }, 'Diese Figur hat noch keine Bones. ', el('button', { class: 'btn tiny', onclick: () => App.openBones(actor.asset) }, 'Bones einrichten')) : null);
         if (actor.puppet && Puppet.get(actor.puppet)) acCard.appendChild(AnimEd.puppetCard(a, actor, t));
         if (a.type === 'scene') acCard.appendChild(AnimEd.maskCard(a, actor, t));
-        if (a.type === 'scene' && !actor.puppet) acCard.appendChild(AnimEd.mouthCard(a, actor));
       }
       box.appendChild(acCard);
       if (a.type === 'scene' && actor && actor.puppet && a.actors.filter((x) => x.puppet).length >= 2) box.appendChild(AnimEd.seamCard(a, actor));

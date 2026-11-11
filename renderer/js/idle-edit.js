@@ -62,10 +62,13 @@
     const costs = [];
     for (let l = 0; l < Math.min(ID().max(b), 5); l++) costs.push(ID().cost(b, l).map((x) => x.amount + ' ' + ID().curName(x.cur)).join(' + '));
     box.appendChild(sec('Kosten für die erste Stufe', amountList(b.costs, 'Kosten'),
-      el('div', { class: 'sk-grid2' }, field('× pro Stufe', num(b.grow, (v) => { b.grow = Math.max(1, v || 1); }, '64px', 0.05))),
+      el('div', { class: 'sk-grid2' }, field('× pro Stufe', num(b.grow, (v) => { b.grow = Math.max(1, v || 1); }, '64px', 0.05)),
+        field('Preis-Kurve', sel(b.costCurve || '', [['', '— wie in Einstellungen —'], ...COST_K], (v) => { if (v) b.costCurve = v; else delete b.costCurve; }))),
       el('div', { class: 'muted small' }, costs.map((x, k) => VN.t('St.') + ' ' + (k + 1) + ': ' + x).join(' · ') + (ID().max(b) > 5 ? ' …' : ''))));
+    const prodPrev = [1, 2, 3, 5, 10, 25].filter((l) => l <= ID().max(b)).map((l) => VN.t('St.') + ' ' + l + ': ' + (Object.entries(ID().prodOf(b, l)).map(([k, v]) => ID().fmtNum(v) + ' ' + ID().curName(k)).join(' + ') || '0'));
     box.appendChild(sec('Produktion je Stufe (' + unitL() + ')', amountList(b.prods, 'Produktion'),
-      el('div', { class: 'muted small' }, 'Stufe 3 bringt das Dreifache. Skilltrees können die Produktion erhöhen.')));
+      el('div', { class: 'sk-grid2' }, field('Gewinn-Kurve', sel(b.prodCurve || '', [['', '— wie in Einstellungen —'], ...PROD_K], (v) => { if (v) b.prodCurve = v; else delete b.prodCurve; }))),
+      el('div', { class: 'muted small' }, prodPrev.join(' · ') + ' – ' + VN.t('Skilltrees können die Produktion erhöhen.'))));
     box.appendChild(sec('Anklicken',
       c.click ? el('div', { class: 'sk-grid2' }, check(b.clickable, 'Dieses Gebäude anklickbar', (v) => { b.clickable = v; }), b.clickable ? field('Pro Klick (× Stufe)', num(b.clickAmount || 1, (v) => { b.clickAmount = Math.max(1, v || 1); }, '56px', 1)) : null)
         : el('div', { class: 'muted small' }, 'Anklicken ist in den Einstellungen ausgeschaltet.')));
@@ -122,7 +125,61 @@
     return box;
   };
 
+  // ---------- Preise & Gewinne (0.9.27) ----------
+  const COST_K = [['exp', 'Exponentiell (× pro Stufe)'], ['poly', 'Quadratisch / Potenz'], ['soft', 'Sanft gebremst'], ['linear', 'Linear (gleich viel mehr)']];
+  const PROD_K = [['linear', 'Gleichmäßig (Stufe × Ertrag)'], ['exp', 'Wachsend (Schneeball)'], ['dimin', 'Abflachend']];
+  const curveChart = (b) => {
+    const NS = 'http://www.w3.org/2000/svg', W = 520, H = 170, pad = 30;
+    const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('class', 'id-chart');
+    const mk = (t, a, txt) => { const n = document.createElementNS(NS, t); for (const [k, v] of Object.entries(a)) n.setAttribute(k, v); if (txt != null) n.textContent = txt; svg.appendChild(n); return n; };
+    const L = Math.max(2, Math.min(ID().max(b), 100));
+    const cost = [], prod = [];
+    for (let l = 0; l <= L; l++) { cost.push(ID().cost(b, l).reduce((a, x) => a + x.amount, 0)); prod.push(Object.values(ID().prodOf(b, l)).reduce((a, x) => a + x, 0)); }
+    // Amortisation: wie viele Zeiteinheiten bis sich die nächste Stufe bezahlt macht
+    const pay = cost.map((c, l) => { const d = (prod[l + 1] || 0) - (prod[l] || 0); return d > 0 ? c / d : null; }).slice(0, L);
+    const all = [...cost, ...prod.filter((x) => x > 0)].filter((x) => x > 0);
+    const lo = Math.log10(Math.max(0.1, Math.min(...all))), hi = Math.log10(Math.max(...all, 1)) + 0.01;
+    const X = (l) => pad + (W - pad - 8) * l / L, Y = (v) => H - 18 - (H - 30) * (Math.log10(Math.max(v, 0.1)) - lo) / (hi - lo || 1);
+    for (let e = Math.ceil(lo); e <= hi; e++) { mk('line', { x1: pad, x2: W - 8, y1: Y(Math.pow(10, e)), y2: Y(Math.pow(10, e)), stroke: 'rgba(255,255,255,.07)' }); mk('text', { x: 2, y: Y(Math.pow(10, e)) + 4, fill: '#888', 'font-size': 10 }, e >= 6 ? '1e' + e : String(Math.pow(10, e))); }
+    const line = (arr, col, from) => mk('path', { d: arr.map((v, l) => (l === from ? 'M' : 'L') + X(l).toFixed(1) + ' ' + Y(v).toFixed(1)).slice(from).join(' '), fill: 'none', stroke: col, 'stroke-width': 2.2 });
+    line(cost, '#f0a05a', 0); line(prod, '#6fd08a', 1);
+    for (const [at] of ID().curve().ms || []) if (at <= L) mk('line', { x1: X(at), x2: X(at), y1: 8, y2: H - 18, stroke: 'rgba(240,194,106,.45)', 'stroke-dasharray': '3 3' });
+    mk('text', { x: pad, y: H - 4, fill: '#888', 'font-size': 10 }, VN.t('Stufe') + ' 0');
+    mk('text', { x: W - 8, y: H - 4, fill: '#888', 'font-size': 10, 'text-anchor': 'end' }, String(L));
+    const leg = el('div', { class: 'id-chart-leg' }, el('span', { style: { color: '#f0a05a' } }, '● ' + VN.t('Preis der nächsten Stufe')), el('span', { style: { color: '#6fd08a' } }, '● ' + VN.t('Ertrag') + ' ' + unitL()),
+      el('span', { class: 'muted' }, VN.t('Amortisation') + ': ' + [1, 10, 25, 50].filter((l) => l < pay.length && pay[l] != null).map((l) => VN.t('St.') + ' ' + l + ' ≈ ' + ID().fmtNum(Math.round(pay[l])) + ' ' + ID().unitShort()).join(' · ')));
+    return el('div', null, svg, leg);
+  };
+  const curveSec = () => {
+    const C = ID().curve(), c = ID().cfg();
+    const box = sec('Preise & Gewinne');
+    box.appendChild(el('div', { class: 'muted small' }, VN.t('Wie stark Preise und Erträge mit jeder Stufe wachsen. Vorlagen nach bekannten Idle-Spielen – danach frei anpassbar. Einzelne Gebäude können eine eigene Kurve haben.')));
+    const setGrow = el('input', { type: 'checkbox', checked: true });
+    box.appendChild(el('div', { class: 'id-cv-pick' }, ...ID().CURVE_PRESETS.map((pr) => el('div', { class: 'id-cv', title: VN.t(pr.desc), onclick: () => VN.mutate(() => ID().applyCurvePreset(pr, setGrow.checked)) }, el('strong', null, VN.t(pr.name)), el('span', { class: 'muted small' }, VN.t(pr.desc))))));
+    box.appendChild(el('label', { class: 'check small' }, setGrow, VN.t('Bei Vorlagen mit festem Faktor auch „× pro Stufe“ aller Gebäude setzen')));
+    box.appendChild(el('div', { class: 'row gap8', style: { flexWrap: 'wrap', marginTop: '6px' } },
+      field('Preise', sel(C.cost, COST_K, (v) => { C.cost = v; })),
+      C.cost === 'poly' ? field('Potenz', num(C.pow, (v) => { C.pow = Math.max(0.5, Math.min(6, v || 2)); }, '60px', 0.1)) : null,
+      C.cost === 'linear' ? field('+ % vom Grundpreis je Stufe', num(C.lin, (v) => { C.lin = Math.max(0, v || 0); }, '60px', 5)) : null,
+      C.cost === 'soft' ? field('Bremse (0,3–1)', num(C.soft, (v) => { C.soft = Math.max(0.3, Math.min(1, v || 0.8)); }, '60px', 0.05)) : null,
+      field('Gewinne', sel(C.prod, PROD_K, (v) => { C.prod = v; })),
+      C.prod === 'exp' ? field('× je Stufe', num(C.pgrow, (v) => { C.pgrow = Math.max(1, Math.min(2, v || 1.05)); }, '60px', 0.01)) : null,
+      C.prod === 'dimin' ? field('Abflachung (0,3–1)', num(C.dimin, (v) => { C.dimin = Math.max(0.3, Math.min(1, v || 0.8)); }, '60px', 0.05)) : null));
+    // Meilenstein-Boni: ab Stufe X wird der Ertrag dieses Gebäudes × Y
+    const ms = el('div', { class: 'row gap8', style: { flexWrap: 'wrap', alignItems: 'center', marginTop: '6px' } }, el('span', { class: 'muted small' }, VN.t('Sprünge (Ertrag × ab Stufe):')));
+    (C.ms || []).forEach((m, i) => ms.appendChild(el('span', { class: 'id-msb' }, VN.t('ab'), num(m[0], (v) => { m[0] = Math.max(1, Math.round(v || 1)); C.ms.sort((a, b) => a[0] - b[0]); }, '64px', 1), '×', num(m[1], (v) => { m[1] = Math.max(0.1, v || 2); }, '46px', 0.5),
+      el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { C.ms.splice(i, 1); }) }, '×'))));
+    ms.appendChild(el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const last = (C.ms[C.ms.length - 1] || [0])[0]; C.ms.push([last ? last * 2 : 25, 2]); }) }, '+ ' + VN.t('Sprung')));
+    box.appendChild(ms);
+    const b = c.buildings.find((x) => x.id === VN.ui.idCurveB) || c.buildings[0];
+    if (b) {
+      box.appendChild(el('div', { class: 'row gap8', style: { marginTop: '8px', alignItems: 'center' } }, el('span', { class: 'muted small' }, VN.t('Verlauf für')), sel(b.id, c.buildings.map((x) => [x.id, x.name]), (v) => { VN.ui.idCurveB = v; })));
+      box.appendChild(curveChart(b));
+    }
+    return box;
+  };
   const settingsView = (body) => {
+    body.appendChild(curveSec());
     const c = ID().cfg();
     body.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Allgemein'),
       el('div', { class: 'sk-grid2' },
@@ -164,7 +221,7 @@
     }
     const tab = VN.ui.idTab || 'buildings';
     const nav = el('div', { class: 'row gap4', style: { flexWrap: 'wrap', alignItems: 'center' } });
-    for (const [k, l] of [['buildings', 'Gebäude'], ['goals', 'Ziele'], ['settings', 'Einstellungen']]) nav.appendChild(el('button', { class: 'btn tiny' + (tab === k ? ' primary' : ''), onclick: () => { VN.ui.idTab = k; VN.ui.idSel = null; VN.render(); } }, l));
+    for (const [k, l] of [['buildings', 'Gebäude'], ['goals', 'Ziele'], ['view', 'Ansicht & Berater'], ['settings', 'Einstellungen']]) nav.appendChild(el('button', { class: 'btn tiny' + (tab === k ? ' primary' : ''), onclick: () => { VN.ui.idTab = k; VN.ui.idSel = null; VN.render(); } }, l));
     nav.appendChild(el('div', { class: 'spacer' }));
     nav.appendChild(el('button', { class: 'btn tiny primary', onclick: () => window.Player && Player.tryIdle && Player.tryIdle() }, '▶ Ausprobieren'));
     nav.appendChild(el('button', { class: 'btn tiny', onclick: () => window.UiDesign && UiDesign.edit('idle') }, '🎨 Design des Aufbaus'));
@@ -176,7 +233,90 @@
     else if (tab === 'goals') body.appendChild(listLayout(c.milestones, VN.ui.idSel, (id) => { VN.ui.idSel = id; }, goalBox,
       [el('button', { class: 'btn tiny primary', onclick: () => VN.mutate(() => { const m = ID().newMilestone(); c.milestones.push(m); VN.ui.idSel = m.id; }) }, '+ Ziel')],
       (m) => ({ thumb: el('span', { class: 'cb-thumb ph' }, '◆'), sub: (m.conds || []).map((x) => VN.condText(x)).join(', ') || VN.t('keine Bedingung'), bad: !(m.conds || []).length })));
+    else if (tab === 'view') viewTab(body);
     else settingsView(body);
+  };
+
+  // ---------- Ansicht & Berater (0.9.27) ----------
+  const LAYOUTS = [
+    ['cards', '🗂', 'Karten', 'Gebäude als Karten, Ziele rechts (wie bisher).'],
+    ['list', '📊', 'Liste', 'Eine Zeile pro Gebäude mit Arbeits-Balken und Kaufen ×1 / ×10 / Max – wie AdVenture Capitalist.'],
+    ['clicker', '🍪', 'Klicker', 'Großes Objekt zum Klicken, daneben ein Laden – wie Cookie Clicker.'],
+    ['map', '🗺', 'Karte / Dorf', 'Gebäude frei auf einem Hintergrundbild; Anklicken öffnet den Ausbau.']
+  ];
+  const WHEN = [['first', 'beim allerersten Öffnen'], ['open', 'beim Öffnen'], ['buy', 'nach dem Bauen'], ['poor', 'wenn das Geld fehlt'], ['milestone', 'wenn ein Ziel erreicht ist'], ['random', 'zwischendurch']];
+  const viewTab = (body) => {
+    const c = ID().cfg(), V = ID().view();
+    const asset = (kind, v, fn) => { const s2 = VN.assetSelect(kind, v, (x) => VN.mutate(() => fn(x))); s2.style.maxWidth = '200px'; return s2; };
+    // Layout
+    body.appendChild(sec('Layout', el('div', { class: 'id-lay-pick' }, ...LAYOUTS.map(([k, ic, l, d]) => el('div', { class: 'id-lay' + (V.layout === k ? ' on' : ''), onclick: () => VN.mutate(() => { V.layout = k; }) }, el('div', { class: 'id-lay-ic' }, ic), el('strong', null, VN.t(l)), el('span', { class: 'muted small' }, VN.t(d))))),
+      el('div', { class: 'row gap8', style: { flexWrap: 'wrap', marginTop: '8px' } },
+        check(V.full, 'Vollbild (ganzer Bildschirm statt Fenster)', (v) => { V.full = v; }),
+        V.layout === 'list' ? check(V.multi !== false, 'Knöpfe ×10 und Max', (v) => { V.multi = v; }) : null,
+        el('button', { class: 'btn tiny primary', onclick: () => window.Player && Player.tryIdle && Player.tryIdle() }, '▶ ' + VN.t('Ausprobieren')))));
+    if (V.layout === 'clicker') {
+      const k = V.clicker;
+      body.appendChild(sec('Klick-Objekt',
+        el('div', { class: 'row gap8', style: { flexWrap: 'wrap' } },
+          field('Bild', asset('image', k.image, (v) => { k.image = v; })),
+          field('oder Symbol', txt(k.icon, (v) => { k.icon = v; }, { width: '60px' })),
+          field('Bringt', sel(k.cur || '', [['', '— erste Währung —'], ...curOpts().slice(1)], (v) => { k.cur = v; })),
+          field('pro Klick', num(k.amount, (v) => { k.amount = Math.max(1, v || 1); })),
+          field('Text darunter', txt(k.label, (v) => { k.label = v; }, { width: '200px' }, VN.t('z. B. Klick die Münze!')))),
+        el('div', { class: 'muted small' }, VN.t('Die Fähigkeit „Mehr pro Klick“ wirkt auch hier. Die Gebäude erscheinen rechts im Laden.'))));
+    }
+    if (V.layout === 'map') {
+      const bg = V.mapBg && VN.assetUrl(V.mapBg);
+      const area = el('div', { class: 'id-map-ed', style: bg ? { backgroundImage: `url("${bg}")` } : null });
+      c.buildings.forEach((b, i) => {
+        const x = b.mx != null ? b.mx : 12 + (i % 5) * 18, y = b.my != null ? b.my : 25 + Math.floor(i / 5) * 28, w = b.ms || 13;
+        const url = b.image && VN.assetUrl(b.image);
+        const n = el('div', { class: 'id-mb-ed' + (VN.ui.idMapSel === b.id ? ' sel' : ''), title: b.name, style: { left: x + '%', top: y + '%', width: w + '%', backgroundImage: url ? `url("${url}")` : '' } }, url ? null : b.icon || '🏠', el('span', null, b.name));
+        n.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          VN.ui.idMapSel = b.id;
+          const R = area.getBoundingClientRect();
+          VN.drag(e, (dx, dy) => { n.style.left = Math.max(0, Math.min(100, x + dx / R.width * 100)) + '%'; n.style.top = Math.max(0, Math.min(100, y + dy / R.height * 100)) + '%'; },
+            (dx, dy, moved) => { if (!moved) { VN.render(); return; } VN.mutate(() => { b.mx = Math.round(Math.max(0, Math.min(100, x + dx / R.width * 100)) * 10) / 10; b.my = Math.round(Math.max(0, Math.min(100, y + dy / R.height * 100)) * 10) / 10; }); });
+        });
+        area.appendChild(n);
+      });
+      const selB = c.buildings.find((b) => b.id === VN.ui.idMapSel);
+      body.appendChild(sec('Karte',
+        el('div', { class: 'row gap8', style: { flexWrap: 'wrap' } }, field('Hintergrundbild', asset('image', V.mapBg, (v) => { V.mapBg = v; })),
+          selB ? field(VN.t('Größe') + ': ' + selB.name, el('input', { type: 'range', min: 4, max: 40, value: selB.ms || 13, onchange: (e) => VN.mutate(() => { selB.ms = Number(e.target.value); }) })) : null),
+        el('div', { class: 'muted small' }, VN.t('Gebäude auf dem Bild an ihren Platz ziehen. Ein Gebäude anklicken, dann lässt sich seine Größe einstellen. Am schönsten mit Gebäudebildern mit durchsichtigem Hintergrund.')),
+        area));
+    }
+    // Berater
+    const A = V.adv;
+    const advSec = sec('Berater (Figur mit Dialog)',
+      check(A.on, 'Berater zeigen', (v) => {
+        A.on = v;
+        if (v && !A.lines.length) A.lines.push(
+          { id: VN.uid('ia'), when: 'first', text: VN.t('Willkommen! Bau zuerst etwas, das Rohstoffe bringt – dann läuft alles von selbst.'), once: true, conds: [] },
+          { id: VN.uid('ia'), when: 'poor', text: VN.t('Dafür reicht es noch nicht. Warte kurz, die Gebäude arbeiten weiter.'), conds: [] },
+          { id: VN.uid('ia'), when: 'buy', text: VN.t('Sehr gut! Das wird sich lohnen.'), conds: [] },
+          { id: VN.uid('ia'), when: 'milestone', text: VN.t('Geschafft! Auf zum nächsten Ziel.'), conds: [] });
+      }),
+      el('div', { class: 'muted small' }, VN.t('Eine Figur in einem kleinen Fenster gibt Tipps und kommentiert, was passiert – wie der Berater in vielen Aufbau-Spielen.')));
+    if (A.on) {
+      advSec.append(
+        el('div', { class: 'row gap8', style: { flexWrap: 'wrap' } },
+          field('Bild der Figur', asset('image', A.image, (v) => { A.image = v; })),
+          field('Name', txt(A.name, (v) => { A.name = v; }, { width: '140px' })),
+          field('Seite', sel(A.side, [['left', 'links'], ['right', 'rechts']], (v) => { A.side = v; })),
+          field('„Zwischendurch“ alle … Sek.', num(A.every, (v) => { A.every = Math.max(10, v || 45); }))));
+      const rows = el('div', { class: 'id-adv-lines' });
+      A.lines.forEach((l, i) => rows.appendChild(el('div', { class: 'logic-row' },
+        sel(l.when || 'random', WHEN, (v) => { l.when = v; }, { width: '190px' }),
+        txt(l.text, (v) => { l.text = v; }, { flex: '1', minWidth: '200px' }, VN.t('Was die Figur sagt')),
+        check(l.once, 'nur einmal', (v) => { l.once = v; }),
+        el('button', { class: 'btn tiny' + ((l.conds || []).length ? ' primary' : ''), title: VN.t('Nur sagen, wenn …'), onclick: () => VN.popupEdit(VN.t('Nur sagen, wenn …'), (cd) => cd.appendChild(VN.condEditor(l.conds = l.conds || [], VN.t('Nur wenn')))) }, '🔒' + ((l.conds || []).length || '')),
+        el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { A.lines.splice(i, 1); }) }, '×'))));
+      advSec.append(rows, el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { A.lines.push({ id: VN.uid('ia'), when: 'random', text: '', conds: [] }); }) }, '+ ' + VN.t('Satz')));
+    }
+    body.appendChild(advSec);
   };
 
   // Übersicht: Schalter
