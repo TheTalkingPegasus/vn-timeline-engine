@@ -16,6 +16,8 @@ Without installing (ZIP):
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
 
+NEW IN 0.9.27 · Mouth & lip line tool (0.9.26) removed again – projects using it still open and play normally
+
 NEW IN 0.9.26 · Mouth & lip line for cutscene figures (side and POV): objects are hidden behind the lips, the jaw opens as far as the object is wide (measured from its image), mouth-inside image or color
 
 NEW IN 0.9.25 · Starter pack: 78 free CC0 images (anime style, 256 px) in the asset library – phones in 4 colors × 5 views and 58 everyday items (money, flowers, food, drinks, everyday things, gifts)

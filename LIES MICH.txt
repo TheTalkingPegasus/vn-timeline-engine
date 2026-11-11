@@ -14,6 +14,10 @@ Ohne Installation (ZIP):
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
 
+NEU IN 0.9.27 · Mund-Werkzeug entfernt
+- Mund & Lippenlinie für Figuren in Zwischensequenzen (0.9.26) ist wieder entfernt. Projekte, die es benutzt haben, öffnen und
+  laufen weiter; die Figur wird einfach normal gezeichnet und das Objekt nicht mehr abgeschnitten.
+
 NEU IN 0.9.26 · Mund & Lippenlinie (seitlich und POV)
 - Mund für Figuren in Zwischensequenzen (einfaches PNG, auch Bilder mit Bones): Oberlippe, Unterlippe und Kiefergelenk setzen.
   Ein mit dem Mund verknüpftes Objekt (Strohhalm, Löffel, Karotte …) ist hinter den Lippen unsichtbar, und der Unterkiefer klappt

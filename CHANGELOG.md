@@ -2,6 +2,10 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.27 – Mouth tool removed
+- The **mouth & lip line** for cutscene figures (0.9.26) has been removed again. Projects that used it still open and play;
+  the figure is simply drawn normally and the object is no longer cut off.
+
 ## 0.9.26 – Mouth & lip line (side and POV)
 - **Mouth for cutscene figures** (simple PNG, also images with bones): set upper lip, lower lip and jaw joint.
   An object linked to the mouth (straw, spoon, carrot …) is **invisible behind the lips** and the **lower jaw opens exactly as far as
