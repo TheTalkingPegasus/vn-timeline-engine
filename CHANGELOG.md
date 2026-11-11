@@ -2,6 +2,13 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.29 – Mouse-wheel zoom everywhere
+- **Zoom with the mouse wheel** in every preview: scene, hub, cutscene animation, design, main menu, bones and soft physics.
+  Zooms towards the mouse position (50 %–800 %); **pan** with the middle mouse button or Space + drag; the badge in the corner
+  shows the zoom level – click it to return to 100 %. The zoom is kept per area while you work. Dragging figures, objects and
+  points stays exact while zoomed.
+- **Timeline:** Ctrl + mouse wheel zooms the scene timeline at the mouse position (plain wheel still scrolls).
+
 ## 0.9.28 – Soft physics (jiggle presets for masked areas)
 - **Figures → Soft physics:** mask a part of a character image and pick a preset – *Chest, Butt,
   Belly/breathing, Hair, Cloth/skirt, Ears/tail, Cheeks, Jelly* – and that part bounces, sways and breathes along when the figure moves.

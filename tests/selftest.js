@@ -1221,6 +1221,29 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Weich-Physik: Masken-Gewicht, Anker, Feder, Trägheit, Bühne, Aktion, freie Formen, Ankerpunkt, Pendeln');
   } catch (e) { general.push('Weich-Physik: ' + e.message); }
 
+  // 25. Mausrad-Zoom (0.9.29): Punkt unter der Maus bleibt stehen, Zoom überlebt Neuaufbau, Zurücksetzen
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [];
+      if (!window.Zoom) return JSON.stringify(['Zoom fehlt']);
+      const keepView = VN.ui.view; VN.ui.view = 'design'; VN.render();
+      const f = Zoom.all()[0];
+      if (!f) { VN.ui.view = keepView; VN.render(); return JSON.stringify(['keine Bühne']); }
+      const r0 = f.c.getBoundingClientRect(), mx = r0.left + r0.width * 0.3, my = r0.top + r0.height * 0.6;
+      Zoom.zoomAt(f.c, mx, my, 2);
+      const r1 = f.c.getBoundingClientRect();
+      if (Math.abs(r1.width / r0.width - 2) > 0.01) out.push('Faktor ' + r1.width / r0.width);
+      if (Math.abs((mx - r1.left) / r1.width - 0.3) > 0.005 || Math.abs((my - r1.top) / r1.height - 0.6) > 0.005) out.push('Punkt wandert');
+      VN.render();
+      const f2 = Zoom.all()[0]; if (!f2 || Math.abs(f2.c.getBoundingClientRect().width / r0.width - 2) > 0.01) out.push('nach Neuaufbau weg');
+      Zoom.reset(); if (Math.abs(Zoom.all()[0].c.getBoundingClientRect().width - r0.width) > 0.5) out.push('Zurücksetzen');
+      VN.ui.view = keepView; VN.render();
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Mausrad-Zoom: ' + r.join(', '));
+    else log('✓ Mausrad-Zoom: zur Maus, bleibt nach Neuaufbau, Zurücksetzen');
+  } catch (e) { general.push('Mausrad-Zoom: ' + e.message); }
+
   // 20. Social Media: Beiträge per Bedingung und Aktion, löschen, Likes mit Aktion nur einmal
   try {
     const r = JSON.parse(await js(`(() => {

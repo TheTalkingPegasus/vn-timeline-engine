@@ -2679,3 +2679,10 @@ img[src*="px_"] { image-rendering: pixelated; }
 .soft-svg .sr-pin circle.dot { fill: #e8405a; }
 .soft-svg .sr-pin.auto circle { stroke-dasharray: 4 3; }
 .soft-svg .sr-pinline { stroke: #e8405a; stroke-width: 1.5; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; pointer-events: none; }
+
+/* Mausrad-Zoom (0.9.29) */
+.vz-vp { position: relative; }
+.vz-badge { position: absolute; right: 10px; top: 10px; z-index: 30; background: rgba(15,16,20,0.85); color: #fff; border: 1px solid var(--line2); border-radius: 6px; padding: 3px 8px; font-size: 12px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.vz-badge:hover { border-color: var(--accent); }
+body.vz-space #center .vz-vp, body.vz-space #center .vz-vp * { cursor: grab !important; }
+body.vz-panning, body.vz-panning * { cursor: grabbing !important; }

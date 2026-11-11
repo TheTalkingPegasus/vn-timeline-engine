@@ -14,6 +14,13 @@ Ohne Installation (ZIP):
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
 
+NEU IN 0.9.29 · Mausrad-Zoom überall
+- Mit dem Mausrad zoomen in jeder Vorschau: Szene, Hub, Zwischensequenz (Animieren), Design, Hauptmenü, Bones und Weich-Physik.
+  Gezoomt wird zur Mausposition (50 %–800 %); verschieben mit der mittleren Maustaste oder Leertaste + Ziehen; die Anzeige in der Ecke
+  zeigt die Stufe – Klick darauf = zurück auf 100 %. Der Zoom bleibt pro Bereich erhalten. Figuren, Objekte und Punkte lassen sich
+  auch gezoomt genau ziehen.
+- Timeline: Strg + Mausrad zoomt die Szenen-Timeline an der Mausposition (normales Mausrad scrollt wie bisher).
+
 NEU IN 0.9.28 · Weich-Physik (Wackel-Vorlagen für maskierte Bereiche)
 - Figuren → Weich-Physik: Eine Stelle des Figuren-Bilds maskieren und eine Vorlage wählen – Brust, Po, Bauch/Atmen,
   Haare, Stoff/Rock, Ohren/Schwanz, Schwanz/Zopf (Pendeln), Wangen, Gelee – dann wippt, schwingt und atmet die Stelle mit, wenn sich die Figur bewegt.

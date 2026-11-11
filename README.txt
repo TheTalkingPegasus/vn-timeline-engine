@@ -16,6 +16,8 @@ Without installing (ZIP):
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
 
+NEW IN 0.9.29 · Mouse-wheel zoom in every preview (scene, hub, animation, design, menu, figures) towards the mouse; pan with middle mouse or Space + drag; click the badge for 100 %; Ctrl + wheel zooms the timeline
+
 NEW IN 0.9.28 · Soft physics: mask part of a character image (ellipse, lasso or pen tool like in After Effects, points editable), pick a preset (chest, hair, skirt, belly, ears, tail, jelly …) and it bounces, sways and breathes along with the figure's movement – image not cut, outside of the mask stays still; optional own layer, free anchor point with pendulum swing, test mode, action “Nudge soft physics”
 
 NEW IN 0.9.27 · Idle layouts (cards, list, clicker, map/village), full screen, advisor character with speech bubble, selectable price/profit curves with presets (AdVenture Capitalist, Cookie Clicker …); Mouth & lip line tool (0.9.26) removed again – projects using it still open and play normally
