@@ -2669,3 +2669,9 @@ img[src*="px_"] { image-rendering: pixelated; }
 .soft-test .char.shake { animation: softShake 0.6s ease-in-out; }
 .soft-test .char.walk { animation: softWalk 0.55s ease-in-out infinite; }
 .view-head .seg button { white-space: nowrap; }
+.soft-svg .sr-pt { cursor: move; }
+.soft-svg .sr-pt.on { fill: #5ab4ff; }
+.soft-svg .sr-h.first { fill: #e8a43a; }
+.soft-svg .sr-draft { fill: rgba(90,180,255,0.12); stroke-dasharray: 6 4; pointer-events: none; }
+.soft-svg .sr.off { opacity: 0.4; }
+.soft-tools button { white-space: nowrap; }

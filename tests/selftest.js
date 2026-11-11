@@ -1198,10 +1198,19 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
         p.softs = keep;
       }
       if (!VN.ext.actions.softPoke) out.push('Aktion fehlt');
+      // freie Form (Lasso / Zeichenstift): innen bewegt, außen ruhig, Ecken bleiben spitz
+      const rp = Object.assign(S.newRegion('chest', 0, 0, 0, 0), { shape: 'poly', smooth: true, pts: [[0.3, 0.3], [0.7, 0.3, 1], [0.7, 0.6], [0.3, 0.6]] });
+      const Pp = S.par(rp);
+      L = S.local(rp, 0.5, 0.45, 1); if (!(L[2] < 0.2) || S.weight(Pp, L[0], L[1], L[2]) <= 0) out.push('Form innen ' + L[2]);
+      L = S.local(rp, 0.9, 0.45, 1); if (S.weight(Pp, L[0], L[1], L[2]) !== 0) out.push('Form außen');
+      const rq = Object.assign({}, rp, { smooth: false }); L = S.local(rq, 0.3, 0.45, 1); if (Math.abs(L[2] - 1) > 0.02) out.push('Form Rand ' + L[2]);
+      if (!S.outline(rp).some((q) => Math.abs(q[0] - 0.7) < 1e-9 && Math.abs(q[1] - 0.3) < 1e-9)) out.push('Ecke');
+      const ep = S.toPoly({ cx: 0.5, cy: 0.5, rx: 0.1, ry: 0.05, rot: 0 }, 0.5, 8);
+      if (ep.length !== 8 || Math.abs(ep[0][0] - 0.6) > 1e-6) out.push('Ellipse → Form');
       return JSON.stringify(out);
     })()`));
     if (r.length) general.push('Weich-Physik: ' + r.join(', '));
-    else log('✓ Weich-Physik: Masken-Gewicht, Anker, Feder, Trägheit, Bühne, Aktion');
+    else log('✓ Weich-Physik: Masken-Gewicht, Anker, Feder, Trägheit, Bühne, Aktion, freie Formen');
   } catch (e) { general.push('Weich-Physik: ' + e.message); }
 
   // 20. Social Media: Beiträge per Bedingung und Aktion, löschen, Likes mit Aktion nur einmal

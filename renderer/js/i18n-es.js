@@ -5331,7 +5331,17 @@ window.VN_I18N_ES = {
 "1. Figuren-Bild wählen. 2. Vorlage wählen (Brust, Haare, Rock …) und eine Ellipse um die Stelle ziehen. 3. Mit „▶ Testen“ die Figur hüpfen lassen oder mit der Maus herumziehen.": "1. Elige una imagen de personaje. 2. Elige una plantilla (pecho, pelo, falda …) y dibuja una elipse alrededor de la zona. 3. Con «▶ Probar» haz saltar al personaje o arrástralo con el ratón.",
 "Das Bild wird nicht zerschnitten: Nur die Punkte in der Maske bewegen sich, mit weichem Übergang. Die Maske gehört zum Bild und bewegt sich mit der Figur mit.": "La imagen no se recorta: solo se mueven los puntos dentro de la máscara, con transición suave. La máscara pertenece a la imagen y se mueve con el personaje.",
 "„Über den Rand“ lässt die Bewegung über die Maske hinaus auslaufen. „Als eigene Ebene“ legt den Bereich als Kopie oben drauf, so kann er über den Körper schwingen.": "«Más allá del borde» deja que el movimiento se extienda fuera de la máscara. «Como capa propia» pone una copia de la zona encima, para que pueda oscilar sobre el cuerpo.",
-"Die Physik reagiert, wenn sich die Figur bewegt (Schritte, Sprünge, Wackeln, Bewegungen in Zwischensequenzen). Mit der Aktion „〰 Weich-Physik anstoßen“ gibst du einen gezielten Stoß.": "La física reacciona cuando el personaje se mueve (pasos, saltos, sacudidas, movimientos en cinemáticas). La acción «〰 Empujar física blanda» da un empujón concreto."
+"Die Physik reagiert, wenn sich die Figur bewegt (Schritte, Sprünge, Wackeln, Bewegungen in Zwischensequenzen). Mit der Aktion „〰 Weich-Physik anstoßen“ gibst du einen gezielten Stoß.": "La física reacciona cuando el personaje se mueve (pasos, saltos, sacudidas, movimientos en cinemáticas). La acción «〰 Empujar física blanda» da un empujón concreto.",
+"↖ Wählen": "↖ Seleccionar",
+"◯ Ellipse": "◯ Elipse",
+"➰ Lasso": "➰ Lazo",
+"✒ Stift": "✒ Pluma",
+"Bereich anklicken zum Wählen, ziehen zum Verschieben. Bei freien Formen die Punkte ziehen. Für einen neuen Bereich oben ein Werkzeug wählen.": "Haz clic en una zona para seleccionarla y arrástrala para moverla. En formas libres arrastra los puntos. Para una zona nueva elige arriba una herramienta.",
+"Fahr mit gedrückter Maus um die Stelle. Beim Loslassen schließt sich die Form und wird geglättet.": "Rodea la zona con el botón del ratón pulsado. Al soltar, la forma se cierra y se suaviza.",
+"Klick setzt eine Ecke, Klicken und Ziehen einen runden Punkt. Klick auf den ersten Punkt, Doppelklick oder Enter schließt die Form, Esc bricht ab.": "Un clic pone una esquina; clic y arrastrar, un punto redondo. Clic en el primer punto, doble clic o Enter cierra la forma; Esc cancela.",
+"✒ In freie Form umwandeln": "✒ Convertir en forma libre",
+"Umriss rund (Kurven statt gerader Linien)": "Contorno redondo (curvas en vez de líneas rectas)",
+"Punkte ziehen zum Anpassen · Doppelklick auf den Umriss fügt einen Punkt ein · Rechtsklick auf einen Punkt löscht ihn · Alt-Klick: Ecke ↔ rund": "Arrastra los puntos para ajustar · doble clic en el contorno añade un punto · clic derecho en un punto lo borra · Alt+clic: esquina ↔ redondo"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

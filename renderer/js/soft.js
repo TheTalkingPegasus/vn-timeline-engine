@@ -78,7 +78,7 @@
       const st = (Number(P.strength) != null ? Number(P.strength) : 1);
       let dx = (s ? s.x : 0) * st, dy = (s ? s.y : 0) * st;
       const amp = (Number(P.idleAmp) || 0) * 0.012, sp = (Number(P.idleSpeed) || 1) * Math.PI * 2 / 3;
-      const ph = (r.cx || 0) * 7 + (r.cy || 0) * 3;
+      const b = r.shape === 'poly' ? Soft.box(r, 1) : r, ph = (b.cx || 0) * 7 + (b.cy || 0) * 3;
       let idleY = 0, idleX = 0, wave = 0;
       if (P.idle === 'breathe') idleY = Math.sin(t * sp + ph * 0.2) * amp;
       else if (P.idle === 'sway') idleX = Math.sin(t * sp + ph) * amp * 1.4;
@@ -88,13 +88,73 @@
       return { dx: dx + idleX, dy: dy + idleY, sq, wave, t, sp };
     },
 
-    // Gewicht eines Punkts (u, v in Bildbruchteilen) für einen Bereich
-    // aspect = Breite/Höhe des Bilds, damit die Ellipse rund rechnet
+    // Freie Form (0.9.28): Umriss aus Punkten (Lasso / Zeichenstift), auf Wunsch rund (Catmull-Rom)
+    outline(r) {
+      const pts = r.pts || [];
+      if (pts.length < 3 || r.smooth === false) return pts.map((q) => [q[0], q[1]]);
+      const out = [], n = pts.length, S = 6;
+      for (let i = 0; i < n; i++) {
+        const p1 = pts[i], p2 = pts[(i + 1) % n];
+        // Ecken (dritter Wert = 1) bleiben spitz: Tangente dort flach
+        const p0 = p1[2] ? p1 : pts[(i - 1 + n) % n], p3 = p2[2] ? p2 : pts[(i + 2) % n];
+        for (let k = 0; k < S; k++) {
+          const t = k / S, t2 = t * t, t3 = t2 * t;
+          const f = (a, b, c, d) => 0.5 * (2 * b + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t2 + (-a + 3 * b - 3 * c + d) * t3);
+          out.push([f(p0[0], p1[0], p2[0], p3[0]), f(p0[1], p1[1], p2[1], p3[1])]);
+        }
+      }
+      return out;
+    },
+    // Maße einer freien Form (zwischengespeichert): Rahmen, Schwerpunkt, Umriss in Pixel-Verhältnis, Tiefe innen
+    geo(r, aspect) {
+      const key = aspect.toFixed(4) + (r.smooth === false ? 'h' : 's') + JSON.stringify(r.pts);
+      const c = GEO.get(r);
+      if (c && c.key === key) return c;
+      const o = Soft.outline(r), poly = o.map((q) => [q[0] * aspect, q[1]]);
+      let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9, sx = 0, sy = 0;
+      for (const q of o) { x0 = Math.min(x0, q[0]); y0 = Math.min(y0, q[1]); x1 = Math.max(x1, q[0]); y1 = Math.max(y1, q[1]); sx += q[0]; sy += q[1]; }
+      const g = { key, poly, x0, y0, x1, y1, cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, rx: Math.max(1e-4, (x1 - x0) / 2), ry: Math.max(1e-4, (y1 - y0) / 2), mx: sx / o.length, my: sy / o.length, depth: 1e-3 };
+      // tiefster Punkt innen = Maßstab für den weichen Rand
+      for (let j = 1; j < 16; j++) for (let i = 1; i < 16; i++) {
+        const X = (x0 + (x1 - x0) * i / 16) * aspect, Y = y0 + (y1 - y0) * j / 16;
+        const sd = sdPoly(poly, X, Y); if (sd < 0) g.depth = Math.max(g.depth, -sd);
+      }
+      GEO.set(r, g);
+      return g;
+    },
+    // Lage eines Punkts (u, v in Bildbruchteilen) zum Bereich: [lx, ly, d]
+    // lx/ly = -1…1 über die Breite/Höhe (für Anker, Stauchen, Welle), d = 0 innen tief … 1 am Rand … >1 außen
+    // aspect = Breite/Höhe des Bilds, damit Formen rund rechnen
     local(r, u, v, aspect) {
+      if (r.shape === 'poly' && r.pts && r.pts.length >= 3) {
+        const g = Soft.geo(r, aspect);
+        const lx = (u - g.cx) / g.rx, ly = (v - g.cy) / g.ry;
+        // schneller Ausschluss weit außerhalb
+        const far = 1 + 0.9 + Math.max(0, Number(r.over) || 0) * 2;
+        if (Math.abs(lx) > far * 1.6 || Math.abs(ly) > far * 1.6) return [lx, ly, 99];
+        const sd = sdPoly(g.poly, u * aspect, v);
+        return [lx, ly, 1 + sd / g.depth];
+      }
       const a = (r.rot || 0) * Math.PI / 180, cs = Math.cos(a), sn = Math.sin(a);
       const x = (u - r.cx) * aspect, y = v - r.cy;
       const lx = (x * cs + y * sn) / Math.max(1e-4, r.rx * aspect), ly = (-x * sn + y * cs) / Math.max(1e-4, r.ry);
-      return [lx, ly];
+      return [lx, ly, Math.hypot(lx, ly)];
+    },
+    // Rahmen eines Bereichs in Bildbruchteilen (für Stauchen, Ebene, Ruhe-Phase)
+    box(r, aspect) {
+      if (r.shape === 'poly' && r.pts && r.pts.length >= 3) { const g = Soft.geo(r, aspect || 1); return { cx: g.cx, cy: g.cy, rx: g.rx, ry: g.ry }; }
+      return { cx: r.cx, cy: r.cy, rx: r.rx, ry: r.ry };
+    },
+    // Ellipse → freie Form (zum Nachbearbeiten)
+    toPoly(r, aspect, n) {
+      n = n || 14; aspect = aspect || 1;
+      const a = (r.rot || 0) * Math.PI / 180, cs = Math.cos(a), sn = Math.sin(a), out = [];
+      const q = (v) => Math.round(v * 10000) / 10000;
+      for (let i = 0; i < n; i++) {
+        const t = i / n * Math.PI * 2, X = Math.cos(t) * r.rx * aspect, Y = Math.sin(t) * r.ry;
+        out.push([q(r.cx + (X * cs - Y * sn) / aspect), q(r.cy + X * sn + Y * cs)]);
+      }
+      return out;
     },
     anchorW(P, lx, ly) {
       const amt = Math.max(0, Math.min(1, Number(P.anchorAmt) || 0));
@@ -103,8 +163,8 @@
       const q = Math.max(0, Math.min(1, g));
       return 1 - amt + amt * q * q * (3 - 2 * q);
     },
-    weight(P, lx, ly) {
-      const d = Math.hypot(lx, ly);
+    weight(P, lx, ly, d) {
+      if (d == null) d = Math.hypot(lx, ly);
       const f = Math.max(0.02, Math.min(0.95, Number(P.feather) != null ? Number(P.feather) : 0.4));
       const over = Math.max(0, Number(P.over) || 0);
       const inner = 1 - f, outer = 1 + over;
@@ -116,7 +176,7 @@
     disp(r, P, m, lx, ly, w, aspect) {
       const aw = Soft.anchorW(P, lx, ly);
       let dx = m.dx * w, dy = m.dy * w;
-      if (m.sq) { dy += ly * r.ry * m.sq * w; dx -= lx * r.rx * m.sq * 0.5 * w; }
+      if (m.sq) { const b = Soft.box(r, aspect); dy += ly * b.ry * m.sq * w; dx -= lx * b.rx * m.sq * 0.5 * w; }
       if (m.wave) dx += Math.sin(m.t * m.sp * 1.3 - ly * 2.4) * m.wave * 0.8 * w * aw;
       return [dx, dy];
     },
@@ -164,7 +224,7 @@
           let dx = 0, dy = 0;
           for (const { r, P, m } of moves) {
             const L = Soft.local(r, u, v, aspect);
-            const w = Soft.weight(P.layer ? Object.assign({}, P, { over: 0 }) : P, L[0], L[1]);
+            const w = Soft.weight(P.layer ? Object.assign({}, P, { over: 0 }) : P, L[0], L[1], L[2]);
             if (w <= 0) continue;
             const d = Soft.disp(r, P, m, L[0], L[1], w, aspect);
             dx += d[0]; dy += d[1];
@@ -233,6 +293,20 @@
     }
   });
 
+  // Vorzeichen-Abstand zu einem Polygon (negativ = innen)
+  function sdPoly(poly, x, y) {
+    let d = 1e9, inside = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const ax = poly[j][0], ay = poly[j][1], bx = poly[i][0], by = poly[i][1];
+      const ex = bx - ax, ey = by - ay, wx = x - ax, wy = y - ay;
+      const t = Math.max(0, Math.min(1, (wx * ex + wy * ey) / (ex * ex + ey * ey || 1e-12)));
+      const qx = wx - ex * t, qy = wy - ey * t;
+      d = Math.min(d, qx * qx + qy * qy);
+      if ((ay > y) !== (by > y) && x < ax + (y - ay) * ex / (ey || 1e-12)) inside = !inside;
+    }
+    return (inside ? -1 : 1) * Math.sqrt(d);
+  }
+  const GEO = new WeakMap();
   function smooth(x) { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }
 
   // ---------- WebGL ----------
@@ -281,18 +355,26 @@
     return m;
   }
   // Kopie eines Bereichs: eigenes kleines Gitter über der Ellipse, Deckkraft weich zum Rand
-  const LG = 18;
+  const LG = 24;
   const LIDX = gridIdx(LG, LG);
   function layerMesh(r, P, m, aspect, iw, ih, ox, oy) {
     const N = (LG + 1) * (LG + 1), pos = new Float32Array(N * 2), uv = new Float32Array(N * 2), al = new Float32Array(N);
-    const a = (r.rot || 0) * Math.PI / 180, cs = Math.cos(a), sn = Math.sin(a);
     const f = Math.max(0.05, Math.min(0.95, Number(P.feather) != null ? Number(P.feather) : 0.4));
+    const poly = r.shape === 'poly' && r.pts && r.pts.length >= 3;
+    const a = (r.rot || 0) * Math.PI / 180, cs = Math.cos(a), sn = Math.sin(a);
+    const b = Soft.box(r, aspect);
     for (let j = 0, k = 0; j <= LG; j++) for (let i = 0; i <= LG; i++, k++) {
-      const lx = (i / LG) * 2 - 1, ly = (j / LG) * 2 - 1;
-      // lokale Ellipse → Bildkoordinaten
-      const x = lx * r.rx * aspect, y = ly * r.ry;
-      const u = r.cx + (x * cs - y * sn) / aspect, v = r.cy + (x * sn + y * cs);
-      const d = Math.hypot(lx, ly);
+      let u, v, lx, ly, d;
+      if (poly) {
+        // Gitter über den Rahmen der freien Form
+        u = b.cx + ((i / LG) * 2 - 1) * b.rx; v = b.cy + ((j / LG) * 2 - 1) * b.ry;
+        const L = Soft.local(r, u, v, aspect); lx = L[0]; ly = L[1]; d = L[2];
+      } else {
+        lx = (i / LG) * 2 - 1; ly = (j / LG) * 2 - 1;
+        const x = lx * r.rx * aspect, y = ly * r.ry;
+        u = r.cx + (x * cs - y * sn) / aspect; v = r.cy + (x * sn + y * cs);
+        d = Math.hypot(lx, ly);
+      }
       const alpha = d >= 1 ? 0 : d <= 1 - f ? 1 : 1 - smooth((d - (1 - f)) / f);
       const aw = Soft.anchorW(P, lx, ly);
       const dd = Soft.disp(r, P, m, lx, ly, 1, aspect);

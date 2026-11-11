@@ -5331,7 +5331,17 @@ window.VN_I18N_JA = {
 "1. Figuren-Bild wählen. 2. Vorlage wählen (Brust, Haare, Rock …) und eine Ellipse um die Stelle ziehen. 3. Mit „▶ Testen“ die Figur hüpfen lassen oder mit der Maus herumziehen.": "1. キャラクター画像を選ぶ。2. テンプレート（胸、髪、スカート…）を選び、部位を楕円で囲む。3.「▶ テスト」でジャンプさせたりマウスでドラッグしたりして確認。",
 "Das Bild wird nicht zerschnitten: Nur die Punkte in der Maske bewegen sich, mit weichem Übergang. Die Maske gehört zum Bild und bewegt sich mit der Figur mit.": "画像は切り分けられません。マスク内の点だけがなめらかに動きます。マスクは画像に属し、キャラクターと一緒に動きます。",
 "„Über den Rand“ lässt die Bewegung über die Maske hinaus auslaufen. „Als eigene Ebene“ legt den Bereich als Kopie oben drauf, so kann er über den Körper schwingen.": "「縁の外まで」は動きをマスクの外へなじませます。「独立レイヤー」は範囲のコピーを上に重ね、体の上に揺れ出せるようにします。",
-"Die Physik reagiert, wenn sich die Figur bewegt (Schritte, Sprünge, Wackeln, Bewegungen in Zwischensequenzen). Mit der Aktion „〰 Weich-Physik anstoßen“ gibst du einen gezielten Stoß.": "キャラクターが動くと物理が反応します（歩く、跳ぶ、揺れる、カットシーンの動き）。アクション「〰 ソフト物理を揺らす」で狙って揺らせます。"
+"Die Physik reagiert, wenn sich die Figur bewegt (Schritte, Sprünge, Wackeln, Bewegungen in Zwischensequenzen). Mit der Aktion „〰 Weich-Physik anstoßen“ gibst du einen gezielten Stoß.": "キャラクターが動くと物理が反応します（歩く、跳ぶ、揺れる、カットシーンの動き）。アクション「〰 ソフト物理を揺らす」で狙って揺らせます。",
+"↖ Wählen": "↖ 選択",
+"◯ Ellipse": "◯ 楕円",
+"➰ Lasso": "➰ なげなわ",
+"✒ Stift": "✒ ペン",
+"Bereich anklicken zum Wählen, ziehen zum Verschieben. Bei freien Formen die Punkte ziehen. Für einen neuen Bereich oben ein Werkzeug wählen.": "範囲をクリックで選択、ドラッグで移動。自由形状は点をドラッグ。新しい範囲は上でツールを選んでください。",
+"Fahr mit gedrückter Maus um die Stelle. Beim Loslassen schließt sich die Form und wird geglättet.": "マウスを押したまま部位をなぞります。離すと形が閉じてなめらかになります。",
+"Klick setzt eine Ecke, Klicken und Ziehen einen runden Punkt. Klick auf den ersten Punkt, Doppelklick oder Enter schließt die Form, Esc bricht ab.": "クリックで角、クリック＋ドラッグで丸い点。最初の点をクリック、ダブルクリックまたはEnterで閉じ、Escで中止。",
+"✒ In freie Form umwandeln": "✒ 自由形状に変換",
+"Umriss rund (Kurven statt gerader Linien)": "輪郭を丸く（直線ではなく曲線）",
+"Punkte ziehen zum Anpassen · Doppelklick auf den Umriss fügt einen Punkt ein · Rechtsklick auf einen Punkt löscht ihn · Alt-Klick: Ecke ↔ rund": "点をドラッグで調整 · 輪郭をダブルクリックで点を追加 · 点を右クリックで削除 · Alt＋クリック：角 ↔ 丸"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

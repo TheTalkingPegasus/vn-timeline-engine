@@ -3,10 +3,14 @@
 All notable changes. German details: `LIES MICH.txt`.
 
 ## 0.9.28 – Soft physics (jiggle presets for masked areas)
-- **Figures → Soft physics:** drag an ellipse mask around a part of a character image and pick a preset – *Chest, Butt,
+- **Figures → Soft physics:** mask a part of a character image and pick a preset – *Chest, Butt,
   Belly/breathing, Hair, Cloth/skirt, Ears/tail, Cheeks, Jelly* – and that part bounces, sways and breathes along when the figure moves.
   The PNG is **not cut up**: a fine mesh lies over the whole image and only the points inside the mask move, with a soft edge;
   everything outside stays still. The mask belongs to the image, so it follows the character everywhere.
+- **Mask tools like in After Effects:** *Ellipse*, *Lasso* (draw freehand around the spot, smoothed on release) and *Pen*
+  (click = corner, click-drag = round point; close on the first point, double-click or Enter). Afterwards drag points,
+  double-click the outline to add one, right-click or Del to delete, Alt-click to switch corner ↔ round; round outline on/off;
+  convert an ellipse into a free shape to refine it. The soft edge follows the drawn outline.
 - Per area: strength, stiffness, damping, sideways motion, squash, soft edge, **beyond the edge** (motion may spill past the mask),
   anchor (fixed at top/bottom/left/right) and idle motion (breathing, swaying, wave). **As its own layer** puts a copy of the area on top,
   so it can swing over the body. “↔ Copy mirrored” for the second side.
