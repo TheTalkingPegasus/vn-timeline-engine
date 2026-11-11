@@ -1,6 +1,6 @@
 # VN Timeline Engine – guide for AI assistants
 
-Engine 0.9.27 · project format 1 · generated 2026-11-11
+Engine 0.9.28 · project format 1 · generated 2026-11-11
 
 This file explains a VN Timeline Engine project so that any AI can read and change it **without the engine source code**. 
 The engine is a free visual novel editor that works like a video editor: every scene is a timeline, every column ("step") is one click of the player.
@@ -42,7 +42,7 @@ The engine is a free visual novel editor that works like a video editor: every s
 - `cam` – Camera / Kamera (cam): `{"id":"<unique id>","start":0,"len":3,"zoom":130,"panX":0,"panY":-8,"rot":0,"shake":0,"dur":1.2,"ease":"ease-in-out","keys":[]}`
 - `video` – Video (video): `{"id":"<unique id>","start":0,"len":1,"asset":null,"layer":"front","loop":false,"muted":false,"vol":90,"fit":"cover","waitEnd":true,"skippable":true}`
 - `dialog` – Dialogue / Dialog (dialog): `{"id":"<unique id>","start":0,"len":1,"speaker":"","color":"#ffffff","text":"Neuer Text …","speed":40,"actions":[]}`
-- `choice` – Choice / Auswahl (choice): `{"id":"<unique id>","start":0,"len":1,"options":[{"id":"opt_1oilp","text":"Antwort A","target":null,"conds":[],"actions":[]},{"id":"opt_1pu8l","text":"Antwort B","target":null,"conds":[],"actions":[]}]}`
+- `choice` – Choice / Auswahl (choice): `{"id":"<unique id>","start":0,"len":1,"options":[{"id":"opt_1oi58","text":"Antwort A","target":null,"conds":[],"actions":[]},{"id":"opt_1pa2a","text":"Antwort B","target":null,"conds":[],"actions":[]}]}`
 - `code` – Code (code): `{"id":"<unique id>","start":0,"len":1,"code":""}`
 - `music` – Music / Musik (music): `{"id":"<unique id>","start":0,"len":3,"asset":null,"vol":70,"loop":true,"carry":false,"fade":1}`
 - `voice` – Voices (voice): `{"id":"<unique id>","start":0,"len":1,"asset":null,"vol":90,"delay":0}`
@@ -185,6 +185,7 @@ Operators: `>=`, `>`, `<=`, `<`, `==`, `!=`.
 - `socialFollowers`: `{"type":"socialFollowers","contact":"","op":"add","amount":100}  – 👥 Change followers / 👥 Follower ändern  (only when that game system is switched on)`
 - `liveChat`: `{"type":"liveChat","chat":"","op":"start"}  – 📺 Live chat / 📺 Live-Chat  (only when that game system is switched on)`
 - `stamina`: `{"type":"stamina","op":"add","amount":-10}  – ⚡ Change stamina / ⚡ Ausdauer ändern  (only when that game system is switched on)`
+- `softPoke`: `{"type":"softPoke","dir":"down","amount":1}  – 〰 Nudge soft physics / 〰 Weich-Physik anstoßen`
 
 ## Game systems
 

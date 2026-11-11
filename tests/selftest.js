@@ -1174,6 +1174,53 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Follower (Wachstum, Währung), Live-Chat, Ausdauer, Masken, Design-Vorlagen, Bibliothek');
   } catch (e) { general.push('Paket 2: ' + e.message); }
 
+  // 24. Weich-Physik (0.9.28): Masken-Gewicht, Feder kommt zur Ruhe, Bühne nutzt Canvas
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [], S = window.Soft, p = VN.project;
+      const r0 = S.newRegion('chest', 0.5, 0.4, 0.1, 0.05), P = S.par(r0);
+      let L = S.local(r0, 0.5, 0.4, 0.6); if (S.weight(P, L[0], L[1]) <= 0.4) out.push('Gewicht Mitte');
+      L = S.local(r0, 0.9, 0.4, 0.6); if (S.weight(P, L[0], L[1]) !== 0) out.push('außerhalb nicht ruhig');
+      L = S.local(r0, 0.5, 0.36, 0.6); const top = S.weight(P, L[0], L[1]); L = S.local(r0, 0.5, 0.44, 0.6); if (!(top < S.weight(P, L[0], L[1]))) out.push('Anker oben');
+      const sim = S.newSim(); S.poke(sim, 'down', 1);
+      S.step(sim, [r0], { x: 0, y: 0 }, 0.016); const v1 = Math.abs(sim.regs[r0.id].y);
+      for (let i = 0; i < 300; i++) S.step(sim, [r0], { x: 0, y: 0 }, 0.016);
+      if (!(v1 > 0) || Math.abs(sim.regs[r0.id].y) > 1e-4) out.push('Feder ' + v1 + ' ' + sim.regs[r0.id].y);
+      const sim2 = S.newSim(); S.feed(sim2, 0, 0, 0.016); S.feed(sim2, 0, 0, 0.016); const a = S.feed(sim2, 0, -0.01, 0.016);
+      S.step(sim2, [r0], a, 0.016); if (!(sim2.regs[r0.id].y > 0)) out.push('Trägheit');
+      const img = VN.assetsOf('image')[0];
+      if (img) {
+        const keep = p.softs; p.softs = { [img.id]: { on: true, regions: [r0] } };
+        const box = Stage.charEl({ asset: img.id, x: 50, start: 0 }, 'char', {});
+        if (!box.querySelector('.soft-canvas')) out.push('Bühne ohne Canvas');
+        p.softs = { [img.id]: { on: false, regions: [r0] } };
+        if (Stage.charEl({ asset: img.id, x: 50, start: 0 }, 'char', {}).querySelector('.soft-canvas')) out.push('aus, aber Canvas');
+        p.softs = keep;
+      }
+      if (!VN.ext.actions.softPoke) out.push('Aktion fehlt');
+      // freie Form (Lasso / Zeichenstift): innen bewegt, außen ruhig, Ecken bleiben spitz
+      const rp = Object.assign(S.newRegion('chest', 0, 0, 0, 0), { shape: 'poly', smooth: true, pts: [[0.3, 0.3], [0.7, 0.3, 1], [0.7, 0.6], [0.3, 0.6]] });
+      const Pp = S.par(rp);
+      L = S.local(rp, 0.5, 0.45, 1); if (!(L[2] < 0.2) || S.weight(Pp, L[0], L[1], L[2]) <= 0) out.push('Form innen ' + L[2]);
+      L = S.local(rp, 0.9, 0.45, 1); if (S.weight(Pp, L[0], L[1], L[2]) !== 0) out.push('Form außen');
+      const rq = Object.assign({}, rp, { smooth: false }); L = S.local(rq, 0.3, 0.45, 1); if (Math.abs(L[2] - 1) > 0.02) out.push('Form Rand ' + L[2]);
+      if (!S.outline(rp).some((q) => Math.abs(q[0] - 0.7) < 1e-9 && Math.abs(q[1] - 0.3) < 1e-9)) out.push('Ecke');
+      const ep = S.toPoly({ cx: 0.5, cy: 0.5, rx: 0.1, ry: 0.05, rot: 0 }, 0.5, 8);
+      if (ep.length !== 8 || Math.abs(ep[0][0] - 0.6) > 1e-6) out.push('Ellipse → Form');
+      // Ankerpunkt und Pendeln: am Pin fest, an der Spitze voll; Pendeln dreht um den Pin
+      const rt = Object.assign(S.newRegion('tail', 0.5, 0.5, 0.1, 0.4), { pin: [0.5, 0.1] }), Pt = S.par(rt);
+      if (S.pinQ(rt, 0.5, 0.1, 1) !== 0 || Math.abs(S.pinQ(rt, 0.5, 0.9, 1) - 1) > 1e-6) out.push('Pin-Abstand');
+      const mt = { dx: 0.05, dy: 0, sq: 0, wave: 0, t: 0, sp: 1 };
+      const dPin = S.disp(rt, Pt, mt, 0, -0.9, 1, 1, { r: rt, u: 0.5, v: 0.12, aspect: 1 }), dTip = S.disp(rt, Pt, mt, 0, 0.9, 1, 1, { r: rt, u: 0.5, v: 0.86, aspect: 1 });
+      if (!(Math.hypot(dPin[0], dPin[1]) < Math.hypot(dTip[0], dTip[1]) * 0.1) || !(Math.abs(dTip[0]) > 0.01)) out.push('Pendeln ' + JSON.stringify([dPin, dTip]));
+      const Pa = Object.assign({}, Pt, { pendulum: false });
+      if (!(S.anchorW(Pa, 0, 0, { r: rt, u: 0.5, v: 0.15, aspect: 1 }) < S.anchorW(Pa, 0, 0, { r: rt, u: 0.5, v: 0.85, aspect: 1 }))) out.push('Pin-Anker');
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Weich-Physik: ' + r.join(', '));
+    else log('✓ Weich-Physik: Masken-Gewicht, Anker, Feder, Trägheit, Bühne, Aktion, freie Formen, Ankerpunkt, Pendeln');
+  } catch (e) { general.push('Weich-Physik: ' + e.message); }
+
   // 20. Social Media: Beiträge per Bedingung und Aktion, löschen, Likes mit Aktion nur einmal
   try {
     const r = JSON.parse(await js(`(() => {
