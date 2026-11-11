@@ -458,7 +458,7 @@
       const laneW = total * BW;
       const tl = el('div', { class: 'timeline' });
       const zoom = el('input', {
-        type: 'range', min: 44, max: 200, value: BW, style: { width: '140px', accentColor: 'var(--accent)' }, 'aria-label': 'Zoom',
+        type: 'range', min: 44, max: 200, value: BW, style: { width: '140px', accentColor: 'var(--accent)' }, 'aria-label': 'Zoom', title: VN.t('Auch: Strg + Mausrad über der Timeline'),
         onchange: (e) => { VN.ui.zoom = parseInt(e.target.value, 10); VN.render(); }
       });
       tl.appendChild(el('div', { class: 'tl-tools' },

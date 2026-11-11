@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.28
+VN Timeline Engine · Prototyp 0.9.29
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,17 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.29 · Mausrad-Zoom überall; Zucken & Herzschlag in der Weich-Physik
+- Mit dem Mausrad zoomen in jeder Vorschau: Szene, Hub, Zwischensequenz (Animieren), Design, Hauptmenü, Bones und Weich-Physik.
+  Gezoomt wird zur Mausposition (50 %–800 %); verschieben mit der mittleren Maustaste oder Leertaste + Ziehen; die Anzeige in der Ecke
+  zeigt die Stufe – Klick darauf = zurück auf 100 %. Der Zoom bleibt pro Bereich erhalten. Figuren, Objekte und Punkte lassen sich
+  auch gezoomt genau ziehen.
+- Timeline: Strg + Mausrad zoomt die Szenen-Timeline an der Mausposition (normales Mausrad scrollt wie bisher).
+- Weich-Physik – angespanntes Zucken: Ein Regler lässt einen Bereich in kurzen, unregelmäßigen Stößen zucken (manchmal zweimal
+  hintereinander), dazu ein feines Zittern – stärker = häufiger und kräftiger.
+- Weich-Physik – Puls: Der Bereich schwillt im Herzschlag („bu-bumm“) kurz an; Stärke und Schläge pro Minute einstellbar.
+  Beides funktioniert mit jeder Vorlage und lässt sich mit Atmen, Schwanken oder Welle kombinieren.
 
 NEU IN 0.9.28 · Weich-Physik (Wackel-Vorlagen für maskierte Bereiche)
 - Figuren → Weich-Physik: Eine Stelle des Figuren-Bilds maskieren und eine Vorlage wählen – Brust, Po, Bauch/Atmen,

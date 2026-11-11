@@ -25,7 +25,9 @@
   const ACC = 0.25; // wie stark Beschleunigung der Figur auf die Bereiche wirkt
 
   // alle Schlüssel, die eine Vorlage setzen kann (zum Zurücksetzen)
-  const PKEYS = [...new Set(Object.values(PRESETS).flatMap((x) => Object.keys(x)))].filter((k) => k !== 'label');
+  // Zusätze für jede Vorlage: angespanntes Zucken und Puls (Herzschlag), Standard aus
+  const EXTRA = { twitch: 0, pulse: 0, bpm: 72 };
+  const PKEYS = [...new Set(Object.values(PRESETS).flatMap((x) => Object.keys(x)).concat(Object.keys(EXTRA)))].filter((k) => k !== 'label');
   const Soft = (window.Soft = {
     PRESETS, ANCHORS, IDLES, PAD, PKEYS,
 
@@ -36,7 +38,13 @@
       return s;
     },
     // Werte eines Bereichs: Vorlage + eigene Anpassungen
-    par(r) { return Object.assign({}, PRESETS[r.preset] || PRESETS.chest, r); },
+    par(r) { return Object.assign({}, EXTRA, PRESETS[r.preset] || PRESETS.chest, r); },
+    // Herzschlag-Kurve 0…1: kräftiger erster Schlag, schwächerer zweiter („bu-bumm“)
+    heart(t, bpm) {
+      const p = ((t * (Number(bpm) || 72) / 60) % 1 + 1) % 1;
+      const g = (c, w) => Math.exp(-((p - c) / w) * ((p - c) / w));
+      return Math.min(1, g(0.06, 0.04) + 0.55 * g(0.24, 0.05));
+    },
     newRegion(preset, cx, cy, rx, ry) {
       return { id: VN.uid ? VN.uid('sr') : 'sr' + Math.random().toString(36).slice(2, 8), name: VN.t(PRESETS[preset] ? PRESETS[preset].label : 'Bereich'), preset, cx, cy, rx, ry, rot: 0, on: true };
     },
@@ -59,6 +67,18 @@
         const P = Soft.par(r);
         const s = sim.regs[r.id] || (sim.regs[r.id] = { x: 0, y: 0, vx: 0, vy: 0 });
         for (const k of kick) { s.vx += k.x * (P.xs || 1); s.vy += k.y * (P.ys || 1); }
+        // angespanntes Zucken: kurze Stöße in zufälligen Abständen (stärker = häufiger und kräftiger)
+        const tw = Math.max(0, Number(P.twitch) || 0);
+        if (tw > 0) {
+          s.clock = (s.clock || 0) + dt;
+          if (s.nextTw == null) s.nextTw = s.clock + 0.3 + Math.random() * 1.2;
+          if (s.clock >= s.nextTw) {
+            const a = Math.random() * Math.PI * 2, f = 0.16 * tw * (0.6 + Math.random() * 0.8);
+            s.vx += Math.cos(a) * f * (P.xs != null ? P.xs : 1) * 0.6; s.vy += Math.sin(a) * f * (P.ys != null ? P.ys : 1);
+            // manchmal kommt ein zweites Zucken direkt hinterher
+            s.nextTw = s.clock + (Math.random() < 0.25 ? 0.08 + Math.random() * 0.1 : (0.5 + Math.random() * 2.2) / Math.max(0.4, Math.min(2, tw)));
+          }
+        }
         const k = Math.max(1, Number(P.k) || 90), c = Math.max(0, Number(P.c) || 5), inert = Number(P.inert) || 1;
         // kleine Unterschritte für stabile Federn
         const n = Math.max(1, Math.ceil(dt / 0.008)), h = dt / n;
@@ -88,7 +108,11 @@
       else if (P.idle === 'wave') { idleX = Math.sin(t * sp + ph) * amp; wave = amp; }
       // Stauchen: nach unten gezogen → länger und schmaler, nach oben → kürzer und breiter
       const sq = Math.max(-0.35, Math.min(0.35, (dy + idleY * 0.6) * (Number(P.squash) || 0) * 4));
-      return { dx: dx + idleX, dy: dy + idleY, sq, wave, t, sp };
+      // Zittern bei Anspannung (fein, schnell) und Puls (der Bereich schwillt im Herzschlag kurz an)
+      const tw = Math.max(0, Number(P.twitch) || 0);
+      if (tw) { idleX += (Math.sin(t * 47 + ph) + Math.sin(t * 31 + ph * 2)) * 0.0006 * tw; idleY += Math.sin(t * 39 + ph * 3) * 0.0006 * tw; }
+      const sw = (Number(P.pulse) || 0) ? Soft.heart(t + ph * 0.05, P.bpm) * Number(P.pulse) * 0.05 : 0;
+      return { dx: dx + idleX, dy: dy + idleY, sq, wave, t, sp, sw };
     },
 
     // Freie Form (0.9.28): Umriss aus Punkten (Lasso / Zeichenstift), auf Wunsch rund (Catmull-Rom)
@@ -214,6 +238,7 @@
       const aw = Soft.anchorW(P, lx, ly, E);
       let dx = m.dx * w, dy = m.dy * w;
       if (m.sq) { const b = Soft.box(r, aspect); dy += ly * b.ry * m.sq * w; dx -= lx * b.rx * m.sq * 0.5 * w; }
+      if (m.sw) { const b = Soft.box(r, aspect); dx += lx * b.rx * m.sw * w; dy += ly * b.ry * m.sw * w; }
       if (m.wave) dx += Math.sin(m.t * m.sp * 1.3 - ly * 2.4) * m.wave * 0.8 * w * aw;
       return [dx, dy];
     },

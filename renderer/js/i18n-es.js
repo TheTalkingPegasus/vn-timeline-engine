@@ -5349,7 +5349,12 @@ window.VN_I18N_ES = {
 "Pin im Bild ziehen zum Verschieben": "Arrastra el pin en la imagen para moverlo",
 "noch nicht gesetzt – Mitte oben": "aún no puesto: arriba al centro",
 "Pendeln (dreht sich um den Ankerpunkt)": "Péndulo (gira alrededor del punto de anclaje)",
-"Anker-Stärke = Biegung: 0 schwingt starr wie ein Schwert, 1 biegt sich zur Spitze wie ein Schwanz.": "Fuerza del ancla = flexión: 0 oscila rígido como una espada, 1 se dobla hacia la punta como una cola."
+"Anker-Stärke = Biegung: 0 schwingt starr wie ein Schwert, 1 biegt sich zur Spitze wie ein Schwanz.": "Fuerza del ancla = flexión: 0 oscila rígido como una espada, 1 se dobla hacia la punta como una cola.",
+"Zoom zurücksetzen (100 %)": "Restablecer zoom (100 %)",
+"Auch: Strg + Mausrad über der Timeline": "También: Ctrl + rueda del ratón sobre la línea de tiempo",
+"Zucken (angespannt)": "Espasmo (tenso)",
+"Puls (Herzschlag)": "Pulso (latido)",
+"Puls: Schläge/Min": "Pulso: latidos/min"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",
