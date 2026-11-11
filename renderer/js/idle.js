@@ -67,11 +67,49 @@
   // Kosten der nächsten Stufe (Stufe lvl → lvl+1), mit Rabatt aus Skilltrees
   // Kosten der nächsten Stufe (Stufe lvl → lvl+1), mit Rabatt aus Skilltrees.
   // Mehrfach eingetragene Währungen werden zusammengezählt (sonst würde jede Zeile einzeln geprüft).
+  // ---------- Kurven für Preise und Gewinne (0.9.27) ----------
+  // c.curve = { cost: 'exp'|'poly'|'linear'|'soft', prod: 'linear'|'exp'|'dimin', pow, lin, soft, pgrow, dimin, ms: [[Stufe, ×], …] }
+  ID.CURVE = { cost: 'exp', prod: 'linear', pow: 2, lin: 50, soft: 0.8, pgrow: 1.05, dimin: 0.8, ms: [] };
+  ID.curve = () => { const c = ID.cfg(); c.curve = VN.fill(c.curve, JSON.parse(JSON.stringify(ID.CURVE))); return c.curve; };
+  // Preisfaktor für Stufe lvl (Stufe 0 = Bau): Grundpreis × f(lvl)
+  ID.costFactor = (b, lvl) => {
+    const C = ID.curve(), kind = b.costCurve || C.cost, g = Math.max(1, Number(b.grow) || 1);
+    if (kind === 'poly') return Math.pow(1 + lvl, Math.max(0.5, Number(C.pow) || 2));
+    if (kind === 'linear') return 1 + lvl * Math.max(0, Number(C.lin) || 0) / 100;
+    if (kind === 'soft') return Math.pow(g, Math.pow(lvl, Math.max(0.3, Math.min(1, Number(C.soft) || 0.8))));
+    return Math.pow(g, lvl);
+  };
+  // Gewinnfaktor bei Stufe lvl: Grundertrag × p(lvl) × Meilenstein-Boni
+  ID.prodFactor = (b, lvl) => {
+    if (lvl <= 0) return 0;
+    const C = ID.curve(), kind = b.prodCurve || C.prod;
+    let f = kind === 'exp' ? lvl * Math.pow(Math.max(1, Number(C.pgrow) || 1.05), lvl - 1) : kind === 'dimin' ? Math.pow(lvl, Math.max(0.3, Math.min(1, Number(C.dimin) || 0.8))) : lvl;
+    for (const [at, mul] of C.ms || []) if (lvl >= Number(at) && Number(mul) > 0) f *= Number(mul);
+    return f;
+  };
+  // Nächster Meilenstein-Bonus eines Gebäudes (für die Anzeige)
+  ID.nextBoost = (b, lvl) => { const ms = (ID.curve().ms || []).filter(([at]) => Number(at) > lvl).sort((x, y) => x[0] - y[0])[0]; return ms ? { at: Number(ms[0]), mul: Number(ms[1]) } : null; };
+  // Vorlagen nach bekannten Idle-Spielen
+  ID.CURVE_PRESETS = [
+    { id: 'classic', name: 'Klassisch', desc: 'Preise × Faktor pro Stufe, Gewinn wächst gleichmäßig (bisheriges Verhalten).', curve: { cost: 'exp', prod: 'linear', ms: [] } },
+    { id: 'adcap', name: 'AdVenture Capitalist', desc: 'Preise × 1,07–1,15, Gewinn gleichmäßig – dazu ×2-Sprünge bei Stufe 25, 50, 100, 200 …', curve: { cost: 'exp', prod: 'linear', ms: [[25, 2], [50, 2], [100, 2], [200, 2], [300, 2], [400, 2]] }, grow: 1.09 },
+    { id: 'cookie', name: 'Cookie Clicker', desc: 'Jeder Kauf 15 % teurer, jedes Gebäude bringt gleich viel dazu.', curve: { cost: 'exp', prod: 'linear', ms: [] }, grow: 1.15 },
+    { id: 'gentle', name: 'Gemächlich', desc: 'Preise steigen nur im Quadrat statt exponentiell – auch nach vielen Stufen noch gut spielbar.', curve: { cost: 'poly', prod: 'linear', pow: 2, ms: [] } },
+    { id: 'soft', name: 'Sanft gebremst', desc: 'Exponentiell, aber die Steigerung lässt mit der Zeit nach.', curve: { cost: 'soft', prod: 'linear', soft: 0.8, ms: [] } },
+    { id: 'story', name: 'Story (linear)', desc: 'Jede Stufe kostet gleich viel mehr – planbar, gut für kurze Aufbau-Phasen in der Geschichte.', curve: { cost: 'linear', prod: 'linear', lin: 50, ms: [] } },
+    { id: 'snow', name: 'Schneeball', desc: 'Gewinne wachsen selbst exponentiell mit – fühlt sich schnell und mächtig an.', curve: { cost: 'exp', prod: 'exp', pgrow: 1.05, ms: [[10, 2], [25, 2], [50, 3]] } }
+  ];
+  ID.applyCurvePreset = (pr, setGrow) => {
+    const C = ID.curve();
+    Object.assign(C, JSON.parse(JSON.stringify(ID.CURVE)), JSON.parse(JSON.stringify(pr.curve)));
+    if (setGrow && pr.grow) for (const b of ID.cfg().buildings) b.grow = pr.grow;
+    for (const b of ID.cfg().buildings) { delete b.costCurve; delete b.prodCurve; }
+  };
   ID.cost = (b, lvl, rs) => {
     const sum = new Map();
     for (const c of b.costs || []) if (c.cur) sum.set(c.cur, (sum.get(c.cur) || 0) + (Number(c.amount) || 0));
     return [...sum].map(([cur, amount]) => {
-      let n = amount * Math.pow(Number(b.grow) || 1, lvl);
+      let n = amount * ID.costFactor(b, lvl);
       if (rs && VN.bonus) n = VN.bonus('idle.cost', n, rs, b.id);
       return { cur, amount: Math.max(0, Math.ceil(n)) };
     });
@@ -82,7 +120,7 @@
     const out = {};
     for (const p of b.prods || []) {
       if (!p.cur) continue;
-      let n = (Number(p.amount) || 0) * lvl;
+      let n = (Number(p.amount) || 0) * ID.prodFactor(b, lvl);
       if (rs && VN.bonus) n = VN.bonus('idle.prod', n, rs, b.id);
       out[p.cur] = (out[p.cur] || 0) + n;
     }
@@ -157,6 +195,38 @@
     VN.addMoney(rs, g.cur, g.amount, true);
     ID.state(rs).clicks++;
     return g;
+  };
+  // ---------- Ansicht (0.9.27): Layouts, Vollbild, Berater ----------
+  ID.VIEW = { layout: 'cards', full: false, multi: true, mapBg: '', clicker: { image: '', icon: '🪙', cur: '', amount: 1, label: '' }, adv: { on: false, image: '', name: '', side: 'left', every: 45, lines: [] } };
+  ID.view = () => { const c = ID.cfg(); c.view = VN.fill(c.view, JSON.parse(JSON.stringify(ID.VIEW))); c.view.clicker = VN.fill(c.view.clicker, JSON.parse(JSON.stringify(ID.VIEW.clicker))); c.view.adv = VN.fill(c.view.adv, JSON.parse(JSON.stringify(ID.VIEW.adv))); return c.view; };
+  // Mehrere Stufen auf einmal: wie viele sind bezahlbar (bis n), und was kosten sie zusammen
+  ID.costN = (rs, b, n) => {
+    const l = ID.level(rs, b), max = ID.max(b), tot = new Map();
+    let k = 0;
+    const want = n === 'max' ? Infinity : n;
+    while (k < want && l + k < max) {
+      const c = ID.cost(b, l + k, rs), sum = new Map(tot);
+      for (const x of c) sum.set(x.cur, (sum.get(x.cur) || 0) + x.amount);
+      if (n === 'max' && [...sum].some(([cur, a]) => (rs.money[cur] || 0) < a)) break;
+      for (const [cur, a] of sum) tot.set(cur, a);
+      k++;
+      if (k > 999) break;
+    }
+    if (n === 'max' && !k) { for (const x of ID.cost(b, l, rs)) tot.set(x.cur, x.amount); }
+    return { count: n === 'max' ? Math.max(1, k) : k, cost: [...tot].map(([cur, amount]) => ({ cur, amount })), ok: k > 0 && [...tot].every(([cur, a]) => (rs.money[cur] || 0) >= a) };
+  };
+  ID.buildN = (rs, b, n) => { let k = 0; const want = n === 'max' ? 999 : n; while (k < want && ID.build(rs, b)) k++; return k; };
+  // Großes Klick-Objekt (Layout „Klicker“)
+  ID.clickMain = (rs) => {
+    const v = ID.view(), k = v.clicker;
+    const cur = k.cur || ((ID.cfg().buildings.find((b) => (b.prods || []).some((x) => x.cur)) || {}).prods || [{}]).find((x) => x.cur)?.cur;
+    if (!cur) return null;
+    let n = Number(k.amount) || 1;
+    if (VN.bonus) n = VN.bonus('idle.click', n, rs, '');
+    n = Math.max(1, Math.round(n));
+    VN.addMoney(rs, cur, n, true);
+    ID.state(rs).clicks++;
+    return { cur, amount: n };
   };
   // Meilensteine: erstes noch offenes Ziel; erreichte werden abgehakt und lösen ihre Aktionen aus
   ID.nextMilestone = (rs) => ID.cfg().milestones.find((m) => !ID.state(rs).done[m.id]) || null;
@@ -377,6 +447,11 @@
     if (!ID.on()) return out;
     const c = ID.cfg();
     out.push({ id: 'idle:title', area: 'Aufbau', where: 'Titel', who: 'Aufbau', text: c.title || '', set: (v) => { c.title = v; } });
+    if (c.view) {
+      const v = c.view;
+      if (v.clicker && v.clicker.label) out.push({ id: 'idle:clicker', area: 'Aufbau', where: 'Klicker', who: 'Text', text: v.clicker.label, set: (x) => { v.clicker.label = x; } });
+      if (v.adv) { if (v.adv.name) out.push({ id: 'idle:advname', area: 'Aufbau', where: 'Berater', who: 'Name', text: v.adv.name, set: (x) => { v.adv.name = x; } }); for (const l of v.adv.lines || []) if (l.text) out.push({ id: l.id, area: 'Aufbau', where: 'Berater', who: v.adv.name || 'Berater', text: l.text, set: (x) => { l.text = x; } }); }
+    }
     for (const x of [...c.buildings, ...c.milestones]) {
       out.push({ id: x.id + ':name', area: 'Aufbau', where: x.name, who: c.buildings.includes(x) ? 'Gebäude' : 'Ziel', text: x.name || '', set: (v) => { x.name = v; } });
       if (x.desc) out.push({ id: x.id + ':desc', area: 'Aufbau', where: x.name, who: 'Beschreibung', text: x.desc, set: (v) => { x.desc = v; } });

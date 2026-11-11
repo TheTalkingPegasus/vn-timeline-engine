@@ -2,7 +2,17 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
-## 0.9.27 – Mouth tool removed
+## 0.9.27 – Idle layouts, full screen, advisor; mouth tool removed
+- **Idle (Aufbau) layouts** to choose from: *Cards* (as before), *List* (one row per building with a work bar and buy ×1 / ×10 / Max –
+  like AdVenture Capitalist), *Clicker* (a big object to click, shop on the side – like Cookie Clicker) and *Map / village*
+  (buildings placed freely on a background image, click to upgrade; placement by dragging in the editor).
+- **Full screen** option instead of a window.
+- **Price & profit curves** to choose from: exponential (× per level), power/quadratic, softly braked, linear; profits even, snowballing
+  or flattening; plus **jumps** (profit × at level 25, 50, 100 …). Presets after known idle games – Classic, AdVenture Capitalist
+  (×1.07–1.15, ×2 at 25/50/100/200/300/400), Cookie Clicker (×1.15), Gentle, Softly braked, Story (linear), Snowball –
+  each building can override the curve. A chart shows price, profit and payback time per level.
+- **Advisor:** a character in a small window with a speech bubble – lines for first opening, opening, after building, not enough money,
+  goal reached and in between; with conditions and “only once”. Shrinks to a small portrait when silent; click it for another tip.
 - The **mouth & lip line** for cutscene figures (0.9.26) has been removed again. Projects that used it still open and play;
   the figure is simply drawn normally and the object is no longer cut off.
 

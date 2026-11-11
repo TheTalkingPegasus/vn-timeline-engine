@@ -1137,6 +1137,36 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
       if (!DV.PRESETS || DV.PRESETS.PHONE.length < 6 || !DV.WEB_TPL || DV.WEB_TPL.length < 6) out.push('Vorlagen fehlen');
       for (const t of DV.WEB_TPL || []) { const pg = t.make(); if (!pg.els.length || pg.els.some((e) => !e.id || e.x == null)) out.push('Vorlage ' + t.id); }
       if (!(VN.api && VN.api.library && VN.api.library.list)) out.push('Bibliothek fehlt');
+      // Aufbau-Ansicht (0.9.27): mehrfach kaufen, Klick-Objekt
+      const keepIdle = JSON.stringify(p.idle);
+      p.idle = undefined; VN.Idle.example(); VN.Idle.cfg().enabled = true;
+      const rsI = VN.newRunState(); VN.Idle.start(rsI);
+      const bI = VN.Idle.cfg().buildings[0], curI = (bI.costs[0] || {}).cur;
+      rsI.money[curI] = 1e9;
+      const q10 = VN.Idle.costN(rsI, bI, 10);
+      if (q10.count !== Math.min(10, VN.Idle.max(bI) - VN.Idle.level(rsI, bI)) || !q10.ok) out.push('Aufbau ×10 ' + JSON.stringify(q10));
+      const lv0 = VN.Idle.level(rsI, bI);
+      let sum10 = 0; for (let k = 0; k < q10.count; k++) sum10 += (VN.Idle.cost(bI, lv0 + k, rsI).find((x) => x.cur === curI) || { amount: 0 }).amount;
+      if (Math.abs(sum10 - q10.cost.find((x) => x.cur === curI).amount) > 0.5) out.push('Aufbau ×10 Kosten');
+      const k10 = VN.Idle.buildN(rsI, bI, 10);
+      if (VN.Idle.level(rsI, bI) !== lv0 + k10 || k10 < 1) out.push('Aufbau ×10 bauen');
+      rsI.money[curI] = 0;
+      if (VN.Idle.costN(rsI, bI, 'max').ok) out.push('Aufbau Max ohne Geld');
+      VN.Idle.view().clicker.cur = curI; VN.Idle.view().clicker.amount = 3;
+      const gI = VN.Idle.clickMain(rsI);
+      if (!gI || rsI.money[curI] !== 3) out.push('Klick-Objekt');
+      // Kurven: Cookie Clicker 1,15^n, AdCap-Sprünge, Potenz, linear
+      const bC = VN.Idle.cfg().buildings[0];
+      VN.Idle.applyCurvePreset(VN.Idle.CURVE_PRESETS.find((x) => x.id === 'cookie'), true);
+      if (Math.abs(VN.Idle.costFactor(bC, 10) - Math.pow(1.15, 10)) > 1e-9) out.push('Kurve Cookie');
+      VN.Idle.applyCurvePreset(VN.Idle.CURVE_PRESETS.find((x) => x.id === 'adcap'), true);
+      if (VN.Idle.prodFactor(bC, 24) !== 24 || VN.Idle.prodFactor(bC, 25) !== 50 || VN.Idle.prodFactor(bC, 50) !== 200) out.push('Kurve AdCap ' + VN.Idle.prodFactor(bC, 25));
+      VN.Idle.applyCurvePreset(VN.Idle.CURVE_PRESETS.find((x) => x.id === 'gentle'), false);
+      if (VN.Idle.costFactor(bC, 3) !== 16) out.push('Kurve Potenz');
+      VN.Idle.curve().cost = 'linear'; VN.Idle.curve().lin = 50;
+      if (VN.Idle.costFactor(bC, 4) !== 3) out.push('Kurve linear');
+      bC.costCurve = 'exp'; if (Math.abs(VN.Idle.costFactor(bC, 2) - Math.pow(bC.grow, 2)) > 1e-9) out.push('Kurve pro Gebäude');
+      p.idle = JSON.parse(keepIdle); VN.migrate(p);
       const t = JSON.parse(keep); p.devices = t.d; p.chats = t.c; p.social = t.s; p.currencies = t.cur; p.time = t.t; p.liveChats = t.lc; p.stamina = t.st; VN.migrate(p);
       return JSON.stringify(out);
     })()`));
