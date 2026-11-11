@@ -5351,7 +5351,10 @@ window.VN_I18N_JA = {
 "Pendeln (dreht sich um den Ankerpunkt)": "振り子（アンカーポイントを中心に回転）",
 "Anker-Stärke = Biegung: 0 schwingt starr wie ein Schwert, 1 biegt sich zur Spitze wie ein Schwanz.": "固定の強さ＝しなり：0は剣のように硬く揺れ、1はしっぽのように先端へ向かってしなる。",
 "Zoom zurücksetzen (100 %)": "ズームをリセット（100%）",
-"Auch: Strg + Mausrad über der Timeline": "タイムライン上で Ctrl＋マウスホイールでも可"
+"Auch: Strg + Mausrad über der Timeline": "タイムライン上で Ctrl＋マウスホイールでも可",
+"Zucken (angespannt)": "ぴくつき（緊張）",
+"Puls (Herzschlag)": "脈動（鼓動）",
+"Puls: Schläge/Min": "脈動：拍/分"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

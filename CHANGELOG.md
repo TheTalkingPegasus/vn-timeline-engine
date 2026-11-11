@@ -2,12 +2,16 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
-## 0.9.29 – Mouse-wheel zoom everywhere
+## 0.9.29 – Mouse-wheel zoom everywhere; twitch & heartbeat for soft physics
 - **Zoom with the mouse wheel** in every preview: scene, hub, cutscene animation, design, main menu, bones and soft physics.
   Zooms towards the mouse position (50 %–800 %); **pan** with the middle mouse button or Space + drag; the badge in the corner
   shows the zoom level – click it to return to 100 %. The zoom is kept per area while you work. Dragging figures, objects and
   points stays exact while zoomed.
 - **Timeline:** Ctrl + mouse wheel zooms the scene timeline at the mouse position (plain wheel still scrolls).
+- **Soft physics – tense twitching:** a slider makes an area twitch in short, irregular jolts (sometimes twice in a row) with a fine
+  tremor – stronger = more often and harder.
+- **Soft physics – pulse:** the area swells briefly to a heartbeat (“lub-dub”); strength and beats per minute adjustable.
+  Both work with every preset and can be combined with breathing, swaying or wave.
 
 ## 0.9.28 – Soft physics (jiggle presets for masked areas)
 - **Figures → Soft physics:** mask a part of a character image and pick a preset – *Chest, Butt,

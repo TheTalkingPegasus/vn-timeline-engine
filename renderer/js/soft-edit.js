@@ -13,7 +13,10 @@
     ['over', 'Über den Rand', 0, 0.8, 0.01],
     ['anchorAmt', 'Anker-Stärke', 0, 1, 0.05],
     ['idleAmp', 'Ruhe: Stärke', 0, 2, 0.05],
-    ['idleSpeed', 'Ruhe: Tempo', 0.2, 4, 0.05]
+    ['idleSpeed', 'Ruhe: Tempo', 0.2, 4, 0.05],
+    ['twitch', 'Zucken (angespannt)', 0, 2, 0.05],
+    ['pulse', 'Puls (Herzschlag)', 0, 2, 0.05],
+    ['bpm', 'Puls: Schläge/Min', 30, 180, 1]
   ];
 
   const TOOLS = [['select', '↖ Wählen'], ['ellipse', '◯ Ellipse'], ['lasso', '➰ Lasso'], ['pen', '✒ Stift']];

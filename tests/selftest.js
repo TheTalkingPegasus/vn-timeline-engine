@@ -1214,11 +1214,19 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
       const dPin = S.disp(rt, Pt, mt, 0, -0.9, 1, 1, { r: rt, u: 0.5, v: 0.12, aspect: 1 }), dTip = S.disp(rt, Pt, mt, 0, 0.9, 1, 1, { r: rt, u: 0.5, v: 0.86, aspect: 1 });
       if (!(Math.hypot(dPin[0], dPin[1]) < Math.hypot(dTip[0], dTip[1]) * 0.1) || !(Math.abs(dTip[0]) > 0.01)) out.push('Pendeln ' + JSON.stringify([dPin, dTip]));
       const Pa = Object.assign({}, Pt, { pendulum: false });
+      // Zucken und Puls (0.9.29)
+      const rz = Object.assign(S.newRegion('chest', 0.5, 0.5, 0.1, 0.05), { twitch: 1.5, pulse: 1, idleAmp: 0 }), simz = S.newSim();
+      let tz = 0; for (let i = 0; i < 300; i++) { S.step(simz, [rz], { x: 0, y: 0 }, 1 / 60); tz = Math.max(tz, Math.hypot(simz.regs[rz.id].x, simz.regs[rz.id].y)); }
+      if (!(tz > 0.002)) out.push('Zucken ' + tz);
+      if (!(S.heart(0.05, 60) > 0.8) || !(S.heart(0.5, 60) < 0.05) || !(S.heart(0.24, 60) > 0.4)) out.push('Herzschlag-Kurve');
+      let swm = 0; for (let i = 0; i < 120; i++) swm = Math.max(swm, S.regionMove(rz, S.par(rz), null, i / 100).sw);
+      if (!(swm > 0.03)) out.push('Puls ' + swm);
+      if (S.regionMove(Object.assign({}, rz, { pulse: 0 }), S.par(Object.assign({}, rz, { pulse: 0 })), null, 0.05).sw !== 0) out.push('Puls aus');
       if (!(S.anchorW(Pa, 0, 0, { r: rt, u: 0.5, v: 0.15, aspect: 1 }) < S.anchorW(Pa, 0, 0, { r: rt, u: 0.5, v: 0.85, aspect: 1 }))) out.push('Pin-Anker');
       return JSON.stringify(out);
     })()`));
     if (r.length) general.push('Weich-Physik: ' + r.join(', '));
-    else log('✓ Weich-Physik: Masken-Gewicht, Anker, Feder, Trägheit, Bühne, Aktion, freie Formen, Ankerpunkt, Pendeln');
+    else log('✓ Weich-Physik: Masken-Gewicht, Anker, Feder, Trägheit, Bühne, Aktion, freie Formen, Ankerpunkt, Pendeln, Zucken, Puls');
   } catch (e) { general.push('Weich-Physik: ' + e.message); }
 
   // 25. Mausrad-Zoom (0.9.29): Punkt unter der Maus bleibt stehen, Zoom überlebt Neuaufbau, Zurücksetzen
@@ -1226,22 +1234,29 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     const r = JSON.parse(await js(`(() => {
       const out = [];
       if (!window.Zoom) return JSON.stringify(['Zoom fehlt']);
-      const keepView = VN.ui.view; VN.ui.view = 'design'; VN.render();
-      const f = Zoom.all()[0];
-      if (!f) { VN.ui.view = keepView; VN.render(); return JSON.stringify(['keine Bühne']); }
-      const r0 = f.c.getBoundingClientRect(), mx = r0.left + r0.width * 0.3, my = r0.top + r0.height * 0.6;
-      Zoom.zoomAt(f.c, mx, my, 2);
-      const r1 = f.c.getBoundingClientRect();
+      // eigene Test-Bühne im Mittelbereich (unabhängig davon, welche Ansicht gerade offen ist)
+      const center = document.getElementById('center');
+      const vp = document.createElement('div'); vp.className = 'stage-wrap'; Object.assign(vp.style, { position: 'fixed', left: '100px', top: '100px', width: '600px', height: '400px' });
+      const st = document.createElement('div'); st.className = 'stage'; Object.assign(st.style, { width: '480px', height: '270px' });
+      vp.appendChild(st); center.appendChild(vp);
+      const f = Zoom.find(st);
+      if (!f) { vp.remove(); return JSON.stringify(['keine Bühne']); }
+      const keep = JSON.stringify(Zoom.state());
+      Zoom.reset();
+      const r0 = st.getBoundingClientRect(), mx = r0.left + r0.width * 0.3, my = r0.top + r0.height * 0.6;
+      Zoom.zoomAt(st, mx, my, 2);
+      const r1 = st.getBoundingClientRect();
       if (Math.abs(r1.width / r0.width - 2) > 0.01) out.push('Faktor ' + r1.width / r0.width);
       if (Math.abs((mx - r1.left) / r1.width - 0.3) > 0.005 || Math.abs((my - r1.top) / r1.height - 0.6) > 0.005) out.push('Punkt wandert');
-      VN.render();
-      const f2 = Zoom.all()[0]; if (!f2 || Math.abs(f2.c.getBoundingClientRect().width / r0.width - 2) > 0.01) out.push('nach Neuaufbau weg');
-      Zoom.reset(); if (Math.abs(Zoom.all()[0].c.getBoundingClientRect().width - r0.width) > 0.5) out.push('Zurücksetzen');
-      VN.ui.view = keepView; VN.render();
+      if (!vp.querySelector('.vz-badge')) out.push('Anzeige fehlt');
+      st.style.scale = ''; st.style.translate = ''; Zoom.apply();
+      if (Math.abs(st.getBoundingClientRect().width / r0.width - 2) > 0.01) out.push('erneut anwenden');
+      Zoom.reset(); if (Math.abs(st.getBoundingClientRect().width - r0.width) > 0.5) out.push('Zurücksetzen');
+      vp.remove(); Object.assign(Zoom.state(), JSON.parse(keep));
       return JSON.stringify(out);
     })()`));
     if (r.length) general.push('Mausrad-Zoom: ' + r.join(', '));
-    else log('✓ Mausrad-Zoom: zur Maus, bleibt nach Neuaufbau, Zurücksetzen');
+    else log('✓ Mausrad-Zoom: zur Maus, Anzeige, erneut anwenden, Zurücksetzen');
   } catch (e) { general.push('Mausrad-Zoom: ' + e.message); }
 
   // 20. Social Media: Beiträge per Bedingung und Aktion, löschen, Likes mit Aktion nur einmal
