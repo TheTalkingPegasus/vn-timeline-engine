@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.28
+VN Timeline Engine · Prototyp 0.9.29
 ====================================
 (English: see README.txt)
 
