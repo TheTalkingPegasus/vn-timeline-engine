@@ -530,14 +530,14 @@
       return;
     }
     dlgBox.hidden = false;
-    const box = Stage.dialogEl(clip, '', speaker, { tailX: Stage.speakerX(chars, clip.speaker), portrait: Stage.portraitOf(chars, clip.speaker) });
+    const box = Stage.dialogEl(clip, '', speaker, { tailX: Stage.speakerX(chars, clip.speaker), portrait: Stage.portraitOf(chars, clip.speaker), full: tokens.map((t) => t.ch).join('') });
     const textEl = box.querySelector('.dlg-text');
     textEl.textContent = '';
     const next = el('div', { class: 'dlg-next', hidden: true }, '▼');
     if (window.Theme) Theme.styleArrow(next, Theme.bubble(clip.speaker, clip));
-    box.appendChild(next);
+    (box._nextHost || box).appendChild(next);
     dlgBox.appendChild(box);
-    const fancy = Fx.hasFx(tokens);
+    const fancy = Fx.hasFx(tokens) || !!textEl.dataset.letters;
     let speed = (clip.speed != null ? clip.speed : 40) * (VN.settings.text / 100);
     // Tempo an die Sprachaufnahme anpassen
     if (clip.syncVoice && s && s.type === 'story') {

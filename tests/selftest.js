@@ -1358,6 +1358,39 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Weich-Physik mit Bones: Bereiche wippen auf Figuren mit Knochen, Beschleunigung je Bereich, Zwischenspeicher erkennt Änderungen');
   } catch (e) { general.push('Weich-Physik mit Bones: ' + e.message); }
 
+  // 29. Freie Sprechblase und Text-Effekte (0.9.35)
+  try {
+    const r = JSON.parse(await js(`(async () => {
+      const out = [];
+      // Matrix legt die Ecken eines Rechtecks genau auf das Viereck
+      const P = [[10, 20], [300, 5], [280, 140], [30, 180]], w = 200, h = 100;
+      const m = Theme.quadMatrix(w, h, P).match(/[-\\d.e]+/g).map(Number).slice(1);
+      const ap = (x, y) => { const X = m[0] * x + m[4] * y + m[12], Y = m[1] * x + m[5] * y + m[13], W = m[3] * x + m[7] * y + m[15]; return [X / W, Y / W]; };
+      [[0, 0], [w, 0], [w, h], [0, h]].forEach((c, i) => { const q = ap(c[0], c[1]); if (Math.hypot(q[0] - P[i][0], q[1] - P[i][1]) > 0.01) out.push('Ecke ' + i + ' ' + q.map((v) => v.toFixed(2))); });
+      // Blase aufbauen
+      const t = Theme.t(), keep = JSON.stringify(t.bubble);
+      t.bubble = { preset: 'dunkel', free: true, freeImg: 'builtin:tilt', dots: true, edge: true, letters: 'wave', cap: true };
+      const stage = document.createElement('div'); stage.className = 'stage'; stage.style.width = '640px'; stage.style.height = '360px'; document.body.appendChild(stage);
+      const box = Stage.dialogEl({ id: 'x', speaker: 'Ray', color: '#fff', text: 'Hallo du da' }, null, null, { tailX: 40, full: 'Hallo du da' });
+      stage.appendChild(box);
+      await new Promise((res) => setTimeout(res, 300));
+      if (!box.classList.contains('free')) out.push('keine freie Blase');
+      if (!box.querySelector('.free-img') || !box.querySelector('.free-tq .dlg-text') || !box.querySelector('.free-nq .dlg-name')) out.push('Aufbau fehlt');
+      if (!/matrix3d/.test(box.querySelector('.free-tq').style.transform)) out.push('Textfläche nicht verzerrt');
+      const te = box.querySelector('.dlg-text');
+      if (te.querySelectorAll('.tch').length !== 11) out.push('Buchstaben nicht einzeln ' + te.querySelectorAll('.tch').length);
+      const fid = (te.style.filter.match(/#([^")]+)/) || [])[1];
+      const f = fid && document.getElementById(fid);
+      if (!f || !f.querySelector('feTile') || f.querySelectorAll('feMorphology').length < 1) out.push('Filter fehlt');
+      if (!te.classList.contains('tcap')) out.push('Initiale fehlt');
+      stage.remove();
+      t.bubble = JSON.parse(keep);
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Freie Sprechblase: ' + r.join(', '));
+    else log('✓ Freie Sprechblase: Text perspektivisch in 4 Ecken, Namensfeld, Comic-Punkte, einseitige Kontur, Buchstaben-Animation, Initiale');
+  } catch (e) { general.push('Freie Sprechblase: ' + e.message); }
+
   // 27. Kulissen-Raum (0.9.32): 3D-Flächen, Kamera, Licht durch Fenster mit Jalousie, Bühne und Spieler
   try {
     const r = JSON.parse(await js(`(async () => {
