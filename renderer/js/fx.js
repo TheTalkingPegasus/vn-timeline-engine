@@ -87,6 +87,8 @@
     applyCam(world, cam, dur, ease) {
       world._vnCam = cam;
       for (const n of world.querySelectorAll('[data-depth]')) {
+        // Kulissen-Raum (0.9.32): echte 3D-Kamera statt flacher Verschiebung
+        if (n._kul) { n.style.transition = 'none'; n.style.transform = ''; n._kul.setCam(cam, dur, ease); continue; }
         n.style.transition = dur ? `transform ${dur}s ${Fx.ease(ease)}` : 'none';
         n.style.transform = Fx.camTransform(cam, Number(n.dataset.depth), n.classList.contains('bg-box') || n.classList.contains('par-layer'));
       }

@@ -11,7 +11,7 @@
       const a = VN.asset(assetId);
       const o = {
         id: VN.uid('o'), name: a ? a.name : 'Objekt', asset: assetId || null,
-        x: Math.max(0, Math.min(100 - w, (x != null ? x : 50) - w / 2)), y: Math.max(0, Math.min(100 - h, (y != null ? y : 50) - h / 2)),
+        x: s.bgLook && s.bgLook.kulisse ? (x != null ? x : 50) - w / 2 : Math.max(0, Math.min(100 - w, (x != null ? x : 50) - w / 2)), y: Math.max(0, Math.min(100 - h, (y != null ? y : 50) - h / 2)),
         w, h, rot: 0, shape: 'rect', hover: 'glow', target: null, message: '', sfx: null, conds: [], actions: [], styles: {}
       };
       VN.mutate(() => { s.objects.push(o); VN.ui.sel = o.id; });
@@ -50,7 +50,24 @@
         'Bilder aus der Dateiliste auf die Bühne ziehen legt Objekte an. Ziehen = verschieben · weiße Ecke = skalieren (Umschalt: frei) · Kreis oben = drehen (Umschalt: 15°-Schritte)'));
       Hub._ro = Stage.fit(wrap, stage);
 
-      if (s.bg && VN.assetUrl(s.bg)) {
+      // Kulissen-Raum (0.9.32): 3D-Kulisse als Hintergrund, mit Regler für die Kamera-Position
+      const kul = s.bgLook && s.bgLook.kulisse && window.Kulisse ? Kulisse.get(s.bgLook.kulisse) : null;
+      let layer = stage, off = 0;
+      if (kul) {
+        VN.ui.hubKul = VN.ui.hubKul || {};
+        const lo = (Number(kul.cam.min) || 0) - kul.cam.x, hi = Math.max(lo, (Number(kul.cam.max) || 0) - kul.cam.x);
+        off = Math.max(lo, Math.min(hi, VN.ui.hubKul[s.id] || 0));
+        const kc = Kulisse.mount(kul, { day: Kulisse.dayKey(kul, s.bgLook) });
+        kc.extra.x = off; kc.setCam(null);
+        stage.append(kc.back, kc.front);
+        layer = el('div', { class: 'hub-kul-layer', style: { translate: (-off / Kulisse.W * 100) + '% 0' } });
+        stage.appendChild(layer);
+        if (hi > lo) {
+          const lab = el('span', { class: 'muted small' }, 'Ansicht');
+          const r = el('input', { type: 'range', min: lo, max: hi, step: 5, value: off, style: { width: '160px' }, oninput: (e) => { off = Number(e.target.value); VN.ui.hubKul[s.id] = off; kc.extra.x = off; kc.setCam(null); layer.style.translate = (-off / Kulisse.W * 100) + '% 0'; } });
+          root.querySelector('.view-head').insertBefore(el('span', { class: 'row gap8' }, lab, r), root.querySelector('.view-head .spacer'));
+        }
+      } else if (s.bg && VN.assetUrl(s.bg)) {
         const img = el('img', { class: 'bg-img', src: VN.assetUrl(s.bg), draggable: 'false' });
         VN.applyBgLook(img, s.bgLook);
         stage.appendChild(img);
@@ -60,7 +77,7 @@
 
       // Partikel des Hubs als Vorschau (0.9.5)
       if ((s.fx || []).some((c) => c.particles)) { const clip = el('div', { style: { position: 'absolute', inset: '0', overflow: 'hidden', pointerEvents: 'none', zIndex: '3' } }); for (const c of s.fx) if (c.particles) clip.appendChild(Stage.fxEl(c)); stage.appendChild(clip); }
-      for (const o of s.objects) stage.appendChild(Hub.objEl(s, o, stage));
+      for (const o of s.objects) layer.appendChild(Hub.objEl(s, o, stage));
       // Lichter (0.9.9): beleuchten Hintergrund und Objekte, Lampe mit der Maus verschieben
       const hl = (s.fx || []).filter((c) => c.light);
       if (hl.length && window.Light) requestAnimationFrame(() => {
@@ -71,7 +88,7 @@
       });
 
       stage.addEventListener('mousedown', (e) => {
-        if (e.target === stage || e.target.classList.contains('bg-img') || e.target.classList.contains('placeholder')) {
+        if (e.target === stage || e.target === layer || e.target.closest('.kul-vp') || e.target.classList.contains('bg-img') || e.target.classList.contains('placeholder')) {
           if (VN.ui.sel) { VN.ui.sel = null; VN.render(); }
         }
       });
@@ -93,7 +110,7 @@
         e.stopPropagation();
         document.getElementById('drag-overlay').hidden = true;
         const r = stage.getBoundingClientRect();
-        const x = (e.clientX - r.left) / r.width * 100, y = (e.clientY - r.top) / r.height * 100;
+        const x = (e.clientX - r.left) / r.width * 100 + off / (window.Kulisse ? Kulisse.W : 1280) * 100, y = (e.clientY - r.top) / r.height * 100;
         let id = e.dataTransfer.getData('vn/asset-image');
         if (!id) {
           const added = await VN.importPaths(VN.filePaths(e.dataTransfer));

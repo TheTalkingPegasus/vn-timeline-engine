@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.31
+VN Timeline Engine · Prototyp 0.9.32
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,29 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.32 · Kulissen-Raum (Räume aus PNG-Flächen, mit Licht)
+- Neuer Reiter „Kulissen“: einen echten Raum aus PNG-Flächen bauen – Rückwände, Böden, Decken, Zwischenwände, Balken, Möbel,
+  Hintergründe und Partikel-Flächen. Jede Fläche hat Position X/Y/Z und eine Drehung; die Kamera schaut mit Perspektive hinein,
+  Parallax entsteht von selbst. Links die Szene durch die Kamera, rechts derselbe Raum schräg von oben (wie die 3D-Ansicht in
+  After Effects) mit Kamerakegel, Scroll-Bereich und Zonen; Flächen und Lampen mit X/Y/Z-Pfeilen verschieben.
+- Bauen: „Ganzer Raum“, Rückwand, Boden (um 90° gekippt), Decke, Zwischenwand (um 90° gedreht), Balken mit „An Wandkante einrasten“ –
+  er wandert beim Scrollen exakt mit der Wandkante und verdeckt die dünne Linie. Was vor der Figuren-Ebene liegt, wird automatisch
+  vor den Figuren gezeichnet.
+- Licht: Lampen, Scheinwerfer (Richtung, Kegel, weiche Kante, sichtbarer Lichtkegel in der Luft) und Neonröhren, jeweils mit Farbe,
+  Stärke, Reichweite und Schatten; Fensterlicht (Sonne/Mond), das durch die durchsichtigen Stellen eines
+  Wand-PNGs scheint – Wände, Böden und Decken sind Hindernisse, Möbel und Figuren nicht. Eine Jalousie an der Wand macht Streifen
+  daraus, dazu wahlweise Lichtstrahlen in der Luft. Lampen schalten sich nach Tageszeit ein und aus; Farbe und Richtung der Sonne
+  folgen der Tageszeit (oder von Hand). Das Licht wird pro Tageszeit einmal eingebacken – im Spiel kostet es nichts.
+- Figuren in der Tiefe: „Tiefe im Kulissen-Raum“ am Figuren-Clip stellt eine Figur weiter nach hinten (kleiner, langsameres Parallax)
+  oder nach vorne (größer, vor Balken und Pflanzen). Idle-Animationen, Blinzeln und Lippensync laufen weiter.
+- Figuren im Licht: Mit „Figuren an das Licht anpassen“ am Hintergrund-Clip bekommt jede Figur das Licht ihres Platzes im Raum –
+  warm neben der Lampe, pink an der Neonröhre, bläulich im Mondlicht.
+- Tageszeit: unbeleuchtete Flächen werden automatisch eingefärbt; wahlweise eigene Bilder je Tageszeit (z. B. Himmel mit Sternen).
+- Partikel: eine Partikel-Fläche (Regen, Schnee …) in die Tiefe stellen – durch die Fenster sichtbar, mit passendem Parallax.
+- Szenen und Hubs: Kulisse am Hintergrund-Clip oder als Hub-Hintergrund wählen. Kamera-Schwenks fahren mit echter Tiefe durch den Raum.
+  Rand-Scrollen: im Hub (und in Szenen mit Haken) scrollt die Kamera, wenn die Maus an den Bildrand geht – im Scroll-Bereich der
+  Kulisse; Hub-Objekte wandern mit. Zonen wechseln die Musik und spielen eine Atmo in Schleife, sobald die Kamera hineinfährt.
 
 NEU IN 0.9.31 · Gesicht-Rig (Ausdrücke auf einem einzigen Bild)
 - Figuren → Gesicht: Gesichtsausdrücke direkt auf einem flachen Figuren-Bild – ohne Bildtausch. Die Engine verbiegt das Bild über ein

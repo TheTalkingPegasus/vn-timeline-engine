@@ -326,6 +326,7 @@
     else if (VN.ui.view === 'menu') Menu.render(center);
     else if (VN.ui.view === 'design') Design.render(center);
     else if (VN.ui.view === 'anim') AnimEd.render(center);
+    else if (VN.ui.view === 'sets' && window.KulEd) KulEd.render(center);
     else if (s && s.type === 'hub') Hub.render(center);
     else if (s) Story.render(center);
     else center.innerHTML = '';

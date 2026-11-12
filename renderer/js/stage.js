@@ -260,7 +260,10 @@
       const world = el('div', { class: 'world' });
       const bgBox = Stage.bgBox(st.bg);
       world.appendChild(bgBox);
-      if (st.bg) {
+      const kul = st.bg && st.bg.kulisse && window.Kulisse ? Kulisse.get(st.bg.kulisse) : null;
+      const kulFront = kul ? el('div', { class: 'kul-fhost' }) : null;
+      if (kul) Kulisse.attach(bgBox, kulFront, kul, st.bg);
+      else if (st.bg) {
         const url = VN.assetUrl(st.bg.asset);
         if (url && Fx.tileOn(st.bg.tile)) {
           const tw = Fx.tileEl(url, st.bg.tile);
@@ -280,13 +283,15 @@
       }
       const vidOk = (v) => v && (v.anim ? !!(window.Anim && Anim.get(v.anim)) : !!VN.assetUrl(v.asset));
       if (st.video && st.video.layer !== 'front' && vidOk(st.video)) { const v = Stage.videoEl(st.video, false); v.dataset.clip = st.video.id; bgBox.appendChild(v); }
-      for (const n of Stage.parallaxEls(st.bg, false)) world.appendChild(n);
+      if (!kul) for (const n of Stage.parallaxEls(st.bg, false)) world.appendChild(n);
       const charsBox = el('div', { class: 'chars-box' });
       charsBox.dataset.depth = 1;
       world.appendChild(charsBox);
       const charNodes = [];
       for (const [, c] of st.chars) { const n = Stage.charEl(c, null, { beat }); n.dataset.clip = c.id; charsBox.appendChild(n); charNodes.push([n, c]); }
-      for (const n of Stage.parallaxEls(st.bg, true)) world.appendChild(n);
+      let charsFront = null;
+      if (kulFront) { world.appendChild(kulFront); charsFront = el('div', { class: 'chars-box' }); charsFront.dataset.depth = 1; world.appendChild(charsFront); }
+      else for (const n of Stage.parallaxEls(st.bg, true)) world.appendChild(n);
       const fxBox = el('div', { class: 'fx-box' });
       fxBox.dataset.depth = 1;
       world.appendChild(fxBox);
@@ -302,13 +307,18 @@
       // Augen auf/zu immer ganz vorne über allen Effekten (0.7.7)
       stage.querySelectorAll(':scope > .fx-eyes').forEach((n) => { n.style.zIndex = '4'; stage.appendChild(n); });
       if (st.cam) Fx.applyCam(world, st.cam, 0);
+      if (kul && bgBox._kul) Kulisse.syncChars(bgBox._kul, charNodes, charsBox, charsFront);
       // Lichtquellen (0.9.9)
       const lights = [st.fx, ...(st.fxX || []).map((x) => x[1])].filter((c) => c && c.light);
       world._lightClips = lights;
       if (lights.length && window.Light) requestAnimationFrame(() => { if (world.isConnected) Light.sync(world, lights, { back: charsBox, front: fxBox, figs: () => Array.from(charsBox.children).map((b) => [b.firstElementChild, false]), fronts: () => Array.from(world.querySelectorAll(':scope > .chars-box ~ .par-layer')) }); });
       if (st.video && st.video.layer === 'front' && vidOk(st.video)) { const v = Stage.videoEl(st.video, false); v.dataset.clip = st.video.id; stage.appendChild(v); }
       // Licht passend zur Szene
-      if (st.bg && st.bg.charLight) {
+      if (st.bg && st.bg.charLight && kul && bgBox._kul) {
+        // Kulissen-Raum: jede Figur bekommt das Licht ihres Platzes im Raum
+        const kc = bgBox._kul;
+        for (const [n, c] of charNodes) Kulisse.charLight(kc, c.x != null ? c.x : 50, c.kz).then((L) => { if (L && n.isConnected) Fx.lightOverlay(n, c, L.color, st.bg.charLight); });
+      } else if (st.bg && st.bg.charLight) {
         const day = Fx.DAY[st.bg.daytime];
         (day ? Promise.resolve(day.light) : Fx.avgColor(st.bg.asset)).then((col) => { for (const [n, c] of charNodes) if (n.isConnected) Fx.lightOverlay(n, c, col, st.bg.charLight); });
       }

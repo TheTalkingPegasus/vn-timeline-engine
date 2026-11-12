@@ -1321,6 +1321,81 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Gesicht-Rig: Mund nur in der Maske, Lid mit Haut-Stempel, eigene Ausdrücke, Bühne und Lippensync');
   } catch (e) { general.push('Gesicht-Rig: ' + e.message); }
 
+  // 27. Kulissen-Raum (0.9.32): 3D-Flächen, Kamera, Licht durch Fenster mit Jalousie, Bühne und Spieler
+  try {
+    const r = JSON.parse(await js(`(async () => {
+      const out = [], K = window.Kulisse;
+      if (!K) return JSON.stringify(['Kulisse fehlt']);
+      const k = K.blank('Test', 'room');
+      if (k.planes.length !== 5) out.push('Raum-Vorlage ' + k.planes.length);
+      const floor = k.planes.find((p) => p.kind === 'floor'), wall = k.planes.find((p) => p.kind === 'wall');
+      if (Math.abs(Math.abs(K.frame(floor).N[1]) - 1) > 1e-6) out.push('Boden liegt nicht waagrecht');
+      if (Math.abs(K.local(floor, 0, floor.h)[2] - 150) > 1e-6) out.push('Boden reicht nicht nach vorn');
+      const beam = K.plane({ kind: 'beam', x: 0, y: 0, z: 164, w: 70, h: 820 });
+      if (!K.isFront(beam) || K.isFront(wall)) out.push('Vordergrund falsch');
+      // Kamera: Schwenk 10 % = 128 px, Zoom 200 % = halber Abstand
+      const c = K.camOf(k, { panX: 10, zoom: 200 });
+      if (Math.abs(c.x - 128) > 1e-6 || Math.abs(c.dz - 500) > 1e-6) out.push('Kamera ' + JSON.stringify(c));
+      const pc = K.projCam(K.camOf(k, null), [0, 0, 0]); if (pc[0] !== 640 || pc[1] !== 360) out.push('Projektion');
+      const far = K.projCam(K.camOf(k, null), [100, 0, -1000]); if (Math.abs(far[0] - 690) > 1e-6) out.push('Parallax ' + far[0]);
+      k.cam.min = 0; k.cam.max = 900; if (K.clampX(k, 2000) !== 900 || K.clampX(k, -5) !== 0) out.push('Scroll-Grenzen');
+      k.zones.push({ id: 'z', name: 'Z', x0: 400, x1: 800 }); if (!K.zoneAt(k, 500) || K.zoneAt(k, 900)) out.push('Zonen');
+      // Licht: Wand mit Fenster in der Mitte, Strahl durchs Fenster kommt durch, daneben nicht, Jalousie macht Streifen
+      const w = K.plane({ kind: 'wall', x: 0, y: 0, z: -300, w: 100, h: 100 }), a = new Uint8Array(100).fill(255);
+      for (let y = 3; y < 7; y++) for (let x = 3; x < 7; x++) a[y * 10 + x] = 0;
+      const occ = [{ p: w, f: K.frame(w), al: { w: 10, h: 10, a }, bl: null }];
+      if (K.trace([0, 0, 0], [0, 0, -1], 1e5, 'x', occ) !== 1) out.push('Fenster lässt kein Licht durch');
+      const d = [40, 0, -300], n = Math.hypot(...d);
+      if (K.trace([0, 0, 0], d.map((v) => v / n), 1e5, 'x', occ) !== 0) out.push('Wand lässt Licht durch');
+      occ[0].bl = { gap: 20, open: 0.5 }; if (!(K.trace([0, 0, 0], [0, 0, -1], 1e5, 'x', occ) < 0.1)) out.push('Jalousie');
+      if (K.trace([0, -5, 0], [0, 0, -1], 1e5, 'x', occ) !== 1) out.push('Jalousie-Spalt');
+      // Scheinwerfer leuchtet nur im Kegel, Neonröhre entlang der ganzen Röhre
+      const sp = K.prepLamp(K.lamp({ type: 'spot', x: 0, y: -300, z: 0, yaw: 0, pitch: 90, spread: 20, range: 1000 }));
+      if (!(K.lampAt(sp, [0, 0, 0], [0, -1, 0], true, null, null) > 0)) out.push('Scheinwerfer dunkel im Kegel');
+      if (K.lampAt(sp, [300, 0, 0], [0, -1, 0], true, null, null) !== 0) out.push('Scheinwerfer leuchtet außerhalb');
+      const ne = K.prepLamp(K.lamp({ type: 'neon', x: 0, y: 0, z: 0, len: 400, angle: 0, range: 300 }));
+      if (!(K.lampAt(ne, [190, 100, 0], null, false, null, null) > 0) || K.lampAt(ne, [-500, 0, 0], null, false, null, null) !== 0) out.push('Neonröhre');
+      // Figuren in der Tiefe: hinten kleiner, vorne größer, auf der Figuren-Ebene unverändert
+      { const kc = { k, cam: K.camOf(k, null), base: null, extra: { x: 0 } };
+        if (Math.abs(K.charOffset(kc, 50, 0).s - 1) > 1e-9 || !(K.charOffset(kc, 50, -500).s < 1) || !(K.charOffset(kc, 50, 300).s > 1)) out.push('Figuren-Tiefe');
+        if (!(K.charOffset(kc, 20, -500).tx > 0)) out.push('Figur hinten rückt nicht zur Mitte'); }
+      // Einbacken: alle Flächen, Lampe nur nachts an
+      k.lamps.push(K.lamp({ x: 0, y: -100, z: -100, days: { night: true } }));
+      const night = await K.bake(k, 'night'), day = await K.bake(k, 'day');
+      if (night.planes.size !== 5) out.push('Einbacken ' + night.planes.size);
+      if (night.glows.length !== 1 || day.glows.length !== 0) out.push('Lampe nach Tageszeit');
+      // Bühne: Hintergrund-Clip mit Kulisse, Vordergrund-Ebene über den Figuren, Kamera fährt durch den Raum
+      K.all().push(k);
+      const sc = VN.project.scenes.find((x) => x.type === 'story' && x.tracks.bg.length);
+      if (sc) {
+        const bg = sc.tracks.bg[0], keep = bg.kulisse; bg.kulisse = k.id;
+        const st = document.createElement('div'); st.className = 'stage'; document.body.appendChild(st);
+        Stage.renderStory(st, sc, bg.start);
+        const box = st.querySelector('.bg-box');
+        if (!box || !box._kul) out.push('Bühne ohne Kulisse');
+        else { Fx.applyCam(st.querySelector('.world'), { zoom: 100, panX: 25, panY: 0, rot: 0 }, 0); if (Math.abs(box._kul.cam.x - 320) > 1e-6) out.push('Kamera-Clip ' + box._kul.cam.x); }
+        if (!st.querySelector('.kul-fhost')) out.push('Vordergrund-Ebene fehlt');
+        st.remove(); if (keep) bg.kulisse = keep; else delete bg.kulisse;
+      }
+      // Spieler: Hub mit Kulisse
+      const hub = VN.project.scenes.find((x) => x.type === 'hub');
+      if (hub) {
+        const keepL = hub.bgLook; hub.bgLook = Object.assign({}, keepL || {}, { kulisse: k.id });
+        Player.start(hub.id);
+        await new Promise((res) => setTimeout(res, 900));
+        const kb = document.querySelector('.pl-stage .kul-back');
+        if (!kb) out.push('Spieler ohne Kulisse');
+        Player.close();
+        hub.bgLook = keepL;
+      }
+      K.all().splice(K.all().indexOf(k), 1);
+      if (!Export.usedAssets(Object.assign({}, VN.project, { kulissen: [{ planes: [{ asset: 'xyz' }] }], assets: [{ id: 'xyz' }] })).has('xyz')) out.push('Export kennt Kulissen-Bilder nicht');
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Kulissen-Raum: ' + r.join(', '));
+    else log('✓ Kulissen-Raum: Flächen im Raum, Kamera mit Parallax, Licht durchs Fenster mit Jalousie, Lampen nach Tageszeit, Bühne und Spieler');
+  } catch (e) { general.push('Kulissen-Raum: ' + e.message); }
+
   // 20. Social Media: Beiträge per Bedingung und Aktion, löschen, Likes mit Aktion nur einmal
   try {
     const r = JSON.parse(await js(`(() => {
