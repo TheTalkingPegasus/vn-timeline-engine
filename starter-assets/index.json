@@ -49,6 +49,24 @@
    "en": "Phones",
    "es": "Móviles",
    "ja": "スマホ"
+  },
+  "files": {
+   "de": "Dateien & Ordner",
+   "en": "Files & folders",
+   "es": "Archivos y carpetas",
+   "ja": "ファイルとフォルダー"
+  },
+  "symbols": {
+   "de": "Symbole",
+   "en": "Symbols",
+   "es": "Símbolos",
+   "ja": "記号"
+  },
+  "messages": {
+   "de": "Nachrichten",
+   "en": "Messages",
+   "es": "Mensajes",
+   "ja": "メッセージ"
   }
  },
  "items": [
@@ -1065,6 +1083,708 @@
     "ja": "スマホ（ローズ・斜め背面）"
    },
    "size": 33552
+  },
+  {
+   "id": "pack:icon_folder",
+   "file": "images/files/folder.png",
+   "kind": "image",
+   "cat": "files",
+   "name": {
+    "de": "Ordner",
+    "en": "Folder",
+    "es": "Carpeta",
+    "ja": "フォルダー"
+   },
+   "size": 2766
+  },
+  {
+   "id": "pack:icon_folder_open",
+   "file": "images/files/folder_open.png",
+   "kind": "image",
+   "cat": "files",
+   "name": {
+    "de": "Ordner offen",
+    "en": "Open folder",
+    "es": "Carpeta abierta",
+    "ja": "開いたフォルダー"
+   },
+   "size": 4285
+  },
+  {
+   "id": "pack:icon_file_text",
+   "file": "images/files/file_text.png",
+   "kind": "image",
+   "cat": "files",
+   "name": {
+    "de": "Textdatei",
+    "en": "Text file",
+    "es": "Archivo de texto",
+    "ja": "テキストファイル"
+   },
+   "size": 2896
+  },
+  {
+   "id": "pack:icon_file_image",
+   "file": "images/files/file_image.png",
+   "kind": "image",
+   "cat": "files",
+   "name": {
+    "de": "Bilddatei",
+    "en": "Image file",
+    "es": "Archivo de imagen",
+    "ja": "画像ファイル"
+   },
+   "size": 5909
+  },
+  {
+   "id": "pack:icon_file_music",
+   "file": "images/files/file_music.png",
+   "kind": "image",
+   "cat": "files",
+   "name": {
+    "de": "Musikdatei",
+    "en": "Music file",
+    "es": "Archivo de música",
+    "ja": "音楽ファイル"
+   },
+   "size": 4401
+  },
+  {
+   "id": "pack:icon_file_zip",
+   "file": "images/files/file_zip.png",
+   "kind": "image",
+   "cat": "files",
+   "name": {
+    "de": "ZIP-Archiv",
+    "en": "ZIP archive",
+    "es": "Archivo ZIP",
+    "ja": "ZIPファイル"
+   },
+   "size": 4419
+  },
+  {
+   "id": "pack:icon_file_pdf",
+   "file": "images/files/file_pdf.png",
+   "kind": "image",
+   "cat": "files",
+   "name": {
+    "de": "PDF-Datei",
+    "en": "PDF file",
+    "es": "Archivo PDF",
+    "ja": "PDFファイル"
+   },
+   "size": 4704
+  },
+  {
+   "id": "pack:icon_save",
+   "file": "images/files/save.png",
+   "kind": "image",
+   "cat": "files",
+   "name": {
+    "de": "Speichern (Diskette)",
+    "en": "Save (floppy disk)",
+    "es": "Guardar (disquete)",
+    "ja": "保存（フロッピー）"
+   },
+   "size": 4381
+  },
+  {
+   "id": "pack:icon_trash",
+   "file": "images/files/trash.png",
+   "kind": "image",
+   "cat": "files",
+   "name": {
+    "de": "Papierkorb",
+    "en": "Trash can",
+    "es": "Papelera",
+    "ja": "ゴミ箱"
+   },
+   "size": 5410
+  },
+  {
+   "id": "pack:icon_clipboard",
+   "file": "images/files/clipboard.png",
+   "kind": "image",
+   "cat": "files",
+   "name": {
+    "de": "Klemmbrett",
+    "en": "Clipboard",
+    "es": "Portapapeles",
+    "ja": "クリップボード"
+   },
+   "size": 5913
+  },
+  {
+   "id": "pack:icon_paperclip",
+   "file": "images/files/paperclip.png",
+   "kind": "image",
+   "cat": "files",
+   "name": {
+    "de": "Büroklammer",
+    "en": "Paperclip",
+    "es": "Clip",
+    "ja": "クリップ"
+   },
+   "size": 7075
+  },
+  {
+   "id": "pack:icon_box",
+   "file": "images/files/box.png",
+   "kind": "image",
+   "cat": "files",
+   "name": {
+    "de": "Archivkarton",
+    "en": "Archive box",
+    "es": "Caja de archivo",
+    "ja": "保管箱"
+   },
+   "size": 3463
+  },
+  {
+   "id": "pack:icon_heart",
+   "file": "images/symbols/heart.png",
+   "kind": "image",
+   "cat": "symbols",
+   "name": {
+    "de": "Herz",
+    "en": "Heart",
+    "es": "Corazón",
+    "ja": "ハート"
+   },
+   "size": 10724
+  },
+  {
+   "id": "pack:icon_star",
+   "file": "images/symbols/star.png",
+   "kind": "image",
+   "cat": "symbols",
+   "name": {
+    "de": "Stern",
+    "en": "Star",
+    "es": "Estrella",
+    "ja": "星"
+   },
+   "size": 9998
+  },
+  {
+   "id": "pack:icon_check",
+   "file": "images/symbols/check.png",
+   "kind": "image",
+   "cat": "symbols",
+   "name": {
+    "de": "Haken",
+    "en": "Check mark",
+    "es": "Visto",
+    "ja": "チェック"
+   },
+   "size": 11949
+  },
+  {
+   "id": "pack:icon_cross",
+   "file": "images/symbols/cross.png",
+   "kind": "image",
+   "cat": "symbols",
+   "name": {
+    "de": "Kreuz",
+    "en": "Cross",
+    "es": "Cruz",
+    "ja": "バツ"
+   },
+   "size": 11636
+  },
+  {
+   "id": "pack:icon_warning",
+   "file": "images/symbols/warning.png",
+   "kind": "image",
+   "cat": "symbols",
+   "name": {
+    "de": "Warnung",
+    "en": "Warning",
+    "es": "Advertencia",
+    "ja": "警告"
+   },
+   "size": 8710
+  },
+  {
+   "id": "pack:icon_question",
+   "file": "images/symbols/question.png",
+   "kind": "image",
+   "cat": "symbols",
+   "name": {
+    "de": "Fragezeichen",
+    "en": "Question mark",
+    "es": "Interrogación",
+    "ja": "はてな"
+   },
+   "size": 12089
+  },
+  {
+   "id": "pack:icon_info",
+   "file": "images/symbols/info.png",
+   "kind": "image",
+   "cat": "symbols",
+   "name": {
+    "de": "Info",
+    "en": "Info",
+    "es": "Información",
+    "ja": "インフォ"
+   },
+   "size": 10270
+  },
+  {
+   "id": "pack:icon_lock",
+   "file": "images/symbols/lock.png",
+   "kind": "image",
+   "cat": "symbols",
+   "name": {
+    "de": "Schloss zu",
+    "en": "Lock",
+    "es": "Candado cerrado",
+    "ja": "錠（閉）"
+   },
+   "size": 7006
+  },
+  {
+   "id": "pack:icon_unlock",
+   "file": "images/symbols/unlock.png",
+   "kind": "image",
+   "cat": "symbols",
+   "name": {
+    "de": "Schloss offen",
+    "en": "Unlocked",
+    "es": "Candado abierto",
+    "ja": "錠（開）"
+   },
+   "size": 7520
+  },
+  {
+   "id": "pack:icon_plus",
+   "file": "images/symbols/plus.png",
+   "kind": "image",
+   "cat": "symbols",
+   "name": {
+    "de": "Plus",
+    "en": "Plus",
+    "es": "Más",
+    "ja": "プラス"
+   },
+   "size": 10134
+  },
+  {
+   "id": "pack:icon_minus",
+   "file": "images/symbols/minus.png",
+   "kind": "image",
+   "cat": "symbols",
+   "name": {
+    "de": "Minus",
+    "en": "Minus",
+    "es": "Menos",
+    "ja": "マイナス"
+   },
+   "size": 9578
+  },
+  {
+   "id": "pack:icon_gear",
+   "file": "images/symbols/gear.png",
+   "kind": "image",
+   "cat": "symbols",
+   "name": {
+    "de": "Zahnrad (Einstellungen)",
+    "en": "Gear (settings)",
+    "es": "Engranaje (ajustes)",
+    "ja": "歯車（設定）"
+   },
+   "size": 14857
+  },
+  {
+   "id": "pack:icon_bell",
+   "file": "images/symbols/bell.png",
+   "kind": "image",
+   "cat": "symbols",
+   "name": {
+    "de": "Glocke",
+    "en": "Bell",
+    "es": "Campana",
+    "ja": "ベル"
+   },
+   "size": 7637
+  },
+  {
+   "id": "pack:icon_home",
+   "file": "images/symbols/home.png",
+   "kind": "image",
+   "cat": "symbols",
+   "name": {
+    "de": "Haus (Start)",
+    "en": "House (home)",
+    "es": "Casa (inicio)",
+    "ja": "家（ホーム）"
+   },
+   "size": 8898
+  },
+  {
+   "id": "pack:icon_search",
+   "file": "images/symbols/search.png",
+   "kind": "image",
+   "cat": "symbols",
+   "name": {
+    "de": "Lupe (Suche)",
+    "en": "Magnifier (search)",
+    "es": "Lupa (buscar)",
+    "ja": "虫眼鏡（検索）"
+   },
+   "size": 9025
+  },
+  {
+   "id": "pack:icon_lightning",
+   "file": "images/symbols/lightning.png",
+   "kind": "image",
+   "cat": "symbols",
+   "name": {
+    "de": "Blitz",
+    "en": "Lightning",
+    "es": "Rayo",
+    "ja": "稲妻"
+   },
+   "size": 6323
+  },
+  {
+   "id": "pack:icon_fire",
+   "file": "images/symbols/fire.png",
+   "kind": "image",
+   "cat": "symbols",
+   "name": {
+    "de": "Feuer",
+    "en": "Fire",
+    "es": "Fuego",
+    "ja": "炎"
+   },
+   "size": 11770
+  },
+  {
+   "id": "pack:icon_music_note",
+   "file": "images/symbols/music_note.png",
+   "kind": "image",
+   "cat": "symbols",
+   "name": {
+    "de": "Musiknote",
+    "en": "Music note",
+    "es": "Nota musical",
+    "ja": "音符"
+   },
+   "size": 5899
+  },
+  {
+   "id": "pack:icon_pin",
+   "file": "images/symbols/pin.png",
+   "kind": "image",
+   "cat": "symbols",
+   "name": {
+    "de": "Ortsmarke",
+    "en": "Location pin",
+    "es": "Marcador de ubicación",
+    "ja": "位置ピン"
+   },
+   "size": 11930
+  },
+  {
+   "id": "pack:icon_clock",
+   "file": "images/symbols/clock.png",
+   "kind": "image",
+   "cat": "symbols",
+   "name": {
+    "de": "Uhr",
+    "en": "Clock",
+    "es": "Reloj",
+    "ja": "時計"
+   },
+   "size": 15401
+  },
+  {
+   "id": "pack:icon_crown",
+   "file": "images/symbols/crown.png",
+   "kind": "image",
+   "cat": "symbols",
+   "name": {
+    "de": "Krone",
+    "en": "Crown",
+    "es": "Corona",
+    "ja": "王冠"
+   },
+   "size": 10274
+  },
+  {
+   "id": "pack:icon_trophy",
+   "file": "images/symbols/trophy.png",
+   "kind": "image",
+   "cat": "symbols",
+   "name": {
+    "de": "Pokal",
+    "en": "Trophy",
+    "es": "Trofeo",
+    "ja": "トロフィー"
+   },
+   "size": 10374
+  },
+  {
+   "id": "pack:icon_chat",
+   "file": "images/messages/chat.png",
+   "kind": "image",
+   "cat": "messages",
+   "name": {
+    "de": "Sprechblase",
+    "en": "Chat bubble",
+    "es": "Bocadillo",
+    "ja": "吹き出し"
+   },
+   "size": 4378
+  },
+  {
+   "id": "pack:icon_chat_typing",
+   "file": "images/messages/chat_typing.png",
+   "kind": "image",
+   "cat": "messages",
+   "name": {
+    "de": "Schreibt gerade …",
+    "en": "Typing …",
+    "es": "Escribiendo …",
+    "ja": "入力中…"
+   },
+   "size": 5703
+  },
+  {
+   "id": "pack:icon_chat_me",
+   "file": "images/messages/chat_me.png",
+   "kind": "image",
+   "cat": "messages",
+   "name": {
+    "de": "Eigene Nachricht",
+    "en": "Own message",
+    "es": "Mensaje propio",
+    "ja": "自分のメッセージ"
+   },
+   "size": 4344
+  },
+  {
+   "id": "pack:icon_chat_heart",
+   "file": "images/messages/chat_heart.png",
+   "kind": "image",
+   "cat": "messages",
+   "name": {
+    "de": "Liebesnachricht",
+    "en": "Love message",
+    "es": "Mensaje de amor",
+    "ja": "ラブメッセージ"
+   },
+   "size": 8241
+  },
+  {
+   "id": "pack:icon_chat_two",
+   "file": "images/messages/chat_two.png",
+   "kind": "image",
+   "cat": "messages",
+   "name": {
+    "de": "Unterhaltung",
+    "en": "Conversation",
+    "es": "Conversación",
+    "ja": "会話"
+   },
+   "size": 5868
+  },
+  {
+   "id": "pack:icon_mail",
+   "file": "images/messages/mail.png",
+   "kind": "image",
+   "cat": "messages",
+   "name": {
+    "de": "Neue E-Mail",
+    "en": "New email",
+    "es": "Nuevo correo",
+    "ja": "新着メール"
+   },
+   "size": 8068
+  },
+  {
+   "id": "pack:icon_mail_open",
+   "file": "images/messages/mail_open.png",
+   "kind": "image",
+   "cat": "messages",
+   "name": {
+    "de": "Brief geöffnet",
+    "en": "Opened letter",
+    "es": "Carta abierta",
+    "ja": "開いた手紙"
+   },
+   "size": 7927
+  },
+  {
+   "id": "pack:icon_inbox",
+   "file": "images/messages/inbox.png",
+   "kind": "image",
+   "cat": "messages",
+   "name": {
+    "de": "Posteingang",
+    "en": "Inbox",
+    "es": "Bandeja de entrada",
+    "ja": "受信トレイ"
+   },
+   "size": 5239
+  },
+  {
+   "id": "pack:icon_send",
+   "file": "images/messages/send.png",
+   "kind": "image",
+   "cat": "messages",
+   "name": {
+    "de": "Senden (Papierflieger)",
+    "en": "Send (paper plane)",
+    "es": "Enviar (avión de papel)",
+    "ja": "送信（紙飛行機）"
+   },
+   "size": 12054
+  },
+  {
+   "id": "pack:icon_phone_call",
+   "file": "images/messages/phone_call.png",
+   "kind": "image",
+   "cat": "messages",
+   "name": {
+    "de": "Anruf",
+    "en": "Call",
+    "es": "Llamada",
+    "ja": "着信"
+   },
+   "size": 16990
+  },
+  {
+   "id": "pack:icon_phone_missed",
+   "file": "images/messages/phone_missed.png",
+   "kind": "image",
+   "cat": "messages",
+   "name": {
+    "de": "Verpasster Anruf",
+    "en": "Missed call",
+    "es": "Llamada perdida",
+    "ja": "不在着信"
+   },
+   "size": 14969
+  },
+  {
+   "id": "pack:icon_video_call",
+   "file": "images/messages/video_call.png",
+   "kind": "image",
+   "cat": "messages",
+   "name": {
+    "de": "Videoanruf",
+    "en": "Video call",
+    "es": "Videollamada",
+    "ja": "ビデオ通話"
+   },
+   "size": 4523
+  },
+  {
+   "id": "pack:icon_voice",
+   "file": "images/messages/voice.png",
+   "kind": "image",
+   "cat": "messages",
+   "name": {
+    "de": "Sprachnachricht",
+    "en": "Voice message",
+    "es": "Mensaje de voz",
+    "ja": "ボイスメッセージ"
+   },
+   "size": 7907
+  },
+  {
+   "id": "pack:icon_thumbs_up",
+   "file": "images/messages/thumbs_up.png",
+   "kind": "image",
+   "cat": "messages",
+   "name": {
+    "de": "Daumen hoch",
+    "en": "Thumbs up",
+    "es": "Pulgar arriba",
+    "ja": "いいね"
+   },
+   "size": 6873
+  },
+  {
+   "id": "pack:icon_at",
+   "file": "images/messages/at.png",
+   "kind": "image",
+   "cat": "messages",
+   "name": {
+    "de": "At-Zeichen (@)",
+    "en": "At sign (@)",
+    "es": "Arroba (@)",
+    "ja": "アットマーク"
+   },
+   "size": 14528
+  },
+  {
+   "id": "pack:icon_wifi",
+   "file": "images/messages/wifi.png",
+   "kind": "image",
+   "cat": "messages",
+   "name": {
+    "de": "WLAN",
+    "en": "Wi-Fi",
+    "es": "Wi-Fi",
+    "ja": "Wi-Fi"
+   },
+   "size": 15170
+  },
+  {
+   "id": "pack:icon_battery",
+   "file": "images/messages/battery.png",
+   "kind": "image",
+   "cat": "messages",
+   "name": {
+    "de": "Akku",
+    "en": "Battery",
+    "es": "Batería",
+    "ja": "バッテリー"
+   },
+   "size": 3999
+  },
+  {
+   "id": "pack:icon_battery_low",
+   "file": "images/messages/battery_low.png",
+   "kind": "image",
+   "cat": "messages",
+   "name": {
+    "de": "Akku leer",
+    "en": "Battery low",
+    "es": "Batería baja",
+    "ja": "バッテリー残量少"
+   },
+   "size": 3879
+  },
+  {
+   "id": "pack:icon_signal",
+   "file": "images/messages/signal.png",
+   "kind": "image",
+   "cat": "messages",
+   "name": {
+    "de": "Empfang",
+    "en": "Signal",
+    "es": "Cobertura",
+    "ja": "電波"
+   },
+   "size": 3626
+  },
+  {
+   "id": "pack:icon_notification",
+   "file": "images/messages/notification.png",
+   "kind": "image",
+   "cat": "messages",
+   "name": {
+    "de": "Neue Benachrichtigung",
+    "en": "New notification",
+    "es": "Nueva notificación",
+    "ja": "新しい通知"
+   },
+   "size": 8295
   }
  ]
 }
