@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.33
+VN Timeline Engine · Prototyp 0.9.34
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,12 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.34 · Schnellere Weich-Physik
+- Weich-Physik (Brust, Kleidung, Atmen) viel schneller: wie stark jeder Gitterpunkt zu einer Maske gehört, wird jetzt einmal berechnet
+  und erst wieder, wenn du eine Maske oder ihre Einstellungen änderst – vorher in jedem Bild neu. Statt etwa 60 ms braucht die Physik
+  jetzt etwa 3 ms pro Bild, mit genau demselben Ergebnis.
+- Keine Zeitlupe mehr: bei wenig Bildern pro Sekunde läuft die Physik in Echtzeit weiter, statt langsamer zu werden.
 
 NEU IN 0.9.33 · Kulissen-Vorlagen
 - Raum-Vorlagen: „+ Neue Kulisse“ bietet jetzt Vorlagen – Büroetage, Klassenzimmer, Schulflur, Korridor, Flur, Wohnzimmer, Küche,

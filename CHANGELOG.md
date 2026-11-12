@@ -2,6 +2,12 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.34 – Faster soft physics
+- **Soft physics (chest, clothing, breathing) much faster:** how strongly each grid point belongs to a mask is now
+  calculated once and only again when you change a mask or its settings – before, it was recalculated every frame.
+  The physics now takes about 3 ms per frame instead of about 60 ms, with exactly the same result.
+- **No more slow motion:** at low frame rates the physics keeps running in real time instead of slowing down.
+
 ## 0.9.33 – Set templates
 - **Room templates:** “+ New set” now offers templates – office floor, classroom, school hallway, corridor, hallway,
   living room, kitchen, bathroom, bedroom, shop and a whole flat. They contain only the rooms (walls, floors, ceilings,
