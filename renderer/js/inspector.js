@@ -150,6 +150,22 @@
         el('div', { class: 'muted small' }, 'Dieselben Formeln gehen auch als Bedingung: „🧮 Formel“, z. B. gold >= 10 and item("Schlüssel") > 0.'));
     },
 
+    // Gesicht-Rig (0.9.31): Ausdruck am Figuren-Clip
+    faceCard(c) {
+      if (!window.Face || c.set || c.puppet || !c.asset) return null;
+      const open = () => { VN.ui.view = 'bones'; VN.ui.figSub = 'face'; VN.ui.faceAsset = c.asset; VN.render(); };
+      if (!Face.cfg(c.asset)) return el('button', { class: 'btn tiny', onclick: open }, VN.t('🙂 Gesicht einrichten (Ausdrücke, Blinzeln, Mund)'));
+      const sel = el('select', { onchange: (e) => VN.mutate(() => { c.faceExpr = e.target.value === 'neutral' ? undefined : e.target.value; }) });
+      for (const x of Face.exprList(Face.data(c.asset))) { const o = el('option', { value: x.id }, VN.t(x.name)); if (x.id === (c.faceExpr || 'neutral')) o.selected = true; sel.appendChild(o); }
+      return el('div', { class: 'opt-card' },
+        el('div', { class: 'logic-row' }, el('span', { class: 'muted small', style: { minWidth: '110px' } }, VN.t('🙂 Ausdruck')), sel),
+        el('label', { class: 'logic-row' }, el('span', { class: 'muted small', style: { minWidth: '110px' } }, VN.t('Stärke')),
+          el('input', { type: 'range', min: 0, max: 150, step: 5, value: c.faceAmt != null ? c.faceAmt : 100, style: { flex: 1 }, onchange: (e) => VN.mutate(() => { c.faceAmt = Number(e.target.value) === 100 ? undefined : Number(e.target.value); }) }),
+          el('span', { class: 'muted small' }, (c.faceAmt != null ? c.faceAmt : 100) + ' %')),
+        el('div', { class: 'muted small' }, VN.t('Wechselt der Ausdruck zum nächsten Clip derselben Figur, blendet das Gesicht weich über. Mitten in der Szene geht es auch mit der Aktion „🙂 Gesicht: Ausdruck“.')),
+        el('button', { class: 'btn tiny', onclick: open }, VN.t('Gesicht bearbeiten')));
+    },
+
     designLink(what) {
       return el('button', { class: 'btn design-link', onclick: () => Design.openTab() }, el('span', null, '🎨 Design'), el('span', { class: 'muted small' }, what));
     },
@@ -211,6 +227,7 @@
           range('Drehung', c.rot || 0, -180, 180, 1, (v) => Math.round(v) + '°', set(c, 'rot')),
           el('div', { class: 'muted small' }, 'Frei transformieren: Figur auf der Bühne ziehen (rastet an Mitte, Dritteln, Boden und anderen Figuren ein – Alt = frei), an den Ecken skalieren, am Kreis oben drehen (Umschalt: 15°-Schritte). Werte lassen sich auch eintippen.'),
           check('Spiegeln', c.flip, set(c, 'flip')),
+          Inspector.faceCard(c),
           field('Auftritt', select(c.trans || 'fade', [['cut', 'Sofort'], ['fade', 'Einblenden'], ['slide', 'Hereingleiten']], set(c, 'trans'))),
           field('Bewegung im Stand', select(c.idle || 'none', [['none', 'Keine'], ['breathe', 'Atmen'], ['float', 'Schweben']], set(c, 'idle'))),
           Tools.keysEditor(s, c, t),

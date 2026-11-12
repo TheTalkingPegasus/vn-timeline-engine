@@ -2694,3 +2694,10 @@ body.vz-panning, body.vz-panning * { cursor: grabbing !important; }
 .web-ed-rulers:has(> .web-ed-frame.vz-on) > .web-ed-ruler { visibility: hidden; }
 .id-map-vp { position: relative; width: 100%; border-radius: 8px; overflow: hidden; margin-top: 8px; }
 .id-map-vp > .id-map-ed { margin-top: 0; border-radius: 0; }
+
+/* Gesicht-Rig (0.9.31) */
+.face-wrap { position: relative; flex: none; }
+.face-wrap > .face-cv { width: 100%; height: 100%; display: block; }
+.face-tools, .face-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.face-ok { color: #6cc48a; font-weight: 600; width: 14px; }
+.face-miss { color: var(--muted); width: 14px; }

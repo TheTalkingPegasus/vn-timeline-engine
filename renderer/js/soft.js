@@ -247,6 +247,13 @@
     _texFor(img) {
       const S = gl0(); if (!S) return null;
       let e = TEX.get(img);
+      // Gesicht-Rig (0.9.31): Quelle ist ein Canvas, das sich ändert – dann neu hochladen
+      if (e && e.gen === S.gen && e.tex && img._ver != null && e.ver !== img._ver) {
+        S.gl.bindTexture(S.gl.TEXTURE_2D, e.tex);
+        try { S.gl.texImage2D(S.gl.TEXTURE_2D, 0, S.gl.RGBA, S.gl.RGBA, S.gl.UNSIGNED_BYTE, img); } catch (er) { /* bleibt beim alten Bild */ }
+        e.ver = img._ver;
+        return e.tex;
+      }
       if (e && e.gen === S.gen) return e.tex;
       const gl = S.gl, tex = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -255,13 +262,14 @@
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      TEX.set(img, { gen: S.gen, tex });
+      TEX.set(img, { gen: S.gen, tex, ver: img._ver });
       return tex;
     },
     // Bild mit Physik in ein 2D-Canvas (W×H inkl. Rand PAD) zeichnen. Gibt false zurück, wenn WebGL fehlt.
     render(out, img, cfg, sim, t) {
       const S = gl0();
-      if (!S || !img.naturalWidth) return false;
+      const NW = img.naturalWidth || img.width, NH = img.naturalHeight || img.height;
+      if (!S || !NW) return false;
       const W = out.width, H = out.height;
       if (S.cv.width < W) S.cv.width = Math.min(4096, Math.max(W, S.cv.width * 1.5 | 0));
       if (S.cv.height < H) S.cv.height = Math.min(4096, Math.max(H, S.cv.height * 1.5 | 0));
@@ -273,7 +281,7 @@
       gl.uniform2f(S.resLoc, W, H);
       gl.bindTexture(gl.TEXTURE_2D, tex);
       const iw = W / (1 + 2 * PAD), ih = H / (1 + 2 * PAD), ox = W * PAD / (1 + 2 * PAD), oy = H * PAD / (1 + 2 * PAD);
-      const aspect = img.naturalWidth / img.naturalHeight;
+      const aspect = NW / NH;
       const regs = cfg.regions.filter((r) => r.on !== false);
       const moves = regs.map((r) => { const P = Soft.par(r); return { r, P, m: Soft.regionMove(r, P, sim.regs[r.id], t) }; });
       // 1) Grundbild: Gitter über das ganze Bild, nur Punkte in Masken bewegen sich
@@ -310,8 +318,10 @@
 
     // ---------- Story-Bühne: Canvas statt <img> ----------
     // inner = span.char-inner mit <img>. Das Bild bleibt (unsichtbar) für die Größe, das Canvas liegt darüber.
+    // Weich-Physik oder Gesicht-Rig: beide zeichnen über dasselbe Canvas
+    cfgAny(assetId) { return Soft.cfg(assetId) || (window.Face && Face.cfg(assetId) ? { regions: [], faceOnly: true } : null); },
     attach(inner, assetId) {
-      const cfg = Soft.cfg(assetId);
+      const cfg = Soft.cfgAny(assetId);
       const img = inner.querySelector('img');
       if (!cfg || !img) return null;
       const cv = el('canvas', { class: 'soft-canvas' });
@@ -322,7 +332,8 @@
       // (erst nach dem vollständigen Laden hochladen – naturalWidth gibt es schon vorher)
       const tex = new Image(); tex.crossOrigin = 'anonymous';
       const inst = { inner, img, tex, cv, assetId, sim: Soft.newSim(), lastT: 0, ready: false };
-      tex.onload = () => { (tex.decode ? tex.decode() : Promise.resolve()).catch(() => {}).then(() => { inst.ready = true; }); };
+      tex.onload = () => { (tex.decode ? tex.decode() : Promise.resolve()).catch(() => {}).then(() => { inst.ready = true; if (inst.face) { inst.face.src = tex; } }); };
+      if (window.Face && Face.cfg(assetId)) { inst.face = Face.inst(assetId, tex); Face.LIVE.add(inst.face); }
       tex.src = img.currentSrc || img.src;
       LIVE.add(inst);
       loop();
@@ -337,8 +348,15 @@
     // ---------- Zwischensequenzen: in den Anim-Canvas zeichnen ----------
     // it = Darsteller-Zustand aus Anim.draw; x,y,w,h = Zielrechteck (lokal); world = Mittelpunkt in Figurenhöhen
     drawAnim(ctx, it, assetId, x, y, w, h, t, world) {
-      const cfg = Soft.cfg(assetId);
+      const cfg = Soft.cfgAny(assetId);
       if (!cfg || !it.img) return false;
+      // Gesicht-Rig in Zwischensequenzen: Blinzeln und Ausdruck
+      let srcImg = it.img;
+      if (window.Face && Face.cfg(assetId) && it.img.naturalWidth) {
+        if (!it._face || it._face.assetId !== assetId) { it._face = Face.inst(assetId, it.img); }
+        if (it._faceExpr !== (it.faceExpr || '')) { it._faceExpr = it.faceExpr || ''; it._face.setExpr(it._faceExpr || 'neutral', it.faceAmt != null ? it.faceAmt : 1, 0); }
+        srcImg = it._face.surface() || it.img;
+      }
       const sim = it._soft || (it._soft = Object.assign(Soft.newSim(), { _asset: assetId }));
       ANIMS.add(sim); sim._seen = performance.now() / 1000;
       const dt = sim._t != null ? t - sim._t : 0; sim._t = t;
@@ -350,7 +368,7 @@
       const ow = Math.min(2048, Math.max(32, Math.round(w * sc * (1 + 2 * PAD)))), oh = Math.min(2048, Math.max(32, Math.round(h * sc * (1 + 2 * PAD))));
       const off = it._softCv || (it._softCv = document.createElement('canvas'));
       if (off.width !== ow || off.height !== oh) { off.width = ow; off.height = oh; }
-      if (!Soft.render(off, it.img, cfg, sim, t)) return false;
+      if (!Soft.render(off, srcImg, cfg, sim, t)) return false;
       ctx.drawImage(off, x - w * PAD, y - h * PAD, w * (1 + 2 * PAD), h * (1 + 2 * PAD));
       return true;
     }
@@ -470,9 +488,10 @@
     const tick = (now) => {
       const dt = Math.min(0.1, (now - prev) / 1000); prev = now;
       for (const it of LIVE) {
-        if (!it.cv.isConnected) { LIVE.delete(it); continue; }
-        const cfg = Soft.cfg(it.assetId);
+        if (!it.cv.isConnected) { LIVE.delete(it); if (it.face) Face.LIVE.delete(it.face); continue; }
+        const cfg = Soft.cfgAny(it.assetId);
         if (!cfg || !it.ready) continue;
+        if (!it.inner.isConnected && it.face) Face.LIVE.delete(it.face);
         const rc = it.inner.getBoundingClientRect();
         if (!rc.height) continue;
         // Canvas-Auflösung an die angezeigte Größe anpassen
@@ -484,7 +503,8 @@
         // gespiegelte Figur: seitliche Richtung umdrehen
         if (it.inner.style.transform && /scaleX\(-1\)/.test(it.inner.style.transform)) acc.x = -acc.x;
         Soft.step(it.sim, cfg.regions.filter((r) => r.on !== false), acc, dt);
-        const ok = Soft.render(it.cv, it.tex, cfg, it.sim, now / 1000 - it.sim.t0);
+        const srcImg = (it.face && Face.cfg(it.assetId) && it.face.surface(now)) || it.tex;
+        const ok = Soft.render(it.cv, srcImg, cfg, it.sim, now / 1000 - it.sim.t0);
         it.inner.classList.toggle('soft-on', ok);
       }
       for (const s of ANIMS) if (s._t != null && performance.now() / 1000 - (s._seen || 0) > 5) ANIMS.delete(s);

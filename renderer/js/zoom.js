@@ -7,7 +7,7 @@
   // Ansichtsfenster → Inhalt, der gezoomt wird
   const VIEWPORTS = [
     ['.stage-wrap', ':scope > .stage, :scope > .bone-stage'],
-    ['.soft-stage', ':scope > .soft-imgwrap, :scope > .soft-test'],
+    ['.soft-stage', ':scope > .soft-imgwrap, :scope > .soft-test, :scope > .face-wrap'],
     ['.mouth-stage', ':scope > .mouth-inner'],
     ['.fig-stage', ':scope > .fig-inner'],
     ['.web-ed-frame', ':scope > .web-ed-page', 'ctrl'], // lange Seiten scrollen mit dem Rad – Zoom hier mit Strg + Rad
