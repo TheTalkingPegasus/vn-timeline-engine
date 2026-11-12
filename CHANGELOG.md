@@ -2,6 +2,22 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.31 – Face rig (expressions on a single image)
+- **Figures → Face:** facial expressions directly on one flat character image – no image swapping. The engine bends the image
+  with a fine mesh, only inside the mouth mask; nose and chin stay still.
+- **Set up with the pen and lasso:** trace the upper lip (and the lower lip for an open mouth – points snap onto the dark line),
+  optionally draw around the jaw and set the jaw joints in front of the ears, trace the lash line and lower lid per eye and the brows.
+  A stamp source over smooth skin (placed automatically between the eyes) provides the eyelids.
+- **Mouth:** smile, sad, grin, lopsided grin, pout, open (the jaw turns around its joints and the chin goes along), built-in mouth
+  interior that fits the opening exactly (colour, tongue, teeth) or the interior from the image.
+- **Eyes and brows:** closing lids made from stamped skin – soft on the left, right and top, hard at the lashes; the lashes move down
+  column by column and keep their shape. Lower lid (squint), smiling eyes ^^, brows up/down and slanted.
+- **Expressions:** Neutral, Smile, Happy ^^, Sad, Angry, Tired, Grin, Lopsided grin, Pout, Surprised – plus own expressions:
+  set the sliders and drag lip and brow points into position (“Shape points”), strength 0–150 %.
+- **In the game:** expression on the character clip (inspector) – blends smoothly when the next clip changes it; action
+  **“🙂 Face: expression”**; lip sync opens the real mouth with the voice volume; the character blinks by itself (sometimes twice);
+  works in story scenes and cutscenes (expression per actor) and together with soft physics on the same image.
+
 ## 0.9.30 – Zoom in every editor
 - The mouse-wheel zoom now also works in **Lip sync**, **Layers & outfits**, the **website editor** (Ctrl + wheel, plain wheel
   still scrolls long pages), the **device preview** and the **idle map**.

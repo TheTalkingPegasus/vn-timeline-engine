@@ -1003,6 +1003,12 @@
           !rig && !actor.puppet ? el('div', { class: 'muted small' }, 'Diese Figur hat noch keine Bones. ', el('button', { class: 'btn tiny', onclick: () => App.openBones(actor.asset) }, 'Bones einrichten')) : null);
         if (actor.puppet && Puppet.get(actor.puppet)) acCard.appendChild(AnimEd.puppetCard(a, actor, t));
         if (a.type === 'scene') acCard.appendChild(AnimEd.maskCard(a, actor, t));
+        // Gesicht-Rig: fester Ausdruck für diesen Darsteller (Blinzeln läuft von selbst)
+        if (window.Face && actor.asset && !actor.puppet && Face.cfg(actor.asset)) {
+          const fs = el('select', { onchange: (e) => VN.mutate(() => { actor.faceExpr = e.target.value === 'neutral' ? undefined : e.target.value; }) });
+          for (const x of Face.exprList(Face.data(actor.asset))) { const o = el('option', { value: x.id }, VN.t(x.name)); if (x.id === (actor.faceExpr || 'neutral')) o.selected = true; fs.appendChild(o); }
+          acCard.appendChild(el('div', { class: 'logic-row' }, el('span', { class: 'muted small' }, VN.t('🙂 Ausdruck')), fs));
+        }
       }
       box.appendChild(acCard);
       if (a.type === 'scene' && actor && actor.puppet && a.actors.filter((x) => x.puppet).length >= 2) box.appendChild(AnimEd.seamCard(a, actor));

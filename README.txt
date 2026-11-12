@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototype 0.9.30
+VN Timeline Engine · Prototype 0.9.31
 ====================================
 (Deutsch: siehe LIES MICH.txt)
 
@@ -15,6 +15,8 @@ Without installing (ZIP):
    isn't signed: "More info" → "Run anyway".
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
+
+NEW IN 0.9.31 · Face rig: expressions on a single flat image (lips, jaw, eyelids from stamped skin, brows), own expressions with shaped points, expression per clip and action, lip sync opens the real mouth, auto blinking
 
 NEW IN 0.9.30 · Wheel zoom in every editor: lip sync, layers, website editor (Ctrl + wheel), device preview, idle map; pan in jointed puppets; pixel art zooms with the plain wheel
 

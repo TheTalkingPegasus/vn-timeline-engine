@@ -111,6 +111,12 @@
       return a ? Fx.attachMouth(box, { asset: a, flip: clip.flip }) : null;
     },
 
+    // Gesicht am Figuren-Clip: Ausdruck aus dem Clip, sofort (Editor) oder mit Übergang (Spiel)
+    faceHook(box, inst, clip) {
+      if (!inst || !inst.face) return;
+      box._face = inst.face;
+      inst.face.setExpr(clip.faceExpr || 'neutral', clip.faceAmt != null ? clip.faceAmt / 100 : 1, 0);
+    },
     charEl(clip, cls, ctx = {}) {
       const box = el('div', { class: cls || 'char' });
       const pr = window.Fx ? Fx.propsAt(clip, ctx.beat != null ? ctx.beat : clip.start) : { x: clip.x != null ? clip.x : 50, y: 0, scale: clip.scale || 100, rot: 0, opacity: clip.opacity != null ? clip.opacity : 100 };
@@ -131,18 +137,19 @@
         const inner = el('span', { class: 'char-inner' }, el('img', { src: url, draggable: 'false' }));
         if (clip.flip) inner.style.transform = 'scaleX(-1)';
         Blink.attach(inner, clip.asset);
-        if (window.Soft && Soft.cfg(clip.asset)) Soft.attach(inner, clip.asset);
+        if (window.Soft && Soft.cfgAny(clip.asset)) Stage.faceHook(box, Soft.attach(inner, clip.asset), clip);
         box.appendChild(inner);
       } else if (url) {
         const inner = el('span', { class: 'char-inner' }, el('img', { src: url, draggable: 'false' }));
         if (clip.flip) inner.style.transform = 'scaleX(-1)';
         // Weich-Physik (0.9.28): Bereiche wippen und schwingen nach
-        if (window.Soft && Soft.cfg(clip.asset)) Soft.attach(inner, clip.asset);
+        // Gesicht-Rig (0.9.31): Ausdrücke, Blinzeln, echter Mund beim Sprechen
+        if (window.Soft && Soft.cfgAny(clip.asset)) Stage.faceHook(box, Soft.attach(inner, clip.asset), clip);
         box.appendChild(inner);
       } else {
         box.appendChild(el('div', { class: 'placeholder', style: { position: 'relative', width: '30cqh', height: '100%' } }, 'Figur ohne Bild'));
       }
-      if (window.Fx && !clip.set && url) box._mouth = Fx.attachMouth(box, clip);
+      if (window.Fx && !clip.set && url) box._mouth = box._face && window.Face && Face.hasMouth(clip.asset) ? Face.mouthCtl(box._face) : Fx.attachMouth(box, clip);
       VN.applyLook(box, clip);
       box.style.opacity = String(pr.opacity / 100);
       return box;

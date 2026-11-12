@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.30
+VN Timeline Engine · Prototyp 0.9.31
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,22 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.31 · Gesicht-Rig (Ausdrücke auf einem einzigen Bild)
+- Figuren → Gesicht: Gesichtsausdrücke direkt auf einem flachen Figuren-Bild – ohne Bildtausch. Die Engine verbiegt das Bild über ein
+  feines Gitter, nur innerhalb der Mund-Maske; Nase und Kinn bleiben ruhig.
+- Einrichten mit Stift und Lasso: Oberlippe nachziehen (bei offenem Mund auch die Unterlippe – die Punkte rasten auf der dunklen Linie ein),
+  optional den Kiefer umfahren und die Kiefergelenke vor die Ohren setzen, pro Auge Wimpernlinie und Unterlid, dazu die Brauen.
+  Eine Stempel-Quelle über glatter Haut (wird automatisch zwischen die Augen gelegt) liefert die Augenlider.
+- Mund: Lächeln, Traurig, Grinsen, schiefes Grinsen, Schmollmund, Öffnen (der Kiefer dreht sich um die Gelenke, das Kinn geht mit),
+  eingebautes Mundinneres, das genau in die Öffnung passt (Farbe, Zunge, Zähne), oder das Innere aus dem Bild.
+- Augen und Brauen: Lider aus gestempelter Haut – links, rechts und oben weich, an den Wimpern hart; die Wimpern wandern Spalte für Spalte
+  nach unten und behalten ihre Form. Unterlid (zukneifen), Lachaugen ^^, Brauen hoch/runter und schräg.
+- Ausdrücke: Neutral, Lächeln, Fröhlich ^^, Traurig, Wütend, Müde, Grinsen, Schiefes Grinsen, Schmollmund, Staunen – dazu eigene Ausdrücke:
+  Regler einstellen und Lippen- und Brauenpunkte in Stellung ziehen („Punkte formen“), Stärke 0–150 %.
+- Im Spiel: Ausdruck am Figuren-Clip (Inspektor) – wechselt er beim nächsten Clip, blendet das Gesicht weich über; Aktion
+  „🙂 Gesicht: Ausdruck“; der Lippensync öffnet den echten Mund mit der Lautstärke der Stimme; die Figur blinzelt von selbst (manchmal doppelt);
+  wirkt in Story-Szenen und Zwischensequenzen (Ausdruck pro Darsteller) und zusammen mit der Weich-Physik auf demselben Bild.
 
 NEU IN 0.9.30 · Zoom in jedem Editor
 - Mausrad-Zoom jetzt auch bei Lippensync, Ebenen & Outfits, im Website-Editor (Strg + Mausrad, normales Rad scrollt lange Seiten),

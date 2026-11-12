@@ -169,6 +169,8 @@
         cur.el.className = 'pl-char' + (clip.idle && clip.idle !== 'none' ? ' idle-' + clip.idle : '');
         VN.applyLook(cur.el, clip);
         cur.el.style.opacity = String(pr.opacity / 100);
+        // Gesicht-Rig: neuer Clip mit anderem Ausdruck blendet weich über
+        if (cur.el._face && ((cur.clip && cur.clip.faceExpr) !== clip.faceExpr || (cur.clip && cur.clip.faceAmt) !== clip.faceAmt)) cur.el._face.setExpr(clip.faceExpr || 'neutral', clip.faceAmt != null ? clip.faceAmt / 100 : 1, 0.35);
         if (clip.set) {
           const fig = cur.el.querySelector('.fig');
           const picks = JSON.stringify(Stage.figurePicks(clip, beat, run.rs));

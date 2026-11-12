@@ -270,7 +270,8 @@
           const ih = boxH, iw = ih * it.img.naturalWidth / it.img.naturalHeight;
           // Weich-Physik (0.9.28): Bild mit wippenden Bereichen
           const mw = ctx.getTransform(), wx = mw.c * (-ih / 2) + mw.e, wy = mw.d * (-ih / 2) + mw.f;
-          const done = window.Soft && a.asset && Soft.cfg(a.asset) && Soft.drawAnim(ctx, it, a.asset, -iw / 2, -ih, iw, ih, t, [wx / Math.max(1, boxH * Math.hypot(mw.a, mw.b)), wy / Math.max(1, boxH * Math.hypot(mw.a, mw.b))]);
+          it.faceExpr = a.faceExpr || ''; it.faceAmt = a.faceAmt != null ? a.faceAmt / 100 : 1;
+          const done = window.Soft && a.asset && Soft.cfgAny(a.asset) && Soft.drawAnim(ctx, it, a.asset, -iw / 2, -ih, iw, ih, t, [wx / Math.max(1, boxH * Math.hypot(mw.a, mw.b)), wy / Math.max(1, boxH * Math.hypot(mw.a, mw.b))]);
           if (!done) ctx.drawImage(it.img, -iw / 2, -ih, iw, ih);
         }
         ctx.restore();

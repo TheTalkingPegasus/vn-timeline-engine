@@ -1266,6 +1266,61 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Mausrad-Zoom: zur Maus, Anzeige, erneut anwenden, Zurücksetzen, eigenes transform');
   } catch (e) { general.push('Mausrad-Zoom: ' + e.message); }
 
+  // 26. Gesicht-Rig (0.9.31): Mund verformt sich nur in der Maske, Lid deckt das Auge ab, Bühne und Lippensync
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [];
+      if (!window.Face) return JSON.stringify(['Face fehlt']);
+      // Testbild: Hautfarbe, dunkle Mundlinie, Auge mit dunklen Wimpern und grüner Iris
+      const c = document.createElement('canvas'); c.width = 200; c.height = 200; const g = c.getContext('2d');
+      g.fillStyle = '#f3d9c4'; g.fillRect(0, 0, 200, 200);
+      g.fillStyle = '#222'; g.fillRect(70, 139, 60, 3);
+      g.fillStyle = '#2a8a3a'; g.fillRect(45, 72, 30, 22); g.fillStyle = '#111'; g.fillRect(40, 66, 40, 6);
+      g.fillStyle = '#7a4a2a'; g.fillRect(140, 20, 40, 4);
+      c.naturalWidth = 0;
+      const f = Face.blank();
+      f.mouth.up = [[0.35, 0.7], [0.5, 0.695], [0.65, 0.7]];
+      f.eyes.push({ bot: [[0.2, 0.36], [0.3, 0.355], [0.4, 0.36]], low: [[0.2, 0.37], [0.3, 0.48], [0.4, 0.37]] });
+      f.src = { x: 0.45, y: 0.05, w: 0.2, h: 0.1 };
+      VN.project.faces = VN.project.faces || {};
+      const keep = VN.project.faces.__t; VN.project.faces.__t = f;
+      if (!Face.cfg('__t')) out.push('cfg');
+      const W = 200, H = 200, render = (vals) => { const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const v = Object.assign({}, Face.snap(f, 'neutral', 0).vals, vals); Face.render(cv.getContext('2d'), c, f, v, {}, W, H, {}); return cv.getContext('2d').getImageData(0, 0, W, H).data; };
+      const base = render({}), smile = render({ s: 1 });
+      const px = (d, x, y) => { const i = (y * W + x) * 4; return [d[i], d[i + 1], d[i + 2]]; };
+      const diff = (a, b, x0, y0, x1, y1) => { let n = 0; for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) { const p = px(a, x, y), q = px(b, x, y); if (Math.abs(p[0] - q[0]) + Math.abs(p[1] - q[1]) + Math.abs(p[2] - q[2]) > 30) n++; } return n; };
+      if (!(diff(base, smile, 60, 120, 140, 160) > 5)) out.push('Lächeln ändert den Mund nicht');
+      if (diff(base, smile, 0, 0, 200, 60) > 0) out.push('außerhalb der Maske verändert');
+      // geschlossener Mund: „öffnen“ darf nicht schließen (o < 0 wird ignoriert)
+      if (diff(base, render({ o: -0.8 }), 60, 120, 140, 160) > 0) out.push('geschlossener Mund schließt weiter');
+      // Lid zu: grüne Iris ist abgedeckt (Haut aus der Quelle)
+      const shut = render({ e: 1 }); const iris = px(shut, 60, 80);
+      if (!(iris[0] > 150 && iris[1] > 150)) out.push('Lid deckt Iris nicht ab ' + iris.join(','));
+      const open = px(base, 60, 80); if (!(open[1] > open[0])) out.push('Iris fehlt im Ausgangsbild');
+      // Ausdrücke, Mischen, eigene Ausdrücke
+      f.exprs.push({ id: 'my', name: 'Mein', vals: { s: 0.5 }, offs: { up: [[0, -0.01], [0, 0], [0, 0]] } });
+      const sn = Face.snap(f, 'my', 0.5); if (Math.abs(sn.vals.s - 0.25) > 1e-9 || Math.abs(sn.offs.up[0][1] + 0.005) > 1e-9) out.push('snap');
+      const mx = Face.mix(Face.snap(f, 'neutral', 0), Face.snap(f, 'smile', 1), 0.5); if (Math.abs(mx.vals.s - 0.45) > 1e-9) out.push('mix');
+      if (!Face.exprList(f).some((x) => x.id === 'my')) out.push('eigener Ausdruck fehlt');
+      if (!VN.ext.actions.faceExpr) out.push('Aktion fehlt');
+      if (keep) VN.project.faces.__t = keep; else delete VN.project.faces.__t;
+      // Bühne: Bild-Figur mit Gesicht bekommt Canvas, Gesicht und echten Mund für den Lippensync
+      const img = VN.assetsOf('image')[0];
+      if (img) {
+        const kf = VN.project.faces[img.id];
+        VN.project.faces[img.id] = Object.assign(Face.blank(), { mouth: Object.assign(Face.blank().mouth, { up: [[0.4, 0.5], [0.5, 0.49], [0.6, 0.5]] }) });
+        const box = Stage.charEl({ asset: img.id, x: 50, start: 0, faceExpr: 'smile' }, 'char', {});
+        if (!box.querySelector('.soft-canvas')) out.push('Bühne ohne Canvas');
+        if (!box._face || !box._mouth || !box._mouth.set) out.push('Gesicht oder Mund fehlt');
+        else { box._mouth.set(0.8); if (Math.abs(box._face.talk - 0.8) > 1e-9) out.push('Lippensync'); }
+        if (kf) VN.project.faces[img.id] = kf; else delete VN.project.faces[img.id];
+      }
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Gesicht-Rig: ' + r.join(', '));
+    else log('✓ Gesicht-Rig: Mund nur in der Maske, Lid mit Haut-Stempel, eigene Ausdrücke, Bühne und Lippensync');
+  } catch (e) { general.push('Gesicht-Rig: ' + e.message); }
+
   // 20. Social Media: Beiträge per Bedingung und Aktion, löschen, Likes mit Aktion nur einmal
   try {
     const r = JSON.parse(await js(`(() => {
