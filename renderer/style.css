@@ -2740,3 +2740,14 @@ body.vz-panning, body.vz-panning * { cursor: grabbing !important; }
 .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .hub-kul-layer { position: absolute; inset: 0; }
 @media (max-width: 1100px) { .kul-ed-views { grid-template-columns: 1fr; } }
+.kul-tpl-modal { width: min(980px, 94vw); max-height: 88vh; overflow: auto; }
+.kul-tpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.kul-tpl { border: 1px solid var(--line); border-radius: 8px; padding: 8px; cursor: pointer; display: flex; flex-direction: column; gap: 4px; background: var(--panel2, rgba(255,255,255,.03)); }
+.kul-tpl:hover { border-color: var(--accent, #9d6bff); }
+.kul-tpl img, .kul-tpl-empty { width: 100%; aspect-ratio: 320 / 150; border-radius: 5px; display: block; }
+.kul-tpl-empty { display: flex; align-items: center; justify-content: center; font-size: 34px; color: var(--muted); background: #1b1d24; }
+.kul-tpl-name { font-weight: 600; }
+.kul-hole { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; padding: 4px 0; border-top: 1px solid rgba(255,255,255,.06); }
+.kul-hole-f { display: flex; flex-direction: column; font-size: 11px; color: var(--muted); }
+.kul-hole-f input { width: 54px; }
+.lib-thumb.lib-kul { background-size: cover; }

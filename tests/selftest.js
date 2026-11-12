@@ -1359,6 +1359,16 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
       { const kc = { k, cam: K.camOf(k, null), base: null, extra: { x: 0 } };
         if (Math.abs(K.charOffset(kc, 50, 0).s - 1) > 1e-9 || !(K.charOffset(kc, 50, -500).s < 1) || !(K.charOffset(kc, 50, 300).s > 1)) out.push('Figuren-Tiefe');
         if (!(K.charOffset(kc, 20, -500).tx > 0)) out.push('Figur hinten rückt nicht zur Mitte'); }
+      // Vorlagen (0.9.33): nur Räume, Fenster und Türen als ausgeschnittene Öffnungen, Scroll-Bereich passt
+      for (const [id] of K.TEMPLATES) {
+        const t = K.fromTemplate(id);
+        if (!t || !t.planes.some((p) => p.kind === 'wall') || t.planes.some((p) => p.asset) || !t.zones.length) { out.push('Vorlage ' + id); continue; }
+        if (t.cam.min > t.cam.max || t.cam.x < t.cam.min || t.cam.x > t.cam.max) out.push('Vorlage Scroll-Bereich ' + id);
+      }
+      { const fl = K.fromTemplate('flat'), wl = fl.planes.find((p) => p.kind === 'wall' && p.holes.some((o) => o.t === 'win'));
+        const cut = K.cut(wl, K.placeholder(wl)), A = K.alpha(cut), o = wl.holes.find((q) => q.t === 'win');
+        if (A.a[Math.floor((o.v0 + o.v1) / 2 * A.h) * A.w + Math.floor((o.u0 + o.u1) / 2 * A.w)] !== 0) out.push('Fenster nicht ausgeschnitten');
+        if (!(Library.kulItems().length === K.TEMPLATES.length)) out.push('Bibliothek ohne Kulissen-Vorlagen'); }
       // Einbacken: alle Flächen, Lampe nur nachts an
       k.lamps.push(K.lamp({ x: 0, y: -100, z: -100, days: { night: true } }));
       const night = await K.bake(k, 'night'), day = await K.bake(k, 'day');
