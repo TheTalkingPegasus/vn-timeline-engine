@@ -41,22 +41,99 @@
       const k = {
         id: VN.uid('kul'), name: name || 'Kulisse', planes: [], lamps: [], zones: [], light: true,
         sun: { on: true, power: 1, shafts: 0.7, auto: true, hAng: 30, vAng: 35, days: { morning: true, day: true, evening: true, night: true } },
-        cam: { x: 0, y: 0, min: 0, max: 0 }, scroll: { edge: true, speed: 900 }, day: 'day'
+        cam: { x: 0, y: 0, min: 0, max: 0 }, scroll: { edge: true, speed: 2000 }, day: 'day'
       };
       if (tpl === 'room') Kulisse.addRoom(k, 0, 'Raum');
       return k;
     },
     // Raum aus Rückwand, Boden, Decke und zwei Seitenwänden – Breite 900, Tiefe 450
-    addRoom(k, cx, name) {
-      const F = 340, C = -360, B = -300, Fr = 150, D = Fr - B;
-      const P = Kulisse.plane, t = (x) => (VN.t ? VN.t(x) : x);
+    // Maßstab (0.9.33): eine Figur, die wie üblich das Bild vom Kopf bis zur Hüfte füllt, ist im Ganzen etwa 1100 hoch.
+    // Raumhöhe 1600, Türen 520 × 1150, Boden bei y = 820, Rückwand standardmäßig bei z = -2000.
+    S: { FLOOR: 820, CEIL: -780, BACK: -2000, FRONT: 150, H: 1600, DOOR_W: 520, DOOR_H: 1150 },
+    addRoom(k, cx, name, w, back) {
+      const S = Kulisse.S, P = Kulisse.plane, t = (x) => (VN.t ? VN.t(x) : x);
+      w = w || 3600; const B = back || S.BACK, D = S.FRONT - B, Y = (S.FLOOR + S.CEIL) / 2;
       k.planes.push(
-        P({ name: name + ' · ' + t('Rückwand'), kind: 'wall', x: cx, y: -10, z: B, w: 900, h: 700 }),
-        P({ name: name + ' · ' + t('Boden'), kind: 'floor', x: cx, y: F, z: B + D / 2, w: 900, h: D, rx: 90 }),
-        P({ name: name + ' · ' + t('Decke'), kind: 'ceil', x: cx, y: C, z: B + D / 2, w: 900, h: D, rx: 90 }),
-        P({ name: name + ' · ' + t('Wand links'), kind: 'side', x: cx - 450, y: -10, z: B + D / 2, w: D, h: 700, ry: 90 }),
-        P({ name: name + ' · ' + t('Wand rechts'), kind: 'side', x: cx + 450, y: -10, z: B + D / 2, w: D, h: 700, ry: 90 }));
+        P({ name: name + ' · ' + t('Rückwand'), kind: 'wall', x: cx, y: Y, z: B, w, h: S.H }),
+        P({ name: name + ' · ' + t('Boden'), kind: 'floor', x: cx, y: S.FLOOR, z: B + D / 2, w, h: D, rx: 90 }),
+        P({ name: name + ' · ' + t('Decke'), kind: 'ceil', x: cx, y: S.CEIL, z: B + D / 2, w, h: D, rx: 90 }),
+        P({ name: name + ' · ' + t('Wand links'), kind: 'side', x: cx - w / 2, y: Y, z: B + D / 2, w: D, h: S.H, ry: 90 }),
+        P({ name: name + ' · ' + t('Wand rechts'), kind: 'side', x: cx + w / 2, y: Y, z: B + D / 2, w: D, h: S.H, ry: 90 }));
       return k;
+    },
+    // Öffnungen (Fenster, Türen) als Daten: werden aus jedem Bild ausgeschnitten – auch aus Platzhaltern
+    win(u0, u1, small) { return small ? { u0, u1, v0: 0.22, v1: 0.45, t: 'win' } : { u0, u1, v0: 0.19, v1: 0.69, t: 'win' }; },
+    door(uc, wall, w) { const S = Kulisse.S, hw = (w || S.DOOR_W) / wall / 2; return { u0: uc - hw, u1: uc + hw, v0: 1 - S.DOOR_H / S.H, v1: 1, t: 'door' }; },
+
+    // ---------- Vorlagen (0.9.33): nur Räume – Wände, Böden, Decken, Türen, Fenster, Kanten, Zonen, Licht ----------
+    // rooms: [{ n: Name, w: Breite, win: Anzahl Fenster (Rückwand), small: kleine Fenster, door: Tür in der Rückwand (0–1), solid: Wand links ohne Tür }]
+    build(name, rooms, o = {}) {
+      const S = Kulisse.S, P = Kulisse.plane, t = (x) => (VN.t ? VN.t(x) : x);
+      const k = Kulisse.blank(name), B = o.back || S.BACK, D = S.FRONT - B, Y = (S.FLOOR + S.CEIL) / 2;
+      const work = o.work ? { morning: true, day: true, evening: true, night: false } : { morning: false, day: false, evening: true, night: true };
+      const total = rooms.reduce((a, r) => a + r.w, 0);
+      let left = -total / 2;
+      const side = (x, nm, i, last) => {
+        const outer = i === 0 || last, holes = outer || (rooms[i] && rooms[i].solid) ? [] : [Kulisse.door(0.5, D)];
+        k.planes.push(P({ name: nm, kind: 'side', x, y: Y, z: B + D / 2, w: D, h: S.H, ry: last ? -90 : 90, outer: outer || undefined, holes }));
+        k.planes.push(P({ name: t('Kante') + ' ' + (i + 1), kind: 'beam', x, y: 0, z: S.FRONT + 14, w: 140, h: 2400 }));
+      };
+      rooms.forEach((r, i) => {
+        const cx = left + r.w / 2, holes = [];
+        for (let j = 0; j < (r.win || 0); j++) { const span = 1 / r.win, m = span * 0.14; holes.push(Kulisse.win(j * span + m, (j + 1) * span - m, r.small)); }
+        if (r.doors) for (const u of r.doors) holes.push(Kulisse.door(u, r.w));
+        side(left, i === 0 ? t('Außenwand links') : t('Wand') + ' ' + rooms[i - 1].n + ' | ' + r.n, i, false);
+        k.planes.push(
+          P({ name: r.n + ' · ' + t('Rückwand'), kind: 'wall', x: cx, y: Y, z: B, w: r.w, h: S.H, holes, blinds: r.win && o.blinds ? { on: true, gap: 40, open: 0.55 } : undefined }),
+          P({ name: r.n + ' · ' + t('Boden'), kind: 'floor', x: cx, y: S.FLOOR, z: B + D / 2, w: r.w, h: D, rx: 90 }),
+          P({ name: r.n + ' · ' + t('Decke'), kind: 'ceil', x: cx, y: S.CEIL, z: B + D / 2, w: r.w, h: D, rx: 90 }));
+        const nl = Math.max(1, Math.round(r.w / (o.lampEvery || 3600)));
+        for (let j = 0; j < nl; j++) k.lamps.push(Kulisse.lamp({ name: t('Licht') + ' ' + r.n + (nl > 1 ? ' ' + (j + 1) : ''), x: Math.round(left + r.w * (j + 0.5) / nl), y: S.CEIL + 60, z: Math.round(B * 0.45), color: o.work ? '#eef4ff' : '#ffd29a', power: 0.85, range: Math.round(Math.max(1800, D * 1.2)), days: Object.assign({}, work) }));
+        k.zones.push({ id: VN.uid('kz'), name: r.n, x0: Math.round(left), x1: Math.round(left + r.w), music: null, ambient: null });
+        left += r.w;
+      });
+      side(left, t('Außenwand rechts'), rooms.length, true);
+      const lo = Math.round(-total / 2 + 700), hi = Math.round(total / 2 - 700);
+      k.cam = lo <= hi ? { x: lo, y: 0, min: lo, max: hi } : { x: 0, y: 0, min: 0, max: 0 };
+      k.scroll = { edge: true, speed: 2200 };
+      return k;
+    },
+    TEMPLATES: [
+      ['office', 'Büroetage', () => [{ n: 'Empfang', w: 3600, doors: [0.75] }, { n: 'Großraumbüro', w: 4400, win: 4 }, { n: 'Besprechung', w: 3200, win: 2 }, { n: 'Chefbüro', w: 3200, win: 2 }, { n: 'Teeküche', w: 2600, win: 1 }], { work: true, blinds: true }],
+      ['classroom', 'Klassenzimmer', () => [{ n: 'Klassenzimmer', w: 5200, win: 4 }], { work: true }],
+      ['schoolhall', 'Schulflur', () => [{ n: 'Schulflur', w: 9600, doors: [0.12, 0.37, 0.62, 0.87] }], { work: true, back: -1100, lampEvery: 2400 }],
+      ['corridor', 'Korridor', () => [{ n: 'Korridor', w: 10800, doors: [0.1, 0.3, 0.5, 0.7, 0.9] }], { work: true, back: -900, lampEvery: 1800 }],
+      ['hall', 'Flur', () => [{ n: 'Flur', w: 3000, doors: [0.3, 0.75] }], { back: -1000 }],
+      ['living', 'Wohnzimmer', () => [{ n: 'Wohnzimmer', w: 4200, win: 2 }], {}],
+      ['kitchen', 'Küche', () => [{ n: 'Küche', w: 3000, win: 1 }], {}],
+      ['bath', 'Badezimmer', () => [{ n: 'Badezimmer', w: 2400, win: 1, small: true }], { back: -1500 }],
+      ['bedroom', 'Schlafzimmer', () => [{ n: 'Schlafzimmer', w: 3400, win: 1 }], {}],
+      ['shop', 'Einkaufsladen', () => [{ n: 'Verkaufsraum', w: 5600, doors: [0.85] }], { work: true, lampEvery: 1900 }],
+      ['flat', 'Wohnung', () => [{ n: 'Flur', w: 2600, doors: [0.5] }, { n: 'Wohnzimmer', w: 4200, win: 2 }, { n: 'Küche', w: 3000, win: 1 }, { n: 'Badezimmer', w: 2400, win: 1, small: true }, { n: 'Schlafzimmer', w: 3400, win: 1 }], {}]
+    ],
+    fromTemplate(id) {
+      const T = Kulisse.TEMPLATES.find((x) => x[0] === id); if (!T) return null;
+      const t = (x) => (VN.t ? VN.t(x) : x);
+      return Kulisse.build(t(T[1]), T[2]().map((r) => Object.assign({}, r, { n: t(r.n) })), T[3]);
+    },
+    // Vorschaubild einer Vorlage: Räume von vorne, Fenster hell, Türen dunkel
+    thumb(id) {
+      Kulisse._thumbs = Kulisse._thumbs || {};
+      if (Kulisse._thumbs[id]) return Kulisse._thumbs[id];
+      const k = Kulisse.fromTemplate(id), walls = k.planes.filter((p) => p.kind === 'wall');
+      const x0 = Math.min(...walls.map((p) => p.x - p.w / 2)), x1 = Math.max(...walls.map((p) => p.x + p.w / 2));
+      const c = document.createElement('canvas'); c.width = 320; c.height = 150; const g = c.getContext('2d');
+      g.fillStyle = '#1b1d24'; g.fillRect(0, 0, c.width, c.height);
+      const sc = Math.min(300 / (x1 - x0), 120 / Kulisse.S.H), ox = (c.width - (x1 - x0) * sc) / 2, oy = (c.height - Kulisse.S.H * sc) / 2;
+      for (const p of walls) {
+        const x = ox + (p.x - p.w / 2 - x0) * sc, w = p.w * sc, h = Kulisse.S.H * sc;
+        g.fillStyle = '#5d6170'; g.fillRect(x, oy, w, h);
+        g.fillStyle = '#7d6a58'; g.fillRect(x, oy + h - 6, w, 6);
+        for (const o of p.holes || []) { g.fillStyle = o.t === 'door' ? '#2a2c34' : '#9cc6ec'; g.fillRect(x + o.u0 * w, oy + o.v0 * h, (o.u1 - o.u0) * w, (o.v1 - o.v0) * h); }
+        g.fillStyle = '#c9ccd6'; g.fillRect(x - 1, oy, 2, h);
+      }
+      g.fillStyle = '#c9ccd6'; g.fillRect(ox + (x1 - x0) * sc - 1, oy, 2, Kulisse.S.H * sc);
+      return (Kulisse._thumbs[id] = c.toDataURL());
     },
 
     // ---------- Mathe (identisch zu den CSS-Transformationen) ----------
@@ -89,7 +166,8 @@
       const xs = k.planes.filter((p) => p.kind !== 'bg').map((p) => p.x);
       const cx = xs.length ? (Math.min(...xs) + Math.max(...xs)) / 2 : 0;
       const span = xs.length ? Math.max(...xs) - Math.min(...xs) + 900 : 1800;
-      return { a: -28, b: -32, s: Math.max(0.15, Math.min(0.8, 1100 / span)), cx, cy: 0, cz: -150 };
+      const zs = k.planes.filter((p) => p.kind === 'wall').map((p) => p.z), cz = zs.length ? Math.min(...zs) / 2 : -150;
+      return { a: -28, b: -32, s: Math.max(0.03, Math.min(0.8, 1100 / span)), cx, cy: 0, cz };
     },
     // Scheinwerfer: Richtung aus Drehen (yaw) und Neigung (pitch); 0/0 = gerade nach hinten, Neigung 90 = senkrecht nach unten
     spotDir(l) { const yw = rad(num(l.yaw, 0)), pt = rad(num(l.pitch, 45)); return [Math.sin(yw) * Math.cos(pt), Math.sin(pt), -Math.cos(yw) * Math.cos(pt)]; },
@@ -185,10 +263,22 @@
       Kulisse._holes.set(src, out);
       return out;
     },
+    // Öffnungen aus dem Bild ausschneiden (Kopie, zwischengespeichert)
+    _cut: new WeakMap(),
+    cut(p, src) {
+      if (!src || !p.holes || !p.holes.length) return src;
+      const key = JSON.stringify(p.holes), m = Kulisse._cut.get(src) || {};
+      if (m[key]) return m[key];
+      const w = src.naturalWidth || src.width, h = src.naturalHeight || src.height, c = document.createElement('canvas');
+      c.width = w; c.height = h; const g = c.getContext('2d'); g.drawImage(src, 0, 0);
+      for (const o of p.holes) g.clearRect(o.u0 * w, o.v0 * h, (o.u1 - o.u0) * w, (o.v1 - o.v0) * h);
+      m[key] = c; Kulisse._cut.set(src, m);
+      return c;
+    },
     srcFor(p, day) { const id = (p.dayAssets && p.dayAssets[day]) || p.asset; return VN.assetUrl(id) || null; },
     async textures(k, day) {
       const out = new Map();
-      await Promise.all(k.planes.map(async (p) => { if (p.kind === 'part') return; const im = await Kulisse.image(Kulisse.srcFor(p, day)); out.set(p.id, im || Kulisse.placeholder(p)); }));
+      await Promise.all(k.planes.map(async (p) => { if (p.kind === 'part') return; const im = await Kulisse.image(Kulisse.srcFor(p, day)); out.set(p.id, Kulisse.cut(p, im || Kulisse.placeholder(p))); }));
       return out;
     },
 

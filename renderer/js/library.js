@@ -1,14 +1,19 @@
 // Asset-Bibliothek (0.9.24): Bilder, Töne, Videos und Schriften einmal speichern – in jedem Projekt wiederverwenden
 (function () {
   const { el } = VN;
-  const KIND = { image: ['🖼', 'Bilder'], audio: ['🔊', 'Audio'], video: ['🎬', 'Video'], font: ['🔤', 'Schriften'] };
+  const KIND = { image: ['🖼', 'Bilder'], audio: ['🔊', 'Audio'], video: ['🎬', 'Video'], font: ['🔤', 'Schriften'], kulisse: ['🏠', 'Kulissen'] };
   const Lib = (window.Library = {
     api: () => VN.api && VN.api.library,
     st: { tab: 'lib', kind: '', folder: '', q: '', src: '', sel: new Set(), addSel: new Set(), addFolder: '' },
     // Starter-Pack (0.9.25): Namen und Ordner kommen in allen Sprachen mit – hier in der Sprache der Oberfläche
     loc(o, fb) { const l = VN.lang || 'en'; return o && typeof o === 'object' ? o[l] || o.en || o.de || fb : (o || fb); },
+    // Kulissen-Vorlagen (0.9.33): nur Räume ohne Bilder – gehören zur Engine wie das Starter-Pack
+    kulItems() {
+      if (!window.Kulisse) return [];
+      return Kulisse.TEMPLATES.map(([id, name, rooms]) => ({ id: 'kul:' + id, tpl: id, kind: 'kulisse', builtin: true, name: VN.t(name), folder: VN.t('Kulissen-Vorlagen'), catName: VN.t('Kulissen-Vorlagen'), rooms: rooms().map((r) => VN.t(r.n)).join(' · ') }));
+    },
     fix(L) {
-      return (L || []).map((x) => (x && x.builtin ? Object.assign({}, x, { name: Lib.loc(x.name, '?'), folder: Lib.loc(x.packName, 'Starter-Pack') + '/' + Lib.loc(x.catName, x.cat || '') }) : x));
+      return (L || []).map((x) => (x && x.builtin ? Object.assign({}, x, { name: Lib.loc(x.name, '?'), folder: Lib.loc(x.packName, 'Starter-Pack') + '/' + Lib.loc(x.catName, x.cat || '') }) : x)).concat(Lib.kulItems());
     },
     async open() {
       if (!Lib.api()) { VN.toast(VN.t('Die Bibliothek ist hier nicht verfügbar.')); return; }
@@ -59,12 +64,13 @@
       const grid = el('div', { class: 'lib-grid' });
       for (const x of vis) {
         const on = S.sel.has(x.id);
-        const thumb = x.kind === 'image' ? el('div', { class: 'lib-thumb', 'data-lib': x.file, style: { backgroundImage: Lib.api().url(x) ? `url("${Lib.api().url(x)}")` : '' } })
+        const thumb = x.kind === 'kulisse' ? el('div', { class: 'lib-thumb lib-kul', style: { backgroundImage: `url("${Kulisse.thumb(x.tpl)}")` } })
+          : x.kind === 'image' ? el('div', { class: 'lib-thumb', 'data-lib': x.file, style: { backgroundImage: Lib.api().url(x) ? `url("${Lib.api().url(x)}")` : '' } })
           : x.kind === 'audio' ? el('div', { class: 'lib-thumb snd' }, el('button', { class: 'btn tiny lib-play', onclick: (e) => { e.stopPropagation(); Lib.play(x, e.currentTarget); } }, '▶'))
             : el('div', { class: 'lib-thumb other' }, KIND[x.kind] ? KIND[x.kind][0] : '📄');
         const nm = el('div', { class: 'lib-name', title: x.builtin ? x.name : VN.t('Doppelklick = umbenennen'), ondblclick: async (e) => { e.stopPropagation(); if (x.builtin) return; const v = prompt(VN.t('Name'), x.name); if (v != null && v.trim()) { Lib.list = Lib.fix(await Lib.api().update(x.id, { name: v.trim() })); Lib.draw(); } } }, x.name);
         grid.appendChild(el('div', { class: 'lib-card' + (on ? ' on' : ''), onclick: () => { if (on) S.sel.delete(x.id); else S.sel.add(x.id); Lib.draw(); } },
-          thumb, nm, el('div', { class: 'lib-meta' }, (x.builtin ? '⭐ ' + Lib.loc(x.catName, '') : x.folder ? '📁 ' + x.folder : '') + (x.size ? ' · ' + Math.max(1, Math.round(x.size / 1024)) + ' KB' : '')), on ? el('span', { class: 'lib-check' }, '✓') : null));
+          thumb, nm, el('div', { class: 'lib-meta' }, (x.kind === 'kulisse' ? '🏠 ' + x.rooms : x.builtin ? '⭐ ' + Lib.loc(x.catName, '') : x.folder ? '📁 ' + x.folder : '') + (x.size ? ' · ' + Math.max(1, Math.round(x.size / 1024)) + ' KB' : '')), on ? el('span', { class: 'lib-check' }, '✓') : null));
       }
       card.appendChild(grid);
       const n = [...S.sel].filter((id) => L.some((x) => x.id === id)).length;
@@ -72,13 +78,21 @@
         el('button', { class: 'btn tiny', onclick: () => { for (const x of vis) S.sel.add(x.id); Lib.draw(); } }, VN.t('Alle sichtbaren wählen')),
         n ? el('button', { class: 'btn tiny', onclick: () => { S.sel.clear(); Lib.draw(); } }, VN.t('Auswahl aufheben')) : null,
         el('div', { class: 'spacer' }),
-        n ? el('button', { class: 'btn tiny', onclick: async () => { const f = prompt(VN.t('Ordner in der Bibliothek'), ''); if (f == null) return; for (const id of S.sel) { if (String(id).startsWith('pack:')) continue; Lib.list = Lib.fix(await Lib.api().update(id, { folder: f.trim() })); } Lib.draw(); } }, '📁 ' + VN.t('Ordner')) : null,
-        n ? el('button', { class: 'btn tiny danger', onclick: async () => { const own = [...S.sel].filter((id) => !String(id).startsWith('pack:')); if (!own.length) { VN.toast(VN.t('Das Starter-Pack gehört zur Engine und kann nicht gelöscht werden.')); return; } if (!confirm(VN.tf('{n} Dateien aus der Bibliothek löschen? (Projekte, die sie schon benutzen, behalten ihre Kopie.)', { n: own.length }))) return; Lib.list = Lib.fix(await Lib.api().remove(own)); S.sel.clear(); Lib.draw(); } }, VN.t('Löschen')) : null,
+        n ? el('button', { class: 'btn tiny', onclick: async () => { const f = prompt(VN.t('Ordner in der Bibliothek'), ''); if (f == null) return; for (const id of S.sel) { if (/^(pack|kul):/.test(String(id))) continue; Lib.list = Lib.fix(await Lib.api().update(id, { folder: f.trim() })); } Lib.draw(); } }, '📁 ' + VN.t('Ordner')) : null,
+        n ? el('button', { class: 'btn tiny danger', onclick: async () => { const own = [...S.sel].filter((id) => !/^(pack|kul):/.test(String(id))); if (!own.length) { VN.toast(VN.t('Das Starter-Pack gehört zur Engine und kann nicht gelöscht werden.')); return; } if (!confirm(VN.tf('{n} Dateien aus der Bibliothek löschen? (Projekte, die sie schon benutzen, behalten ihre Kopie.)', { n: own.length }))) return; Lib.list = Lib.fix(await Lib.api().remove(own)); S.sel.clear(); Lib.draw(); } }, VN.t('Löschen')) : null,
         el('button', { class: 'btn primary', disabled: !n || !VN.dir, onclick: () => Lib.importSel() }, '⬇ ' + (n ? VN.tf('{n} ins Projekt holen', { n }) : VN.t('Ins Projekt holen')))));
     },
     async importSel() {
-      const ids = [...Lib.st.sel];
+      let ids = [...Lib.st.sel];
       if (!ids.length) return;
+      // Kulissen-Vorlagen: als neue Kulissen ins Projekt
+      const kul = ids.filter((id) => String(id).startsWith('kul:'));
+      if (kul.length) {
+        VN.mutate(() => { for (const id of kul) { const k = Kulisse.fromTemplate(id.slice(4)); if (k) { Kulisse.all().push(k); VN.ui.kulId = k.id; } } });
+        VN.toast(VN.tf('{n} Kulissen ins Projekt geholt – zu finden im Reiter „Kulissen“', { n: kul.length }));
+        ids = ids.filter((id) => !kul.includes(id));
+        if (!ids.length) { Lib.st.sel.clear(); Lib.draw(); return; }
+      }
       const res = await Lib.api().import(ids);
       const fol = new Map((Lib.list || []).map((x) => [x.name, x.folder]));
       const added = VN.registerAssets(res);

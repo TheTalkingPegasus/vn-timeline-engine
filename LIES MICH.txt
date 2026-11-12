@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.32
+VN Timeline Engine · Prototyp 0.9.33
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,18 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.33 · Kulissen-Vorlagen
+- Raum-Vorlagen: „+ Neue Kulisse“ bietet jetzt Vorlagen – Büroetage, Klassenzimmer, Schulflur, Korridor, Flur, Wohnzimmer, Küche,
+  Badezimmer, Schlafzimmer, Einkaufsladen und eine ganze Wohnung. Sie enthalten nur die Räume (Wände, Böden, Decken, Türen, Fenster,
+  Kanten, Zonen und Deckenlicht), keine Bilder und keine Möbel. Auch in der Asset-Bibliothek unter „🏠 Kulissen“ – wählen und
+  „Ins Projekt holen“.
+- Öffnungen als Daten: Fenster und Türen werden an der Wand gespeichert und automatisch aus jedem Bild ausgeschnitten – du musst sie
+  im PNG nicht mehr selbst freistellen. Im Inspektor unter „Öffnungen“ hinzufügen, verschieben und in der Größe ändern.
+- Zeichnen mit dem Stift (Gesicht-Rig, Weich-Physik): unten auf der Bühne zeigt eine Leiste die Punkte mit „✓ Fertig“, „↶ Punkt zurück“
+  und „✕ Abbrechen“ – ohne Tastatur. Punkte und Anfasser bleiben beim Zoomen gleich groß, die Bühne nutzt die ganze Fensterhöhe.
+- Figuren-Maßstab: neue Räume passen zu einer Figur, die das Bild vom Kopf bis zur Hüfte füllt (Raumhöhe etwa 1,5 × Figur, Türen etwas
+  höher als die Figur, breite Räume). Bestehende Kulissen behalten ihren Maßstab.
 
 NEU IN 0.9.32 · Kulissen-Raum (Räume aus PNG-Flächen, mit Licht)
 - Neuer Reiter „Kulissen“: einen echten Raum aus PNG-Flächen bauen – Rückwände, Böden, Decken, Zwischenwände, Balken, Möbel,

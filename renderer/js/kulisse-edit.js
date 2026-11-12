@@ -37,6 +37,20 @@
     viewX(k) { const u = VN.ui.kulView = VN.ui.kulView || {}; return u[k.id] != null ? u[k.id] : k.cam.x; },
     orbit(k) { const u = VN.ui.kulOrb = VN.ui.kulOrb || {}; return u[k.id] || (u[k.id] = K().orbDefault(k)); },
 
+    // ---------- Neue Kulisse: leer oder aus einer Vorlage (nur Räume, ohne Bilder und Möbel) ----------
+    picker() {
+      const back = el('div', { class: 'modal-back', onclick: (e) => { if (e.target === back) back.remove(); } });
+      const make = (fn) => { back.remove(); VN.mutate(() => { const n = fn(); K().all().push(n); VN.ui.kulId = n.id; VN.ui.kulSel = { t: 'set' }; VN.ui.kulView = VN.ui.kulView || {}; delete VN.ui.kulView[n.id]; }); };
+      const cardOf = (img, name, sub, fn) => el('div', { class: 'kul-tpl', onclick: () => make(fn) }, img ? el('img', { src: img, alt: '' }) : el('div', { class: 'kul-tpl-empty' }, '＋'), el('div', { class: 'kul-tpl-name' }, name), sub ? el('div', { class: 'muted small' }, sub) : null);
+      back.appendChild(el('div', { class: 'modal kul-tpl-modal' },
+        el('div', { class: 'row gap8' }, el('strong', { style: { fontSize: '16px' } }, 'Neue Kulisse'), el('div', { class: 'spacer' }), el('button', { class: 'btn', onclick: () => back.remove() }, 'Schließen')),
+        el('div', { class: 'muted small', style: { margin: '4px 0 10px' } }, 'Vorlagen enthalten nur die Räume: Wände, Böden, Decken, Türen, Fenster, Kanten, Zonen und Licht. Bilder und Möbel fügst du selbst ein – Fenster und Türen werden aus deinen Wand-Bildern automatisch ausgeschnitten.'),
+        el('div', { class: 'kul-tpl-grid' },
+          cardOf(null, VN.t('Leer'), VN.t('ohne Flächen'), () => K().blank(VN.t('Neue Kulisse'))),
+          ...K().TEMPLATES.map(([id, name, rooms]) => cardOf(K().thumb(id), VN.t(name), rooms().map((r) => VN.t(r.n)).join(' · '), () => K().fromTemplate(id))))));
+      document.body.appendChild(back);
+    },
+
     // ---------- Hintergrund-Auswahl in Szene und Hub ----------
     bgField(look, hub) {
       const all = K().all();
@@ -60,7 +74,7 @@
       const head = el('div', { class: 'view-head kul-head' },
         el('strong', { style: { fontSize: '15px' } }, 'Kulissen'),
         (() => { const x = sel(k ? k.id : '', all.length ? all.map((x) => [x.id, x.name]) : [['', '— keine —']], (v) => { VN.ui.kulId = v; VN.ui.kulSel = null; VN.render(); }); x.className = 'small-input'; return x; })(),
-        el('button', { class: 'btn', onclick: () => VN.mutate(() => { const n = K().blank(VN.t('Neue Kulisse'), 'room'); all.push(n); VN.ui.kulId = n.id; VN.ui.kulSel = { t: 'set' }; }) }, '+ Neue Kulisse'),
+        el('button', { class: 'btn', onclick: () => KulEd.picker() }, '+ Neue Kulisse'),
         k ? el('button', { class: 'btn', onclick: () => VN.mutate(() => { const c = JSON.parse(JSON.stringify(k)); c.id = VN.uid('kul'); c.name = k.name + ' ' + VN.t('Kopie'); all.push(c); VN.ui.kulId = c.id; }) }, 'Duplizieren') : null,
         k ? el('button', { class: 'btn danger', onclick: () => VN.mutate(() => { const i = all.indexOf(k); if (i >= 0) all.splice(i, 1); VN.ui.kulSel = null; }) }, 'Löschen') : null,
         el('div', { class: 'spacer' }));
@@ -71,7 +85,7 @@
           'Baue einen echten Raum aus PNG-Flächen: Rückwände, Böden, Decken, Zwischenwände, Balken und Möbel. Die Kamera schaut mit Perspektive hinein – Parallax entsteht von selbst. ',
           'Fenster sind einfach durchsichtige Stellen im Wand-PNG: man sieht hinaus, und das Fensterlicht fällt hindurch. ',
           'Eine Kulisse wählst du danach am Hintergrund-Clip einer Szene oder am Hub als Hintergrund.', el('br'), el('br'),
-          el('button', { class: 'btn primary', onclick: () => VN.mutate(() => { const n = K().blank(VN.t('Neue Kulisse'), 'room'); all.push(n); VN.ui.kulId = n.id; VN.ui.kulSel = { t: 'set' }; }) }, '+ Erste Kulisse anlegen')));
+          el('button', { class: 'btn primary', onclick: () => KulEd.picker() }, '+ Erste Kulisse anlegen')));
         return;
       }
       const day = KulEd.day();
@@ -104,22 +118,26 @@
       // Hinzufügen
       const cx = round(KulEd.viewX(k));
       const addP = (o) => VN.mutate(() => { const p = K().plane(o); k.planes.push(p); VN.ui.kulSel = { t: 'plane', id: p.id }; });
-      const F = 340, C = -360, B = -300, Fr = 150, D = Fr - B;
+      // Maßstab: neue Kulissen (ab 0.9.33) im Figuren-Maßstab, ältere mit kleinen Räumen bleiben bei ihrem Maßstab
+      const big = !k.planes.some((p) => p.kind === 'wall' && p.h < 1000);
+      const S = big ? K().S : { FLOOR: 340, CEIL: -360, BACK: -300, FRONT: 150, H: 700 };
+      const F = S.FLOOR, C = S.CEIL, B = S.BACK, Fr = S.FRONT, D = Fr - B, Y = (F + C) / 2, RW = big ? 3600 : 900, m = big ? 4 : 1;
+      const lampDays = { morning: true, day: true, evening: true, night: true };
       center.appendChild(el('div', { class: 'row gap8 kul-ed-add' },
         el('span', { class: 'muted small' }, 'Hinzufügen:'),
-        el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { K().addRoom(k, cx, VN.t('Raum') + ' ' + (k.planes.filter((p) => p.kind === 'wall').length + 1)); }) }, 'Ganzer Raum'),
-        el('button', { class: 'btn tiny', onclick: () => addP({ name: VN.t('Rückwand'), kind: 'wall', x: cx, y: -10, z: B, w: 900, h: 700 }) }, 'Rückwand'),
-        el('button', { class: 'btn tiny', onclick: () => addP({ name: VN.t('Boden'), kind: 'floor', x: cx, y: F, z: B + D / 2, w: 900, h: D, rx: 90 }) }, 'Boden'),
-        el('button', { class: 'btn tiny', onclick: () => addP({ name: VN.t('Decke'), kind: 'ceil', x: cx, y: C, z: B + D / 2, w: 900, h: D, rx: 90 }) }, 'Decke'),
-        el('button', { class: 'btn tiny', onclick: () => addP({ name: VN.t('Zwischenwand'), kind: 'side', x: cx + 200, y: -10, z: B + D / 2, w: D, h: 700, ry: 90 }) }, 'Zwischenwand'),
-        el('button', { class: 'btn tiny', onclick: () => addP({ name: VN.t('Balken'), kind: 'beam', x: cx + 260, y: 0, z: Fr + 14, w: 70, h: 820 }) }, 'Balken'),
-        el('button', { class: 'btn tiny', onclick: () => addP({ name: VN.t('Möbel'), kind: 'deco', x: cx, y: F - 120, z: -150, w: 240, h: 240 }) }, 'Möbel / Objekt'),
-        el('button', { class: 'btn tiny', onclick: () => addP({ name: VN.t('Himmel'), kind: 'bg', x: cx, y: -60, z: -1400, w: 5600, h: 2000 }) }, 'Hintergrund'),
-        el('button', { class: 'btn tiny', onclick: () => addP({ name: VN.t('Regen'), kind: 'part', x: cx, y: 0, z: -600, w: 3400, h: 1500, part: Object.assign({ particles: 'rain' }, Fx.PART_DEF.rain) }) }, 'Partikel'),
-        el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const l = K().lamp({ name: VN.t('Lampe'), x: cx, y: -200, z: -100, days: { morning: true, day: true, evening: true, night: true } }); k.lamps.push(l); VN.ui.kulSel = { t: 'lamp', id: l.id }; }) }, 'Lampe'),
-        el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const l = K().lamp({ name: VN.t('Scheinwerfer'), type: 'spot', x: cx - 250, y: -300, z: 60, yaw: 20, pitch: 55, spread: 20, soft: 0.4, haze: 0.6, range: 1200, color: '#fff1d6', power: 1.4, days: { morning: true, day: true, evening: true, night: true } }); k.lamps.push(l); VN.ui.kulSel = { t: 'lamp', id: l.id }; }) }, 'Scheinwerfer'),
-        el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const l = K().lamp({ name: VN.t('Neonröhre'), type: 'neon', x: cx, y: -250, z: -290, len: 320, angle: 0, range: 520, color: '#ff3fb4', power: 1.2, days: { morning: true, day: true, evening: true, night: true } }); k.lamps.push(l); VN.ui.kulSel = { t: 'lamp', id: l.id }; }) }, 'Neonröhre'),
-        el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const z = { id: VN.uid('kz'), name: VN.t('Zone') + ' ' + (k.zones.length + 1), x0: cx - 450, x1: cx + 450, music: null, ambient: null }; k.zones.push(z); VN.ui.kulSel = { t: 'zone', id: z.id }; }) }, 'Zone')));
+        el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { if (big) K().addRoom(k, cx, VN.t('Raum') + ' ' + (k.planes.filter((p) => p.kind === 'wall').length + 1)); else { const P = K().plane; const n = VN.t('Raum'); k.planes.push(P({ name: n, kind: 'wall', x: cx, y: -10, z: B, w: 900, h: 700 }), P({ name: n, kind: 'floor', x: cx, y: F, z: B + D / 2, w: 900, h: D, rx: 90 }), P({ name: n, kind: 'ceil', x: cx, y: C, z: B + D / 2, w: 900, h: D, rx: 90 })); } }) }, 'Ganzer Raum'),
+        el('button', { class: 'btn tiny', onclick: () => addP({ name: VN.t('Rückwand'), kind: 'wall', x: cx, y: Y, z: B, w: RW, h: S.H }) }, 'Rückwand'),
+        el('button', { class: 'btn tiny', onclick: () => addP({ name: VN.t('Boden'), kind: 'floor', x: cx, y: F, z: B + D / 2, w: RW, h: D, rx: 90 }) }, 'Boden'),
+        el('button', { class: 'btn tiny', onclick: () => addP({ name: VN.t('Decke'), kind: 'ceil', x: cx, y: C, z: B + D / 2, w: RW, h: D, rx: 90 }) }, 'Decke'),
+        el('button', { class: 'btn tiny', onclick: () => addP({ name: VN.t('Zwischenwand'), kind: 'side', x: cx + 200 * m, y: Y, z: B + D / 2, w: D, h: S.H, ry: 90 }) }, 'Zwischenwand'),
+        el('button', { class: 'btn tiny', onclick: () => addP({ name: VN.t('Balken'), kind: 'beam', x: cx + 260 * m, y: 0, z: Fr + 14, w: 70 * (big ? 2 : 1), h: big ? 2400 : 820 }) }, 'Balken'),
+        el('button', { class: 'btn tiny', onclick: () => addP({ name: VN.t('Möbel'), kind: 'deco', x: cx, y: F - 120 * m, z: B / 2, w: 240 * m, h: 240 * m }) }, 'Möbel / Objekt'),
+        el('button', { class: 'btn tiny', onclick: () => addP({ name: VN.t('Himmel'), kind: 'bg', x: cx, y: -60 * m, z: B - 1100 * m, w: 5600 * m, h: 2000 * m }) }, 'Hintergrund'),
+        el('button', { class: 'btn tiny', onclick: () => addP({ name: VN.t('Regen'), kind: 'part', x: cx, y: 0, z: B - 300 * m, w: 3400 * m, h: 1500 * m, part: Object.assign({ particles: 'rain' }, Fx.PART_DEF.rain) }) }, 'Partikel'),
+        el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const l = K().lamp({ name: VN.t('Lampe'), x: cx, y: C + 160 * m, z: B / 2, range: 620 * m, days: Object.assign({}, lampDays) }); k.lamps.push(l); VN.ui.kulSel = { t: 'lamp', id: l.id }; }) }, 'Lampe'),
+        el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const l = K().lamp({ name: VN.t('Scheinwerfer'), type: 'spot', x: cx - 250 * m, y: C + 60 * m, z: 60, yaw: 20, pitch: 55, spread: 20, soft: 0.4, haze: 0.6, range: 1200 * m, color: '#fff1d6', power: 1.4, days: Object.assign({}, lampDays) }); k.lamps.push(l); VN.ui.kulSel = { t: 'lamp', id: l.id }; }) }, 'Scheinwerfer'),
+        el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const l = K().lamp({ name: VN.t('Neonröhre'), type: 'neon', x: cx, y: C + 110 * m, z: B + 10, len: 320 * m, angle: 0, range: 520 * m, color: '#ff3fb4', power: 1.2, days: Object.assign({}, lampDays) }); k.lamps.push(l); VN.ui.kulSel = { t: 'lamp', id: l.id }; }) }, 'Neonröhre'),
+        el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const z = { id: VN.uid('kz'), name: VN.t('Zone') + ' ' + (k.zones.length + 1), x0: cx - RW / 2, x1: cx + RW / 2, music: null, ambient: null }; k.zones.push(z); VN.ui.kulSel = { t: 'zone', id: z.id }; }) }, 'Zone')));
       // Liste aller Flächen, Lichter und Zonen
       const s = VN.ui.kulSel || {};
       const item = (t, o, label, kind, dot) => el('div', { class: 'list-item' + (s.t === t && (t === 'sun' || t === 'set' || s.id === o.id) ? ' active' : ''), onclick: () => KulEd.pick(t, o && o.id) },
@@ -200,7 +218,7 @@
         g.addEventListener('pointerdown', (e) => { e.stopPropagation(); KulEd.pick('sun'); });
         S('text', { x: a[0], y: a[1] - 28, fill: col, 'font-size': 30, 'text-anchor': 'middle' }, orbOv).textContent = VN.t(cam.day === 'night' ? 'Mond' : 'Sonne');
       }
-      lampIcons(orbOv, P, true); gizmo(orbOv, P, 260);
+      lampIcons(orbOv, P, true); gizmo(orbOv, P, Math.round(95 / Math.max(0.03, orb.orbit.s)));
     },
     axisDrag(e, o, d, proj, svg) {
       e.preventDefault(); e.stopPropagation(); KulEd._axis = true;
@@ -384,6 +402,26 @@
           el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { p.rx = 90; p.ry = 0; p.rz = 0; }) }, 'Als Boden / Decke'),
           el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { p.rx = 0; p.ry = 90; p.rz = 0; }) }, 'Als Zwischenwand')),
         field('Ebene', sel(p.front || '', [['', 'Automatisch nach Tiefe'], ['front', 'Immer vor den Figuren'], ['back', 'Immer hinter den Figuren']], (v) => VN.mutate(() => { p.front = v || undefined; }))));
+      if (p.kind === 'wall' || p.kind === 'side') {
+        // Öffnungen: Fenster und Türen als Daten, werden aus dem Bild ausgeschnitten
+        const hs = p.holes || [];
+        const holeRow = (o, i) => {
+          const fld = (lab, key, fn) => { const v = fn.get(o); return el('label', { class: 'kul-hole-f' }, lab, el('input', { type: 'number', step: 1, value: Math.round(v * 100), onchange: (e) => VN.mutate(() => { const n = Math.max(0, Math.min(100, Number(e.target.value))) / 100; fn.set(o, n); }) })); };
+          return el('div', { class: 'kul-hole' },
+            el('strong', { class: 'small' }, VN.t(o.t === 'door' ? 'Tür' : 'Fenster') + ' ' + (i + 1)),
+            fld(VN.t('Links %'), 'u0', { get: (q) => q.u0, set: (q, n) => { const w = q.u1 - q.u0; q.u0 = Math.min(n, 1 - w); q.u1 = q.u0 + w; } }),
+            fld(VN.t('Breite %'), 'w', { get: (q) => q.u1 - q.u0, set: (q, n) => { q.u1 = Math.min(1, q.u0 + Math.max(0.01, n)); } }),
+            fld(VN.t('Oben %'), 'v0', { get: (q) => q.v0, set: (q, n) => { const h = q.v1 - q.v0; q.v0 = Math.min(n, 1 - h); q.v1 = q.v0 + h; } }),
+            fld(VN.t('Höhe %'), 'h', { get: (q) => q.v1 - q.v0, set: (q, n) => { q.v1 = Math.min(1, q.v0 + Math.max(0.01, n)); } }),
+            el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { p.holes.splice(i, 1); }) }, '✕'));
+        };
+        box.append(card('Öffnungen (Fenster und Türen)',
+          el('div', { class: 'muted small' }, 'Werden aus dem Bild ausgeschnitten – du musst sie im PNG nicht selbst freistellen. Licht und Durchblick gehen hindurch.'),
+          ...hs.map(holeRow),
+          el('div', { class: 'row gap8' },
+            el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { p.holes = p.holes || []; p.holes.push(p.kind === 'side' ? K().door(0.5, p.w) : K().win(0.38, 0.62)); }) }, '+ ' + VN.t('Fenster')),
+            el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { p.holes = p.holes || []; p.holes.push(K().door(0.5, p.w, Math.min(520, p.w * 0.3))); }) }, '+ ' + VN.t('Tür')))));
+      }
       if (p.kind === 'wall') {
         const b = p.blinds || {};
         box.append(card('Jalousie',

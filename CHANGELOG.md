@@ -2,6 +2,19 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.33 – Set templates
+- **Room templates:** “+ New set” now offers templates – office floor, classroom, school hallway, corridor, hallway,
+  living room, kitchen, bathroom, bedroom, shop and a whole flat. They contain only the rooms (walls, floors, ceilings,
+  doors, windows, edges, zones and ceiling lights), no images and no furniture. Also in the **asset library** under
+  “🏠 Sets” – select and “Import into project”.
+- **Openings as data:** windows and doors are stored on the wall and cut out of any image automatically – you no longer
+  have to make them transparent in the PNG yourself. Add, move and resize them in the inspector (“Openings”).
+- **Drawing with the pen** (face rig, soft physics): a bar at the bottom of the stage shows the number of points with
+  “✓ Done”, “↶ Undo point” and “✕ Cancel” – no keyboard needed. Points and handles now stay the same size on screen when
+  zooming, and the editing stage uses the full window height.
+- **Character scale:** new rooms are built to match a character that fills the screen from head to hip (room height
+  about 1.5 × the character, doors slightly taller than the character, wide rooms). Existing sets keep their scale.
+
 ## 0.9.32 – 3D sets (rooms from PNG planes, with light)
 - **New tab “Sets”:** build a real room from PNG planes – back walls, floors, ceilings, partition walls, beams, furniture,
   backgrounds and particle planes. Every plane has a position X/Y/Z and a rotation; the camera looks in with perspective,

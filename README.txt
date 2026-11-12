@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototype 0.9.32
+VN Timeline Engine · Prototype 0.9.33
 ====================================
 (Deutsch: siehe LIES MICH.txt)
 
@@ -15,6 +15,8 @@ Without installing (ZIP):
    isn't signed: "More info" → "Run anyway".
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
+
+NEW IN 0.9.33 · Set templates (office floor, classroom, hallways, flat rooms, shop) in “+ New set” and in the asset library; windows and doors as openings cut out of any image; rooms at character scale; pen bar with Done/Undo/Cancel, handles keep their size when zooming
 
 NEW IN 0.9.32 · 3D sets: rooms from PNG planes in a new “Sets” tab (oblique view with X/Y/Z arrows, beams that snap to wall edges), lamps, spotlights, neon tubes and window light with shadows and blinds, characters in depth and lit by the room, time of day, particle planes, edge scrolling in hubs and scenes, zones with music
 
