@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototype 0.9.35
+VN Timeline Engine · Prototype 0.9.36
 ====================================
 (Deutsch: siehe LIES MICH.txt)
 
@@ -15,6 +15,8 @@ Without installing (ZIP):
    isn't signed: "More info" → "Run anyway".
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
+
+NEW IN 0.9.36 · 216 icons in the starter pack (files, symbols, messages) – colourful, simple black, simple white, futuristic neon with and without frame
 
 NEW IN 0.9.35 · Free speech bubbles (own shape, text and name laid into 4 draggable corners with perspective, animated GIF/WebP), text effects (comic dots shadow, one-sided outline, moving letters, large first letter); soft physics and face rig on characters with bones
 

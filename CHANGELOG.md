@@ -2,6 +2,15 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.36 – Icons in the starter pack
+- **216 new icons** in the asset library (starter pack), each motif in four styles: colourful (comic style), simple
+  black, simple white, futuristic neon (with and without a hexagon frame). Motifs: files & folders (folder, text, image,
+  music, ZIP, PDF, save, trash, clipboard, paperclip, box), symbols (heart, star, check, cross, warning, question, info,
+  lock, plus/minus, gear, bell, home, search, lightning, fire, music note, location pin, clock, crown, trophy) and
+  messages (chat bubbles, typing, email, letter, inbox, send, call, missed call, video call, voice message, thumbs up,
+  @, Wi-Fi, battery, signal, notification). 256 × 256 px, transparent, CC0.
+- Black icons are shown on a light background in the library.
+
 ## 0.9.35 – Free speech bubbles, text effects
 - **Free bubble:** a bubble image in its own shape (PNG, GIF or WebP – animated images play) that is no longer stretched.
   Built-in shapes: slanted (Persona style), tilted, shout and round comic bubble. The **text area** and the **name field**

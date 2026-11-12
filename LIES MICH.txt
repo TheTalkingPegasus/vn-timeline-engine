@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.35
+VN Timeline Engine · Prototyp 0.9.36
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,15 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.36 · Icons im Starter-Pack
+- 216 neue Icons in der Asset-Bibliothek (Starter-Pack), jedes Motiv in vier Stilen: bunt (Comic-Stil), einfach schwarz, einfach weiß,
+  futuristisch (Neon, mit und ohne Sechseck-Rahmen). Motive: Dateien & Ordner (Ordner, Text, Bild, Musik, ZIP, PDF, Speichern,
+  Papierkorb, Klemmbrett, Büroklammer, Karton), Symbole (Herz, Stern, Haken, Kreuz, Warnung, Fragezeichen, Info, Schloss, Plus/Minus,
+  Zahnrad, Glocke, Haus, Lupe, Blitz, Feuer, Note, Ortsmarke, Uhr, Krone, Pokal) und Nachrichten (Sprechblasen, schreibt gerade,
+  E-Mail, Brief, Posteingang, Senden, Anruf, verpasster Anruf, Videoanruf, Sprachnachricht, Daumen hoch, @, WLAN, Akku, Empfang,
+  Benachrichtigung). 256 × 256 px, transparent, CC0.
+- Schwarze Icons erscheinen in der Bibliothek auf hellem Grund.
 
 NEU IN 0.9.35 · Freie Sprechblasen, Text-Effekte
 - Freie Blase: ein Blasen-Bild in eigener Form (PNG, GIF oder WebP – bewegte Bilder laufen mit), das nicht mehr gestreckt wird.
