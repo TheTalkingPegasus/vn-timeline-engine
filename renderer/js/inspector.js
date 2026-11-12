@@ -86,6 +86,7 @@
       if (VN.ui.view === 'transcript') return root.appendChild(Transcript.inspector());
       if (VN.ui.view === 'storyboard') return root.appendChild(Storyboard.inspector());
       if (VN.ui.view === 'bones') return root.appendChild(Figures.inspector());
+      if (VN.ui.view === 'sets' && window.KulEd) return root.appendChild(KulEd.inspector());
       if (VN.ui.view === 'menu') return root.appendChild(Menu.inspector());
       if (!s) return root.appendChild(el('div', { class: 'hint-box' }, 'Lege links eine Story- oder Hub-Szene an.'));
       if (VN.ui.view === 'design') return root.appendChild(Design.inspector());
@@ -203,7 +204,8 @@
         field('Dauer (Schritte)', num(c.len, (v) => VN.mutate(() => { c.len = Math.max(1, Math.round(v)); s.beats = Math.max(s.beats, c.start + c.len); }), { min: 1 })));
 
       if (tb === 'bg') {
-        box.append(assetField('Bild', 'image', c.asset, set(c, 'asset')),
+        box.append(window.KulEd ? KulEd.bgField(c, false) : null,
+          c.kulisse ? null : assetField('Bild', 'image', c.asset, set(c, 'asset')),
           field('Übergang', select(c.trans || 'fade', [['cut', 'Schnitt'], ['fade', 'Überblenden'], ['black', 'Über Schwarz'], ['eyes', 'Augen zu und auf'], ['mask', 'Mit Maske (Wischen, Kreis …)'], ['shatter', 'Bildschirm zerspringt']], set(c, 'trans'))),
           c.trans === 'shatter' ? field('Scherben', select(c.shatterMode || 'fall', [['fall', 'fallen herunter'], ['burst', 'explodieren'], ['side', 'fliegen zur Seite']], set(c, 'shatterMode'))) : null,
           range('Übergangsdauer', c.dur != null ? c.dur : 1, 0, 3, 0.1, (v) => v.toFixed(1) + ' s', set(c, 'dur')),
@@ -335,8 +337,9 @@
       return el('div', { class: 'insp' },
         el('div', null, el('h3', null, 'Hub-Szene'), el('div', { class: 'insp-title' }, s.name)),
         field('Name', text(s.name, set(s, 'name'))),
-        assetField('Hintergrund', 'image', s.bg, set(s, 'bg')),
-        s.bg ? Inspector.designLink('Hintergrund bearbeiten') : null,
+        window.KulEd ? KulEd.bgField(s.bgLook || (s.bgLook = {}), true) : null,
+        s.bgLook && s.bgLook.kulisse ? null : assetField('Hintergrund', 'image', s.bg, set(s, 'bg')),
+        s.bg && !(s.bgLook && s.bgLook.kulisse) ? Inspector.designLink('Hintergrund bearbeiten') : null,
         VN.Life && VN.Life.timeOn() ? Inspector.hubSlots(s) : null,
         Inspector.hubFx(s),
         window.Light ? Inspector.hubLights(s) : null,

@@ -2701,3 +2701,41 @@ body.vz-panning, body.vz-panning * { cursor: grabbing !important; }
 .face-tools, .face-chips { display: flex; flex-wrap: wrap; gap: 4px; }
 .face-ok { color: #6cc48a; font-weight: 600; width: 14px; }
 .face-miss { color: var(--muted); width: 14px; }
+
+/* Kulissen-Raum (0.9.32) */
+.kul-vp { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.kul-scale { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; transform-origin: 0 0; perspective: 1000px; perspective-origin: 640px 360px; }
+.kul-scale.kul-orbit { perspective: 2600px; }
+.kul-world { position: absolute; left: 640px; top: 360px; width: 0; height: 0; transform-style: preserve-3d; }
+.kul-pl { position: absolute; left: 0; top: 0; transform-origin: 0 0; display: block; }
+.kul-part canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.kul-shaft { position: absolute; left: 0; top: 0; width: 100px; height: 100px; transform-origin: 0 0; pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, #000, rgba(0,0,0,.55) 45%, transparent); mask-image: linear-gradient(to bottom, #000, rgba(0,0,0,.55) 45%, transparent); }
+.kul-glow { position: absolute; left: 0; top: 0; transform-origin: 0 0; border-radius: 50%; pointer-events: none; }
+.kul-pl.kul-sel { outline: 3px solid var(--accent, #9d6bff); outline-offset: -3px; }
+.kul-front { z-index: 0; }
+.kul-fhost { position: absolute; inset: 0; pointer-events: none; }
+/* Kulissen-Editor */
+.kul-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.kul-head select { max-width: 220px; }
+.kul-ed-views { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 14px; }
+.kul-ed-col { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.kul-ed-cap { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.kul-ed-cap b { font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.kul-ed-vp { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; background: #0c0d11; border: 1px solid rgba(255,255,255,.08); }
+.kul-ed-orb { background: radial-gradient(ellipse at 50% 40%, #1b1e27, #0c0d11 70%); cursor: grab; }
+.kul-ed-vp .kul-vp { pointer-events: auto; }
+.kul-ov { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; font-family: inherit; }
+.kul-ov .kul-h { pointer-events: all; cursor: move; }
+.kul-edge { position: absolute; top: 0; bottom: 0; width: 8%; pointer-events: none; opacity: 0; transition: opacity .2s; }
+.kul-edge.l { left: 0; background: linear-gradient(90deg, rgba(232,164,58,.35), transparent); }
+.kul-edge.r { right: 0; background: linear-gradient(-90deg, rgba(232,164,58,.35), transparent); }
+.kul-edge.on { opacity: 1; }
+.kul-pill { position: absolute; left: 10px; top: 10px; background: rgba(10,10,14,.75); color: #ffcf5a; padding: 4px 10px; border-radius: 999px; font-size: 12px; pointer-events: none; }
+.kul-ed-bar { flex-wrap: wrap; align-items: center; }
+.kul-ed-add { padding: 10px 14px 4px; flex-wrap: wrap; align-items: center; }
+.kul-ed-list { margin: 6px 14px 14px; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 2px 10px; max-height: 260px; overflow: auto; }
+.kul-days summary { cursor: pointer; font-size: 12px; color: var(--muted); padding: 4px 0; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.hub-kul-layer { position: absolute; inset: 0; }
+@media (max-width: 1100px) { .kul-ed-views { grid-template-columns: 1fr; } }

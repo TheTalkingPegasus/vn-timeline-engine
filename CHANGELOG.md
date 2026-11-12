@@ -2,6 +2,26 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.32 – 3D sets (rooms from PNG planes, with light)
+- **New tab “Sets”:** build a real room from PNG planes – back walls, floors, ceilings, partition walls, beams, furniture,
+  backgrounds and particle planes. Every plane has a position X/Y/Z and a rotation; the camera looks in with perspective,
+  so parallax happens by itself. Left the scene through the camera, right the same room from an oblique view (like the
+  custom view in After Effects) with the camera cone, scroll range and zones; move planes and lamps with X/Y/Z arrows.
+- **Building:** “Whole room”, back wall, floor (tilted 90°), ceiling, partition wall (turned 90°), beam with **“Snap to
+  wall edge”** – it then moves exactly with the wall edge when scrolling and hides the thin line. Planes in front of the
+  character plane are drawn in front of characters automatically.
+- **Light:** lamps with colour, strength, range and shadows; window light (sun/moon) that shines through the transparent
+  areas of a wall PNG – walls, floors and ceilings block it, furniture and characters don’t. Blinds on a wall make the light
+  fall in stripes, plus optional light shafts in the air. Lamps switch on and off by time of day; sun colour and direction
+  follow the time of day (or set them by hand). Light is baked once per time of day – it costs nothing while playing.
+- **Time of day:** planes without lighting are tinted automatically; optional own images per time of day (e.g. a sky with
+  stars at night).
+- **Particles:** a particle plane (rain, snow …) placed in depth – visible through windows with matching parallax.
+- **Scenes and hubs:** pick a set on the background clip or as hub background. Camera clips pan through the room with real
+  depth. **Edge scrolling:** in hubs (and in scenes with the box ticked) the camera scrolls when the mouse reaches the screen
+  edge, within the set’s scroll range; hub objects move along. **Zones** change music and loop an ambience when the camera
+  enters them.
+
 ## 0.9.31 – Face rig (expressions on a single image)
 - **Figures → Face:** facial expressions directly on one flat character image – no image swapping. The engine bends the image
   with a fine mesh, only inside the mouth mask; nose and chin stay still.

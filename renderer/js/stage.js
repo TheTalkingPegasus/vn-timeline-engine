@@ -260,7 +260,10 @@
       const world = el('div', { class: 'world' });
       const bgBox = Stage.bgBox(st.bg);
       world.appendChild(bgBox);
-      if (st.bg) {
+      const kul = st.bg && st.bg.kulisse && window.Kulisse ? Kulisse.get(st.bg.kulisse) : null;
+      const kulFront = kul ? el('div', { class: 'kul-fhost' }) : null;
+      if (kul) Kulisse.attach(bgBox, kulFront, kul, st.bg);
+      else if (st.bg) {
         const url = VN.assetUrl(st.bg.asset);
         if (url && Fx.tileOn(st.bg.tile)) {
           const tw = Fx.tileEl(url, st.bg.tile);
@@ -280,13 +283,14 @@
       }
       const vidOk = (v) => v && (v.anim ? !!(window.Anim && Anim.get(v.anim)) : !!VN.assetUrl(v.asset));
       if (st.video && st.video.layer !== 'front' && vidOk(st.video)) { const v = Stage.videoEl(st.video, false); v.dataset.clip = st.video.id; bgBox.appendChild(v); }
-      for (const n of Stage.parallaxEls(st.bg, false)) world.appendChild(n);
+      if (!kul) for (const n of Stage.parallaxEls(st.bg, false)) world.appendChild(n);
       const charsBox = el('div', { class: 'chars-box' });
       charsBox.dataset.depth = 1;
       world.appendChild(charsBox);
       const charNodes = [];
       for (const [, c] of st.chars) { const n = Stage.charEl(c, null, { beat }); n.dataset.clip = c.id; charsBox.appendChild(n); charNodes.push([n, c]); }
-      for (const n of Stage.parallaxEls(st.bg, true)) world.appendChild(n);
+      if (kulFront) world.appendChild(kulFront);
+      else for (const n of Stage.parallaxEls(st.bg, true)) world.appendChild(n);
       const fxBox = el('div', { class: 'fx-box' });
       fxBox.dataset.depth = 1;
       world.appendChild(fxBox);

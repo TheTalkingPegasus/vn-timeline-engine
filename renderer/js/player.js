@@ -28,7 +28,58 @@
   const { fadeVolume, musicVol, duck, stopMusic, playMusic, playOnce, stopVoice, stopSfx, lipLoop, showAmbient, stopAmbient } = A;
 
   // ---------- Bühne ----------
-  const lookKey = (l) => (l ? [l.zoom, l.fx, l.fy, l.vignette, l.kenburns, l.daytime, l.depth, JSON.stringify(l.layers || []), JSON.stringify(l.styles || {}), JSON.stringify(l.tile || {}), VN.Life && run ? VN.Life.daytime(l, run.rs) : ''].join('|') : '');
+  const lookKey = (l) => (l ? [l.kulisse || '', l.kScroll ? 1 : 0, l.zoom, l.fx, l.fy, l.vignette, l.kenburns, l.daytime, l.depth, JSON.stringify(l.layers || []), JSON.stringify(l.styles || {}), JSON.stringify(l.tile || {}), VN.Life && run ? VN.Life.daytime(l, run.rs) : ''].join('|') : '');
+  // ---------- Kulissen-Raum (0.9.32): Rand-Scrollen, Zonen ----------
+  let kulEdgeV = 0, kulRaf = 0, kulLast = 0;
+  function kulDrop(dur) {
+    if (!run || !run.bgKul) return;
+    const kc = run.bgKul; run.bgKul = null; bgBox._kul = null; run.kulZone = undefined;
+    hubBox.style.translate = '';
+    kc.back.style.transition = dur ? `opacity ${dur}s` : 'none'; kc.back.style.opacity = '0';
+    if (kc.front) kc.front.remove();
+    later(() => kc.destroy(), dur * 1000 + 60);
+    if (run.kulAmb) { const a = run.kulAmb; run.kulAmb = null; fadeVolume(a, 0, 1, () => a.pause()); }
+  }
+  // Scrollen erlaubt: im Hub immer (wenn die Kulisse es erlaubt), in Szenen nur mit „Rand-Scrollen“ am Hintergrund-Clip
+  const kulCanScroll = () => {
+    if (!run || !run.bgKul || run.message || run.overlay || run.event || run.blocked) return false;
+    const k = run.bgKul.k, s = VN.scene(run.scene);
+    if (!k.scroll || k.scroll.edge === false || !(Number(k.cam && k.cam.max) > Number(k.cam && k.cam.min))) return false;
+    return (s && s.type === 'hub') || !!(run.kulLook && run.kulLook.kScroll);
+  };
+  function kulZoneCheck() {
+    const kc = run && run.bgKul; if (!kc) return;
+    hubBox.style.translate = kc.extra.x ? `${(-kc.extra.x / Kulisse.W * 100).toFixed(3)}% 0` : '';
+    const z = Kulisse.zoneAt(kc.k, kc.cam.x);
+    if (z === run.kulZone) return;
+    run.kulZone = z;
+    if (!z) return;
+    if (z.music) playMusic({ asset: z.music, vol: z.vol != null ? z.vol : 70, loop: true, carry: true, fade: 1.2 });
+    if (run.kulAmb && (!z.ambient || run.kulAmb._asset !== z.ambient)) { const a = run.kulAmb; run.kulAmb = null; fadeVolume(a, 0, 1, () => a.pause()); }
+    if (z.ambient && !run.kulAmb) {
+      const url = VN.assetUrl(z.ambient);
+      if (url) { const a = new Audio(); a.crossOrigin = 'anonymous'; a.src = url; a.loop = true; a.volume = 0; a._asset = z.ambient; if (VN.Audio && VN.Audio.route) VN.Audio.route(a); a.play().catch(() => {}); fadeVolume(a, Math.min(1, 0.7 * volOf('music')), 1); run.kulAmb = a; }
+    }
+  }
+  function kulTick(now) {
+    kulRaf = 0;
+    if (!run || !run.bgKul) return;
+    const v = kulCanScroll() ? kulEdgeV : 0;
+    if (!v) return;
+    const dt = Math.min(0.05, (now - (kulLast || now)) / 1000); kulLast = now;
+    const kc = run.bgKul, sp = Number(kc.k.scroll && kc.k.scroll.speed) || 900;
+    kc.scrollTo(kc.cam.x + v * sp * dt);
+    kulZoneCheck();
+    kulRaf = requestAnimationFrame(kulTick);
+  }
+  const kulKick = () => { if (!kulRaf) { kulLast = performance.now(); kulRaf = requestAnimationFrame(kulTick); } };
+  function kulMouse(e) {
+    if (!run || !run.bgKul) { kulEdgeV = 0; return; }
+    const r = stage.getBoundingClientRect(), fx = (e.clientX - r.left) / r.width;
+    kulEdgeV = fx < 0.1 ? -(1 - fx / 0.1) : fx > 0.9 ? (fx - 0.9) / 0.1 : 0;
+    if (kulEdgeV) kulKick();
+  }
+
   const showBg = (assetId, trans, dur, look) => {
     // „Weniger Effekte“ (Spieler-Einstellung): Scherben, Blitze und Augen-Übergänge werden zum Überblenden
     if (VN.settings && VN.settings.lessFx && ['shatter', 'flash', 'eyes', 'glitch'].includes(trans)) trans = 'fade';
@@ -61,6 +112,32 @@
     parBack.innerHTML = ''; parFront.innerHTML = '';
     for (const n of Stage.parallaxEls(look, false)) parBack.appendChild(n);
     for (const n of Stage.parallaxEls(look, true)) parFront.appendChild(n);
+    // Kulissen-Raum (0.9.32): 3D-Kulisse statt Bild
+    const kul = look && look.kulisse && window.Kulisse ? Kulisse.get(look.kulisse) : null;
+    // Gleiche Kulisse (z. B. nur andere Tageszeit): nicht neu aufbauen, nur Licht umrechnen
+    if (kul && run.bgKul && run.bgKul.k === kul) {
+      parBack.innerHTML = ''; parFront.innerHTML = ''; parFront.appendChild(run.bgKul.front);
+      run.kulLook = look; run.bgKul.setDay(Kulisse.dayKey(kul, look, run.rs)); dayOv.style.opacity = '0';
+      if (run.cam) Fx.applyCam(world, run.cam, 0);
+      return;
+    }
+    kulDrop(trans === 'cut' || dur === 0 ? 0 : dur);
+    if (kul) {
+      parBack.innerHTML = ''; parFront.innerHTML = '';
+      const kc = Kulisse.mount(kul, { day: Kulisse.dayKey(kul, look, run.rs) });
+      kc.back.style.opacity = '0';
+      bgBox.insertBefore(kc.back, dayOv); parFront.appendChild(kc.front);
+      bgBox._kul = kc; run.bgKul = kc; run.kulLook = look; run.kulZone = undefined;
+      dayOv.style.opacity = '0';
+      void kc.back.offsetWidth;
+      kc.back.style.transition = trans === 'cut' || dur === 0 ? 'none' : `opacity ${dur}s`;
+      kc.back.style.opacity = '1';
+      if (run.cam) Fx.applyCam(world, run.cam, 0); else kc.setCam(null);
+      if (run.bgTile) { const old = run.bgTile; old.style.transition = `opacity ${dur}s`; old.style.opacity = '0'; later(() => old.remove(), dur * 1000 + 50); run.bgTile = null; }
+      cur.style.transition = `opacity ${dur}s`; cur.style.opacity = '0';
+      kulZoneCheck();
+      return;
+    }
     if (run.cam) Fx.applyCam(world, run.cam, 0);
     // Endlos-Kachel statt Standbild
     if (run.bgTile) { const old = run.bgTile; old.style.transition = `opacity ${dur}s`; old.style.opacity = '0'; later(() => old.remove(), dur * 1000 + 50); run.bgTile = null; }
@@ -955,9 +1032,9 @@
     run.event = { ev, i: 0, scene: s };
     const target = ev.spotlight ? s.objects.find((o) => o.id === ev.spotlight) : null;
     if (target) {
-      const pad = 1.5;
-      stage.appendChild(el('div', { class: 'pl-spot', style: { left: (target.x - pad) + '%', top: (target.y - pad * 1.6) + '%', width: (target.w + pad * 2) + '%', height: (target.h + pad * 3.2) + '%' } }));
-      stage.appendChild(el('div', { class: 'pl-pointer', style: { left: (target.x + target.w / 2) + '%', top: Math.max(2, target.y - 9) + '%' } }, '▼'));
+      const pad = 1.5, ko = run.bgKul ? run.bgKul.extra.x / Kulisse.W * 100 : 0;
+      stage.appendChild(el('div', { class: 'pl-spot', style: { left: (target.x - pad - ko) + '%', top: (target.y - pad * 1.6) + '%', width: (target.w + pad * 2) + '%', height: (target.h + pad * 3.2) + '%' } }));
+      stage.appendChild(el('div', { class: 'pl-pointer', style: { left: (target.x + target.w / 2 - ko) + '%', top: Math.max(2, target.y - 9) + '%' } }, '▼'));
     }
     showEventLine();
   }
@@ -1525,6 +1602,8 @@
       if (window.Perf) Perf.startMonitor();
       if (window.Theme) { Theme.loadFonts(); stage.style.cursor = Theme.cursor('normal', 'pointer'); }
       stage.addEventListener('click', () => Player.advance());
+      stage.addEventListener('mousemove', kulMouse);
+      stage.addEventListener('mouseleave', () => { kulEdgeV = 0; });
       window.addEventListener('keydown', onKey, true);
       window.addEventListener('keyup', E.onKeyUp, true);
       stage.addEventListener('wheel', E.onWheel, { passive: true });
