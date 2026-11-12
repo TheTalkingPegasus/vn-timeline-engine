@@ -293,7 +293,10 @@
     if (order.some((n, i) => now[i] !== n)) for (const n of order) charsBox.appendChild(n);
     // Licht passend zur Szene
     const bg = run.bgClip;
-    if (bg && bg.charLight) {
+    if (bg && bg.charLight && run.bgKul) {
+      const kc = run.bgKul;
+      for (const c of Object.values(run.chars)) Kulisse.charLight(kc, c.clip.x != null ? c.clip.x : 50).then((L) => { if (run && L) Fx.lightOverlay(c.el, c.clip, L.color, bg.charLight); });
+    } else if (bg && bg.charLight) {
       const d = Fx.DAY[VN.Life ? VN.Life.daytime(bg, run.rs) : bg.daytime];
       (d ? Promise.resolve(d.light) : Fx.avgColor(bg.asset)).then((col) => { if (!run) return; for (const c of Object.values(run.chars)) Fx.lightOverlay(c.el, c.clip, col, bg.charLight); });
     } else for (const c of Object.values(run.chars)) c.el.querySelectorAll('.char-light').forEach((n) => n.remove());

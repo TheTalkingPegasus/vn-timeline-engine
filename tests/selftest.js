@@ -1349,6 +1349,12 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
       if (K.trace([0, 0, 0], d.map((v) => v / n), 1e5, 'x', occ) !== 0) out.push('Wand lässt Licht durch');
       occ[0].bl = { gap: 20, open: 0.5 }; if (!(K.trace([0, 0, 0], [0, 0, -1], 1e5, 'x', occ) < 0.1)) out.push('Jalousie');
       if (K.trace([0, -5, 0], [0, 0, -1], 1e5, 'x', occ) !== 1) out.push('Jalousie-Spalt');
+      // Scheinwerfer leuchtet nur im Kegel, Neonröhre entlang der ganzen Röhre
+      const sp = K.prepLamp(K.lamp({ type: 'spot', x: 0, y: -300, z: 0, yaw: 0, pitch: 90, spread: 20, range: 1000 }));
+      if (!(K.lampAt(sp, [0, 0, 0], [0, -1, 0], true, null, null) > 0)) out.push('Scheinwerfer dunkel im Kegel');
+      if (K.lampAt(sp, [300, 0, 0], [0, -1, 0], true, null, null) !== 0) out.push('Scheinwerfer leuchtet außerhalb');
+      const ne = K.prepLamp(K.lamp({ type: 'neon', x: 0, y: 0, z: 0, len: 400, angle: 0, range: 300 }));
+      if (!(K.lampAt(ne, [190, 100, 0], null, false, null, null) > 0) || K.lampAt(ne, [-500, 0, 0], null, false, null, null) !== 0) out.push('Neonröhre');
       // Einbacken: alle Flächen, Lampe nur nachts an
       k.lamps.push(K.lamp({ x: 0, y: -100, z: -100, days: { night: true } }));
       const night = await K.bake(k, 'night'), day = await K.bake(k, 'day');

@@ -5536,7 +5536,14 @@ window.VN_I18N_ES = {
 "Hintergründe werden nicht beleuchtet, aber nach Tageszeit eingefärbt – oder du gibst eigene Bilder je Tageszeit an.": "Los fondos no se iluminan, pero se tiñen según la hora del día, o indicas imágenes propias por hora.",
 "An Wandkante einrasten": "Ajustar al borde de la pared",
 "Im Hub scrollt die Kulisse, wenn die Maus an den Bildrand geht. Hub-Objekte wandern mit. Tageszeit, Licht und Kamera kommen aus der Kulisse und aus dieser Szene.": "En un hub el decorado se desplaza cuando el ratón llega al borde. Los objetos del hub se mueven con él. La hora, la luz y la cámara vienen del decorado y de esta escena.",
-"Kamera-Schwenks dieser Szene fahren durch den Raum, mit echter Tiefe. Die Tageszeit oben schaltet Lampen und Fensterlicht um.": "Los paneos de cámara de esta escena recorren la habitación con profundidad real. La hora del día de arriba cambia lámparas y luz de ventana."
+"Kamera-Schwenks dieser Szene fahren durch den Raum, mit echter Tiefe. Die Tageszeit oben schaltet Lampen und Fensterlicht um.": "Los paneos de cámara de esta escena recorren la habitación con profundidad real. La hora del día de arriba cambia lámparas y luz de ventana.",
+"Lampe (rundum)": "Lámpara (alrededor)",
+"Drehen (links / rechts)": "Girar (izquierda / derecha)",
+"Neigung (nach unten)": "Inclinación (hacia abajo)",
+"Kegel": "Cono",
+"Lichtkegel in der Luft": "Cono de luz en el aire",
+"Winkel": "Ángulo",
+"Leuchtet entlang der ganzen Röhre. Die Mitte der Röhre liegt bei X / Y / Z.": "Brilla a lo largo de todo el tubo. El centro del tubo está en X / Y / Z."
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

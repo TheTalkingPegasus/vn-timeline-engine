@@ -10,10 +10,13 @@ All notable changes. German details: `LIES MICH.txt`.
 - **Building:** “Whole room”, back wall, floor (tilted 90°), ceiling, partition wall (turned 90°), beam with **“Snap to
   wall edge”** – it then moves exactly with the wall edge when scrolling and hides the thin line. Planes in front of the
   character plane are drawn in front of characters automatically.
-- **Light:** lamps with colour, strength, range and shadows; window light (sun/moon) that shines through the transparent
+- **Light:** lamps, spotlights (direction, cone, soft edge, visible light cone in the air) and neon tubes, each with colour,
+  strength, range and shadows; window light (sun/moon) that shines through the transparent
   areas of a wall PNG – walls, floors and ceilings block it, furniture and characters don’t. Blinds on a wall make the light
   fall in stripes, plus optional light shafts in the air. Lamps switch on and off by time of day; sun colour and direction
   follow the time of day (or set them by hand). Light is baked once per time of day – it costs nothing while playing.
+- **Characters in the light:** with “Match characters to the light” on the background clip each character gets the light of
+  its spot in the room – warm next to a lamp, pink by the neon tube, bluish in moonlight.
 - **Time of day:** planes without lighting are tinted automatically; optional own images per time of day (e.g. a sky with
   stars at night).
 - **Particles:** a particle plane (rain, snow …) placed in depth – visible through windows with matching parallax.

@@ -5455,7 +5455,14 @@ window.VN_I18N_EN = {
 "Hintergründe werden nicht beleuchtet, aber nach Tageszeit eingefärbt – oder du gibst eigene Bilder je Tageszeit an.": "Backgrounds aren’t lit but are tinted by time of day – or you set your own images per time of day.",
 "An Wandkante einrasten": "Snap to wall edge",
 "Im Hub scrollt die Kulisse, wenn die Maus an den Bildrand geht. Hub-Objekte wandern mit. Tageszeit, Licht und Kamera kommen aus der Kulisse und aus dieser Szene.": "In a hub the set scrolls when the mouse reaches the screen edge. Hub objects move along. Time of day, light and camera come from the set and this scene.",
-"Kamera-Schwenks dieser Szene fahren durch den Raum, mit echter Tiefe. Die Tageszeit oben schaltet Lampen und Fensterlicht um.": "Camera pans in this scene travel through the room with real depth. The time of day above switches lamps and window light."
+"Kamera-Schwenks dieser Szene fahren durch den Raum, mit echter Tiefe. Die Tageszeit oben schaltet Lampen und Fensterlicht um.": "Camera pans in this scene travel through the room with real depth. The time of day above switches lamps and window light.",
+"Lampe (rundum)": "Lamp (all around)",
+"Drehen (links / rechts)": "Turn (left / right)",
+"Neigung (nach unten)": "Tilt (downwards)",
+"Kegel": "Cone",
+"Lichtkegel in der Luft": "Light cone in the air",
+"Winkel": "Angle",
+"Leuchtet entlang der ganzen Röhre. Die Mitte der Röhre liegt bei X / Y / Z.": "Glows along the whole tube. The middle of the tube is at X / Y / Z."
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",

@@ -117,6 +117,8 @@
         el('button', { class: 'btn tiny', onclick: () => addP({ name: VN.t('Himmel'), kind: 'bg', x: cx, y: -60, z: -1400, w: 5600, h: 2000 }) }, 'Hintergrund'),
         el('button', { class: 'btn tiny', onclick: () => addP({ name: VN.t('Regen'), kind: 'part', x: cx, y: 0, z: -600, w: 3400, h: 1500, part: Object.assign({ particles: 'rain' }, Fx.PART_DEF.rain) }) }, 'Partikel'),
         el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const l = K().lamp({ name: VN.t('Lampe'), x: cx, y: -200, z: -100, days: { morning: true, day: true, evening: true, night: true } }); k.lamps.push(l); VN.ui.kulSel = { t: 'lamp', id: l.id }; }) }, 'Lampe'),
+        el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const l = K().lamp({ name: VN.t('Scheinwerfer'), type: 'spot', x: cx - 250, y: -300, z: 60, yaw: 20, pitch: 55, spread: 20, soft: 0.4, haze: 0.6, range: 1200, color: '#fff1d6', power: 1.4, days: { morning: true, day: true, evening: true, night: true } }); k.lamps.push(l); VN.ui.kulSel = { t: 'lamp', id: l.id }; }) }, 'Scheinwerfer'),
+        el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const l = K().lamp({ name: VN.t('Neonröhre'), type: 'neon', x: cx, y: -250, z: -290, len: 320, angle: 0, range: 520, color: '#ff3fb4', power: 1.2, days: { morning: true, day: true, evening: true, night: true } }); k.lamps.push(l); VN.ui.kulSel = { t: 'lamp', id: l.id }; }) }, 'Neonröhre'),
         el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const z = { id: VN.uid('kz'), name: VN.t('Zone') + ' ' + (k.zones.length + 1), x0: cx - 450, x1: cx + 450, music: null, ambient: null }; k.zones.push(z); VN.ui.kulSel = { t: 'zone', id: z.id }; }) }, 'Zone')));
       // Liste aller Flächen, Lichter und Zonen
       const s = VN.ui.kulSel || {};
@@ -144,6 +146,9 @@
           S('circle', { cx: C[0], cy: C[1], r, fill: on ? l.color : 'rgba(40,40,50,.85)', stroke: s.t === 'lamp' && s.id === l.id ? '#9d6bff' : '#fff', 'stroke-width': s.id === l.id ? 4 : 2 }, g);
           for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; S('line', { x1: C[0] + Math.cos(a) * (r + 5), y1: C[1] + Math.sin(a) * (r + 5), x2: C[0] + Math.cos(a) * (r + 12), y2: C[1] + Math.sin(a) * (r + 12), stroke: on ? l.color : '#777', 'stroke-width': 3, 'stroke-linecap': 'round' }, g); }
           g.addEventListener('pointerdown', (e) => { e.stopPropagation(); KulEd.pick('lamp', l.id); });
+          const col = on ? l.color : '#888';
+          if (l.type === 'spot') { const D = K().spotDir(l), E = proj([l.x + D[0] * 240, l.y + D[1] * 240, l.z + D[2] * 240]); if (E[2]) S('line', { x1: C[0], y1: C[1], x2: E[0], y2: E[1], stroke: col, 'stroke-width': 3, 'stroke-dasharray': '8 6', 'pointer-events': 'none' }, svg); }
+          if (l.type === 'neon') { const [A, B] = K().neonEnds(l).map(proj); if (A[2] && B[2]) S('line', { x1: A[0], y1: A[1], x2: B[0], y2: B[1], stroke: col, 'stroke-width': 6, 'stroke-linecap': 'round', opacity: 0.8, 'pointer-events': 'none' }, svg); }
         }
       };
       const gizmo = (svg, proj, size) => {
@@ -306,8 +311,20 @@
       }
       if (s.t === 'lamp') {
         const l = o;
-        box.append(el('div', null, el('h3', null, 'Lampe'), el('div', { class: 'insp-title' }, l.name)),
+        const ty = l.type || 'lamp';
+        box.append(el('div', null, el('h3', null, VN.t((K().LTYPES.find((x) => x[0] === ty) || [0, 'Lampe'])[1])), el('div', { class: 'insp-title' }, l.name)),
           field('Name', el('input', { type: 'text', value: l.name, onchange: (e) => VN.mutate(() => { l.name = e.target.value; }) })),
+          field('Art', sel(ty, K().LTYPES, (v) => VN.mutate(() => { l.type = v; if (v === 'spot') Object.assign(l, { yaw: l.yaw || 0, pitch: l.pitch != null ? l.pitch : 55, spread: l.spread || 20, soft: l.soft != null ? l.soft : 0.4, haze: l.haze != null ? l.haze : 0.6, range: Math.max(l.range || 0, 1000) }); if (v === 'neon') Object.assign(l, { len: l.len || 320, angle: l.angle || 0 }); }))),
+          ty === 'spot' ? card('Scheinwerfer',
+            rng('Drehen (links / rechts)', l, 'yaw', -180, 180, 1, (v) => v + '°', 0),
+            rng('Neigung (nach unten)', l, 'pitch', -89, 89, 1, (v) => v + '°', 45),
+            rng('Kegel', l, 'spread', 3, 70, 1, (v) => '±' + v + '°', 22),
+            rng('Weiche Kante', l, 'soft', 0, 1, 0.01, pct, 0.4),
+            rng('Lichtkegel in der Luft', l, 'haze', 0, 1.5, 0.05, pct, 0.5)) : null,
+          ty === 'neon' ? card('Neonröhre',
+            rng('Länge', l, 'len', 40, 1600, 10, (v) => v + ' px', 300),
+            rng('Winkel', l, 'angle', -90, 90, 1, (v) => v + '°', 0),
+            el('div', { class: 'muted small' }, 'Leuchtet entlang der ganzen Röhre. Die Mitte der Röhre liegt bei X / Y / Z.')) : null,
           field('Farbe', el('input', { type: 'color', value: l.color, onchange: (e) => VN.mutate(() => { l.color = e.target.value; }) })),
           el('div', { class: 'grid3' }, numF('X', l, 'x', 5, 1), numF('Y', l, 'y', 5, 1), numF('Z · Tiefe', l, 'z', 5, 1)),
           rng('Stärke', l, 'power', 0, 2.5, 0.05, pct, 1),

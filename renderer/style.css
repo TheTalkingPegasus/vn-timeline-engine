@@ -2712,6 +2712,7 @@ body.vz-panning, body.vz-panning * { cursor: grabbing !important; }
 .kul-shaft { position: absolute; left: 0; top: 0; width: 100px; height: 100px; transform-origin: 0 0; pointer-events: none;
   -webkit-mask-image: linear-gradient(to bottom, #000, rgba(0,0,0,.55) 45%, transparent); mask-image: linear-gradient(to bottom, #000, rgba(0,0,0,.55) 45%, transparent); }
 .kul-glow { position: absolute; left: 0; top: 0; transform-origin: 0 0; border-radius: 50%; pointer-events: none; }
+.kul-glow.kul-cone { border-radius: 0; clip-path: polygon(0 50%, 100% 0, 100% 100%); }
 .kul-pl.kul-sel { outline: 3px solid var(--accent, #9d6bff); outline-offset: -3px; }
 .kul-front { z-index: 0; }
 .kul-fhost { position: absolute; inset: 0; pointer-events: none; }

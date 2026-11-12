@@ -5536,7 +5536,14 @@ window.VN_I18N_JA = {
 "Hintergründe werden nicht beleuchtet, aber nach Tageszeit eingefärbt – oder du gibst eigene Bilder je Tageszeit an.": "背景は照明されませんが、時間帯に応じて色付けされます。時間帯ごとの画像を指定することもできます。",
 "An Wandkante einrasten": "壁の縁に合わせる",
 "Im Hub scrollt die Kulisse, wenn die Maus an den Bildrand geht. Hub-Objekte wandern mit. Tageszeit, Licht und Kamera kommen aus der Kulisse und aus dieser Szene.": "ハブではマウスが画面端に来るとセットがスクロールします。ハブのオブジェクトも一緒に動きます。時間帯・光・カメラはセットとこのシーンから決まります。",
-"Kamera-Schwenks dieser Szene fahren durch den Raum, mit echter Tiefe. Die Tageszeit oben schaltet Lampen und Fensterlicht um.": "このシーンのカメラのパンは本物の奥行きで部屋の中を進みます。上の時間帯でランプと窓の光が切り替わります。"
+"Kamera-Schwenks dieser Szene fahren durch den Raum, mit echter Tiefe. Die Tageszeit oben schaltet Lampen und Fensterlicht um.": "このシーンのカメラのパンは本物の奥行きで部屋の中を進みます。上の時間帯でランプと窓の光が切り替わります。",
+"Lampe (rundum)": "ランプ（全方向）",
+"Drehen (links / rechts)": "回転（左／右）",
+"Neigung (nach unten)": "傾き（下向き）",
+"Kegel": "円錐",
+"Lichtkegel in der Luft": "空中の光の円錐",
+"Winkel": "角度",
+"Leuchtet entlang der ganzen Röhre. Die Mitte der Röhre liegt bei X / Y / Z.": "管全体に沿って光ります。管の中心は X / Y / Z です。"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

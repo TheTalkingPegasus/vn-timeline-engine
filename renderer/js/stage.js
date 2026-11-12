@@ -312,7 +312,11 @@
       if (lights.length && window.Light) requestAnimationFrame(() => { if (world.isConnected) Light.sync(world, lights, { back: charsBox, front: fxBox, figs: () => Array.from(charsBox.children).map((b) => [b.firstElementChild, false]), fronts: () => Array.from(world.querySelectorAll(':scope > .chars-box ~ .par-layer')) }); });
       if (st.video && st.video.layer === 'front' && vidOk(st.video)) { const v = Stage.videoEl(st.video, false); v.dataset.clip = st.video.id; stage.appendChild(v); }
       // Licht passend zur Szene
-      if (st.bg && st.bg.charLight) {
+      if (st.bg && st.bg.charLight && kul && bgBox._kul) {
+        // Kulissen-Raum: jede Figur bekommt das Licht ihres Platzes im Raum
+        const kc = bgBox._kul;
+        for (const [n, c] of charNodes) Kulisse.charLight(kc, c.x != null ? c.x : 50).then((L) => { if (L && n.isConnected) Fx.lightOverlay(n, c, L.color, st.bg.charLight); });
+      } else if (st.bg && st.bg.charLight) {
         const day = Fx.DAY[st.bg.daytime];
         (day ? Promise.resolve(day.light) : Fx.avgColor(st.bg.asset)).then((col) => { for (const [n, c] of charNodes) if (n.isConnected) Fx.lightOverlay(n, c, col, st.bg.charLight); });
       }

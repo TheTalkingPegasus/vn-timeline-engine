@@ -22,10 +22,13 @@ NEU IN 0.9.32 · Kulissen-Raum (Räume aus PNG-Flächen, mit Licht)
 - Bauen: „Ganzer Raum“, Rückwand, Boden (um 90° gekippt), Decke, Zwischenwand (um 90° gedreht), Balken mit „An Wandkante einrasten“ –
   er wandert beim Scrollen exakt mit der Wandkante und verdeckt die dünne Linie. Was vor der Figuren-Ebene liegt, wird automatisch
   vor den Figuren gezeichnet.
-- Licht: Lampen mit Farbe, Stärke, Reichweite und Schatten; Fensterlicht (Sonne/Mond), das durch die durchsichtigen Stellen eines
+- Licht: Lampen, Scheinwerfer (Richtung, Kegel, weiche Kante, sichtbarer Lichtkegel in der Luft) und Neonröhren, jeweils mit Farbe,
+  Stärke, Reichweite und Schatten; Fensterlicht (Sonne/Mond), das durch die durchsichtigen Stellen eines
   Wand-PNGs scheint – Wände, Böden und Decken sind Hindernisse, Möbel und Figuren nicht. Eine Jalousie an der Wand macht Streifen
   daraus, dazu wahlweise Lichtstrahlen in der Luft. Lampen schalten sich nach Tageszeit ein und aus; Farbe und Richtung der Sonne
   folgen der Tageszeit (oder von Hand). Das Licht wird pro Tageszeit einmal eingebacken – im Spiel kostet es nichts.
+- Figuren im Licht: Mit „Figuren an das Licht anpassen“ am Hintergrund-Clip bekommt jede Figur das Licht ihres Platzes im Raum –
+  warm neben der Lampe, pink an der Neonröhre, bläulich im Mondlicht.
 - Tageszeit: unbeleuchtete Flächen werden automatisch eingefärbt; wahlweise eigene Bilder je Tageszeit (z. B. Himmel mit Sternen).
 - Partikel: eine Partikel-Fläche (Regen, Schnee …) in die Tiefe stellen – durch die Fenster sichtbar, mit passendem Parallax.
 - Szenen und Hubs: Kulisse am Hintergrund-Clip oder als Hub-Hintergrund wählen. Kamera-Schwenks fahren mit echter Tiefe durch den Raum.

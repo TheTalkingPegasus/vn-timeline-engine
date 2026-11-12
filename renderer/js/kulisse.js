@@ -10,6 +10,7 @@
   const KINDS = [['wall', 'Rückwand'], ['floor', 'Boden'], ['ceil', 'Decke'], ['side', 'Zwischenwand / Seitenwand'], ['beam', 'Balken / Kante'], ['deco', 'Möbel / Objekt'], ['bg', 'Hintergrund (Himmel, Landschaft)'], ['part', 'Partikel (Regen, Schnee …)']];
   const OCC = { wall: 1, floor: 1, ceil: 1, side: 1 };
   const DAYS = [['morning', 'Morgen'], ['day', 'Tag'], ['evening', 'Abend'], ['night', 'Nacht']];
+  const LTYPES = [['lamp', 'Lampe (rundum)'], ['spot', 'Scheinwerfer'], ['neon', 'Neonröhre']];
   // Umgebungslicht, Sonne/Mond (Farbe, Stärke, Richtung) je Tageszeit
   const DAYCFG = {
     morning: { amb: [0.6, 0.6, 0.68], sun: [1, 0.84, 0.62], sunP: 0.62, dir: [0.62, 0.42, 0.66] },
@@ -24,7 +25,7 @@
   const num = (v, d) => (v != null && isFinite(v) ? Number(v) : d);
 
   const Kulisse = (window.Kulisse = {
-    W, H, P0, KINDS, DAYS, DAYCFG,
+    W, H, P0, KINDS, DAYS, DAYCFG, LTYPES,
     all() { const p = VN.project; if (!p) return []; p.kulissen = p.kulissen || []; return p.kulissen; },
     get(id) { return id ? Kulisse.all().find((k) => k.id === id) || null : null; },
     kindName(k) { const f = KINDS.find((x) => x[0] === k); return f ? f[1] : k; },
@@ -34,7 +35,7 @@
       return Object.assign({ id: VN.uid('kp'), name: 'Fläche', kind: 'wall', asset: null, dayAssets: {}, x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, w: 900, h: 700 }, o);
     },
     lamp(o) {
-      return Object.assign({ id: VN.uid('kl'), name: 'Lampe', x: 0, y: -100, z: -100, color: '#ffc77a', power: 1, range: 620, shadows: true, days: { morning: false, day: false, evening: true, night: true } }, o);
+      return Object.assign({ id: VN.uid('kl'), name: 'Lampe', type: 'lamp', x: 0, y: -100, z: -100, color: '#ffc77a', power: 1, range: 620, shadows: true, days: { morning: false, day: false, evening: true, night: true } }, o);
     },
     blank(name, tpl) {
       const k = {
@@ -89,6 +90,29 @@
       const cx = xs.length ? (Math.min(...xs) + Math.max(...xs)) / 2 : 0;
       const span = xs.length ? Math.max(...xs) - Math.min(...xs) + 900 : 1800;
       return { a: -28, b: -32, s: Math.max(0.15, Math.min(0.8, 1100 / span)), cx, cy: 0, cz: -150 };
+    },
+    // Scheinwerfer: Richtung aus Drehen (yaw) und Neigung (pitch); 0/0 = gerade nach hinten, Neigung 90 = senkrecht nach unten
+    spotDir(l) { const yw = rad(num(l.yaw, 0)), pt = rad(num(l.pitch, 45)); return [Math.sin(yw) * Math.cos(pt), Math.sin(pt), -Math.cos(yw) * Math.cos(pt)]; },
+    // Neonröhre: Strecke ab (x, y, z) mit Länge und Winkel (0 = waagrecht nach rechts)
+    neonEnds(l) { const a = rad(num(l.angle, 0)), L = num(l.len, 300) / 2; return [[l.x - Math.cos(a) * L, l.y - Math.sin(a) * L, l.z], [l.x + Math.cos(a) * L, l.y + Math.sin(a) * L, l.z]]; },
+    prepLamp(l) {
+      const o = Object.assign({}, l, { c: hex3(l.color), range: num(l.range, l.type === 'spot' ? 1200 : 600), power: num(l.power, 1), type: l.type || 'lamp' });
+      if (o.type === 'spot') { o.dir = Kulisse.spotDir(l); const sp = rad(Math.max(2, num(l.spread, 22))); o.cosOut = Math.cos(sp); o.cosIn = Math.cos(sp * (1 - 0.85 * num(l.soft, 0.4))); }
+      if (o.type === 'neon') [o.A, o.B] = Kulisse.neonEnds(l);
+      return o;
+    },
+    // Beitrag einer Lampe an Punkt S mit Normale N (one = nur Vorderseite) – mit Schatten
+    lampAt(l, S, N, one, selfId, occ) {
+      let P = [l.x, l.y, l.z];
+      if (l.type === 'neon') { const v = sub(l.B, l.A), t = Math.max(0, Math.min(1, dot(sub(S, l.A), v) / (dot(v, v) || 1))); P = [l.A[0] + v[0] * t, l.A[1] + v[1] * t, l.A[2] + v[2] * t]; }
+      const d0 = [P[0] - S[0], P[1] - S[1], P[2] - S[2]], d = Math.hypot(d0[0], d0[1], d0[2]); if (d > l.range || d < 0.01) return 0;
+      const dir = [d0[0] / d, d0[1] / d, d0[2] / d]; let lam = N ? dot(N, dir) : 1; lam = one ? Math.max(0, lam) : Math.abs(lam);
+      let att = (1 - d / l.range) ** 2 * (0.3 + 0.7 * lam);
+      if (l.type === 'spot') { const c = -dot(dir, l.dir); if (c <= l.cosOut) return 0; att *= c >= l.cosIn ? 1 : ((c - l.cosOut) / Math.max(1e-4, l.cosIn - l.cosOut)) ** 2; att *= 1.6; }
+      if (l.type === 'neon') att *= 0.85;
+      if (att < 0.005) return 0;
+      const t = l.shadows !== false && occ ? Kulisse.trace(S, dir, d, selfId, occ) : 1;
+      return l.power * att * t * 1.25;
     },
     sunDir(k, day) {
       const s = k.sun || {};
@@ -180,7 +204,7 @@
         const C = DAYCFG[day], lit = k.light !== false;
         const sun = k.sun || {}, sunOn = lit && sun.on !== false && (!sun.days || sun.days[day] !== false);
         const ctx = { D: Kulisse.sunDir(k, day), sunOn, sunCol: C.sun, sunP: C.sunP * num(sun.power, 1), amb: C.amb,
-          lamps: lit ? (k.lamps || []).filter((l) => l.days && l.days[day]).map((l) => Object.assign({}, l, { c: hex3(l.color), range: num(l.range, 600), power: num(l.power, 1) })) : [],
+          lamps: lit ? (k.lamps || []).filter((l) => l.days && l.days[day]).map(Kulisse.prepLamp) : [],
           view: [num(k.cam && k.cam.x, 0), num(k.cam && k.cam.y, 0), P0] };
         const occ = lit ? k.planes.filter((p) => OCC[p.kind] && tex.get(p.id)).map((p) => ({ p, f: Kulisse.frame(p), al: Kulisse.alpha(tex.get(p.id)), bl: p.blinds && p.blinds.on ? p.blinds : null })) : [];
         for (const p of k.planes) {
@@ -190,12 +214,52 @@
           await new Promise((r) => setTimeout(r, 0)); // Oberfläche nicht blockieren
         }
         if (sunOn && num(sun.shafts, 0.7) > 0) res.shafts = Kulisse.shafts(k, tex, ctx, day);
-        res.glows = ctx.lamps.map((l) => ({ x: l.x, y: l.y, z: l.z, c: l.c, s: 120 + l.power * 90 }));
+        res.glows = ctx.lamps.map((l) => Object.assign(Kulisse.glowOf(l), { c: l.c, z: l.z }));
+        res.ctx = ctx; res.occ = occ;
         return res;
       })();
       Kulisse._bake.set(key, job);
       if (Kulisse._bake.size > 12) Kulisse._bake.delete(Kulisse._bake.keys().next().value);
       return job;
+    },
+    // Sichtbarer Schein einer Lampe: Lichtkreis, Neon-Balken oder Lichtkegel im Raum
+    glowOf(l) {
+      const c = l.c.map((x) => Math.round(x * 255)).join(','), out = { els: [] };
+      if (l.type === 'neon') {
+        const len = num(l.len, 300), th = 40 + l.power * 40;
+        out.els.push({ w: len + th * 2, h: th * 2, t: `translate3d(${l.x}px,${l.y}px,${l.z + 2}px) rotateZ(${num(l.angle, 0)}deg) translate(-50%,-50%)`,
+          bg: `linear-gradient(to bottom, rgba(${c},0), rgba(${c},.28) 38%, rgba(255,255,255,.95) 47%, rgba(255,255,255,.95) 53%, rgba(${c},.28) 62%, rgba(${c},0))`, r: th + 'px' });
+        return out;
+      }
+      const s = 120 + l.power * 90;
+      out.els.push({ w: s * 2, h: s * 2, t: `translate3d(${l.x - s}px,${l.y - s}px,${l.z + 2}px)`, bg: `radial-gradient(circle, rgba(${c},.85) 0, rgba(${c},.35) 12%, rgba(${c},.08) 45%, rgba(${c},0) 70%)`, r: '50%' });
+      if (l.type === 'spot' && num(l.haze, 0.5) > 0) {
+        // Lichtkegel: drei Dreiecke um die Achse, nach vorne ausgeblendet
+        const D = l.dir, len = l.range * 0.9, wdt = Math.tan(Math.acos(l.cosOut)) * len, a = num(l.haze, 0.5) * 0.22;
+        let up = Math.abs(D[1]) > 0.9 ? [1, 0, 0] : [0, 1, 0];
+        const s1 = cross(D, up), n1 = Math.hypot(...s1) || 1, e1 = s1.map((x) => x / n1), e2 = cross(D, e1);
+        for (let i = 0; i < 3; i++) {
+          const an = i * Math.PI / 3, P = [e1[0] * Math.cos(an) + e2[0] * Math.sin(an), e1[1] * Math.cos(an) + e2[1] * Math.sin(an), e1[2] * Math.cos(an) + e2[2] * Math.sin(an)];
+          const U = D.map((x) => x * len), V = P.map((x) => x * wdt * 2), O = [l.x - V[0] / 2, l.y - V[1] / 2, l.z - V[2] / 2], Nn = cross(U, V), nn = Math.hypot(...Nn) || 1;
+          out.els.push({ w: 100, h: 100, cone: true, t: `matrix3d(${U[0] / 100},${U[1] / 100},${U[2] / 100},0,${V[0] / 100},${V[1] / 100},${V[2] / 100},0,${Nn[0] / nn},${Nn[1] / nn},${Nn[2] / nn},0,${O[0]},${O[1]},${O[2]},1)`,
+            bg: `linear-gradient(to right, rgba(${c},${a.toFixed(3)}), rgba(${c},${(a * 0.45).toFixed(3)}) 55%, rgba(${c},0))` });
+        }
+      }
+      return out;
+    },
+    // Licht an einem Punkt im Raum (für Figuren): Umgebung + Sonne + Lampen, Normale zur Kamera
+    lightAt(res, S) {
+      const ctx = res && res.ctx; if (!ctx) return null;
+      let r = ctx.amb[0], g = ctx.amb[1], b = ctx.amb[2];
+      if (ctx.sunOn) { const toSun = ctx.D.map((x) => -x), t = Kulisse.trace(S, toSun, 1e5, null, res.occ); const kk = ctx.sunP * 0.6 * t; r += ctx.sunCol[0] * kk; g += ctx.sunCol[1] * kk; b += ctx.sunCol[2] * kk; }
+      for (const l of ctx.lamps) { const kk = Kulisse.lampAt(l, S, null, false, null, res.occ); if (kk) { r += l.c[0] * kk; g += l.c[1] * kk; b += l.c[2] * kk; } }
+      const m = Math.max(r, g, b, 1e-3), hx = (v) => Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16).padStart(2, '0');
+      return { color: '#' + hx(r / Math.max(1, m)) + hx(g / Math.max(1, m)) + hx(b / Math.max(1, m)), level: Math.min(1.5, (r + g + b) / 3) };
+    },
+    // Farbe für eine Figur an Bildschirm-Position x (0–100 %) bei der aktuellen Kamera
+    async charLight(ctrl, xPct) {
+      const res = await Kulisse.bake(ctrl.k, ctrl.day);
+      return Kulisse.lightAt(res, [ctrl.cam.x + (num(xPct, 50) - 50) / 100 * W, ctrl.cam.y + 120, 0]);
     },
     trace(S, dir, tmax, selfId, occ) {
       let T = 1;
@@ -231,13 +295,7 @@
           let lam = dot(N, toSun); lam = one ? Math.max(0, lam) : Math.abs(lam);
           if (lam > 0.02) { const t = Kulisse.trace(S, toSun, 1e5, p.id, occ); if (t > 0) { const kk = ctx.sunP * (0.35 + 0.65 * lam) * t; r += ctx.sunCol[0] * kk; g += ctx.sunCol[1] * kk; b += ctx.sunCol[2] * kk; } }
         }
-        for (const l of ctx.lamps) {
-          const d0 = [l.x - S[0], l.y - S[1], l.z - S[2]], d = Math.hypot(d0[0], d0[1], d0[2]); if (d > l.range || d < 0.01) continue;
-          const dir = [d0[0] / d, d0[1] / d, d0[2] / d]; let lam = dot(N, dir); lam = one ? Math.max(0, lam) : Math.abs(lam);
-          const att = (1 - d / l.range) ** 2 * (0.3 + 0.7 * lam); if (att < 0.005) continue;
-          const t = l.shadows !== false ? Kulisse.trace(S, dir, d, p.id, occ) : 1; if (!t) continue;
-          const kk = l.power * att * t * 1.25; r += l.c[0] * kk; g += l.c[1] * kk; b += l.c[2] * kk;
-        }
+        for (const l of ctx.lamps) { const kk = Kulisse.lampAt(l, S, N, one, p.id, occ); if (kk) { r += l.c[0] * kk; g += l.c[1] * kk; b += l.c[2] * kk; } }
         const o = (j * gw + i) * 4;
         mul.data[o] = Math.min(255, r * 255); mul.data[o + 1] = Math.min(255, g * 255); mul.data[o + 2] = Math.min(255, b * 255); mul.data[o + 3] = 255;
         add.data[o] = Math.max(0, r - 1) * 110; add.data[o + 1] = Math.max(0, g - 1) * 110; add.data[o + 2] = Math.max(0, b - 1) * 110; add.data[o + 3] = 255;
@@ -337,11 +395,10 @@
           }
           for (const x of [...wB.querySelectorAll('.kul-shaft, .kul-glow'), ...wF.querySelectorAll('.kul-glow')]) x.remove();
           for (const s of res.shafts) { const d = document.createElement('div'); d.className = 'kul-shaft'; d.style.transform = s.m; d.style.background = s.bg; wB.appendChild(d); }
-          for (const l of res.glows) {
-            const d = document.createElement('div'), c = l.c.map((x) => Math.round(x * 255)).join(',');
-            d.className = 'kul-glow'; d.style.width = d.style.height = l.s * 2 + 'px';
-            d.style.background = `radial-gradient(circle, rgba(${c},.85) 0, rgba(${c},.35) 12%, rgba(${c},.08) 45%, rgba(${c},0) 70%)`;
-            d.style.transform = `translate3d(${l.x - l.s}px,${l.y - l.s}px,${l.z + 2}px)`;
+          for (const l of res.glows) for (const g of l.els) {
+            const d = document.createElement('div');
+            d.className = 'kul-glow' + (g.cone ? ' kul-cone' : ''); d.style.width = g.w + 'px'; d.style.height = g.h + 'px';
+            d.style.background = g.bg; if (g.r) d.style.borderRadius = g.r; d.style.transform = g.t;
             (ctrl.mode !== 'orbit' && l.z > 20 ? wF : wB).appendChild(d);
           }
           ctrl.ready = true;
