@@ -85,6 +85,12 @@
    "en": "Futuristic",
    "es": "Futurista",
    "ja": "近未来"
+  },
+  "future_plain": {
+   "de": "Futuristisch ohne Rahmen",
+   "en": "Futuristic, no frame",
+   "es": "Futurista sin marco",
+   "ja": "近未来（枠なし）"
   }
  },
  "items": [
@@ -3909,6 +3915,708 @@
     "ja": "新しい通知（近未来）"
    },
    "size": 28490
+  },
+  {
+   "id": "pack:ifp_folder",
+   "file": "images/future_plain/folder.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Ordner (futuristisch)",
+    "en": "Folder (futuristic)",
+    "es": "Carpeta (futurista)",
+    "ja": "フォルダー（近未来）"
+   },
+   "size": 12202
+  },
+  {
+   "id": "pack:ifp_folder_open",
+   "file": "images/future_plain/folder_open.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Ordner offen (futuristisch)",
+    "en": "Open folder (futuristic)",
+    "es": "Carpeta abierta (futurista)",
+    "ja": "開いたフォルダー（近未来）"
+   },
+   "size": 18503
+  },
+  {
+   "id": "pack:ifp_file_text",
+   "file": "images/future_plain/file_text.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Textdatei (futuristisch)",
+    "en": "Text file (futuristic)",
+    "es": "Archivo de texto (futurista)",
+    "ja": "テキストファイル（近未来）"
+   },
+   "size": 16659
+  },
+  {
+   "id": "pack:ifp_file_image",
+   "file": "images/future_plain/file_image.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Bilddatei (futuristisch)",
+    "en": "Image file (futuristic)",
+    "es": "Archivo de imagen (futurista)",
+    "ja": "画像ファイル（近未来）"
+   },
+   "size": 18648
+  },
+  {
+   "id": "pack:ifp_file_music",
+   "file": "images/future_plain/file_music.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Musikdatei (futuristisch)",
+    "en": "Music file (futuristic)",
+    "es": "Archivo de música (futurista)",
+    "ja": "音楽ファイル（近未来）"
+   },
+   "size": 17998
+  },
+  {
+   "id": "pack:ifp_file_zip",
+   "file": "images/future_plain/file_zip.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "ZIP-Archiv (futuristisch)",
+    "en": "ZIP archive (futuristic)",
+    "es": "Archivo ZIP (futurista)",
+    "ja": "ZIPファイル（近未来）"
+   },
+   "size": 19407
+  },
+  {
+   "id": "pack:ifp_file_pdf",
+   "file": "images/future_plain/file_pdf.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "PDF-Datei (futuristisch)",
+    "en": "PDF file (futuristic)",
+    "es": "Archivo PDF (futurista)",
+    "ja": "PDFファイル（近未来）"
+   },
+   "size": 16959
+  },
+  {
+   "id": "pack:ifp_save",
+   "file": "images/future_plain/save.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Speichern (Diskette) (futuristisch)",
+    "en": "Save (floppy disk) (futuristic)",
+    "es": "Guardar (disquete) (futurista)",
+    "ja": "保存（フロッピー）（近未来）"
+   },
+   "size": 16936
+  },
+  {
+   "id": "pack:ifp_trash",
+   "file": "images/future_plain/trash.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Papierkorb (futuristisch)",
+    "en": "Trash can (futuristic)",
+    "es": "Papelera (futurista)",
+    "ja": "ゴミ箱（近未来）"
+   },
+   "size": 25254
+  },
+  {
+   "id": "pack:ifp_clipboard",
+   "file": "images/future_plain/clipboard.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Klemmbrett (futuristisch)",
+    "en": "Clipboard (futuristic)",
+    "es": "Portapapeles (futurista)",
+    "ja": "クリップボード（近未来）"
+   },
+   "size": 26383
+  },
+  {
+   "id": "pack:ifp_paperclip",
+   "file": "images/future_plain/paperclip.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Büroklammer (futuristisch)",
+    "en": "Paperclip (futuristic)",
+    "es": "Clip (futurista)",
+    "ja": "クリップ（近未来）"
+   },
+   "size": 12233
+  },
+  {
+   "id": "pack:ifp_box",
+   "file": "images/future_plain/box.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Archivkarton (futuristisch)",
+    "en": "Archive box (futuristic)",
+    "es": "Caja de archivo (futurista)",
+    "ja": "保管箱（近未来）"
+   },
+   "size": 12136
+  },
+  {
+   "id": "pack:ifp_heart",
+   "file": "images/future_plain/heart.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Herz (futuristisch)",
+    "en": "Heart (futuristic)",
+    "es": "Corazón (futurista)",
+    "ja": "ハート（近未来）"
+   },
+   "size": 27637
+  },
+  {
+   "id": "pack:ifp_star",
+   "file": "images/future_plain/star.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Stern (futuristisch)",
+    "en": "Star (futuristic)",
+    "es": "Estrella (futurista)",
+    "ja": "星（近未来）"
+   },
+   "size": 28277
+  },
+  {
+   "id": "pack:ifp_check",
+   "file": "images/future_plain/check.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Haken (futuristisch)",
+    "en": "Check mark (futuristic)",
+    "es": "Visto (futurista)",
+    "ja": "チェック（近未来）"
+   },
+   "size": 12422
+  },
+  {
+   "id": "pack:ifp_cross",
+   "file": "images/future_plain/cross.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Kreuz (futuristisch)",
+    "en": "Cross (futuristic)",
+    "es": "Cruz (futurista)",
+    "ja": "バツ（近未来）"
+   },
+   "size": 12163
+  },
+  {
+   "id": "pack:ifp_warning",
+   "file": "images/future_plain/warning.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Warnung (futuristisch)",
+    "en": "Warning (futuristic)",
+    "es": "Advertencia (futurista)",
+    "ja": "警告（近未来）"
+   },
+   "size": 23735
+  },
+  {
+   "id": "pack:ifp_question",
+   "file": "images/future_plain/question.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Fragezeichen (futuristisch)",
+    "en": "Question mark (futuristic)",
+    "es": "Interrogación (futurista)",
+    "ja": "はてな（近未来）"
+   },
+   "size": 16400
+  },
+  {
+   "id": "pack:ifp_info",
+   "file": "images/future_plain/info.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Info (futuristisch)",
+    "en": "Info (futuristic)",
+    "es": "Información (futurista)",
+    "ja": "インフォ（近未来）"
+   },
+   "size": 33562
+  },
+  {
+   "id": "pack:ifp_lock",
+   "file": "images/future_plain/lock.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Schloss zu (futuristisch)",
+    "en": "Lock (futuristic)",
+    "es": "Candado cerrado (futurista)",
+    "ja": "錠（閉）（近未来）"
+   },
+   "size": 20792
+  },
+  {
+   "id": "pack:ifp_unlock",
+   "file": "images/future_plain/unlock.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Schloss offen (futuristisch)",
+    "en": "Unlocked (futuristic)",
+    "es": "Candado abierto (futurista)",
+    "ja": "錠（開）（近未来）"
+   },
+   "size": 21219
+  },
+  {
+   "id": "pack:ifp_plus",
+   "file": "images/future_plain/plus.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Plus (futuristisch)",
+    "en": "Plus (futuristic)",
+    "es": "Más (futurista)",
+    "ja": "プラス（近未来）"
+   },
+   "size": 9465
+  },
+  {
+   "id": "pack:ifp_minus",
+   "file": "images/future_plain/minus.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Minus (futuristisch)",
+    "en": "Minus (futuristic)",
+    "es": "Menos (futurista)",
+    "ja": "マイナス（近未来）"
+   },
+   "size": 3778
+  },
+  {
+   "id": "pack:ifp_gear",
+   "file": "images/future_plain/gear.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Zahnrad (Einstellungen) (futuristisch)",
+    "en": "Gear (settings) (futuristic)",
+    "es": "Engranaje (ajustes) (futurista)",
+    "ja": "歯車（設定）（近未来）"
+   },
+   "size": 41050
+  },
+  {
+   "id": "pack:ifp_bell",
+   "file": "images/future_plain/bell.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Glocke (futuristisch)",
+    "en": "Bell (futuristic)",
+    "es": "Campana (futurista)",
+    "ja": "ベル（近未来）"
+   },
+   "size": 22461
+  },
+  {
+   "id": "pack:ifp_home",
+   "file": "images/future_plain/home.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Haus (Start) (futuristisch)",
+    "en": "House (home) (futuristic)",
+    "es": "Casa (inicio) (futurista)",
+    "ja": "家（ホーム）（近未来）"
+   },
+   "size": 16806
+  },
+  {
+   "id": "pack:ifp_search",
+   "file": "images/future_plain/search.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Lupe (Suche) (futuristisch)",
+    "en": "Magnifier (search) (futuristic)",
+    "es": "Lupa (buscar) (futurista)",
+    "ja": "虫眼鏡（検索）（近未来）"
+   },
+   "size": 23237
+  },
+  {
+   "id": "pack:ifp_lightning",
+   "file": "images/future_plain/lightning.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Blitz (futuristisch)",
+    "en": "Lightning (futuristic)",
+    "es": "Rayo (futurista)",
+    "ja": "稲妻（近未来）"
+   },
+   "size": 18779
+  },
+  {
+   "id": "pack:ifp_fire",
+   "file": "images/future_plain/fire.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Feuer (futuristisch)",
+    "en": "Fire (futuristic)",
+    "es": "Fuego (futurista)",
+    "ja": "炎（近未来）"
+   },
+   "size": 26945
+  },
+  {
+   "id": "pack:ifp_music_note",
+   "file": "images/future_plain/music_note.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Musiknote (futuristisch)",
+    "en": "Music note (futuristic)",
+    "es": "Nota musical (futurista)",
+    "ja": "音符（近未来）"
+   },
+   "size": 13465
+  },
+  {
+   "id": "pack:ifp_pin",
+   "file": "images/future_plain/pin.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Ortsmarke (futuristisch)",
+    "en": "Location pin (futuristic)",
+    "es": "Marcador de ubicación (futurista)",
+    "ja": "位置ピン（近未来）"
+   },
+   "size": 32515
+  },
+  {
+   "id": "pack:ifp_clock",
+   "file": "images/future_plain/clock.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Uhr (futuristisch)",
+    "en": "Clock (futuristic)",
+    "es": "Reloj (futurista)",
+    "ja": "時計（近未来）"
+   },
+   "size": 34315
+  },
+  {
+   "id": "pack:ifp_crown",
+   "file": "images/future_plain/crown.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Krone (futuristisch)",
+    "en": "Crown (futuristic)",
+    "es": "Corona (futurista)",
+    "ja": "王冠（近未来）"
+   },
+   "size": 24366
+  },
+  {
+   "id": "pack:ifp_trophy",
+   "file": "images/future_plain/trophy.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Pokal (futuristisch)",
+    "en": "Trophy (futuristic)",
+    "es": "Trofeo (futurista)",
+    "ja": "トロフィー（近未来）"
+   },
+   "size": 24225
+  },
+  {
+   "id": "pack:ifp_chat",
+   "file": "images/future_plain/chat.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Sprechblase (futuristisch)",
+    "en": "Chat bubble (futuristic)",
+    "es": "Bocadillo (futurista)",
+    "ja": "吹き出し（近未来）"
+   },
+   "size": 19139
+  },
+  {
+   "id": "pack:ifp_chat_typing",
+   "file": "images/future_plain/chat_typing.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Schreibt gerade … (futuristisch)",
+    "en": "Typing … (futuristic)",
+    "es": "Escribiendo … (futurista)",
+    "ja": "入力中…（近未来）"
+   },
+   "size": 21549
+  },
+  {
+   "id": "pack:ifp_chat_me",
+   "file": "images/future_plain/chat_me.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Eigene Nachricht (futuristisch)",
+    "en": "Own message (futuristic)",
+    "es": "Mensaje propio (futurista)",
+    "ja": "自分のメッセージ（近未来）"
+   },
+   "size": 8198
+  },
+  {
+   "id": "pack:ifp_chat_heart",
+   "file": "images/future_plain/chat_heart.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Liebesnachricht (futuristisch)",
+    "en": "Love message (futuristic)",
+    "es": "Mensaje de amor (futurista)",
+    "ja": "ラブメッセージ（近未来）"
+   },
+   "size": 20150
+  },
+  {
+   "id": "pack:ifp_chat_two",
+   "file": "images/future_plain/chat_two.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Unterhaltung (futuristisch)",
+    "en": "Conversation (futuristic)",
+    "es": "Conversación (futurista)",
+    "ja": "会話（近未来）"
+   },
+   "size": 22331
+  },
+  {
+   "id": "pack:ifp_mail",
+   "file": "images/future_plain/mail.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Neue E-Mail (futuristisch)",
+    "en": "New email (futuristic)",
+    "es": "Nuevo correo (futurista)",
+    "ja": "新着メール（近未来）"
+   },
+   "size": 14129
+  },
+  {
+   "id": "pack:ifp_mail_open",
+   "file": "images/future_plain/mail_open.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Brief geöffnet (futuristisch)",
+    "en": "Opened letter (futuristic)",
+    "es": "Carta abierta (futurista)",
+    "ja": "開いた手紙（近未来）"
+   },
+   "size": 23153
+  },
+  {
+   "id": "pack:ifp_inbox",
+   "file": "images/future_plain/inbox.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Posteingang (futuristisch)",
+    "en": "Inbox (futuristic)",
+    "es": "Bandeja de entrada (futurista)",
+    "ja": "受信トレイ（近未来）"
+   },
+   "size": 22154
+  },
+  {
+   "id": "pack:ifp_send",
+   "file": "images/future_plain/send.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Senden (Papierflieger) (futuristisch)",
+    "en": "Send (paper plane) (futuristic)",
+    "es": "Enviar (avión de papel) (futurista)",
+    "ja": "送信（紙飛行機）（近未来）"
+   },
+   "size": 24929
+  },
+  {
+   "id": "pack:ifp_phone_call",
+   "file": "images/future_plain/phone_call.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Anruf (futuristisch)",
+    "en": "Call (futuristic)",
+    "es": "Llamada (futurista)",
+    "ja": "着信（近未来）"
+   },
+   "size": 38933
+  },
+  {
+   "id": "pack:ifp_phone_missed",
+   "file": "images/future_plain/phone_missed.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Verpasster Anruf (futuristisch)",
+    "en": "Missed call (futuristic)",
+    "es": "Llamada perdida (futurista)",
+    "ja": "不在着信（近未来）"
+   },
+   "size": 27560
+  },
+  {
+   "id": "pack:ifp_video_call",
+   "file": "images/future_plain/video_call.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Videoanruf (futuristisch)",
+    "en": "Video call (futuristic)",
+    "es": "Videollamada (futurista)",
+    "ja": "ビデオ通話（近未来）"
+   },
+   "size": 17148
+  },
+  {
+   "id": "pack:ifp_voice",
+   "file": "images/future_plain/voice.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Sprachnachricht (futuristisch)",
+    "en": "Voice message (futuristic)",
+    "es": "Mensaje de voz (futurista)",
+    "ja": "ボイスメッセージ（近未来）"
+   },
+   "size": 26000
+  },
+  {
+   "id": "pack:ifp_thumbs_up",
+   "file": "images/future_plain/thumbs_up.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Daumen hoch (futuristisch)",
+    "en": "Thumbs up (futuristic)",
+    "es": "Pulgar arriba (futurista)",
+    "ja": "いいね（近未来）"
+   },
+   "size": 21084
+  },
+  {
+   "id": "pack:ifp_at",
+   "file": "images/future_plain/at.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "At-Zeichen (@) (futuristisch)",
+    "en": "At sign (@) (futuristic)",
+    "es": "Arroba (@) (futurista)",
+    "ja": "アットマーク（近未来）"
+   },
+   "size": 37188
+  },
+  {
+   "id": "pack:ifp_wifi",
+   "file": "images/future_plain/wifi.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "WLAN (futuristisch)",
+    "en": "Wi-Fi (futuristic)",
+    "es": "Wi-Fi (futurista)",
+    "ja": "Wi-Fi（近未来）"
+   },
+   "size": 27532
+  },
+  {
+   "id": "pack:ifp_battery",
+   "file": "images/future_plain/battery.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Akku (futuristisch)",
+    "en": "Battery (futuristic)",
+    "es": "Batería (futurista)",
+    "ja": "バッテリー（近未来）"
+   },
+   "size": 14085
+  },
+  {
+   "id": "pack:ifp_battery_low",
+   "file": "images/future_plain/battery_low.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Akku leer (futuristisch)",
+    "en": "Battery low (futuristic)",
+    "es": "Batería baja (futurista)",
+    "ja": "バッテリー残量少（近未来）"
+   },
+   "size": 13400
+  },
+  {
+   "id": "pack:ifp_signal",
+   "file": "images/future_plain/signal.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Empfang (futuristisch)",
+    "en": "Signal (futuristic)",
+    "es": "Cobertura (futurista)",
+    "ja": "電波（近未来）"
+   },
+   "size": 9789
+  },
+  {
+   "id": "pack:ifp_notification",
+   "file": "images/future_plain/notification.png",
+   "kind": "image",
+   "cat": "future_plain",
+   "name": {
+    "de": "Neue Benachrichtigung (futuristisch)",
+    "en": "New notification (futuristic)",
+    "es": "Nueva notificación (futurista)",
+    "ja": "新しい通知（近未来）"
+   },
+   "size": 20828
   }
  ]
 }
