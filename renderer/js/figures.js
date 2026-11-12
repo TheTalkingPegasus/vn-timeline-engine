@@ -97,7 +97,7 @@
           : 'Richte Bones am Bild der untersten Ebene (z. B. Körper) ein – dann bewegen sich alle Ebenen darüber mit. Alle Bilder brauchen dieselbe Leinwand.'),
         firstImg ? el('button', { class: 'btn tiny', onclick: () => App.openBones(rb || firstImg) }, rb ? 'Knochen bearbeiten' : 'Bones für die Körper-Ebene einrichten') : null));
       const st = el('div', { class: 'fig-stage' });
-      st.appendChild(Stage.charEl(fake, 'char', { beat: 0 }));
+      st.appendChild(el('div', { class: 'fig-inner' }, Stage.charEl(fake, 'char', { beat: 0 })));
       prev.append(el('div', { class: 'sec-title' }, 'Vorschau (Klick auf eine Variante wählt sie aus)'), st);
       wrap.append(ed, prev);
     },
@@ -120,14 +120,17 @@
       center.appendChild(body);
       if (!id) { body.appendChild(el('div', { class: 'hint-box' }, 'Importiere zuerst ein Figuren-Bild.')); return; }
       const stage = el('div', { class: 'mouth-stage' });
+      // Bild + Markierung in einer inneren Fläche (die lässt sich mit dem Mausrad zoomen)
+      const inner = el('div', { class: 'mouth-inner' });
+      stage.appendChild(inner);
       const img = el('img', { src: VN.assetUrl(id), draggable: 'false' });
-      stage.appendChild(img);
+      inner.appendChild(img);
       const svgNS = 'http://www.w3.org/2000/svg';
       const ov = document.createElementNS(svgNS, 'svg');
       ov.setAttribute('class', 'mouth-svg');
       ov.setAttribute('viewBox', '0 0 1000 1000');
       ov.setAttribute('preserveAspectRatio', 'none');
-      stage.appendChild(ov);
+      inner.appendChild(ov);
       const pos = () => Object.assign(ov.style, { left: img.offsetLeft + 'px', top: img.offsetTop + 'px', width: img.offsetWidth + 'px', height: img.offsetHeight + 'px' });
       img.addEventListener('load', pos);
       Figures._ro = new ResizeObserver(pos);
@@ -147,7 +150,7 @@
         const inner = el('span', { class: 'char-inner' }, el('img', { src: VN.assetUrl(id), draggable: 'false' }));
         fake.appendChild(inner);
         stage.innerHTML = '';
-        stage.appendChild(fake);
+        stage.appendChild(el('div', { class: 'mouth-inner' }, fake));
         const ctl = Fx.attachMouth(fake, { asset: id });
         const t0 = performance.now();
         const loop = () => { if (!fake.isConnected) return; const t = (performance.now() - t0) / 1000; const v = Math.max(0, Math.sin(t * 11) * 0.6 + Math.sin(t * 4.3) * 0.4); if (ctl) ctl.set(v); requestAnimationFrame(loop); };

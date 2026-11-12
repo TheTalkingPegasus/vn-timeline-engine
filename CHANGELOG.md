@@ -2,6 +2,13 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.30 – Zoom in every editor
+- The mouse-wheel zoom now also works in **Lip sync**, **Layers & outfits**, the **website editor** (Ctrl + wheel, plain wheel
+  still scrolls long pages), the **device preview** and the **idle map**.
+- **Jointed puppets** (incl. inpaint masking) already zoomed with the wheel – now you can also **pan** there with the middle mouse
+  button or Space + drag.
+- **Pixel art:** the wheel zooms without Ctrl, the pixel under the mouse stays in place; pan with the middle mouse button or Space + drag.
+
 ## 0.9.29 – Mouse-wheel zoom everywhere; twitch & heartbeat for soft physics
 - **Zoom with the mouse wheel** in every preview: scene, hub, cutscene animation, design, main menu, bones and soft physics.
   Zooms towards the mouse position (50 %–800 %); **pan** with the middle mouse button or Space + drag; the badge in the corner

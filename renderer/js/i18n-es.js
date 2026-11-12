@@ -5354,7 +5354,8 @@ window.VN_I18N_ES = {
 "Auch: Strg + Mausrad über der Timeline": "También: Ctrl + rueda del ratón sobre la línea de tiempo",
 "Zucken (angespannt)": "Espasmo (tenso)",
 "Puls (Herzschlag)": "Pulso (latido)",
-"Puls: Schläge/Min": "Pulso: latidos/min"
+"Puls: Schläge/Min": "Pulso: latidos/min",
+"Linke Maustaste = malen · rechte = radieren · Mausrad = Zoom · mittlere Maustaste oder Leertaste + Ziehen = verschieben. Ändert man eine Farbe, ändert sie sich in allen Bildern.": "Botón izquierdo = pintar · derecho = borrar · rueda = zoom · botón central o Espacio + arrastrar = desplazar. Si cambias un color, cambia en todos los fotogramas."
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

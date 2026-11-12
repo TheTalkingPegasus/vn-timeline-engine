@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototype 0.9.29
+VN Timeline Engine · Prototype 0.9.30
 ====================================
 (Deutsch: siehe LIES MICH.txt)
 
@@ -15,6 +15,8 @@ Without installing (ZIP):
    isn't signed: "More info" → "Run anyway".
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
+
+NEW IN 0.9.30 · Wheel zoom in every editor: lip sync, layers, website editor (Ctrl + wheel), device preview, idle map; pan in jointed puppets; pixel art zooms with the plain wheel
 
 NEW IN 0.9.29 · Mouse-wheel zoom in every preview (scene, hub, animation, design, menu, figures) towards the mouse; pan with middle mouse or Space + drag; click the badge for 100 %; Ctrl + wheel zooms the timeline; soft physics: tense twitching and heartbeat pulse (strength and BPM adjustable)
 

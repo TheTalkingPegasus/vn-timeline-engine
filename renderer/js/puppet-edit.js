@@ -233,9 +233,10 @@
       testing ? null : el('button', { class: 'btn' + (ui().pupRuler ? ' primary' : ''), title: VN.t('Länge jedes Glieds markieren: vom Gelenk bis zum nächsten Gelenk (z. B. Oberschenkel bis Knie). Bestimmt, wie weit sich die Figur beim Puppenspiel strecken kann.'), onclick: () => { ui().pupRuler = !ui().pupRuler; ui().pupErase = null; ui().pupSew = false; VN.render(); } }, ui().pupRuler ? '✓ Längen' : '📏 Längen'),
       el('label', { class: 'check btn' }, el('input', { type: 'checkbox', checked: !!ui().pupIdle, onchange: (e) => { ui().pupIdle = e.target.checked; } }), 'Idle abspielen'),
       el('label', { class: 'check btn' }, el('input', { type: 'checkbox', checked: ui().pupPins !== false, onchange: (e) => { ui().pupPins = e.target.checked; } }), 'Pins')));
-    const wrap = el('div', { class: 'pup-stage-wrap' });
+    const wrap = el('div', { class: 'pup-stage-wrap vz-own' });
     const canvas = el('canvas', { class: 'pup-ed-canvas', tabindex: '0' });
     wrap.appendChild(canvas);
+
     main.appendChild(wrap);
     main.appendChild(el('div', { class: 'muted small pup-help' }, ui().pupHold && !testing
       ? 'Haftpunkte: auf ein Teil klicken = Punkt setzen (z. B. Handfläche, Ferse, Knie) · Punkt ziehen = verschieben · rechts unter „Haftpunkte“ Reichweite und Löschen. Im Animations-Editor hält ein Doppelklick auf den Punkt diese Stelle fest: Bewegst du die Figur, bleibt sie kleben, die Glieder beugen sich und das Bild dehnt sich, wo sie nicht reichen.'
@@ -569,6 +570,13 @@
     });
     canvas.addEventListener('mousemove', (e) => { const r = canvas.getBoundingClientRect(); PupEd._mouse = [e.clientX - r.left, e.clientY - r.top]; });
     canvas.addEventListener('mouseleave', () => { PupEd._mouse = null; });
+    // Verschieben (0.9.30): mittlere Maustaste oder Leertaste + Ziehen – wie in allen anderen Vorschauen
+    canvas.addEventListener('mousedown', (e) => {
+      if (!window.Zoom) return;
+      const v = view(), o = { x: v.x, y: v.y };
+      Zoom.panStart(e, (dx, dy) => { v.x = o.x + dx; v.y = o.y + dy; });
+    }, true);
+    canvas.addEventListener('auxclick', (e) => { if (e.button === 1) e.preventDefault(); });
     canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
       if (ui().pupErase && (e.ctrlKey || e.metaKey)) { const E = ui().pupErase; E.size = Math.max(2, Math.min(400, Math.round(E.size * (e.deltaY < 0 ? 1.15 : 1 / 1.15)))); const n = document.getElementById('pup-er-size'); if (n) n.value = E.size; return; }

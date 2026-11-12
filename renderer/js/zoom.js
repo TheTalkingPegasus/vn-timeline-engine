@@ -7,7 +7,12 @@
   // Ansichtsfenster → Inhalt, der gezoomt wird
   const VIEWPORTS = [
     ['.stage-wrap', ':scope > .stage, :scope > .bone-stage'],
-    ['.soft-stage', ':scope > .soft-imgwrap, :scope > .soft-test']
+    ['.soft-stage', ':scope > .soft-imgwrap, :scope > .soft-test'],
+    ['.mouth-stage', ':scope > .mouth-inner'],
+    ['.fig-stage', ':scope > .fig-inner'],
+    ['.web-ed-frame', ':scope > .web-ed-page', 'ctrl'], // lange Seiten scrollen mit dem Rad – Zoom hier mit Strg + Rad
+    ['.dv-prev', ':scope > .dv-back'],
+    ['.id-map-vp', ':scope > .id-map-ed']
   ];
 
   const Zoom = (window.Zoom = {
@@ -15,15 +20,17 @@
       const u = VN.ui;
       if (u.view === 'bones') return 'bones:' + (u.figSub || 'bones') + (u.figSub === 'soft' && u.softTest ? ':test' : '');
       if (u.view === 'scene' || !u.view) { const s = VN.curScene && VN.curScene(); return 'scene:' + (s ? s.type : ''); }
+      if (u.view === 'systems') return 'systems:' + (u.sysTab || '');
+      if (u.view === 'design') return 'design:' + (u.designSec || '');
       return u.view;
     },
     state(k) { const all = VN.ui.vzoom || (VN.ui.vzoom = {}); return all[k || Zoom.key()] || (all[k || Zoom.key()] = { z: 1, x: 0, y: 0 }); },
     find(target) {
-      for (const [vs, cs] of VIEWPORTS) {
+      for (const [vs, cs, mode] of VIEWPORTS) {
         const vp = target && target.closest && target.closest(vs);
         if (!vp) continue;
         const c = vp.querySelector(cs);
-        if (c) return { vp, c };
+        if (c) return { vp, c, ctrl: mode === 'ctrl' };
       }
       return null;
     },
@@ -40,7 +47,7 @@
         const on = st.z !== 1 || st.x || st.y;
         c.style.scale = on ? String(st.z) : '';
         c.style.translate = on ? `${st.x}px ${st.y}px` : '';
-        vp.classList.add('vz-vp');
+        vp.classList.add('vz-vp'); vp.classList.toggle('vz-on', !!on);
         let b = vp.querySelector(':scope > .vz-badge');
         if (!on) { if (b) b.remove(); continue; }
         if (!b) {
@@ -60,16 +67,27 @@
       const st = Zoom.state();
       const nz = Math.max(MIN, Math.min(MAX, st.z * factor));
       if (nz === st.z) return;
-      // Mittelpunkt ohne Verschiebung (scale wirkt um die Mitte des Inhalts)
-      const r = c.getBoundingClientRect();
-      const c0x = r.left + r.width / 2 - st.x, c0y = r.top + r.height / 2 - st.y;
-      const qx = (mx - c0x - st.x) / st.z, qy = (my - c0y - st.y) / st.z;
-      st.x = mx - c0x - nz * qx; st.y = my - c0y - nz * qy; st.z = nz;
+      // Drehpunkt = Mitte des Inhalts ohne Zoom und ohne eigene Verschiebung (funktioniert auch bei Inhalten mit eigenem transform)
+      const O = origin(c);
+      st.x = mx - O[0] - nz * (mx - O[0] - st.x) / st.z;
+      st.y = my - O[1] - nz * (my - O[1] - st.y) / st.z;
+      st.z = nz;
       // ganz herausgezoomt: wieder mittig
       if (Math.abs(st.z - 1) < 0.02) { st.z = 1; st.x = 0; st.y = 0; }
       Zoom.apply(); Zoom.changed();
     }
   });
+
+  // Mitte des Layout-Kastens messen (eigenes transform kurz aus, ohne Übergang)
+  function origin(c) {
+    const S = c.style, keep = { transform: S.transform, scale: S.scale, translate: S.translate, transition: S.transition };
+    S.transition = 'none'; S.transform = 'none'; S.scale = ''; S.translate = '';
+    const r = c.getBoundingClientRect();
+    S.transform = keep.transform; S.scale = keep.scale; S.translate = keep.translate;
+    void c.offsetWidth;
+    S.transition = keep.transition;
+    return [r.left + r.width / 2, r.top + r.height / 2];
+  }
 
   // Mausrad: nur wenn kein anderes Element das Rad schon selbst benutzt (Graph, Storyboard, Puppen …)
   document.addEventListener('wheel', (e) => {
@@ -91,6 +109,7 @@
     if (!f) return;
     // Text in Eingabefeldern / scrollbaren Listen in der Bühne nicht abfangen
     if (e.target.closest('input, textarea, select')) return;
+    if (f.ctrl && !(e.ctrlKey || e.metaKey)) return;
     e.preventDefault();
     const k = Math.exp(-Math.max(-120, Math.min(120, e.deltaY * (e.deltaMode === 1 ? 33 : 1))) * 0.0018);
     Zoom.zoomAt(f.c, e.clientX, e.clientY, k);
@@ -98,9 +117,18 @@
 
   // Verschieben: mittlere Maustaste oder Leertaste + linke Maustaste
   let space = false;
+  Zoom.spaceHeld = () => space;
+  // Verschieben für Bereiche mit eigenem Zoom (Gliederpuppen, Pixel-Art): onPan(dx, dy) bekommt die Mausstrecke
+  Zoom.panStart = (e, onPan, onEnd) => {
+    if (!(e.button === 1 || (e.button === 0 && space))) return false;
+    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
+    document.body.classList.add('vz-panning');
+    VN.drag(e, (dx, dy) => onPan(dx, dy), () => { document.body.classList.remove('vz-panning'); if (onEnd) onEnd(); });
+    return true;
+  };
   document.addEventListener('keydown', (e) => {
     if (e.code !== 'Space' || /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test((e.target && e.target.tagName) || '') || (e.target && e.target.isContentEditable)) return;
-    if (!document.querySelector('#center .vz-vp:hover')) return;
+    if (!document.querySelector('#center .vz-vp:hover, #center .vz-own:hover')) return;
     if (!space) { space = true; document.body.classList.add('vz-space'); }
     e.preventDefault();
   });
