@@ -15,6 +15,8 @@ All notable changes. German details: `LIES MICH.txt`.
   areas of a wall PNG – walls, floors and ceilings block it, furniture and characters don’t. Blinds on a wall make the light
   fall in stripes, plus optional light shafts in the air. Lamps switch on and off by time of day; sun colour and direction
   follow the time of day (or set them by hand). Light is baked once per time of day – it costs nothing while playing.
+- **Characters in depth:** “Depth in the 3D set” on a character clip places the character further back (smaller, slower
+  parallax) or further forward (bigger, in front of beams and plants). Idle animations, blinking and lip sync keep working.
 - **Characters in the light:** with “Match characters to the light” on the background clip each character gets the light of
   its spot in the room – warm next to a lamp, pink by the neon tube, bluish in moonlight.
 - **Time of day:** planes without lighting are tinted automatically; optional own images per time of day (e.g. a sky with

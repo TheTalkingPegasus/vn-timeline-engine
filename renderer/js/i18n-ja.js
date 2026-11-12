@@ -5543,7 +5543,11 @@ window.VN_I18N_JA = {
 "Kegel": "円錐",
 "Lichtkegel in der Luft": "空中の光の円錐",
 "Winkel": "角度",
-"Leuchtet entlang der ganzen Röhre. Die Mitte der Röhre liegt bei X / Y / Z.": "管全体に沿って光ります。管の中心は X / Y / Z です。"
+"Leuchtet entlang der ganzen Röhre. Die Mitte der Röhre liegt bei X / Y / Z.": "管全体に沿って光ります。管の中心は X / Y / Z です。",
+"Tiefe im Kulissen-Raum": "3Dセット内の奥行き",
+"Figuren-Ebene": "キャラクター面",
+"hinten": "奥",
+"vorne": "手前"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

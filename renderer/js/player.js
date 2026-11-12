@@ -4,7 +4,7 @@
 
   let eyeBox;
   let root, stage, bgLayers, black, vig, charsBox, fxBox, hubBox, dlgBox, choiceBox, msgBox, info, hud, overlayBox, gainBox, debugBox, menuBox, ctrl;
-  let world, bgBox, dayOv, parBack, parFront, partBox, phoneBox;
+  let world, bgBox, dayOv, parBack, parFront, partBox, phoneBox, charsFront;
   let run = null;        // aktueller Durchlauf
   let session = null;    // Sitzung (auch im Hauptmenü)
   const timers = new Set();
@@ -34,7 +34,7 @@
   function kulDrop(dur) {
     if (!run || !run.bgKul) return;
     const kc = run.bgKul; run.bgKul = null; bgBox._kul = null; run.kulZone = undefined;
-    hubBox.style.translate = '';
+    hubBox.style.translate = ''; kc.onCam.length = 0; kulChars();
     kc.back.style.transition = dur ? `opacity ${dur}s` : 'none'; kc.back.style.opacity = '0';
     if (kc.front) kc.front.remove();
     later(() => kc.destroy(), dur * 1000 + 60);
@@ -47,9 +47,19 @@
     if (!k.scroll || k.scroll.edge === false || !(Number(k.cam && k.cam.max) > Number(k.cam && k.cam.min))) return false;
     return (s && s.type === 'hub') || !!(run.kulLook && run.kulLook.kScroll);
   };
+  // Figuren in der Tiefe der Kulisse einsortieren (vor/hinter der Vordergrund-Ebene, verkleinert/vergrößert)
+  function kulChars(dur, ease) {
+    if (!run || !charsBox) return;
+    const kc = run.bgKul, pairs = Object.values(run.chars).map((c) => [c.el, c.clip]);
+    if (!kc) { for (const [n] of pairs) { if (n.parentNode === charsFront) charsBox.appendChild(n); n.style.translate = ''; n.style.scale = ''; } charsBox.style.translate = charsFront.style.translate = ''; return; }
+    const Z = Math.max(0.2, (Number(kc.base && kc.base.zoom) || 100) / 100), sh = kc.extra.x ? `${(-kc.extra.x * Z / Kulisse.W * 100).toFixed(3)}cqw 0` : '';
+    charsBox.style.translate = charsFront.style.translate = sh;
+    Kulisse.syncChars(kc, pairs, charsBox, charsFront, dur, ease);
+  }
   function kulZoneCheck() {
     const kc = run && run.bgKul; if (!kc) return;
     hubBox.style.translate = kc.extra.x ? `${(-kc.extra.x / Kulisse.W * 100).toFixed(3)}% 0` : '';
+    kulChars();
     const z = Kulisse.zoneAt(kc.k, kc.cam.x);
     if (z === run.kulZone) return;
     run.kulZone = z;
@@ -128,6 +138,7 @@
       kc.back.style.opacity = '0';
       bgBox.insertBefore(kc.back, dayOv); parFront.appendChild(kc.front);
       bgBox._kul = kc; run.bgKul = kc; run.kulLook = look; run.kulZone = undefined;
+      kc.onCam.push((d, e) => { if (run && run.bgKul === kc) kulChars(d, e); });
       dayOv.style.opacity = '0';
       void kc.back.offsetWidth;
       kc.back.style.transition = trans === 'cut' || dur === 0 ? 'none' : `opacity ${dur}s`;
@@ -291,11 +302,12 @@
     const order = list.map((x) => run.chars[x[0]] && run.chars[x[0]].el).filter(Boolean);
     const now = Array.from(charsBox.children).filter((n) => order.includes(n));
     if (order.some((n, i) => now[i] !== n)) for (const n of order) charsBox.appendChild(n);
+    kulChars();
     // Licht passend zur Szene
     const bg = run.bgClip;
     if (bg && bg.charLight && run.bgKul) {
       const kc = run.bgKul;
-      for (const c of Object.values(run.chars)) Kulisse.charLight(kc, c.clip.x != null ? c.clip.x : 50).then((L) => { if (run && L) Fx.lightOverlay(c.el, c.clip, L.color, bg.charLight); });
+      for (const c of Object.values(run.chars)) Kulisse.charLight(kc, c.clip.x != null ? c.clip.x : 50, c.clip.kz).then((L) => { if (run && L) Fx.lightOverlay(c.el, c.clip, L.color, bg.charLight); });
     } else if (bg && bg.charLight) {
       const d = Fx.DAY[VN.Life ? VN.Life.daytime(bg, run.rs) : bg.daytime];
       (d ? Promise.resolve(d.light) : Fx.avgColor(bg.asset)).then((col) => { if (!run) return; for (const c of Object.values(run.chars)) Fx.lightOverlay(c.el, c.clip, col, bg.charLight); });
@@ -346,7 +358,7 @@
     if (!clips.length && !world._light) return;
     Light.sync(world, clips, {
       back: charsBox, front: fxBox, fade: true,
-      figs: () => Array.from(charsBox.children).map((b) => [b.firstElementChild, false]).concat(Array.from(hubBox.querySelectorAll('.pl-hobj > img')).map((i) => [i, true])),
+      figs: () => Array.from(charsBox.children).concat(Array.from(charsFront ? charsFront.children : [])).map((b) => [b.firstElementChild, false]).concat(Array.from(hubBox.querySelectorAll('.pl-hobj > img')).map((i) => [i, true])),
       fronts: () => [parFront]
     });
   };
@@ -1138,7 +1150,7 @@
     overlayBox.hidden = true;
     for (const n of stage.querySelectorAll('.pl-end, .plugin-overlay, .pl-spot, .pl-pointer, .dv-back, .dv-note-wrap')) n.remove();
     devCtl = null;
-    charsBox.innerHTML = ''; fxBox.innerHTML = ''; hubBox.innerHTML = ''; dlgBox.hidden = true; choiceBox.hidden = true; msgBox.hidden = true; gainBox.hidden = true;
+    charsBox.innerHTML = ''; if (charsFront) charsFront.innerHTML = ''; fxBox.innerHTML = ''; hubBox.innerHTML = ''; dlgBox.hidden = true; choiceBox.hidden = true; msgBox.hidden = true; gainBox.hidden = true;
     partBox.innerHTML = ''; eyeBox.innerHTML = ''; phoneBox.innerHTML = ''; parBack.innerHTML = ''; parFront.innerHTML = ''; world.style.filter = ''; world._vnf = []; if (window.Light && world._light) { Light.sync(world, [], { fronts: () => [parFront] }); }
     stage.querySelectorAll('.vid-layer, .gl-pop').forEach((n) => n.remove());
     Fx.applyCam(world, Fx.CAM0, 0);
@@ -1200,7 +1212,7 @@
     run = null;
     for (const n of stage.querySelectorAll('.pl-end, .plugin-overlay, .pl-spot, .pl-pointer, .dv-back, .dv-note-wrap')) n.remove();
     devCtl = null;
-    charsBox.innerHTML = ''; fxBox.innerHTML = ''; hubBox.innerHTML = ''; dlgBox.hidden = true; choiceBox.hidden = true; msgBox.hidden = true; gainBox.hidden = true;
+    charsBox.innerHTML = ''; if (charsFront) charsFront.innerHTML = ''; fxBox.innerHTML = ''; hubBox.innerHTML = ''; dlgBox.hidden = true; choiceBox.hidden = true; msgBox.hidden = true; gainBox.hidden = true;
     closeOverlay();
     ctrl.hidden = true;
     hud.hidden = true;
@@ -1580,7 +1592,8 @@
       eyeBox = el('div', { class: 'pl-eyesbox' });
       phoneBox = el('div', { class: 'pl-phone' });
       charsBox.dataset.depth = 1; fxBox.dataset.depth = 1; bgBox.dataset.depth = 1;
-      world = el('div', { class: 'world' }, bgBox, parBack, charsBox, parFront, fxBox);
+      charsFront = el('div', { class: 'pl-chars' }); charsFront.dataset.depth = 1;
+      world = el('div', { class: 'world' }, bgBox, parBack, charsBox, parFront, charsFront, fxBox);
       hubBox = el('div', { class: 'pl-hub' });
       dlgBox = el('div', { hidden: true });
       choiceBox = el('div', { hidden: true });
@@ -1708,7 +1721,7 @@
       if (s && s.type === 'story') { enterScene(sceneId, Math.min(beat || 0, s.beats - 1)); } else enterScene(sceneId, 0);
     },
     _audio: A, // nur für Tests/Debug
-    reloadBeat() { if (!run) return; const s = VN.scene(run.scene); run.fx = null; charsBox.innerHTML = ''; run.chars = {}; if (s && s.type === 'story') enterBeat(run.beat); else enterScene(run.scene); },
+    reloadBeat() { if (!run) return; const s = VN.scene(run.scene); run.fx = null; charsBox.innerHTML = ''; if (charsFront) charsFront.innerHTML = ''; run.chars = {}; if (s && s.type === 'story') enterBeat(run.beat); else enterScene(run.scene); },
     setValue(name, val) {
       if (!run || !name) return null;
       const p = VN.project, rs = run.rs, n = name.toLowerCase();

@@ -5543,7 +5543,11 @@ window.VN_I18N_ES = {
 "Kegel": "Cono",
 "Lichtkegel in der Luft": "Cono de luz en el aire",
 "Winkel": "Ángulo",
-"Leuchtet entlang der ganzen Röhre. Die Mitte der Röhre liegt bei X / Y / Z.": "Brilla a lo largo de todo el tubo. El centro del tubo está en X / Y / Z."
+"Leuchtet entlang der ganzen Röhre. Die Mitte der Röhre liegt bei X / Y / Z.": "Brilla a lo largo de todo el tubo. El centro del tubo está en X / Y / Z.",
+"Tiefe im Kulissen-Raum": "Profundidad en el decorado 3D",
+"Figuren-Ebene": "plano de personajes",
+"hinten": "atrás",
+"vorne": "delante"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

@@ -256,10 +256,41 @@
       const m = Math.max(r, g, b, 1e-3), hx = (v) => Math.round(Math.max(0, Math.min(1, v)) * 255).toString(16).padStart(2, '0');
       return { color: '#' + hx(r / Math.max(1, m)) + hx(g / Math.max(1, m)) + hx(b / Math.max(1, m)), level: Math.min(1.5, (r + g + b) / 3) };
     },
-    // Farbe für eine Figur an Bildschirm-Position x (0–100 %) bei der aktuellen Kamera
-    async charLight(ctrl, xPct) {
-      const res = await Kulisse.bake(ctrl.k, ctrl.day);
-      return Kulisse.lightAt(res, [ctrl.cam.x + (num(xPct, 50) - 50) / 100 * W, ctrl.cam.y + 120, 0]);
+    // Farbe für eine Figur an Bildschirm-Position x (0–100 %) und Tiefe z bei der aktuellen Kamera
+    async charLight(ctrl, xPct, z) {
+      const res = await Kulisse.bake(ctrl.k, ctrl.day), c0 = Kulisse.camOf(ctrl.k, null);
+      return Kulisse.lightAt(res, [c0.x + (num(xPct, 50) - 50) / 100 * W, c0.y + 120, num(z, 0)]);
+    },
+    // Figuren in der Tiefe (0.9.32): Figur bleibt eine flache Figur, wird aber so verschoben und skaliert,
+    // als stünde sie bei z im Raum. Rechnet relativ zur Figuren-Ebene, die die Engine-Kamera schon bewegt.
+    charOffset(ctrl, xPct, z) {
+      const c = ctrl.cam, base = ctrl.base || {}, Z = Math.max(0.2, num(base.zoom, 100) / 100);
+      const f = P0 / Math.max(20, P0 - z - c.dz), k = f / Z - 1;
+      const qx = (num(xPct, 50) - 50) / 100 * W, qy = H / 2;
+      return { tx: k * (qx - num(base.panX, 0) / 100 * W - ctrl.extra.x) / W * 100, ty: k * (qy - num(base.panY, 0) / 100 * H) / H * 100, s: f / Z };
+    },
+    placeChar(node, ctrl, clip, dur, ease) {
+      const z = num(clip && clip.kz, 0);
+      if (!z || !ctrl) { node.style.translate = ''; node.style.scale = ''; return; }
+      const o = Kulisse.charOffset(ctrl, clip.x, z);
+      if (dur) { const keep = (node.style.transition || '').split(',').map((x) => x.trim()).filter((x) => x && !/^(translate|scale)\b/.test(x)); node.style.transition = keep.concat([`translate ${dur}s ${window.Fx ? Fx.ease(ease) : 'ease'}`, `scale ${dur}s ${window.Fx ? Fx.ease(ease) : 'ease'}`]).join(', '); }
+      node.style.translate = `${o.tx.toFixed(3)}cqw ${o.ty.toFixed(3)}cqh`;
+      node.style.scale = o.s.toFixed(4);
+    },
+    // Alle Figuren einer Bühne einsortieren: weit vorne (z > 20) über die Vordergrund-Ebene, sonst normal
+    syncChars(ctrl, pairs, backBox, frontBox, dur, ease) {
+      for (const [node, clip] of pairs) {
+        if (!node) continue;
+        const z = num(clip && clip.kz, 0), host = z > 20 && frontBox ? frontBox : backBox;
+        if (host && node.parentNode !== host) host.appendChild(node);
+        Kulisse.placeChar(node, ctrl, clip, dur, ease);
+      }
+      // Figuren hinter der Figuren-Ebene zuerst, nahe zuletzt (weiter vorne = später gezeichnet)
+      for (const box of [backBox, frontBox]) {
+        if (!box) continue;
+        const list = pairs.filter(([n]) => n && n.parentNode === box).sort((a, b) => num(a[1] && a[1].kz, 0) - num(b[1] && b[1].kz, 0));
+        if (list.some(([n], i) => box.children[i] !== n) && list.length === box.children.length) for (const [n] of list) box.appendChild(n);
+      }
     },
     trace(S, dir, tmax, selfId, occ) {
       let T = 1;
@@ -356,7 +387,7 @@
       if (opts.mode === 'orbit') { scB.classList.add('kul-orbit'); }
       const ctrl = {
         k, back, front, day: opts.day || Kulisse.dayKey(k), mode: opts.mode || 'cam', orbit: opts.orbit || Kulisse.orbDefault(k),
-        cam: Kulisse.camOf(k, null), base: null, extra: { x: 0 }, els: new Map(), gen: 0,
+        cam: Kulisse.camOf(k, null), base: null, extra: { x: 0 }, els: new Map(), gen: 0, onCam: [],
         world: [wB, wF],
         fit() { for (const [vp, sc] of [[back, scB], [front, scF]]) { if (!vp) continue; const w = vp.clientWidth || (vp.getBoundingClientRect().width); if (w) sc.style.transform = `scale(${w / W})`; } },
         // Flächen aufbauen (nach Datenänderung erneut aufrufen)
@@ -413,6 +444,7 @@
           const c = ctrl.cam;
           const t = ctrl.mode === 'orbit' ? Kulisse.orbCss(ctrl.orbit) : `rotate(${c.rot}deg) translate3d(${-c.x}px,${-c.y}px,${c.dz}px)`;
           for (const w of [wB, wF]) { w.style.transition = dur ? `transform ${dur}s ${window.Fx ? Fx.ease(ease) : 'ease'}` : 'none'; w.style.transform = t; }
+          for (const fn of ctrl.onCam) fn(dur, ease);
         },
         proj(p) { return ctrl.mode === 'orbit' ? Kulisse.projOrb(ctrl.orbit, p) : Kulisse.projCam(ctrl.cam, p); },
         destroy() { ctrl.gen++; if (ctrl._ro) ctrl._ro.disconnect(); back.remove(); if (front) front.remove(); }

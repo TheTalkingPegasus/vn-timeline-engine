@@ -225,6 +225,8 @@
           field('Name der Figur (für Sprecher)', text(c.name, set(c, 'name'), (VN.asset(c.asset) || {}).name || 'z. B. Ray')),
           range('Position', c.x != null ? c.x : 50, 0, 100, 1, (v) => Math.round(v * 10) / 10 + ' %', set(c, 'x'), { free: true, lo: -50, hi: 150 }),
           range('Höhe', c.y || 0, -40, 60, 1, (v) => (v > 0 ? '+' : '') + Math.round(v * 10) / 10 + ' %', set(c, 'y'), { free: true, lo: -100, hi: 100 }),
+          (() => { const b = Stage.state(s, c.start).bg; return b && b.kulisse && window.Kulisse && Kulisse.get(b.kulisse); })()
+            ? range('Tiefe im Kulissen-Raum', c.kz || 0, -1200, 600, 10, (v) => (v === 0 ? 'Figuren-Ebene' : v < 0 ? VN.t('hinten') + ' ' + -v : VN.t('vorne') + ' ' + v), set(c, 'kz')) : null,
           range('Größe', c.scale || 100, 30, 180, 1, (v) => Math.round(v) + ' %', set(c, 'scale'), { free: true, lo: 5, hi: 400 }),
           range('Drehung', c.rot || 0, -180, 180, 1, (v) => Math.round(v) + '°', set(c, 'rot')),
           el('div', { class: 'muted small' }, 'Frei transformieren: Figur auf der Bühne ziehen (rastet an Mitte, Dritteln, Boden und anderen Figuren ein – Alt = frei), an den Ecken skalieren, am Kreis oben drehen (Umschalt: 15°-Schritte). Werte lassen sich auch eintippen.'),

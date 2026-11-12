@@ -289,7 +289,8 @@
       world.appendChild(charsBox);
       const charNodes = [];
       for (const [, c] of st.chars) { const n = Stage.charEl(c, null, { beat }); n.dataset.clip = c.id; charsBox.appendChild(n); charNodes.push([n, c]); }
-      if (kulFront) world.appendChild(kulFront);
+      let charsFront = null;
+      if (kulFront) { world.appendChild(kulFront); charsFront = el('div', { class: 'chars-box' }); charsFront.dataset.depth = 1; world.appendChild(charsFront); }
       else for (const n of Stage.parallaxEls(st.bg, true)) world.appendChild(n);
       const fxBox = el('div', { class: 'fx-box' });
       fxBox.dataset.depth = 1;
@@ -306,6 +307,7 @@
       // Augen auf/zu immer ganz vorne über allen Effekten (0.7.7)
       stage.querySelectorAll(':scope > .fx-eyes').forEach((n) => { n.style.zIndex = '4'; stage.appendChild(n); });
       if (st.cam) Fx.applyCam(world, st.cam, 0);
+      if (kul && bgBox._kul) Kulisse.syncChars(bgBox._kul, charNodes, charsBox, charsFront);
       // Lichtquellen (0.9.9)
       const lights = [st.fx, ...(st.fxX || []).map((x) => x[1])].filter((c) => c && c.light);
       world._lightClips = lights;
@@ -315,7 +317,7 @@
       if (st.bg && st.bg.charLight && kul && bgBox._kul) {
         // Kulissen-Raum: jede Figur bekommt das Licht ihres Platzes im Raum
         const kc = bgBox._kul;
-        for (const [n, c] of charNodes) Kulisse.charLight(kc, c.x != null ? c.x : 50).then((L) => { if (L && n.isConnected) Fx.lightOverlay(n, c, L.color, st.bg.charLight); });
+        for (const [n, c] of charNodes) Kulisse.charLight(kc, c.x != null ? c.x : 50, c.kz).then((L) => { if (L && n.isConnected) Fx.lightOverlay(n, c, L.color, st.bg.charLight); });
       } else if (st.bg && st.bg.charLight) {
         const day = Fx.DAY[st.bg.daytime];
         (day ? Promise.resolve(day.light) : Fx.avgColor(st.bg.asset)).then((col) => { for (const [n, c] of charNodes) if (n.isConnected) Fx.lightOverlay(n, c, col, st.bg.charLight); });

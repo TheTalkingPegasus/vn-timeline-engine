@@ -1355,6 +1355,10 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
       if (K.lampAt(sp, [300, 0, 0], [0, -1, 0], true, null, null) !== 0) out.push('Scheinwerfer leuchtet außerhalb');
       const ne = K.prepLamp(K.lamp({ type: 'neon', x: 0, y: 0, z: 0, len: 400, angle: 0, range: 300 }));
       if (!(K.lampAt(ne, [190, 100, 0], null, false, null, null) > 0) || K.lampAt(ne, [-500, 0, 0], null, false, null, null) !== 0) out.push('Neonröhre');
+      // Figuren in der Tiefe: hinten kleiner, vorne größer, auf der Figuren-Ebene unverändert
+      { const kc = { k, cam: K.camOf(k, null), base: null, extra: { x: 0 } };
+        if (Math.abs(K.charOffset(kc, 50, 0).s - 1) > 1e-9 || !(K.charOffset(kc, 50, -500).s < 1) || !(K.charOffset(kc, 50, 300).s > 1)) out.push('Figuren-Tiefe');
+        if (!(K.charOffset(kc, 20, -500).tx > 0)) out.push('Figur hinten rückt nicht zur Mitte'); }
       // Einbacken: alle Flächen, Lampe nur nachts an
       k.lamps.push(K.lamp({ x: 0, y: -100, z: -100, days: { night: true } }));
       const night = await K.bake(k, 'night'), day = await K.bake(k, 'day');

@@ -27,6 +27,8 @@ NEU IN 0.9.32 · Kulissen-Raum (Räume aus PNG-Flächen, mit Licht)
   Wand-PNGs scheint – Wände, Böden und Decken sind Hindernisse, Möbel und Figuren nicht. Eine Jalousie an der Wand macht Streifen
   daraus, dazu wahlweise Lichtstrahlen in der Luft. Lampen schalten sich nach Tageszeit ein und aus; Farbe und Richtung der Sonne
   folgen der Tageszeit (oder von Hand). Das Licht wird pro Tageszeit einmal eingebacken – im Spiel kostet es nichts.
+- Figuren in der Tiefe: „Tiefe im Kulissen-Raum“ am Figuren-Clip stellt eine Figur weiter nach hinten (kleiner, langsameres Parallax)
+  oder nach vorne (größer, vor Balken und Pflanzen). Idle-Animationen, Blinzeln und Lippensync laufen weiter.
 - Figuren im Licht: Mit „Figuren an das Licht anpassen“ am Hintergrund-Clip bekommt jede Figur das Licht ihres Platzes im Raum –
   warm neben der Lampe, pink an der Neonröhre, bläulich im Mondlicht.
 - Tageszeit: unbeleuchtete Flächen werden automatisch eingefärbt; wahlweise eigene Bilder je Tageszeit (z. B. Himmel mit Sternen).
