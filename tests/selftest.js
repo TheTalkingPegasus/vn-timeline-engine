@@ -1321,6 +1321,43 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Gesicht-Rig: Mund nur in der Maske, Lid mit Haut-Stempel, eigene Ausdrücke, Bühne und Lippensync');
   } catch (e) { general.push('Gesicht-Rig: ' + e.message); }
 
+  // 28. Weich-Physik mit Bones (0.9.35): Bereiche wippen auch auf Figuren mit Knochen; Gewichte zwischengespeichert
+  try {
+    const r = JSON.parse(await js(`(async () => {
+      const out = [];
+      if (!window.Soft || !window.Rig) return JSON.stringify(['Soft/Rig fehlt']);
+      const cfg = { on: true, regions: [{ id: 'q1', preset: 'chest', cx: 0.5, cy: 0.4, rx: 0.2, ry: 0.1, rot: 0, on: true, idle: 'breathe', idleAmp: 3 }] };
+      const mesh = { w: 200, h: 400, count: 3, pos: new Float32Array([100, 160, 100, 390, 5, 5]) };
+      const sim = Soft.newSim(), d = new Float32Array(6);
+      Soft.offsets(cfg, sim, 0.75, mesh, d);
+      if (!(Math.abs(d[1]) > 0.01)) out.push('Mitte bewegt sich nicht ' + d[1]);
+      if (d[3] || d[5]) out.push('Punkte außerhalb bewegen sich');
+      // je Bereich eigene Beschleunigung
+      Soft.step(sim, cfg.regions, { x: 0, y: 0, byId: { q1: { x: 40, y: 0 } } }, 0.05);
+      if (!(Math.abs(sim.regs.q1.vx) > 0)) out.push('Beschleunigung je Bereich wirkt nicht');
+      // Zwischenspeicher: geänderte Form wird erkannt
+      cfg.regions[0].cy = 0.95; Soft.offsets(cfg, Soft.newSim(), 0.75, mesh, d);
+      if (Math.abs(d[1]) > 1e-6 || !(Math.abs(d[3]) > 0.01)) out.push('Formänderung nicht erkannt');
+      // Figur mit Bones: Weich-Physik läuft mit
+      const p = VN.project;
+      for (const id of Object.keys(p.rigs || {}).filter((k) => Rig.has(k) && p.assets.some((a) => a.id === k && !/gittertest/.test(a.name || '')))) {
+        const had = p.softs && p.softs[id];
+        p.softs = p.softs || {}; p.softs[id] = { on: true, regions: [{ id: 'q2', preset: 'chest', cx: 0.5, cy: 0.4, rx: 0.2, ry: 0.15, rot: 0, on: true, idle: 'breathe', idleAmp: 3 }] };
+        const cv = Rig.canvasFor(id, { boneAmp: 100 }, { manual: true });
+        const inst = await cv._inst.ready;
+        if (!inst) { if (had) p.softs[id] = had; else delete p.softs[id]; continue; }
+        Rig.renderAt(inst, 0.2, 1 / 60); Rig.renderAt(inst, 0.95, 1 / 60);
+        let m = 0; if (inst.soft) for (const v of inst.soft.d) m = Math.max(m, Math.abs(v));
+        if (!(m > 0.01)) out.push('Bones-Figur ohne Weich-Physik');
+        if (had) p.softs[id] = had; else delete p.softs[id];
+        break;
+      }
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Weich-Physik mit Bones: ' + r.join(', '));
+    else log('✓ Weich-Physik mit Bones: Bereiche wippen auf Figuren mit Knochen, Beschleunigung je Bereich, Zwischenspeicher erkennt Änderungen');
+  } catch (e) { general.push('Weich-Physik mit Bones: ' + e.message); }
+
   // 27. Kulissen-Raum (0.9.32): 3D-Flächen, Kamera, Licht durch Fenster mit Jalousie, Bühne und Spieler
   try {
     const r = JSON.parse(await js(`(async () => {

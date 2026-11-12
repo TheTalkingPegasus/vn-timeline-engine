@@ -132,6 +132,7 @@
       } else if (url && window.Rig && Rig.has(clip.asset) && clip.bones !== false) {
         const cv = Rig.canvasFor(clip.asset, clip, window.Anim ? { extraFn: Anim.extraFnFor(clip, box) } : {});
         if (clip.flip) cv.style.transform += ' scaleX(-1)';
+        if (cv._inst && cv._inst.face) Stage.faceHook(box, cv._inst, clip);
         box.appendChild(cv);
       } else if (url && window.Blink && Blink.cfg(clip.asset)) {
         const inner = el('span', { class: 'char-inner' }, el('img', { src: url, draggable: 'false' }));
