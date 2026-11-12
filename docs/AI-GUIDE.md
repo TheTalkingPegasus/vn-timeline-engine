@@ -1,6 +1,6 @@
 # VN Timeline Engine – guide for AI assistants
 
-Engine 0.9.31 · project format 1 · generated 2026-11-12
+Engine 0.9.32 · project format 1 · generated 2026-11-12
 
 This file explains a VN Timeline Engine project so that any AI can read and change it **without the engine source code**. 
 The engine is a free visual novel editor that works like a video editor: every scene is a timeline, every column ("step") is one click of the player.
@@ -42,7 +42,7 @@ The engine is a free visual novel editor that works like a video editor: every s
 - `cam` – Camera / Kamera (cam): `{"id":"<unique id>","start":0,"len":3,"zoom":130,"panX":0,"panY":-8,"rot":0,"shake":0,"dur":1.2,"ease":"ease-in-out","keys":[]}`
 - `video` – Video (video): `{"id":"<unique id>","start":0,"len":1,"asset":null,"layer":"front","loop":false,"muted":false,"vol":90,"fit":"cover","waitEnd":true,"skippable":true}`
 - `dialog` – Dialogue / Dialog (dialog): `{"id":"<unique id>","start":0,"len":1,"speaker":"","color":"#ffffff","text":"Neuer Text …","speed":40,"actions":[]}`
-- `choice` – Choice / Auswahl (choice): `{"id":"<unique id>","start":0,"len":1,"options":[{"id":"opt_1oxfp","text":"Antwort A","target":null,"conds":[],"actions":[]},{"id":"opt_1peyf","text":"Antwort B","target":null,"conds":[],"actions":[]}]}`
+- `choice` – Choice / Auswahl (choice): `{"id":"<unique id>","start":0,"len":1,"options":[{"id":"opt_1o956","text":"Antwort A","target":null,"conds":[],"actions":[]},{"id":"opt_1p1ms","text":"Antwort B","target":null,"conds":[],"actions":[]}]}`
 - `code` – Code (code): `{"id":"<unique id>","start":0,"len":1,"code":""}`
 - `music` – Music / Musik (music): `{"id":"<unique id>","start":0,"len":3,"asset":null,"vol":70,"loop":true,"carry":false,"fade":1}`
 - `voice` – Voices (voice): `{"id":"<unique id>","start":0,"len":1,"asset":null,"vol":90,"delay":0}`
@@ -71,6 +71,15 @@ The engine is a free visual novel editor that works like a video editor: every s
 ## Bones (one image that bends)
 
 `rigs: { "<image asset id>": { … } }` – skeleton and mesh of an image, set up under **Characters → Bones & blinking**. Don’t write rigs by hand; keep them unchanged. `cellEdit: { nx, ny, add: [cell index …], del: [cell index …] }` stores manual mesh edits for one mesh density. Layered characters (`figures`) use the bones of their lowest layer for all layers.
+
+## 3D sets (rooms from PNG planes)
+
+`kulissen: [{ id, name, planes: [...], lamps: [...], sun: {...}, zones: [...], cam: { x, y, min, max }, scroll: { edge, speed }, light, day }]` – built in the **Sets** tab. Coordinates: 1280 × 720 = the visible screen on the plane z = 0 (characters and hub objects stand there), y points down, z towards the viewer; the camera looks from z = 1000.
+- Plane: `{ id, name, kind: "wall"|"floor"|"ceil"|"side"|"beam"|"deco"|"bg"|"part", asset, dayAssets: { morning, day, evening, night }, x, y, z, rx, ry, rz (degrees), w, h, front: ""|"front"|"back", blinds: { on, gap, open } (walls), outer (side walls), lit (deco/beam), part: { particles, color, density, speed, size, wind } (kind "part") }`. A floor is `rx: 90`, a partition wall `ry: 90`. Windows and doors are transparent areas of the PNG.
+- Light: `sun: { on, power, shafts, auto, hAng, vAng, days: { morning, day, evening, night } }`, lamps `{ id, name, type: "lamp"|"spot"|"neon", x, y, z, color, power, range, shadows, days }` – spot: `yaw`, `pitch` (90 = straight down), `spread` (half cone angle), `soft`, `haze` (visible cone); neon: `len`, `angle` (tube centred at x/y/z). Walls, floors and ceilings block light; furniture and characters don’t.
+- Zones: `{ id, name, x0, x1, music, ambient }` – when the camera scrolls into a zone the music changes and the ambience loops.
+- Characters: a character clip’s `kz` places it in depth (negative = further back, positive = in front).
+- Use: background clip `{ kulisse: "<set id>", kScroll: true }` (edge scrolling in that scene) or hub `bgLook: { kulisse: "<set id>" }`. Camera clips pan through the room with real parallax; the clip’s `daytime` switches lamps and window light.
 
 ## Animations (idle, gestures, cutscenes, battle moves)
 
