@@ -65,7 +65,7 @@
       for (const x of vis) {
         const on = S.sel.has(x.id);
         const thumb = x.kind === 'kulisse' ? el('div', { class: 'lib-thumb lib-kul', style: { backgroundImage: `url("${Kulisse.thumb(x.tpl)}")` } })
-          : x.kind === 'image' ? el('div', { class: 'lib-thumb', 'data-lib': x.file, style: { backgroundImage: Lib.api().url(x) ? `url("${Lib.api().url(x)}")` : '' } })
+          : x.kind === 'image' ? el('div', { class: 'lib-thumb' + (x.cat === 'mono_black' ? ' light' : ''), 'data-lib': x.file, style: { backgroundImage: Lib.api().url(x) ? `url("${Lib.api().url(x)}")` : '' } })
           : x.kind === 'audio' ? el('div', { class: 'lib-thumb snd' }, el('button', { class: 'btn tiny lib-play', onclick: (e) => { e.stopPropagation(); Lib.play(x, e.currentTarget); } }, '▶'))
             : el('div', { class: 'lib-thumb other' }, KIND[x.kind] ? KIND[x.kind][0] : '📄');
         const nm = el('div', { class: 'lib-name', title: x.builtin ? x.name : VN.t('Doppelklick = umbenennen'), ondblclick: async (e) => { e.stopPropagation(); if (x.builtin) return; const v = prompt(VN.t('Name'), x.name); if (v != null && v.trim()) { Lib.list = Lib.fix(await Lib.api().update(x.id, { name: v.trim() })); Lib.draw(); } } }, x.name);

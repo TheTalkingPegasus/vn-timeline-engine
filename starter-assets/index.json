@@ -67,6 +67,24 @@
    "en": "Messages",
    "es": "Mensajes",
    "ja": "メッセージ"
+  },
+  "mono_black": {
+   "de": "Einfach schwarz",
+   "en": "Simple black",
+   "es": "Simple negro",
+   "ja": "シンプル（黒）"
+  },
+  "mono_white": {
+   "de": "Einfach weiß",
+   "en": "Simple white",
+   "es": "Simple blanco",
+   "ja": "シンプル（白）"
+  },
+  "future": {
+   "de": "Futuristisch",
+   "en": "Futuristic",
+   "es": "Futurista",
+   "ja": "近未来"
   }
  },
  "items": [
@@ -1785,6 +1803,2112 @@
     "ja": "新しい通知"
    },
    "size": 8295
+  },
+  {
+   "id": "pack:ib_folder",
+   "file": "images/mono_black/folder.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Ordner (schwarz)",
+    "en": "Folder (black)",
+    "es": "Carpeta (negro)",
+    "ja": "フォルダー（黒）"
+   },
+   "size": 1814
+  },
+  {
+   "id": "pack:ib_folder_open",
+   "file": "images/mono_black/folder_open.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Ordner offen (schwarz)",
+    "en": "Open folder (black)",
+    "es": "Carpeta abierta (negro)",
+    "ja": "開いたフォルダー（黒）"
+   },
+   "size": 3381
+  },
+  {
+   "id": "pack:ib_file_text",
+   "file": "images/mono_black/file_text.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Textdatei (schwarz)",
+    "en": "Text file (black)",
+    "es": "Archivo de texto (negro)",
+    "ja": "テキストファイル（黒）"
+   },
+   "size": 2337
+  },
+  {
+   "id": "pack:ib_file_image",
+   "file": "images/mono_black/file_image.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Bilddatei (schwarz)",
+    "en": "Image file (black)",
+    "es": "Archivo de imagen (negro)",
+    "ja": "画像ファイル（黒）"
+   },
+   "size": 3111
+  },
+  {
+   "id": "pack:ib_file_music",
+   "file": "images/mono_black/file_music.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Musikdatei (schwarz)",
+    "en": "Music file (black)",
+    "es": "Archivo de música (negro)",
+    "ja": "音楽ファイル（黒）"
+   },
+   "size": 2781
+  },
+  {
+   "id": "pack:ib_file_zip",
+   "file": "images/mono_black/file_zip.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "ZIP-Archiv (schwarz)",
+    "en": "ZIP archive (black)",
+    "es": "Archivo ZIP (negro)",
+    "ja": "ZIPファイル（黒）"
+   },
+   "size": 2568
+  },
+  {
+   "id": "pack:ib_file_pdf",
+   "file": "images/mono_black/file_pdf.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "PDF-Datei (schwarz)",
+    "en": "PDF file (black)",
+    "es": "Archivo PDF (negro)",
+    "ja": "PDFファイル（黒）"
+   },
+   "size": 2593
+  },
+  {
+   "id": "pack:ib_save",
+   "file": "images/mono_black/save.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Speichern (Diskette) (schwarz)",
+    "en": "Save (floppy disk) (black)",
+    "es": "Guardar (disquete) (negro)",
+    "ja": "保存（フロッピー）（黒）"
+   },
+   "size": 2251
+  },
+  {
+   "id": "pack:ib_trash",
+   "file": "images/mono_black/trash.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Papierkorb (schwarz)",
+    "en": "Trash can (black)",
+    "es": "Papelera (negro)",
+    "ja": "ゴミ箱（黒）"
+   },
+   "size": 3367
+  },
+  {
+   "id": "pack:ib_clipboard",
+   "file": "images/mono_black/clipboard.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Klemmbrett (schwarz)",
+    "en": "Clipboard (black)",
+    "es": "Portapapeles (negro)",
+    "ja": "クリップボード（黒）"
+   },
+   "size": 3371
+  },
+  {
+   "id": "pack:ib_paperclip",
+   "file": "images/mono_black/paperclip.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Büroklammer (schwarz)",
+    "en": "Paperclip (black)",
+    "es": "Clip (negro)",
+    "ja": "クリップ（黒）"
+   },
+   "size": 2745
+  },
+  {
+   "id": "pack:ib_box",
+   "file": "images/mono_black/box.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Archivkarton (schwarz)",
+    "en": "Archive box (black)",
+    "es": "Caja de archivo (negro)",
+    "ja": "保管箱（黒）"
+   },
+   "size": 1418
+  },
+  {
+   "id": "pack:ib_heart",
+   "file": "images/mono_black/heart.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Herz (schwarz)",
+    "en": "Heart (black)",
+    "es": "Corazón (negro)",
+    "ja": "ハート（黒）"
+   },
+   "size": 4670
+  },
+  {
+   "id": "pack:ib_star",
+   "file": "images/mono_black/star.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Stern (schwarz)",
+    "en": "Star (black)",
+    "es": "Estrella (negro)",
+    "ja": "星（黒）"
+   },
+   "size": 4709
+  },
+  {
+   "id": "pack:ib_check",
+   "file": "images/mono_black/check.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Haken (schwarz)",
+    "en": "Check mark (black)",
+    "es": "Visto (negro)",
+    "ja": "チェック（黒）"
+   },
+   "size": 2222
+  },
+  {
+   "id": "pack:ib_cross",
+   "file": "images/mono_black/cross.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Kreuz (schwarz)",
+    "en": "Cross (black)",
+    "es": "Cruz (negro)",
+    "ja": "バツ（黒）"
+   },
+   "size": 1582
+  },
+  {
+   "id": "pack:ib_warning",
+   "file": "images/mono_black/warning.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Warnung (schwarz)",
+    "en": "Warning (black)",
+    "es": "Advertencia (negro)",
+    "ja": "警告（黒）"
+   },
+   "size": 4256
+  },
+  {
+   "id": "pack:ib_question",
+   "file": "images/mono_black/question.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Fragezeichen (schwarz)",
+    "en": "Question mark (black)",
+    "es": "Interrogación (negro)",
+    "ja": "はてな（黒）"
+   },
+   "size": 2736
+  },
+  {
+   "id": "pack:ib_info",
+   "file": "images/mono_black/info.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Info (schwarz)",
+    "en": "Info (black)",
+    "es": "Información (negro)",
+    "ja": "インフォ（黒）"
+   },
+   "size": 5399
+  },
+  {
+   "id": "pack:ib_lock",
+   "file": "images/mono_black/lock.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Schloss zu (schwarz)",
+    "en": "Lock (black)",
+    "es": "Candado cerrado (negro)",
+    "ja": "錠（閉）（黒）"
+   },
+   "size": 3065
+  },
+  {
+   "id": "pack:ib_unlock",
+   "file": "images/mono_black/unlock.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Schloss offen (schwarz)",
+    "en": "Unlocked (black)",
+    "es": "Candado abierto (negro)",
+    "ja": "錠（開）（黒）"
+   },
+   "size": 3189
+  },
+  {
+   "id": "pack:ib_plus",
+   "file": "images/mono_black/plus.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Plus (schwarz)",
+    "en": "Plus (black)",
+    "es": "Más (negro)",
+    "ja": "プラス（黒）"
+   },
+   "size": 1385
+  },
+  {
+   "id": "pack:ib_minus",
+   "file": "images/mono_black/minus.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Minus (schwarz)",
+    "en": "Minus (black)",
+    "es": "Menos (negro)",
+    "ja": "マイナス（黒）"
+   },
+   "size": 734
+  },
+  {
+   "id": "pack:ib_gear",
+   "file": "images/mono_black/gear.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Zahnrad (Einstellungen) (schwarz)",
+    "en": "Gear (settings) (black)",
+    "es": "Engranaje (ajustes) (negro)",
+    "ja": "歯車（設定）（黒）"
+   },
+   "size": 6608
+  },
+  {
+   "id": "pack:ib_bell",
+   "file": "images/mono_black/bell.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Glocke (schwarz)",
+    "en": "Bell (black)",
+    "es": "Campana (negro)",
+    "ja": "ベル（黒）"
+   },
+   "size": 3346
+  },
+  {
+   "id": "pack:ib_home",
+   "file": "images/mono_black/home.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Haus (Start) (schwarz)",
+    "en": "House (home) (black)",
+    "es": "Casa (inicio) (negro)",
+    "ja": "家（ホーム）（黒）"
+   },
+   "size": 2083
+  },
+  {
+   "id": "pack:ib_search",
+   "file": "images/mono_black/search.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Lupe (Suche) (schwarz)",
+    "en": "Magnifier (search) (black)",
+    "es": "Lupa (buscar) (negro)",
+    "ja": "虫眼鏡（検索）（黒）"
+   },
+   "size": 3990
+  },
+  {
+   "id": "pack:ib_lightning",
+   "file": "images/mono_black/lightning.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Blitz (schwarz)",
+    "en": "Lightning (black)",
+    "es": "Rayo (negro)",
+    "ja": "稲妻（黒）"
+   },
+   "size": 2817
+  },
+  {
+   "id": "pack:ib_fire",
+   "file": "images/mono_black/fire.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Feuer (schwarz)",
+    "en": "Fire (black)",
+    "es": "Fuego (negro)",
+    "ja": "炎（黒）"
+   },
+   "size": 4853
+  },
+  {
+   "id": "pack:ib_music_note",
+   "file": "images/mono_black/music_note.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Musiknote (schwarz)",
+    "en": "Music note (black)",
+    "es": "Nota musical (negro)",
+    "ja": "音符（黒）"
+   },
+   "size": 2024
+  },
+  {
+   "id": "pack:ib_pin",
+   "file": "images/mono_black/pin.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Ortsmarke (schwarz)",
+    "en": "Location pin (black)",
+    "es": "Marcador de ubicación (negro)",
+    "ja": "位置ピン（黒）"
+   },
+   "size": 5475
+  },
+  {
+   "id": "pack:ib_clock",
+   "file": "images/mono_black/clock.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Uhr (schwarz)",
+    "en": "Clock (black)",
+    "es": "Reloj (negro)",
+    "ja": "時計（黒）"
+   },
+   "size": 5477
+  },
+  {
+   "id": "pack:ib_crown",
+   "file": "images/mono_black/crown.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Krone (schwarz)",
+    "en": "Crown (black)",
+    "es": "Corona (negro)",
+    "ja": "王冠（黒）"
+   },
+   "size": 3978
+  },
+  {
+   "id": "pack:ib_trophy",
+   "file": "images/mono_black/trophy.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Pokal (schwarz)",
+    "en": "Trophy (black)",
+    "es": "Trofeo (negro)",
+    "ja": "トロフィー（黒）"
+   },
+   "size": 4063
+  },
+  {
+   "id": "pack:ib_chat",
+   "file": "images/mono_black/chat.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Sprechblase (schwarz)",
+    "en": "Chat bubble (black)",
+    "es": "Bocadillo (negro)",
+    "ja": "吹き出し（黒）"
+   },
+   "size": 2636
+  },
+  {
+   "id": "pack:ib_chat_typing",
+   "file": "images/mono_black/chat_typing.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Schreibt gerade … (schwarz)",
+    "en": "Typing … (black)",
+    "es": "Escribiendo … (negro)",
+    "ja": "入力中…（黒）"
+   },
+   "size": 2751
+  },
+  {
+   "id": "pack:ib_chat_me",
+   "file": "images/mono_black/chat_me.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Eigene Nachricht (schwarz)",
+    "en": "Own message (black)",
+    "es": "Mensaje propio (negro)",
+    "ja": "自分のメッセージ（黒）"
+   },
+   "size": 1434
+  },
+  {
+   "id": "pack:ib_chat_heart",
+   "file": "images/mono_black/chat_heart.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Liebesnachricht (schwarz)",
+    "en": "Love message (black)",
+    "es": "Mensaje de amor (negro)",
+    "ja": "ラブメッセージ（黒）"
+   },
+   "size": 3417
+  },
+  {
+   "id": "pack:ib_chat_two",
+   "file": "images/mono_black/chat_two.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Unterhaltung (schwarz)",
+    "en": "Conversation (black)",
+    "es": "Conversación (negro)",
+    "ja": "会話（黒）"
+   },
+   "size": 3027
+  },
+  {
+   "id": "pack:ib_mail",
+   "file": "images/mono_black/mail.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Neue E-Mail (schwarz)",
+    "en": "New email (black)",
+    "es": "Nuevo correo (negro)",
+    "ja": "新着メール（黒）"
+   },
+   "size": 2496
+  },
+  {
+   "id": "pack:ib_mail_open",
+   "file": "images/mono_black/mail_open.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Brief geöffnet (schwarz)",
+    "en": "Opened letter (black)",
+    "es": "Carta abierta (negro)",
+    "ja": "開いた手紙（黒）"
+   },
+   "size": 3825
+  },
+  {
+   "id": "pack:ib_inbox",
+   "file": "images/mono_black/inbox.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Posteingang (schwarz)",
+    "en": "Inbox (black)",
+    "es": "Bandeja de entrada (negro)",
+    "ja": "受信トレイ（黒）"
+   },
+   "size": 3560
+  },
+  {
+   "id": "pack:ib_send",
+   "file": "images/mono_black/send.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Senden (Papierflieger) (schwarz)",
+    "en": "Send (paper plane) (black)",
+    "es": "Enviar (avión de papel) (negro)",
+    "ja": "送信（紙飛行機）（黒）"
+   },
+   "size": 4325
+  },
+  {
+   "id": "pack:ib_phone_call",
+   "file": "images/mono_black/phone_call.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Anruf (schwarz)",
+    "en": "Call (black)",
+    "es": "Llamada (negro)",
+    "ja": "着信（黒）"
+   },
+   "size": 5805
+  },
+  {
+   "id": "pack:ib_phone_missed",
+   "file": "images/mono_black/phone_missed.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Verpasster Anruf (schwarz)",
+    "en": "Missed call (black)",
+    "es": "Llamada perdida (negro)",
+    "ja": "不在着信（黒）"
+   },
+   "size": 4338
+  },
+  {
+   "id": "pack:ib_video_call",
+   "file": "images/mono_black/video_call.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Videoanruf (schwarz)",
+    "en": "Video call (black)",
+    "es": "Videollamada (negro)",
+    "ja": "ビデオ通話（黒）"
+   },
+   "size": 2965
+  },
+  {
+   "id": "pack:ib_voice",
+   "file": "images/mono_black/voice.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Sprachnachricht (schwarz)",
+    "en": "Voice message (black)",
+    "es": "Mensaje de voz (negro)",
+    "ja": "ボイスメッセージ（黒）"
+   },
+   "size": 4286
+  },
+  {
+   "id": "pack:ib_thumbs_up",
+   "file": "images/mono_black/thumbs_up.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Daumen hoch (schwarz)",
+    "en": "Thumbs up (black)",
+    "es": "Pulgar arriba (negro)",
+    "ja": "いいね（黒）"
+   },
+   "size": 3451
+  },
+  {
+   "id": "pack:ib_at",
+   "file": "images/mono_black/at.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "At-Zeichen (@) (schwarz)",
+    "en": "At sign (@) (black)",
+    "es": "Arroba (@) (negro)",
+    "ja": "アットマーク（黒）"
+   },
+   "size": 5968
+  },
+  {
+   "id": "pack:ib_wifi",
+   "file": "images/mono_black/wifi.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "WLAN (schwarz)",
+    "en": "Wi-Fi (black)",
+    "es": "Wi-Fi (negro)",
+    "ja": "Wi-Fi（黒）"
+   },
+   "size": 4091
+  },
+  {
+   "id": "pack:ib_battery",
+   "file": "images/mono_black/battery.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Akku (schwarz)",
+    "en": "Battery (black)",
+    "es": "Batería (negro)",
+    "ja": "バッテリー（黒）"
+   },
+   "size": 2158
+  },
+  {
+   "id": "pack:ib_battery_low",
+   "file": "images/mono_black/battery_low.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Akku leer (schwarz)",
+    "en": "Battery low (black)",
+    "es": "Batería baja (negro)",
+    "ja": "バッテリー残量少（黒）"
+   },
+   "size": 2073
+  },
+  {
+   "id": "pack:ib_signal",
+   "file": "images/mono_black/signal.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Empfang (schwarz)",
+    "en": "Signal (black)",
+    "es": "Cobertura (negro)",
+    "ja": "電波（黒）"
+   },
+   "size": 1406
+  },
+  {
+   "id": "pack:ib_notification",
+   "file": "images/mono_black/notification.png",
+   "kind": "image",
+   "cat": "mono_black",
+   "name": {
+    "de": "Neue Benachrichtigung (schwarz)",
+    "en": "New notification (black)",
+    "es": "Nueva notificación (negro)",
+    "ja": "新しい通知（黒）"
+   },
+   "size": 3191
+  },
+  {
+   "id": "pack:iw_folder",
+   "file": "images/mono_white/folder.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Ordner (weiß)",
+    "en": "Folder (white)",
+    "es": "Carpeta (blanco)",
+    "ja": "フォルダー（白）"
+   },
+   "size": 2007
+  },
+  {
+   "id": "pack:iw_folder_open",
+   "file": "images/mono_white/folder_open.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Ordner offen (weiß)",
+    "en": "Open folder (white)",
+    "es": "Carpeta abierta (blanco)",
+    "ja": "開いたフォルダー（白）"
+   },
+   "size": 3750
+  },
+  {
+   "id": "pack:iw_file_text",
+   "file": "images/mono_white/file_text.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Textdatei (weiß)",
+    "en": "Text file (white)",
+    "es": "Archivo de texto (blanco)",
+    "ja": "テキストファイル（白）"
+   },
+   "size": 2477
+  },
+  {
+   "id": "pack:iw_file_image",
+   "file": "images/mono_white/file_image.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Bilddatei (weiß)",
+    "en": "Image file (white)",
+    "es": "Archivo de imagen (blanco)",
+    "ja": "画像ファイル（白）"
+   },
+   "size": 3600
+  },
+  {
+   "id": "pack:iw_file_music",
+   "file": "images/mono_white/file_music.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Musikdatei (weiß)",
+    "en": "Music file (white)",
+    "es": "Archivo de música (blanco)",
+    "ja": "音楽ファイル（白）"
+   },
+   "size": 2960
+  },
+  {
+   "id": "pack:iw_file_zip",
+   "file": "images/mono_white/file_zip.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "ZIP-Archiv (weiß)",
+    "en": "ZIP archive (white)",
+    "es": "Archivo ZIP (blanco)",
+    "ja": "ZIPファイル（白）"
+   },
+   "size": 2886
+  },
+  {
+   "id": "pack:iw_file_pdf",
+   "file": "images/mono_white/file_pdf.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "PDF-Datei (weiß)",
+    "en": "PDF file (white)",
+    "es": "Archivo PDF (blanco)",
+    "ja": "PDFファイル（白）"
+   },
+   "size": 2789
+  },
+  {
+   "id": "pack:iw_save",
+   "file": "images/mono_white/save.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Speichern (Diskette) (weiß)",
+    "en": "Save (floppy disk) (white)",
+    "es": "Guardar (disquete) (blanco)",
+    "ja": "保存（フロッピー）（白）"
+   },
+   "size": 2182
+  },
+  {
+   "id": "pack:iw_trash",
+   "file": "images/mono_white/trash.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Papierkorb (weiß)",
+    "en": "Trash can (white)",
+    "es": "Papelera (blanco)",
+    "ja": "ゴミ箱（白）"
+   },
+   "size": 3569
+  },
+  {
+   "id": "pack:iw_clipboard",
+   "file": "images/mono_white/clipboard.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Klemmbrett (weiß)",
+    "en": "Clipboard (white)",
+    "es": "Portapapeles (blanco)",
+    "ja": "クリップボード（白）"
+   },
+   "size": 4121
+  },
+  {
+   "id": "pack:iw_paperclip",
+   "file": "images/mono_white/paperclip.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Büroklammer (weiß)",
+    "en": "Paperclip (white)",
+    "es": "Clip (blanco)",
+    "ja": "クリップ（白）"
+   },
+   "size": 3141
+  },
+  {
+   "id": "pack:iw_box",
+   "file": "images/mono_white/box.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Archivkarton (weiß)",
+    "en": "Archive box (white)",
+    "es": "Caja de archivo (blanco)",
+    "ja": "保管箱（白）"
+   },
+   "size": 1422
+  },
+  {
+   "id": "pack:iw_heart",
+   "file": "images/mono_white/heart.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Herz (weiß)",
+    "en": "Heart (white)",
+    "es": "Corazón (blanco)",
+    "ja": "ハート（白）"
+   },
+   "size": 5259
+  },
+  {
+   "id": "pack:iw_star",
+   "file": "images/mono_white/star.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Stern (weiß)",
+    "en": "Star (white)",
+    "es": "Estrella (blanco)",
+    "ja": "星（白）"
+   },
+   "size": 5576
+  },
+  {
+   "id": "pack:iw_check",
+   "file": "images/mono_white/check.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Haken (weiß)",
+    "en": "Check mark (white)",
+    "es": "Visto (blanco)",
+    "ja": "チェック（白）"
+   },
+   "size": 2607
+  },
+  {
+   "id": "pack:iw_cross",
+   "file": "images/mono_white/cross.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Kreuz (weiß)",
+    "en": "Cross (white)",
+    "es": "Cruz (blanco)",
+    "ja": "バツ（白）"
+   },
+   "size": 2179
+  },
+  {
+   "id": "pack:iw_warning",
+   "file": "images/mono_white/warning.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Warnung (weiß)",
+    "en": "Warning (white)",
+    "es": "Advertencia (blanco)",
+    "ja": "警告（白）"
+   },
+   "size": 4894
+  },
+  {
+   "id": "pack:iw_question",
+   "file": "images/mono_white/question.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Fragezeichen (weiß)",
+    "en": "Question mark (white)",
+    "es": "Interrogación (blanco)",
+    "ja": "はてな（白）"
+   },
+   "size": 3147
+  },
+  {
+   "id": "pack:iw_info",
+   "file": "images/mono_white/info.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Info (weiß)",
+    "en": "Info (white)",
+    "es": "Información (blanco)",
+    "ja": "インフォ（白）"
+   },
+   "size": 6384
+  },
+  {
+   "id": "pack:iw_lock",
+   "file": "images/mono_white/lock.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Schloss zu (weiß)",
+    "en": "Lock (white)",
+    "es": "Candado cerrado (blanco)",
+    "ja": "錠（閉）（白）"
+   },
+   "size": 3558
+  },
+  {
+   "id": "pack:iw_unlock",
+   "file": "images/mono_white/unlock.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Schloss offen (weiß)",
+    "en": "Unlocked (white)",
+    "es": "Candado abierto (blanco)",
+    "ja": "錠（開）（白）"
+   },
+   "size": 3734
+  },
+  {
+   "id": "pack:iw_plus",
+   "file": "images/mono_white/plus.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Plus (weiß)",
+    "en": "Plus (white)",
+    "es": "Más (blanco)",
+    "ja": "プラス（白）"
+   },
+   "size": 1457
+  },
+  {
+   "id": "pack:iw_minus",
+   "file": "images/mono_white/minus.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Minus (weiß)",
+    "en": "Minus (white)",
+    "es": "Menos (blanco)",
+    "ja": "マイナス（白）"
+   },
+   "size": 741
+  },
+  {
+   "id": "pack:iw_gear",
+   "file": "images/mono_white/gear.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Zahnrad (Einstellungen) (weiß)",
+    "en": "Gear (settings) (white)",
+    "es": "Engranaje (ajustes) (blanco)",
+    "ja": "歯車（設定）（白）"
+   },
+   "size": 7828
+  },
+  {
+   "id": "pack:iw_bell",
+   "file": "images/mono_white/bell.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Glocke (weiß)",
+    "en": "Bell (white)",
+    "es": "Campana (blanco)",
+    "ja": "ベル（白）"
+   },
+   "size": 3857
+  },
+  {
+   "id": "pack:iw_home",
+   "file": "images/mono_white/home.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Haus (Start) (weiß)",
+    "en": "House (home) (white)",
+    "es": "Casa (inicio) (blanco)",
+    "ja": "家（ホーム）（白）"
+   },
+   "size": 2511
+  },
+  {
+   "id": "pack:iw_search",
+   "file": "images/mono_white/search.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Lupe (Suche) (weiß)",
+    "en": "Magnifier (search) (white)",
+    "es": "Lupa (buscar) (blanco)",
+    "ja": "虫眼鏡（検索）（白）"
+   },
+   "size": 4558
+  },
+  {
+   "id": "pack:iw_lightning",
+   "file": "images/mono_white/lightning.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Blitz (weiß)",
+    "en": "Lightning (white)",
+    "es": "Rayo (blanco)",
+    "ja": "稲妻（白）"
+   },
+   "size": 3769
+  },
+  {
+   "id": "pack:iw_fire",
+   "file": "images/mono_white/fire.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Feuer (weiß)",
+    "en": "Fire (white)",
+    "es": "Fuego (blanco)",
+    "ja": "炎（白）"
+   },
+   "size": 5460
+  },
+  {
+   "id": "pack:iw_music_note",
+   "file": "images/mono_white/music_note.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Musiknote (weiß)",
+    "en": "Music note (white)",
+    "es": "Nota musical (blanco)",
+    "ja": "音符（白）"
+   },
+   "size": 2448
+  },
+  {
+   "id": "pack:iw_pin",
+   "file": "images/mono_white/pin.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Ortsmarke (weiß)",
+    "en": "Location pin (white)",
+    "es": "Marcador de ubicación (blanco)",
+    "ja": "位置ピン（白）"
+   },
+   "size": 6552
+  },
+  {
+   "id": "pack:iw_clock",
+   "file": "images/mono_white/clock.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Uhr (weiß)",
+    "en": "Clock (white)",
+    "es": "Reloj (blanco)",
+    "ja": "時計（白）"
+   },
+   "size": 6502
+  },
+  {
+   "id": "pack:iw_crown",
+   "file": "images/mono_white/crown.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Krone (weiß)",
+    "en": "Crown (white)",
+    "es": "Corona (blanco)",
+    "ja": "王冠（白）"
+   },
+   "size": 4944
+  },
+  {
+   "id": "pack:iw_trophy",
+   "file": "images/mono_white/trophy.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Pokal (weiß)",
+    "en": "Trophy (white)",
+    "es": "Trofeo (blanco)",
+    "ja": "トロフィー（白）"
+   },
+   "size": 4852
+  },
+  {
+   "id": "pack:iw_chat",
+   "file": "images/mono_white/chat.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Sprechblase (weiß)",
+    "en": "Chat bubble (white)",
+    "es": "Bocadillo (blanco)",
+    "ja": "吹き出し（白）"
+   },
+   "size": 3033
+  },
+  {
+   "id": "pack:iw_chat_typing",
+   "file": "images/mono_white/chat_typing.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Schreibt gerade … (weiß)",
+    "en": "Typing … (white)",
+    "es": "Escribiendo … (blanco)",
+    "ja": "入力中…（白）"
+   },
+   "size": 3230
+  },
+  {
+   "id": "pack:iw_chat_me",
+   "file": "images/mono_white/chat_me.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Eigene Nachricht (weiß)",
+    "en": "Own message (white)",
+    "es": "Mensaje propio (blanco)",
+    "ja": "自分のメッセージ（白）"
+   },
+   "size": 1650
+  },
+  {
+   "id": "pack:iw_chat_heart",
+   "file": "images/mono_white/chat_heart.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Liebesnachricht (weiß)",
+    "en": "Love message (white)",
+    "es": "Mensaje de amor (blanco)",
+    "ja": "ラブメッセージ（白）"
+   },
+   "size": 4064
+  },
+  {
+   "id": "pack:iw_chat_two",
+   "file": "images/mono_white/chat_two.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Unterhaltung (weiß)",
+    "en": "Conversation (white)",
+    "es": "Conversación (blanco)",
+    "ja": "会話（白）"
+   },
+   "size": 3657
+  },
+  {
+   "id": "pack:iw_mail",
+   "file": "images/mono_white/mail.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Neue E-Mail (weiß)",
+    "en": "New email (white)",
+    "es": "Nuevo correo (blanco)",
+    "ja": "新着メール（白）"
+   },
+   "size": 2921
+  },
+  {
+   "id": "pack:iw_mail_open",
+   "file": "images/mono_white/mail_open.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Brief geöffnet (weiß)",
+    "en": "Opened letter (white)",
+    "es": "Carta abierta (blanco)",
+    "ja": "開いた手紙（白）"
+   },
+   "size": 4657
+  },
+  {
+   "id": "pack:iw_inbox",
+   "file": "images/mono_white/inbox.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Posteingang (weiß)",
+    "en": "Inbox (white)",
+    "es": "Bandeja de entrada (blanco)",
+    "ja": "受信トレイ（白）"
+   },
+   "size": 4180
+  },
+  {
+   "id": "pack:iw_send",
+   "file": "images/mono_white/send.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Senden (Papierflieger) (weiß)",
+    "en": "Send (paper plane) (white)",
+    "es": "Enviar (avión de papel) (blanco)",
+    "ja": "送信（紙飛行機）（白）"
+   },
+   "size": 5229
+  },
+  {
+   "id": "pack:iw_phone_call",
+   "file": "images/mono_white/phone_call.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Anruf (weiß)",
+    "en": "Call (white)",
+    "es": "Llamada (blanco)",
+    "ja": "着信（白）"
+   },
+   "size": 6467
+  },
+  {
+   "id": "pack:iw_phone_missed",
+   "file": "images/mono_white/phone_missed.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Verpasster Anruf (weiß)",
+    "en": "Missed call (white)",
+    "es": "Llamada perdida (blanco)",
+    "ja": "不在着信（白）"
+   },
+   "size": 5166
+  },
+  {
+   "id": "pack:iw_video_call",
+   "file": "images/mono_white/video_call.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Videoanruf (weiß)",
+    "en": "Video call (white)",
+    "es": "Videollamada (blanco)",
+    "ja": "ビデオ通話（白）"
+   },
+   "size": 3426
+  },
+  {
+   "id": "pack:iw_voice",
+   "file": "images/mono_white/voice.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Sprachnachricht (weiß)",
+    "en": "Voice message (white)",
+    "es": "Mensaje de voz (blanco)",
+    "ja": "ボイスメッセージ（白）"
+   },
+   "size": 4902
+  },
+  {
+   "id": "pack:iw_thumbs_up",
+   "file": "images/mono_white/thumbs_up.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Daumen hoch (weiß)",
+    "en": "Thumbs up (white)",
+    "es": "Pulgar arriba (blanco)",
+    "ja": "いいね（白）"
+   },
+   "size": 4000
+  },
+  {
+   "id": "pack:iw_at",
+   "file": "images/mono_white/at.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "At-Zeichen (@) (weiß)",
+    "en": "At sign (@) (white)",
+    "es": "Arroba (@) (blanco)",
+    "ja": "アットマーク（白）"
+   },
+   "size": 7101
+  },
+  {
+   "id": "pack:iw_wifi",
+   "file": "images/mono_white/wifi.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "WLAN (weiß)",
+    "en": "Wi-Fi (white)",
+    "es": "Wi-Fi (blanco)",
+    "ja": "Wi-Fi（白）"
+   },
+   "size": 4816
+  },
+  {
+   "id": "pack:iw_battery",
+   "file": "images/mono_white/battery.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Akku (weiß)",
+    "en": "Battery (white)",
+    "es": "Batería (blanco)",
+    "ja": "バッテリー（白）"
+   },
+   "size": 2322
+  },
+  {
+   "id": "pack:iw_battery_low",
+   "file": "images/mono_white/battery_low.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Akku leer (weiß)",
+    "en": "Battery low (white)",
+    "es": "Batería baja (blanco)",
+    "ja": "バッテリー残量少（白）"
+   },
+   "size": 2241
+  },
+  {
+   "id": "pack:iw_signal",
+   "file": "images/mono_white/signal.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Empfang (weiß)",
+    "en": "Signal (white)",
+    "es": "Cobertura (blanco)",
+    "ja": "電波（白）"
+   },
+   "size": 1534
+  },
+  {
+   "id": "pack:iw_notification",
+   "file": "images/mono_white/notification.png",
+   "kind": "image",
+   "cat": "mono_white",
+   "name": {
+    "de": "Neue Benachrichtigung (weiß)",
+    "en": "New notification (white)",
+    "es": "Nueva notificación (blanco)",
+    "ja": "新しい通知（白）"
+   },
+   "size": 3709
+  },
+  {
+   "id": "pack:if_folder",
+   "file": "images/future/folder.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Ordner (futuristisch)",
+    "en": "Folder (futuristic)",
+    "es": "Carpeta (futurista)",
+    "ja": "フォルダー（近未来）"
+   },
+   "size": 22463
+  },
+  {
+   "id": "pack:if_folder_open",
+   "file": "images/future/folder_open.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Ordner offen (futuristisch)",
+    "en": "Open folder (futuristic)",
+    "es": "Carpeta abierta (futurista)",
+    "ja": "開いたフォルダー（近未来）"
+   },
+   "size": 27318
+  },
+  {
+   "id": "pack:if_file_text",
+   "file": "images/future/file_text.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Textdatei (futuristisch)",
+    "en": "Text file (futuristic)",
+    "es": "Archivo de texto (futurista)",
+    "ja": "テキストファイル（近未来）"
+   },
+   "size": 25729
+  },
+  {
+   "id": "pack:if_file_image",
+   "file": "images/future/file_image.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Bilddatei (futuristisch)",
+    "en": "Image file (futuristic)",
+    "es": "Archivo de imagen (futurista)",
+    "ja": "画像ファイル（近未来）"
+   },
+   "size": 27232
+  },
+  {
+   "id": "pack:if_file_music",
+   "file": "images/future/file_music.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Musikdatei (futuristisch)",
+    "en": "Music file (futuristic)",
+    "es": "Archivo de música (futurista)",
+    "ja": "音楽ファイル（近未来）"
+   },
+   "size": 26753
+  },
+  {
+   "id": "pack:if_file_zip",
+   "file": "images/future/file_zip.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "ZIP-Archiv (futuristisch)",
+    "en": "ZIP archive (futuristic)",
+    "es": "Archivo ZIP (futurista)",
+    "ja": "ZIPファイル（近未来）"
+   },
+   "size": 27678
+  },
+  {
+   "id": "pack:if_file_pdf",
+   "file": "images/future/file_pdf.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "PDF-Datei (futuristisch)",
+    "en": "PDF file (futuristic)",
+    "es": "Archivo PDF (futurista)",
+    "ja": "PDFファイル（近未来）"
+   },
+   "size": 25778
+  },
+  {
+   "id": "pack:if_save",
+   "file": "images/future/save.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Speichern (Diskette) (futuristisch)",
+    "en": "Save (floppy disk) (futuristic)",
+    "es": "Guardar (disquete) (futurista)",
+    "ja": "保存（フロッピー）（近未来）"
+   },
+   "size": 26302
+  },
+  {
+   "id": "pack:if_trash",
+   "file": "images/future/trash.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Papierkorb (futuristisch)",
+    "en": "Trash can (futuristic)",
+    "es": "Papelera (futurista)",
+    "ja": "ゴミ箱（近未来）"
+   },
+   "size": 31610
+  },
+  {
+   "id": "pack:if_clipboard",
+   "file": "images/future/clipboard.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Klemmbrett (futuristisch)",
+    "en": "Clipboard (futuristic)",
+    "es": "Portapapeles (futurista)",
+    "ja": "クリップボード（近未来）"
+   },
+   "size": 32211
+  },
+  {
+   "id": "pack:if_paperclip",
+   "file": "images/future/paperclip.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Büroklammer (futuristisch)",
+    "en": "Paperclip (futuristic)",
+    "es": "Clip (futurista)",
+    "ja": "クリップ（近未来）"
+   },
+   "size": 22681
+  },
+  {
+   "id": "pack:if_box",
+   "file": "images/future/box.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Archivkarton (futuristisch)",
+    "en": "Archive box (futuristic)",
+    "es": "Caja de archivo (futurista)",
+    "ja": "保管箱（近未来）"
+   },
+   "size": 22362
+  },
+  {
+   "id": "pack:if_heart",
+   "file": "images/future/heart.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Herz (futuristisch)",
+    "en": "Heart (futuristic)",
+    "es": "Corazón (futurista)",
+    "ja": "ハート（近未来）"
+   },
+   "size": 35057
+  },
+  {
+   "id": "pack:if_star",
+   "file": "images/future/star.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Stern (futuristisch)",
+    "en": "Star (futuristic)",
+    "es": "Estrella (futurista)",
+    "ja": "星（近未来）"
+   },
+   "size": 34667
+  },
+  {
+   "id": "pack:if_check",
+   "file": "images/future/check.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Haken (futuristisch)",
+    "en": "Check mark (futuristic)",
+    "es": "Visto (futurista)",
+    "ja": "チェック（近未来）"
+   },
+   "size": 23690
+  },
+  {
+   "id": "pack:if_cross",
+   "file": "images/future/cross.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Kreuz (futuristisch)",
+    "en": "Cross (futuristic)",
+    "es": "Cruz (futurista)",
+    "ja": "バツ（近未来）"
+   },
+   "size": 23281
+  },
+  {
+   "id": "pack:if_warning",
+   "file": "images/future/warning.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Warnung (futuristisch)",
+    "en": "Warning (futuristic)",
+    "es": "Advertencia (futurista)",
+    "ja": "警告（近未来）"
+   },
+   "size": 32832
+  },
+  {
+   "id": "pack:if_question",
+   "file": "images/future/question.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Fragezeichen (futuristisch)",
+    "en": "Question mark (futuristic)",
+    "es": "Interrogación (futurista)",
+    "ja": "はてな（近未来）"
+   },
+   "size": 25354
+  },
+  {
+   "id": "pack:if_info",
+   "file": "images/future/info.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Info (futuristisch)",
+    "en": "Info (futuristic)",
+    "es": "Información (futurista)",
+    "ja": "インフォ（近未来）"
+   },
+   "size": 38699
+  },
+  {
+   "id": "pack:if_lock",
+   "file": "images/future/lock.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Schloss zu (futuristisch)",
+    "en": "Lock (futuristic)",
+    "es": "Candado cerrado (futurista)",
+    "ja": "錠（閉）（近未来）"
+   },
+   "size": 28538
+  },
+  {
+   "id": "pack:if_unlock",
+   "file": "images/future/unlock.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Schloss offen (futuristisch)",
+    "en": "Unlocked (futuristic)",
+    "es": "Candado abierto (futurista)",
+    "ja": "錠（開）（近未来）"
+   },
+   "size": 28852
+  },
+  {
+   "id": "pack:if_plus",
+   "file": "images/future/plus.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Plus (futuristisch)",
+    "en": "Plus (futuristic)",
+    "es": "Más (futurista)",
+    "ja": "プラス（近未来）"
+   },
+   "size": 20178
+  },
+  {
+   "id": "pack:if_minus",
+   "file": "images/future/minus.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Minus (futuristisch)",
+    "en": "Minus (futuristic)",
+    "es": "Menos (futurista)",
+    "ja": "マイナス（近未来）"
+   },
+   "size": 16416
+  },
+  {
+   "id": "pack:if_gear",
+   "file": "images/future/gear.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Zahnrad (Einstellungen) (futuristisch)",
+    "en": "Gear (settings) (futuristic)",
+    "es": "Engranaje (ajustes) (futurista)",
+    "ja": "歯車（設定）（近未来）"
+   },
+   "size": 42820
+  },
+  {
+   "id": "pack:if_bell",
+   "file": "images/future/bell.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Glocke (futuristisch)",
+    "en": "Bell (futuristic)",
+    "es": "Campana (futurista)",
+    "ja": "ベル（近未来）"
+   },
+   "size": 30025
+  },
+  {
+   "id": "pack:if_home",
+   "file": "images/future/home.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Haus (Start) (futuristisch)",
+    "en": "House (home) (futuristic)",
+    "es": "Casa (inicio) (futurista)",
+    "ja": "家（ホーム）（近未来）"
+   },
+   "size": 28140
+  },
+  {
+   "id": "pack:if_search",
+   "file": "images/future/search.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Lupe (Suche) (futuristisch)",
+    "en": "Magnifier (search) (futuristic)",
+    "es": "Lupa (buscar) (futurista)",
+    "ja": "虫眼鏡（検索）（近未来）"
+   },
+   "size": 31197
+  },
+  {
+   "id": "pack:if_lightning",
+   "file": "images/future/lightning.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Blitz (futuristisch)",
+    "en": "Lightning (futuristic)",
+    "es": "Rayo (futurista)",
+    "ja": "稲妻（近未来）"
+   },
+   "size": 29254
+  },
+  {
+   "id": "pack:if_fire",
+   "file": "images/future/fire.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Feuer (futuristisch)",
+    "en": "Fire (futuristic)",
+    "es": "Fuego (futurista)",
+    "ja": "炎（近未来）"
+   },
+   "size": 33655
+  },
+  {
+   "id": "pack:if_music_note",
+   "file": "images/future/music_note.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Musiknote (futuristisch)",
+    "en": "Music note (futuristic)",
+    "es": "Nota musical (futurista)",
+    "ja": "音符（近未来）"
+   },
+   "size": 23578
+  },
+  {
+   "id": "pack:if_pin",
+   "file": "images/future/pin.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Ortsmarke (futuristisch)",
+    "en": "Location pin (futuristic)",
+    "es": "Marcador de ubicación (futurista)",
+    "ja": "位置ピン（近未来）"
+   },
+   "size": 37898
+  },
+  {
+   "id": "pack:if_clock",
+   "file": "images/future/clock.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Uhr (futuristisch)",
+    "en": "Clock (futuristic)",
+    "es": "Reloj (futurista)",
+    "ja": "時計（近未来）"
+   },
+   "size": 39435
+  },
+  {
+   "id": "pack:if_crown",
+   "file": "images/future/crown.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Krone (futuristisch)",
+    "en": "Crown (futuristic)",
+    "es": "Corona (futurista)",
+    "ja": "王冠（近未来）"
+   },
+   "size": 32201
+  },
+  {
+   "id": "pack:if_trophy",
+   "file": "images/future/trophy.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Pokal (futuristisch)",
+    "en": "Trophy (futuristic)",
+    "es": "Trofeo (futurista)",
+    "ja": "トロフィー（近未来）"
+   },
+   "size": 31605
+  },
+  {
+   "id": "pack:if_chat",
+   "file": "images/future/chat.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Sprechblase (futuristisch)",
+    "en": "Chat bubble (futuristic)",
+    "es": "Bocadillo (futurista)",
+    "ja": "吹き出し（近未来）"
+   },
+   "size": 27278
+  },
+  {
+   "id": "pack:if_chat_typing",
+   "file": "images/future/chat_typing.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Schreibt gerade … (futuristisch)",
+    "en": "Typing … (futuristic)",
+    "es": "Escribiendo … (futurista)",
+    "ja": "入力中…（近未来）"
+   },
+   "size": 28977
+  },
+  {
+   "id": "pack:if_chat_me",
+   "file": "images/future/chat_me.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Eigene Nachricht (futuristisch)",
+    "en": "Own message (futuristic)",
+    "es": "Mensaje propio (futurista)",
+    "ja": "自分のメッセージ（近未来）"
+   },
+   "size": 19348
+  },
+  {
+   "id": "pack:if_chat_heart",
+   "file": "images/future/chat_heart.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Liebesnachricht (futuristisch)",
+    "en": "Love message (futuristic)",
+    "es": "Mensaje de amor (futurista)",
+    "ja": "ラブメッセージ（近未来）"
+   },
+   "size": 28193
+  },
+  {
+   "id": "pack:if_chat_two",
+   "file": "images/future/chat_two.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Unterhaltung (futuristisch)",
+    "en": "Conversation (futuristic)",
+    "es": "Conversación (futurista)",
+    "ja": "会話（近未来）"
+   },
+   "size": 29593
+  },
+  {
+   "id": "pack:if_mail",
+   "file": "images/future/mail.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Neue E-Mail (futuristisch)",
+    "en": "New email (futuristic)",
+    "es": "Nuevo correo (futurista)",
+    "ja": "新着メール（近未来）"
+   },
+   "size": 25603
+  },
+  {
+   "id": "pack:if_mail_open",
+   "file": "images/future/mail_open.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Brief geöffnet (futuristisch)",
+    "en": "Opened letter (futuristic)",
+    "es": "Carta abierta (futurista)",
+    "ja": "開いた手紙（近未来）"
+   },
+   "size": 32328
+  },
+  {
+   "id": "pack:if_inbox",
+   "file": "images/future/inbox.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Posteingang (futuristisch)",
+    "en": "Inbox (futuristic)",
+    "es": "Bandeja de entrada (futurista)",
+    "ja": "受信トレイ（近未来）"
+   },
+   "size": 30212
+  },
+  {
+   "id": "pack:if_send",
+   "file": "images/future/send.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Senden (Papierflieger) (futuristisch)",
+    "en": "Send (paper plane) (futuristic)",
+    "es": "Enviar (avión de papel) (futurista)",
+    "ja": "送信（紙飛行機）（近未来）"
+   },
+   "size": 34371
+  },
+  {
+   "id": "pack:if_phone_call",
+   "file": "images/future/phone_call.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Anruf (futuristisch)",
+    "en": "Call (futuristic)",
+    "es": "Llamada (futurista)",
+    "ja": "着信（近未来）"
+   },
+   "size": 42342
+  },
+  {
+   "id": "pack:if_phone_missed",
+   "file": "images/future/phone_missed.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Verpasster Anruf (futuristisch)",
+    "en": "Missed call (futuristic)",
+    "es": "Llamada perdida (futurista)",
+    "ja": "不在着信（近未来）"
+   },
+   "size": 33777
+  },
+  {
+   "id": "pack:if_video_call",
+   "file": "images/future/video_call.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Videoanruf (futuristisch)",
+    "en": "Video call (futuristic)",
+    "es": "Videollamada (futurista)",
+    "ja": "ビデオ通話（近未来）"
+   },
+   "size": 26537
+  },
+  {
+   "id": "pack:if_voice",
+   "file": "images/future/voice.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Sprachnachricht (futuristisch)",
+    "en": "Voice message (futuristic)",
+    "es": "Mensaje de voz (futurista)",
+    "ja": "ボイスメッセージ（近未来）"
+   },
+   "size": 32345
+  },
+  {
+   "id": "pack:if_thumbs_up",
+   "file": "images/future/thumbs_up.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Daumen hoch (futuristisch)",
+    "en": "Thumbs up (futuristic)",
+    "es": "Pulgar arriba (futurista)",
+    "ja": "いいね（近未来）"
+   },
+   "size": 29086
+  },
+  {
+   "id": "pack:if_at",
+   "file": "images/future/at.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "At-Zeichen (@) (futuristisch)",
+    "en": "At sign (@) (futuristic)",
+    "es": "Arroba (@) (futurista)",
+    "ja": "アットマーク（近未来）"
+   },
+   "size": 40205
+  },
+  {
+   "id": "pack:if_wifi",
+   "file": "images/future/wifi.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "WLAN (futuristisch)",
+    "en": "Wi-Fi (futuristic)",
+    "es": "Wi-Fi (futurista)",
+    "ja": "Wi-Fi（近未来）"
+   },
+   "size": 34822
+  },
+  {
+   "id": "pack:if_battery",
+   "file": "images/future/battery.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Akku (futuristisch)",
+    "en": "Battery (futuristic)",
+    "es": "Batería (futurista)",
+    "ja": "バッテリー（近未来）"
+   },
+   "size": 23691
+  },
+  {
+   "id": "pack:if_battery_low",
+   "file": "images/future/battery_low.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Akku leer (futuristisch)",
+    "en": "Battery low (futuristic)",
+    "es": "Batería baja (futurista)",
+    "ja": "バッテリー残量少（近未来）"
+   },
+   "size": 23357
+  },
+  {
+   "id": "pack:if_signal",
+   "file": "images/future/signal.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Empfang (futuristisch)",
+    "en": "Signal (futuristic)",
+    "es": "Cobertura (futurista)",
+    "ja": "電波（近未来）"
+   },
+   "size": 20466
+  },
+  {
+   "id": "pack:if_notification",
+   "file": "images/future/notification.png",
+   "kind": "image",
+   "cat": "future",
+   "name": {
+    "de": "Neue Benachrichtigung (futuristisch)",
+    "en": "New notification (futuristic)",
+    "es": "Nueva notificación (futurista)",
+    "ja": "新しい通知（近未来）"
+   },
+   "size": 28490
   }
  ]
 }
