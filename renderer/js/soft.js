@@ -61,7 +61,8 @@
       return { x: ax, y: ay };
     },
     step(sim, regions, acc, dt) {
-      dt = Math.min(0.05, Math.max(0, dt || 0));
+      // bis 0,1 s je Bild in Echtzeit (Unterschritte halten die Federn stabil) – sonst wirkt es bei wenig FPS wie Zeitlupe
+      dt = Math.min(0.1, Math.max(0, dt || 0));
       const kick = sim.poke.splice(0);
       for (const r of regions) {
         const P = Soft.par(r);
@@ -134,9 +135,11 @@
     },
     // Maße einer freien Form (zwischengespeichert): Rahmen, Schwerpunkt, Umriss in Pixel-Verhältnis, Tiefe innen
     geo(r, aspect) {
-      const key = aspect.toFixed(4) + (r.smooth === false ? 'h' : 's') + JSON.stringify(r.pts);
       const c = GEO.get(r);
-      if (c && c.key === key) return c;
+      // während eines Bilds ändert sich die Form nicht: ohne erneuten Vergleich zurückgeben
+      if (FAST && c && c.f === FAST && c.aspect === aspect) return c;
+      const key = aspect.toFixed(4) + (r.smooth === false ? 'h' : 's') + JSON.stringify(r.pts);
+      if (c && c.key === key) { c.f = FAST; c.aspect = aspect; return c; }
       const o = Soft.outline(r), poly = o.map((q) => [q[0] * aspect, q[1]]);
       let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9, sx = 0, sy = 0;
       for (const q of o) { x0 = Math.min(x0, q[0]); y0 = Math.min(y0, q[1]); x1 = Math.max(x1, q[0]); y1 = Math.max(y1, q[1]); sx += q[0]; sy += q[1]; }
@@ -146,6 +149,7 @@
         const X = (x0 + (x1 - x0) * i / 16) * aspect, Y = y0 + (y1 - y0) * j / 16;
         const sd = sdPoly(poly, X, Y); if (sd < 0) g.depth = Math.max(g.depth, -sd);
       }
+      g.f = FAST; g.aspect = aspect;
       GEO.set(r, g);
       return g;
     },
@@ -192,12 +196,15 @@
     // Abstand vom Pin, 0 am Pin … 1 am weitesten Punkt der Maske
     pinQ(r, u, v, aspect) {
       const pin = Soft.pinOf(r, aspect);
-      const key = aspect.toFixed(4) + JSON.stringify([pin, r.shape, r.pts, r.cx, r.cy, r.rx, r.ry, r.rot, r.smooth]);
       let c = REACH.get(r);
+      if (!(FAST && c && c.f === FAST && c.aspect === aspect)) {
+      const key = aspect.toFixed(4) + JSON.stringify([pin, r.shape, r.pts, r.cx, r.cy, r.rx, r.ry, r.rot, r.smooth]);
       if (!c || c.key !== key) {
         const o = r.shape === 'poly' && r.pts && r.pts.length >= 3 ? Soft.outline(r) : Soft.toPoly(r, aspect, 24);
         let m = 1e-3; for (const q of o) m = Math.max(m, Math.hypot((q[0] - pin[0]) * aspect, q[1] - pin[1]));
         c = { key, reach: m }; REACH.set(r, c);
+      }
+      c.f = FAST; c.aspect = aspect;
       }
       return Math.min(1, Math.hypot((u - pin[0]) * aspect, v - pin[1]) / c.reach);
     },
@@ -283,24 +290,22 @@
       const iw = W / (1 + 2 * PAD), ih = H / (1 + 2 * PAD), ox = W * PAD / (1 + 2 * PAD), oy = H * PAD / (1 + 2 * PAD);
       const aspect = NW / NH;
       const regs = cfg.regions.filter((r) => r.on !== false);
+      FAST = ++FRAME;
+      try {
       const moves = regs.map((r) => { const P = Soft.par(r); return { r, P, m: Soft.regionMove(r, P, sim.regs[r.id], t) }; });
       // 1) Grundbild: Gitter über das ganze Bild, nur Punkte in Masken bewegen sich
       const gw = GRID, gh = Math.max(8, Math.round(GRID / aspect));
       const mesh = baseMesh(gw, gh);
       const pos = mesh.pos;
-      for (let j = 0, k = 0; j <= gh; j++) {
-        for (let i = 0; i <= gw; i++, k++) {
-          const u = i / gw, v = j / gh;
-          let dx = 0, dy = 0;
-          for (const { r, P, m } of moves) {
-            const L = Soft.local(r, u, v, aspect);
-            const E = { r, u, v, aspect };
-            const w = Soft.weight(P.layer ? Object.assign({}, P, { over: 0 }) : P, L[0], L[1], L[2], E);
-            if (w <= 0) continue;
-            const d = Soft.disp(r, P, m, L[0], L[1], w, aspect, E);
-            dx += d[0]; dy += d[1];
-          }
-          pos[k * 2] = ox + (u + dx) * iw; pos[k * 2 + 1] = oy + (v + dy) * ih;
+      // Gewichte hängen nur von Form und Einstellungen ab: einmal rechnen, dann je Bild nur verschieben
+      const W8 = weights(cfg, moves, gw, gh, aspect);
+      for (let j = 0, k = 0; j <= gh; j++) for (let i = 0; i <= gw; i++, k++) { pos[k * 2] = ox + (i / gw) * iw; pos[k * 2 + 1] = oy + (j / gh) * ih; }
+      for (let mi = 0; mi < moves.length; mi++) {
+        const { r, P, m } = moves[mi], L = W8[mi];
+        for (let q = 0; q < L.n; q++) {
+          const k = L.k[q], u = (k % (gw + 1)) / gw, v = Math.floor(k / (gw + 1)) / gh;
+          const d = Soft.disp(r, P, m, L.lx[q], L.ly[q], L.w[q], aspect, { r, u, v, aspect });
+          pos[k * 2] += d[0] * iw; pos[k * 2 + 1] += d[1] * ih;
         }
       }
       drawMesh(S, mesh, 1);
@@ -310,6 +315,7 @@
         const lm = layerMesh(r, P, m, aspect, iw, ih, ox, oy);
         drawMesh(S, lm, 0);
       }
+      } finally { FAST = 0; }
       const ctx = out.getContext('2d');
       ctx.clearRect(0, 0, W, H);
       ctx.drawImage(S.cv, 0, 0, W, H, 0, 0, W, H);
@@ -388,6 +394,28 @@
     return (inside ? -1 : 1) * Math.sqrt(d);
   }
   const GEO = new WeakMap(), REACH = new WeakMap();
+  // FAST = Nummer des Bilds, das gerade gezeichnet wird (0 = außerhalb, dann wird immer verglichen)
+  let FAST = 0, FRAME = 0;
+  const WCACHE = new WeakMap();
+  // Gewicht jedes Gitterpunkts je Bereich (nur Punkte mit Gewicht > 0)
+  function weights(cfg, moves, gw, gh, aspect) {
+    const sig = gw + 'x' + gh + ':' + aspect.toFixed(4) + JSON.stringify(moves.map((x) => x.P));
+    const c = WCACHE.get(cfg);
+    if (c && c.sig === sig) return c.list;
+    const list = moves.map(({ r, P }) => {
+      const Pw = P.layer ? Object.assign({}, P, { over: 0 }) : P;
+      const k = [], lx = [], ly = [], w = [];
+      for (let j = 0, kk = 0; j <= gh; j++) for (let i = 0; i <= gw; i++, kk++) {
+        const u = i / gw, v = j / gh, L = Soft.local(r, u, v, aspect);
+        const ww = Soft.weight(Pw, L[0], L[1], L[2], { r, u, v, aspect });
+        if (ww <= 0) continue;
+        k.push(kk); lx.push(L[0]); ly.push(L[1]); w.push(ww);
+      }
+      return { n: k.length, k: Int32Array.from(k), lx: Float32Array.from(lx), ly: Float32Array.from(ly), w: Float32Array.from(w) };
+    });
+    WCACHE.set(cfg, { sig, list });
+    return list;
+  }
   function smooth(x) { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }
 
   // ---------- WebGL ----------
