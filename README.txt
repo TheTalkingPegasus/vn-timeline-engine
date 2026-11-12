@@ -16,6 +16,8 @@ Without installing (ZIP):
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
 
+NEW IN 0.9.30 · Wheel zoom in every editor: lip sync, layers, website editor (Ctrl + wheel), device preview, idle map; pan in jointed puppets; pixel art zooms with the plain wheel
+
 NEW IN 0.9.29 · Mouse-wheel zoom in every preview (scene, hub, animation, design, menu, figures) towards the mouse; pan with middle mouse or Space + drag; click the badge for 100 %; Ctrl + wheel zooms the timeline; soft physics: tense twitching and heartbeat pulse (strength and BPM adjustable)
 
 NEW IN 0.9.28 · Soft physics: mask part of a character image (ellipse, lasso or pen tool like in After Effects, points editable), pick a preset (chest, hair, skirt, belly, ears, tail, jelly …) and it bounces, sways and breathes along with the figure's movement – image not cut, outside of the mask stays still; optional own layer, free anchor point with pendulum swing, test mode, action “Nudge soft physics”

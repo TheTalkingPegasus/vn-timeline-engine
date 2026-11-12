@@ -1252,11 +1252,18 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
       st.style.scale = ''; st.style.translate = ''; Zoom.apply();
       if (Math.abs(st.getBoundingClientRect().width / r0.width - 2) > 0.01) out.push('erneut anwenden');
       Zoom.reset(); if (Math.abs(st.getBoundingClientRect().width - r0.width) > 0.5) out.push('Zurücksetzen');
+      // Inhalt mit eigenem transform (z. B. Geräte-Vorschau): Punkt bleibt trotzdem unter der Maus
+      st.style.transform = 'translateX(-20%) scale(0.8)';
+      const q0 = st.getBoundingClientRect(), qx = q0.left + q0.width * 0.7, qy = q0.top + q0.height * 0.2;
+      Zoom.zoomAt(st, qx, qy, 2.5);
+      const q1 = st.getBoundingClientRect();
+      if (Math.abs((qx - q1.left) / q1.width - 0.7) > 0.005 || Math.abs((qy - q1.top) / q1.height - 0.2) > 0.005) out.push('eigenes transform');
+      Zoom.reset();
       vp.remove(); Object.assign(Zoom.state(), JSON.parse(keep));
       return JSON.stringify(out);
     })()`));
     if (r.length) general.push('Mausrad-Zoom: ' + r.join(', '));
-    else log('✓ Mausrad-Zoom: zur Maus, Anzeige, erneut anwenden, Zurücksetzen');
+    else log('✓ Mausrad-Zoom: zur Maus, Anzeige, erneut anwenden, Zurücksetzen, eigenes transform');
   } catch (e) { general.push('Mausrad-Zoom: ' + e.message); }
 
   // 20. Social Media: Beiträge per Bedingung und Aktion, löschen, Likes mit Aktion nur einmal

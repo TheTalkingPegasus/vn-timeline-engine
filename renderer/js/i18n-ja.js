@@ -5354,7 +5354,8 @@ window.VN_I18N_JA = {
 "Auch: Strg + Mausrad über der Timeline": "タイムライン上で Ctrl＋マウスホイールでも可",
 "Zucken (angespannt)": "ぴくつき（緊張）",
 "Puls (Herzschlag)": "脈動（鼓動）",
-"Puls: Schläge/Min": "脈動：拍/分"
+"Puls: Schläge/Min": "脈動：拍/分",
+"Linke Maustaste = malen · rechte = radieren · Mausrad = Zoom · mittlere Maustaste oder Leertaste + Ziehen = verschieben. Ändert man eine Farbe, ändert sie sich in allen Bildern.": "左クリック＝描く · 右クリック＝消す · ホイール＝ズーム · 中ボタンまたはスペース＋ドラッグ＝移動。色を変えると全フレームで変わります。"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

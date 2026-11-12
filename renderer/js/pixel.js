@@ -145,7 +145,7 @@
       const tools = el('div', { class: 'seg' }, ...TOOLS.map(([k, ic, l]) => el('button', { class: (ui().pxTool || 'pen') === k ? 'active' : '', title: VN.t(l), onclick: () => { ui().pxTool = k; VN.render(); } }, ic)));
       const tg = (key, label, title) => el('label', { class: 'check btn', title: VN.t(title || '') }, el('input', { type: 'checkbox', checked: !!ui()[key], onchange: (e) => { ui()[key] = e.target.checked; VN.render(); } }), label);
       bar.append(tools, tg('pxMirror', '⇋ ' + VN.t('Spiegeln'), 'Beim Zeichnen gleichzeitig auf der anderen Seite malen'), tg('pxOnion', '◐ ' + VN.t('Zwiebelhaut'), 'Vorheriges und nächstes Bild durchscheinend zeigen'), el('label', { class: 'check btn' }, el('input', { type: 'checkbox', checked: ui().pxGrid !== false, onchange: (e) => { ui().pxGrid = e.target.checked; VN.render(); } }), '# ' + VN.t('Raster')));
-      const wrap = el('div', { class: 'px-wrap' });
+      const wrap = el('div', { class: 'px-wrap vz-own' });
       center.appendChild(wrap);
       const cv = el('canvas', { class: 'px-canvas' });
       wrap.appendChild(cv);
@@ -190,7 +190,25 @@
       const at = (e) => { const r = cv.getBoundingClientRect(); return [Math.floor((e.clientX - r.left) / r.width * spr.w), Math.floor((e.clientY - r.top) / r.height * spr.h)]; };
       const inside = (x, y) => x >= 0 && y >= 0 && x < spr.w && y < spr.h;
       cv.addEventListener('contextmenu', (e) => e.preventDefault());
-      cv.addEventListener('wheel', (e) => { if (!e.ctrlKey) return; e.preventDefault(); ui().pxZoom = Math.max(2, Math.min(40, P.zoom(spr, cv.parentNode) + (e.deltaY < 0 ? 1 : -1))); P.draw(cv, spr); }, { passive: false });
+      // Mausrad = zoomen zur Mausposition (0.9.30, vorher nur mit Strg)
+      cv.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const wrap = cv.parentNode, old = P.zoom(spr, wrap);
+        const nz = Math.max(2, Math.min(40, e.deltaY < 0 ? Math.max(old + 1, Math.round(old * 1.2)) : Math.min(old - 1, Math.round(old / 1.2))));
+        if (nz === old) return;
+        const r = cv.getBoundingClientRect(), px = (e.clientX - r.left) / old, py = (e.clientY - r.top) / old;
+        ui().pxZoom = nz; P.draw(cv, spr);
+        // gleicher Pixel bleibt unter der Maus
+        const r2 = cv.getBoundingClientRect();
+        wrap.scrollLeft += (r2.left + px * nz) - e.clientX; wrap.scrollTop += (r2.top + py * nz) - e.clientY;
+      }, { passive: false });
+      // Verschieben: mittlere Maustaste oder Leertaste + Ziehen
+      cv.addEventListener('mousedown', (e) => {
+        if (!window.Zoom) return;
+        const wrap = cv.parentNode, o = { x: wrap.scrollLeft, y: wrap.scrollTop };
+        Zoom.panStart(e, (dx, dy) => { wrap.scrollLeft = o.x - dx; wrap.scrollTop = o.y - dy; });
+      }, true);
+      cv.addEventListener('auxclick', (e) => { if (e.button === 1) e.preventDefault(); });
       cv.addEventListener('mousedown', (e) => {
         const fr = P.frame(spr), ly = P.layer(spr);
         if (!fr || !ly) return;
@@ -302,7 +320,7 @@
           ci > 0 ? el('label', { class: 'd-color' }, el('input', { type: 'color', value: spr.palette[ci], onchange: (e) => mut(() => { spr.palette[ci] = e.target.value; }) }), el('span', null, VN.t('Farbe ändern'))) : el('span', { class: 'muted small' }, VN.t('Durchsichtig = radieren')),
           el('label', { class: 'd-color', title: VN.t('Neue Farbe zur Palette') }, el('input', { type: 'color', value: '#ffffff', onchange: (e) => mut(() => { if (spr.palette.length < 256) { spr.palette.push(e.target.value); ui().pxColor = spr.palette.length - 1; } }) }), el('span', null, '+'))),
         presetSel,
-        el('div', { class: 'muted small' }, 'Linke Maustaste = malen · rechte = radieren · Strg + Mausrad = Zoom. Ändert man eine Farbe, ändert sie sich in allen Bildern.')));
+        el('div', { class: 'muted small' }, 'Linke Maustaste = malen · rechte = radieren · Mausrad = Zoom · mittlere Maustaste oder Leertaste + Ziehen = verschieben. Ändert man eine Farbe, ändert sie sich in allen Bildern.')));
       // Ebenen
       const ly = P.layer(spr);
       const lbox = el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Ebenen (oben = vorne)'));

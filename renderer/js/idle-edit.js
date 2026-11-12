@@ -286,7 +286,7 @@
         el('div', { class: 'row gap8', style: { flexWrap: 'wrap' } }, field('Hintergrundbild', asset('image', V.mapBg, (v) => { V.mapBg = v; })),
           selB ? field(VN.t('Größe') + ': ' + selB.name, el('input', { type: 'range', min: 4, max: 40, value: selB.ms || 13, onchange: (e) => VN.mutate(() => { selB.ms = Number(e.target.value); }) })) : null),
         el('div', { class: 'muted small' }, VN.t('Gebäude auf dem Bild an ihren Platz ziehen. Ein Gebäude anklicken, dann lässt sich seine Größe einstellen. Am schönsten mit Gebäudebildern mit durchsichtigem Hintergrund.')),
-        area));
+        el('div', { class: 'id-map-vp' }, area)));
     }
     // Berater
     const A = V.adv;

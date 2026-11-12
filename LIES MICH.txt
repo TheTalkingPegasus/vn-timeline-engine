@@ -14,6 +14,13 @@ Ohne Installation (ZIP):
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
 
+NEU IN 0.9.30 · Zoom in jedem Editor
+- Mausrad-Zoom jetzt auch bei Lippensync, Ebenen & Outfits, im Website-Editor (Strg + Mausrad, normales Rad scrollt lange Seiten),
+  in der Geräte-Vorschau und auf der Aufbau-Karte.
+- Gliederpuppen (auch beim Inpaint-Maskieren) zoomten schon mit dem Mausrad – jetzt lässt sich dort auch mit der mittleren Maustaste
+  oder Leertaste + Ziehen verschieben.
+- Pixel-Art: Mausrad zoomt ohne Strg, der Pixel unter der Maus bleibt stehen; verschieben mit mittlerer Maustaste oder Leertaste + Ziehen.
+
 NEU IN 0.9.29 · Mausrad-Zoom überall; Zucken & Herzschlag in der Weich-Physik
 - Mit dem Mausrad zoomen in jeder Vorschau: Szene, Hub, Zwischensequenz (Animieren), Design, Hauptmenü, Bones und Weich-Physik.
   Gezoomt wird zur Mausposition (50 %–800 %); verschieben mit der mittleren Maustaste oder Leertaste + Ziehen; die Anzeige in der Ecke
