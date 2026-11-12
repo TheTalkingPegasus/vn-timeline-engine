@@ -2,6 +2,18 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.35 – Free speech bubbles, text effects
+- **Free bubble:** a bubble image in its own shape (PNG, GIF or WebP – animated images play) that is no longer stretched.
+  Built-in shapes: slanted (Persona style), tilted, shout and round comic bubble. The **text area** and the **name field**
+  each have 4 corners you drag right in the design preview; the text is laid in with perspective – where the area is
+  narrower, the text gets smaller. Name field image distorts along. Position, width, “stays at the speaker”, mirror,
+  shrink text to fit.
+- **Text effects** (free and normal bubbles): comic dots as a shadow (colour, dot size, grid, distance, direction),
+  outline on one side only, moving letters (wave, bounce, shake, float, pop while typing), large first letter
+  (size, colour, font, drop cap). All per project, per speaker name or per line, and savable as your own template.
+- **Bones + soft physics:** chest/clothing physics and the face rig now also work on characters with bones; each soft
+  area reacts to the bone movement at its own spot.
+
 ## 0.9.34 – Faster soft physics
 - **Soft physics (chest, clothing, breathing) much faster:** how strongly each grid point belongs to a mask is now
   calculated once and only again when you change a mask or its settings – before, it was recalculated every frame.

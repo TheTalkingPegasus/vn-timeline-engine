@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototype 0.9.34
+VN Timeline Engine · Prototype 0.9.35
 ====================================
 (Deutsch: siehe LIES MICH.txt)
 
@@ -15,6 +15,8 @@ Without installing (ZIP):
    isn't signed: "More info" → "Run anyway".
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
+
+NEW IN 0.9.35 · Free speech bubbles (own shape, text and name laid into 4 draggable corners with perspective, animated GIF/WebP), text effects (comic dots shadow, one-sided outline, moving letters, large first letter); soft physics and face rig on characters with bones
 
 NEW IN 0.9.34 · Soft physics (chest, clothing, breathing) about 20× faster per frame with the same result; no slow motion at low frame rates
 

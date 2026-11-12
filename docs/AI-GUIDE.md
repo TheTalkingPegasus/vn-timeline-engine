@@ -1,6 +1,6 @@
 # VN Timeline Engine – guide for AI assistants
 
-Engine 0.9.34 · project format 1 · generated 2026-11-12
+Engine 0.9.35 · project format 1 · generated 2026-11-12
 
 This file explains a VN Timeline Engine project so that any AI can read and change it **without the engine source code**. 
 The engine is a free visual novel editor that works like a video editor: every scene is a timeline, every column ("step") is one click of the player.
@@ -42,7 +42,7 @@ The engine is a free visual novel editor that works like a video editor: every s
 - `cam` – Camera / Kamera (cam): `{"id":"<unique id>","start":0,"len":3,"zoom":130,"panX":0,"panY":-8,"rot":0,"shake":0,"dur":1.2,"ease":"ease-in-out","keys":[]}`
 - `video` – Video (video): `{"id":"<unique id>","start":0,"len":1,"asset":null,"layer":"front","loop":false,"muted":false,"vol":90,"fit":"cover","waitEnd":true,"skippable":true}`
 - `dialog` – Dialogue / Dialog (dialog): `{"id":"<unique id>","start":0,"len":1,"speaker":"","color":"#ffffff","text":"Neuer Text …","speed":40,"actions":[]}`
-- `choice` – Choice / Auswahl (choice): `{"id":"<unique id>","start":0,"len":1,"options":[{"id":"opt_1ofjb","text":"Antwort A","target":null,"conds":[],"actions":[]},{"id":"opt_1pxr3","text":"Antwort B","target":null,"conds":[],"actions":[]}]}`
+- `choice` – Choice / Auswahl (choice): `{"id":"<unique id>","start":0,"len":1,"options":[{"id":"opt_1osdg","text":"Antwort A","target":null,"conds":[],"actions":[]},{"id":"opt_1p8kb","text":"Antwort B","target":null,"conds":[],"actions":[]}]}`
 - `code` – Code (code): `{"id":"<unique id>","start":0,"len":1,"code":""}`
 - `music` – Music / Musik (music): `{"id":"<unique id>","start":0,"len":3,"asset":null,"vol":70,"loop":true,"carry":false,"fade":1}`
 - `voice` – Voices (voice): `{"id":"<unique id>","start":0,"len":1,"asset":null,"vol":90,"delay":0}`
@@ -71,6 +71,12 @@ The engine is a free visual novel editor that works like a video editor: every s
 ## Bones (one image that bends)
 
 `rigs: { "<image asset id>": { … } }` – skeleton and mesh of an image, set up under **Characters → Bones & blinking**. Don’t write rigs by hand; keep them unchanged. `cellEdit: { nx, ny, add: [cell index …], del: [cell index …] }` stores manual mesh edits for one mesh density. Layered characters (`figures`) use the bones of their lowest layer for all layers.
+
+## Speech bubbles (theme)
+
+`theme.bubble` (project), `theme.speakers["<name>"]` (per speaker name) and a dialog clip’s `bubble` (one line) are layers; later layers override earlier ones. `preset`: "hell"|"dunkel"|"duester"|"pergament"|"comic"|"neon" or a custom preset id from `theme.presets`.
+- Free bubble: `free: true`, `freeImg` ("builtin:slash"|"builtin:tilt"|"builtin:shout"|"builtin:round" or an image asset id, GIF/WebP animate), `freeW` (% of width), `freeX`, `freeY` (% centre), `freeFollow` (centre on the speaker), `freeFlip`, `fitText`, `vAlign` ("center"|"top"), `tq` and `nq` = text area and name field as 4 corners `[[x,y]×4]` (top-left, top-right, bottom-right, bottom-left, fractions of the image; the text is laid in with perspective), `nameImg`, `nameBg`.
+- Text effects: `dots`, `dotsColor`, `dotsSize` (% of the grid), `dotsGap`, `dotsDist`, `dotsWide` (em), `dotsAng` (°) – halftone shadow; `edge`, `edgeColor`, `edgeW` (em), `edgeAng` (°) – outline on one side; `fxName` (also on the name); `letters`: ""|"wave"|"bounce"|"shake"|"float"|"pop" with `letAmt`, `letSpeed`; `cap`, `capSize`, `capColor`, `capFont`, `capDrop` – large first letter.
 
 ## 3D sets (rooms from PNG planes)
 

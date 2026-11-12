@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.34
+VN Timeline Engine · Prototyp 0.9.35
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,17 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.35 · Freie Sprechblasen, Text-Effekte
+- Freie Blase: ein Blasen-Bild in eigener Form (PNG, GIF oder WebP – bewegte Bilder laufen mit), das nicht mehr gestreckt wird.
+  Mitgelieferte Formen: Schräg (Persona-Stil), Gekippt, Ausruf und Comic rund. Textfläche und Namensfeld haben je 4 Ecken, die du
+  direkt in der Design-Vorschau ziehst; der Text wird perspektivisch hineingelegt – wo die Fläche schmaler ist, wird er kleiner. Ein
+  Namensfeld-Bild wird mit verzerrt. Position, Breite, „Steht beim Sprecher“, Spiegeln, Text passend verkleinern.
+- Text-Effekte (freie und normale Blase): Comic-Punkte als Schatten (Farbe, Punktgröße, Raster, Abstand, Richtung), Kontur nur auf
+  einer Seite, Buchstaben bewegen sich (Welle, Hüpfen, Zittern, Schweben, Aufploppen beim Tippen), großer Anfangsbuchstabe (Größe,
+  Farbe, Schrift, Initiale). Alles fürs Projekt, pro Sprecher-Name oder pro Zeile, und als eigene Vorlage speicherbar.
+- Bones + Weich-Physik: Brust-/Kleidungsphysik und Gesicht-Rig laufen jetzt auch auf Figuren mit Bones; jeder Bereich reagiert auf
+  die Knochen-Bewegung an seiner Stelle.
 
 NEU IN 0.9.34 · Schnellere Weich-Physik
 - Weich-Physik (Brust, Kleidung, Atmen) viel schneller: wie stark jeder Gitterpunkt zu einer Maske gehört, wird jetzt einmal berechnet
