@@ -2752,3 +2752,36 @@ body.vz-panning, body.vz-panning * { cursor: grabbing !important; }
 .kul-hole-f input { width: 54px; }
 .lib-thumb.lib-kul { background-size: cover; }
 .pen-bar { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 6; display: flex; gap: 8px; align-items: center; background: rgba(14,15,19,.92); border: 1px solid var(--line); border-radius: 999px; padding: 6px 8px 6px 14px; box-shadow: 0 6px 20px rgba(0,0,0,.4); white-space: nowrap; }
+
+/* ---------- Freie Sprechblase (0.9.35) ---------- */
+.dlg-box.free { position: absolute; transform: translate(-50%, -50%); min-height: 0 !important; padding: 0 !important; background: none !important; border: none !important; overflow: visible; }
+.dlg-box.free .free-img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; user-select: none; }
+.dlg-box.free .free-q { position: absolute; left: 0; top: 0; transform-origin: 0 0; box-sizing: border-box; }
+.dlg-box.free .free-tq { display: flex; flex-direction: column; justify-content: center; padding: 0.4cqh 0.8cqh; }
+.dlg-box.free .free-tq.top { justify-content: flex-start; }
+.dlg-box.free .free-tq .dlg-text { overflow-wrap: anywhere; }
+.dlg-box.free .free-nq { display: flex; align-items: center; justify-content: center; overflow: visible; }
+.dlg-box.free .free-nq .dlg-name { margin: 0; padding: 0; white-space: nowrap; position: static; transform: none; background: none; box-shadow: none; }
+.dlg-box.free .free-tq .dlg-next { right: 0.6cqh; bottom: 0; }
+.dlg-box.free.mini .dlg-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Text-Effekte: Buchstaben-Animation, Initiale */
+.dlg-text[data-letters] .tch:not(.t-wave):not(.t-shake) { position: relative; animation-duration: calc(1.2s / var(--ls, 1)); animation-iteration-count: infinite; animation-timing-function: ease-in-out; animation-delay: calc(var(--i, 0) * -0.09s); }
+.dlg-text[data-letters="wave"] .tch:not(.t-wave):not(.t-shake) { animation-name: laWave; }
+.dlg-text[data-letters="bounce"] .tch:not(.t-wave):not(.t-shake) { animation-name: laBounce; animation-delay: calc(var(--i, 0) * -0.13s); }
+.dlg-text[data-letters="shake"] .tch:not(.t-wave):not(.t-shake) { animation-name: laShake; animation-duration: calc(0.32s / var(--ls, 1)); animation-timing-function: steps(2); animation-delay: calc(var(--i, 0) * -0.11s); }
+.dlg-text[data-letters="float"] .tch:not(.t-wave):not(.t-shake) { animation-name: laFloat; animation-duration: calc(3.2s / var(--ls, 1)); animation-delay: calc(var(--i, 0) * -0.37s); }
+.dlg-text[data-letters="pop"] .tch:not(.t-wave):not(.t-shake) { animation-name: laPop; animation-duration: calc(0.32s / var(--ls, 1)); animation-iteration-count: 1; animation-delay: 0s; animation-timing-function: cubic-bezier(.2,1.6,.4,1); }
+@keyframes laWave { 0%, 100% { top: 0; } 50% { top: calc(var(--la, 1) * -0.14em); } }
+@keyframes laBounce { 0%, 55%, 100% { top: 0; } 25% { top: calc(var(--la, 1) * -0.22em); } 40% { top: calc(var(--la, 1) * 0.03em); } }
+@keyframes laShake { 0% { left: 0; top: 0; } 25% { left: calc(var(--la, 1) * 0.04em); top: calc(var(--la, 1) * -0.03em); } 50% { left: calc(var(--la, 1) * -0.04em); top: calc(var(--la, 1) * 0.02em); } 75% { left: calc(var(--la, 1) * 0.02em); top: calc(var(--la, 1) * 0.04em); } 100% { left: 0; top: 0; } }
+@keyframes laFloat { 0%, 100% { top: 0; left: 0; } 33% { top: calc(var(--la, 1) * -0.08em); left: calc(var(--la, 1) * 0.03em); } 66% { top: calc(var(--la, 1) * 0.05em); left: calc(var(--la, 1) * -0.03em); } }
+@keyframes laPop { 0% { top: calc(var(--la, 1) * 0.4em); opacity: 0; } 100% { top: 0; opacity: 1; } }
+.dlg-text.tcap::first-letter { font-size: calc(var(--capk, 1.8) * 1em); color: var(--capc, currentColor); font-family: var(--capf, inherit); font-weight: 700; line-height: 1; }
+.dlg-text.tcap.tdrop::first-letter { float: left; font-size: calc(var(--capk, 1.8) * 1.45em); margin: 0.04em 0.08em 0 0; line-height: 0.85; }
+/* Bearbeiten der freien Blase in der Design-Vorschau */
+.free-edit { position: absolute; inset: 0; overflow: visible; z-index: 7; cursor: move; }
+.free-edit svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.free-edit .fe-poly { fill: rgba(232, 164, 58, 0.08); stroke: #e8a43a; stroke-width: 1.5; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; cursor: move; pointer-events: all; }
+.free-edit .fe-poly.n { fill: rgba(80, 170, 255, 0.08); stroke: #50aaff; }
+.free-edit .fe-h { position: absolute; width: 13px; height: 13px; margin: -7px 0 0 -7px; border-radius: 50%; background: #e8a43a; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.5); cursor: grab; }
+.free-edit .fe-h.n { background: #50aaff; }

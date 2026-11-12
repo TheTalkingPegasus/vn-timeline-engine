@@ -660,12 +660,14 @@
       if (c.color) s.style.color = c.color;
       if (c.glow) s.style.textShadow = `0 0 0.8cqh ${c.color || 'currentColor'}, 0 0 1.6cqh ${c.color || 'currentColor'}`;
       if (c.shake || c.wave) s.style.animationDelay = (-(idx * 0.07)).toFixed(2) + 's';
+      s.style.setProperty('--i', idx);
       return s;
     },
     renderText(node, text) {
       node.textContent = '';
       const tokens = Fx.parse(text);
-      if (!Fx.hasFx(tokens)) { node.textContent = tokens.map((t) => t.ch).join(''); return tokens; }
+      // Buchstaben-Animation der Sprechblase (0.9.35) braucht einzelne Buchstaben
+      if (!Fx.hasFx(tokens) && !(node.dataset && node.dataset.letters)) { node.textContent = tokens.map((t) => t.ch).join(''); return tokens; }
       tokens.forEach((c, i) => node.appendChild(Fx.charEl(c, i)));
       return tokens;
     },

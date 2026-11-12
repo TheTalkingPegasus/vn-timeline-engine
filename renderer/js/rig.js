@@ -348,6 +348,11 @@
       cv.width = 10; cv.height = 10;
       const inst = { cv, assetId, amp: (clip && clip.boneAmp != null ? clip.boneAmp : 100) / 100, phys: {}, static: !!opts.static, manual: !!opts.manual, extraFn: opts.extraFn || null, t0: performance.now() / 1000, clip: clip || null };
       cv._inst = inst;
+      // Gesicht-Rig (0.9.35) auch mit Bones: das verformte Gesicht wird zur Textur
+      if (!inst.static && !(opts.layers && opts.layers.length) && window.Face && Face.cfg(assetId)) {
+        const im = new Image(); im.crossOrigin = 'anonymous'; im.src = VN.assetUrl(assetId);
+        inst.face = Face.inst(assetId, im); Face.LIVE.add(inst.face);
+      }
       let readyRes;
       inst.ready = new Promise((r) => { readyRes = r; });
       Rig.mesh(assetId, opts.layers).then(({ info, mesh }) => {
@@ -358,6 +363,11 @@
         inst.mesh = mesh;
         inst.wts = Rig.weights(mesh, rig);
         inst.out = new Float32Array(mesh.count * 2);
+        // Weich-Physik (0.9.35) auch mit Bones: Bereiche wippen zuerst, die Knochen bewegen danach alles
+        if (!inst.static && window.Soft) {
+          inst.soft = { sim: Object.assign(Soft.newSim(), { _asset: assetId }), d: new Float32Array(mesh.count * 2), p: new Float32Array(mesh.count * 2), feeds: {}, anchors: {} };
+          Soft.EXT.add(inst.soft.sim);
+        }
         cv.width = Math.round(mesh.w * (1 + 2 * PAD));
         cv.height = Math.round(mesh.h * (1 + 2 * PAD));
         let glOk = false;
@@ -369,7 +379,7 @@
           if (!inst.ctx2d) return;
         }
         // Blinzeln in die Textur zeichnen
-        const bc = window.Blink && !inst.static ? Blink.cfg(opts.blinkAsset || assetId) : null;
+        const bc = window.Blink && !inst.static && !inst.face ? Blink.cfg(opts.blinkAsset || assetId) : null;
         if (bc) {
           const tex = document.createElement('canvas');
           tex.width = info.w; tex.height = info.h;
@@ -664,13 +674,59 @@
     void ox; void oy;
   }
 
+  // neues Bild als Textur (Blinzeln, Gesicht)
+  function setTex(inst, src) {
+    if (inst.ctx2d) { inst.tex = src; inst.dirty2D = true; }
+    else if (inst.gl && !inst.ownLost) { inst.gl.bindTexture(inst.gl.TEXTURE_2D, inst.texObj); inst.gl.texImage2D(inst.gl.TEXTURE_2D, 0, inst.gl.RGBA, inst.gl.RGBA, inst.gl.UNSIGNED_BYTE, src); }
+    else { inst.texSrc = src; const r = glRes(inst); if (r) { SH.gl.bindTexture(SH.gl.TEXTURE_2D, r.tex); SH.gl.texImage2D(SH.gl.TEXTURE_2D, 0, SH.gl.RGBA, SH.gl.RGBA, SH.gl.UNSIGNED_BYTE, src); } }
+  }
+  // Weich-Physik vor den Knochen: Gitterpunkte verschieben. Die Beschleunigung misst jeder Bereich
+  // an seiner Stelle nach den Knochen (Schwanken, Gesten) und auf dem Bildschirm (Laufen, Springen).
+  function softMesh(inst, t, dt) {
+    const S = inst.soft, cfg = S && window.Soft ? Soft.cfg(inst.assetId) : null;
+    if (!cfg) return null;
+    const mesh = inst.mesh, pos = mesh.pos, regs = cfg.regions.filter((r) => r.on !== false);
+    const acc = { x: 0, y: 0, byId: {} };
+    if (inst.skinned && dt > 0) {
+      const rc = !inst.manual && inst.cv.isConnected ? inst.cv.getBoundingClientRect() : null;
+      const fl = /scaleX\(-1\)/.test(inst.cv.style.transform || '');
+      const cw = inst.cv.width, ch = inst.cv.height;
+      const unit = rc && rc.height ? rc.height / (1 + 2 * PAD) : mesh.h;
+      for (const r of regs) {
+        const c = Soft.center(r), key = c[0].toFixed(3) + ',' + c[1].toFixed(3);
+        let an = S.anchors[r.id];
+        if (!an || an.key !== key) {
+          // nächster Gitterpunkt zur Mitte des Bereichs
+          let best = 0, bd = Infinity;
+          for (let k = 0; k < mesh.count; k++) { const dx = pos[k * 2] - c[0] * mesh.w, dy = pos[k * 2 + 1] - c[1] * mesh.h, dd = dx * dx + dy * dy; if (dd < bd) { bd = dd; best = k; } }
+          an = S.anchors[r.id] = { key, k: best };
+        }
+        const ox = inst.out[an.k * 2], oy = inst.out[an.k * 2 + 1];
+        const x = rc && rc.height ? (rc.left + (fl ? cw - ox : ox) * rc.width / cw) / unit : ox / unit;
+        const y = rc && rc.height ? (rc.top + oy * rc.height / ch) / unit : oy / unit;
+        const a = Soft.feed(S.feeds[r.id] || (S.feeds[r.id] = {}), x, y, dt);
+        if (fl) a.x = -a.x;
+        acc.byId[r.id] = a;
+      }
+    }
+    Soft.step(S.sim, regs, acc, dt);
+    Soft.offsets(cfg, S.sim, t, mesh, S.d);
+    for (let i = 0; i < S.p.length; i++) S.p[i] = pos[i] + S.d[i];
+    return { pos: S.p, count: mesh.count, w: mesh.w, h: mesh.h };
+  }
+
   function drawFrame(inst, now, dt, forced) {
     const { mesh, rig } = inst;
     const t = now - inst.t0;
     const extra = inst.manualExtra || (inst.extraFn ? inst.extraFn(now) : null);
     const mats = Rig.pose(rig, mesh.w, mesh.h, inst.static ? 0 : t, inst.static ? 0 : dt, inst.phys, inst.static ? 0 : inst.amp, extra);
     inst.lastMats = mats;
-    Rig.skin(mesh, inst.wts, rig, mats, inst.out, inst.static ? 0 : t, inst.static ? 0 : inst.amp);
+    Rig.skin(softMesh(inst, t, inst.static ? 0 : dt) || mesh, inst.wts, rig, mats, inst.out, inst.static ? 0 : t, inst.static ? 0 : inst.amp);
+    inst.skinned = true;
+    if (inst.face) {
+      const sf = inst.face.surface(now * 1000);
+      if (sf && sf._ver !== inst.faceVer) { inst.faceVer = sf._ver; setTex(inst, sf); }
+    }
     if (inst.blink) {
       const bl = inst.blink;
       const p = Math.round(Blink.progress(bl.state, now) * 20) / 20;
@@ -680,9 +736,7 @@
         c.clearRect(0, 0, bl.tex.width, bl.tex.height);
         c.drawImage(bl.base, 0, 0);
         Blink.paint(c, bl.tex.width, bl.tex.height, bl.cfg, p, bl.closed);
-        if (inst.ctx2d) { inst.tex = bl.tex; inst.dirty2D = true; }
-        else if (inst.gl && !inst.ownLost) { inst.gl.bindTexture(inst.gl.TEXTURE_2D, inst.texObj); inst.gl.texImage2D(inst.gl.TEXTURE_2D, 0, inst.gl.RGBA, inst.gl.RGBA, inst.gl.UNSIGNED_BYTE, bl.tex); }
-        else { inst.texSrc = bl.tex; const r = glRes(inst); if (r) { SH.gl.bindTexture(SH.gl.TEXTURE_2D, r.tex); SH.gl.texImage2D(SH.gl.TEXTURE_2D, 0, SH.gl.RGBA, SH.gl.RGBA, SH.gl.UNSIGNED_BYTE, bl.tex); } }
+        setTex(inst, bl.tex);
       }
     }
     if (inst.ctx2d) return drawFallback(inst, now, forced);
@@ -740,6 +794,8 @@
       for (const inst of live) {
         if (!inst.cv.isConnected) {
           live.delete(inst);
+          if (inst.soft) Soft.EXT.delete(inst.soft.sim);
+          if (inst.face) Face.LIVE.delete(inst.face);
           if (inst.res) { releaseRes(inst.res); inst.res = null; if (glFree && inst.resToken) glFree.unregister(inst.resToken); }
           freeOwn(inst);
           continue;

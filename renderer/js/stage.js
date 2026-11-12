@@ -132,6 +132,7 @@
       } else if (url && window.Rig && Rig.has(clip.asset) && clip.bones !== false) {
         const cv = Rig.canvasFor(clip.asset, clip, window.Anim ? { extraFn: Anim.extraFnFor(clip, box) } : {});
         if (clip.flip) cv.style.transform += ' scaleX(-1)';
+        if (cv._inst && cv._inst.face) Stage.faceHook(box, cv._inst, clip);
         box.appendChild(cv);
       } else if (url && window.Blink && Blink.cfg(clip.asset)) {
         const inner = el('span', { class: 'char-inner' }, el('img', { src: url, draggable: 'false' }));
@@ -211,6 +212,8 @@
         textEl);
       const t = text != null ? text : clip.text || '';
       if (window.Fx) Fx.renderText(textEl, t); else textEl.textContent = t;
+      // ganzer Text für die freie Blase (Schrift passend verkleinern, auch beim Tippen)
+      if (opts.full != null) box._full = opts.full;
       if (window.Theme && VN.project) {
         const B = Theme.bubble(clip.speaker, clip.id && clip.id !== '_pv' ? clip : null);
         Theme.styleBubble(box, B, { speakerColor: clip.color, tailX: opts.tailX });

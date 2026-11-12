@@ -124,6 +124,7 @@
     // Vorschau im Kleinformat: Maße relativ zur kleinen Karte hochrechnen
     const k = 4.2;
     const small = Object.assign({}, B, { minH: 0, size: (B.size || 3.6) * k, pad: (B.pad || 2.4) * k * 0.7, radius: (B.radius || 0) * k, borderW: (B.borderW || 0) * k, frameW: (B.frameW || 2.4) * k });
+    if (B.free) Object.assign(small, { freeX: 50, freeY: 52, freeW: 92, freeFollow: false, size: (B.size || 3.6) * 2.2 });
     Theme.styleBubble(box, small, { speakerColor: '#e8a43a', tailX: B.tail ? 30 : null });
     const nm = box.querySelector('.dlg-name');
     if (nm) nm.style.fontSize = (B.size || 3.6) * k * 0.9 + 'cqh';
@@ -158,6 +159,34 @@
       }
       box.appendChild(sec('Vorlage', grid));
 
+      // Freie Blase (0.9.35): eigenes Bild in seiner Form, Text und Name in frei verzerrten Flächen
+      const freeSec = sec('Freie Blase',
+        check('Freie Blase (eigene Form, Text frei verzerren)', B.free, (v) => VN.mutate(() => {
+          const o = L.ensure(); o.free = v;
+          if (v && !B.freeImg) { const f = Theme.FREE_SHAPES.slash; Object.assign(o, { freeImg: 'builtin:slash', tq: f.tq, nq: f.nq, freeW: f.w, nameBg: f.nameBg, nameText: f.nameText, text: f.text }); }
+        })));
+      if (B.free) {
+        const shapes = el('div', { class: 'preset-grid' });
+        for (const [k, f] of Object.entries(Theme.FREE_SHAPES)) {
+          shapes.appendChild(el('div', { class: 'preset-card' + (B.freeImg === 'builtin:' + k ? ' active' : ''), title: f.label, onclick: () => VN.mutate(() => Object.assign(L.ensure(), { freeImg: 'builtin:' + k, tq: f.tq, nq: f.nq, freeW: f.w, nameBg: f.nameBg, nameText: f.nameText, text: f.text })) },
+            el('div', { class: 'pv', style: { background: `#3b4a5e url("${f.src}") center / 86% auto no-repeat` } }), el('div', { class: 'pc-name' }, f.label)));
+        }
+        freeSec.append(
+          el('div', { class: 'lbl' }, 'Mitgelieferte Formen'), shapes,
+          textureField('Eigenes Bild (PNG, GIF, WebP – bewegte Bilder laufen mit)', B.freeImg && !String(B.freeImg).startsWith('builtin:') ? B.freeImg : '', (v) => set('freeImg', v || 'builtin:slash'), { placeholder: 'Form oben', hint: 'beliebige Form mit Transparenz' }),
+          el('div', { class: 'hint-box' }, 'In der Vorschau ziehen: orange Punkte = Textfläche, blaue Punkte = Namensfeld, Fläche ziehen = Fläche verschieben, daneben auf die Blase ziehen = ganze Blase verschieben. Wo die Fläche schmaler ist, wird der Text kleiner.'),
+          el('div', { class: 'grid2' },
+            rng('Breite', B.freeW, 15, 100, 1, (v) => v + ' %', (v) => set('freeW', v)),
+            rng('Links/Rechts', B.freeX, 0, 100, 1, (v) => v + ' %', (v) => set('freeX', v)),
+            rng('Oben/Unten', B.freeY, 0, 100, 1, (v) => v + ' %', (v) => set('freeY', v))),
+          row(check('Steht beim Sprecher', B.freeFollow, (v) => set('freeFollow', v)), check('Bild spiegeln', B.freeFlip, (v) => set('freeFlip', v))),
+          row(check('Text passend verkleinern', B.fitText !== false, (v) => set('fitText', v)), sel(B.vAlign || 'center', [['center', 'Text mittig'], ['top', 'Text oben']], (v) => set('vAlign', v))),
+          textureField('Namensfeld-Bild (wird mit verzerrt)', B.nameImg, (v) => set('nameImg', v), { placeholder: 'Fläche', hint: 'z. B. 400 × 120 px' }),
+          row(check('Namensfeld als Fläche', !!B.nameBg, (v) => set('nameBg', v ? '#ffffff' : '')), B.nameBg ? color('Fläche', B.nameBg, (v) => set('nameBg', v)) : null),
+          el('div', { class: 'row gap4' }, el('button', { class: 'btn tiny', onclick: () => { const f = Theme.FREE_SHAPES[String(B.freeImg || '').replace('builtin:', '')] || Theme.BUBBLE_BASE; VN.mutate(() => Object.assign(L.ensure(), { tq: f.tq, nq: f.nq })); } }, 'Flächen zurücksetzen')));
+      }
+      box.appendChild(freeSec);
+
       box.appendChild(sec('Farben',
         row(color('Hintergrund', B.bg, (v) => set('bg', v)), color('Rand', B.border, (v) => set('border', v)), color('Text', B.text, (v) => set('text', v))),
         rng('Deckkraft Hintergrund', B.alpha, 0, 100, 1, (v) => v + ' %', (v) => set('alpha', v)),
@@ -188,6 +217,31 @@
           rng('Größe', B.size, 2, 6, 0.1, (v) => v + ' cqh', (v) => set('size', v)),
           rng('Zeilenabstand', B.lineH, 1, 2, 0.05, (v) => v.toFixed(2), (v) => set('lineH', v))),
         row(sel(B.align, [['left', 'Linksbündig'], ['center', 'Zentriert'], ['right', 'Rechtsbündig']], (v) => set('align', v)), check('Kursiv (z. B. Gedanken)', B.italic, (v) => set('italic', v)))));
+
+      // Text-Effekte (0.9.35)
+      const fxSec = sec('Text-Effekte',
+        row(check('Comic-Punkte als Schatten', B.dots, (v) => set('dots', v)), B.dots ? color('Punkte', B.dotsColor, (v) => set('dotsColor', v)) : null));
+      if (B.dots) fxSec.appendChild(el('div', { class: 'grid2' },
+        rng('Punktgröße', B.dotsSize, 15, 100, 1, (v) => v + ' %', (v) => set('dotsSize', v)),
+        rng('Raster', B.dotsGap, 0.06, 0.5, 0.01, (v) => v.toFixed(2), (v) => set('dotsGap', v)),
+        rng('Abstand zum Text', B.dotsDist, 0, 0.5, 0.01, (v) => v.toFixed(2), (v) => set('dotsDist', v)),
+        rng('Richtung', B.dotsAng, 0, 359, 1, (v) => v + '°', (v) => set('dotsAng', v)),
+        rng('Fülle', B.dotsWide, 0, 0.15, 0.005, (v) => v.toFixed(3), (v) => set('dotsWide', v))));
+      fxSec.appendChild(row(check('Kontur nur auf einer Seite', B.edge, (v) => set('edge', v)), B.edge ? color('Kontur', B.edgeColor, (v) => set('edgeColor', v)) : null));
+      if (B.edge) fxSec.appendChild(el('div', { class: 'grid2' },
+        rng('Dicke', B.edgeW, 0.02, 0.3, 0.005, (v) => v.toFixed(3), (v) => set('edgeW', v)),
+        rng('Seite', B.edgeAng, 0, 359, 1, (v) => v + '°', (v) => set('edgeAng', v))));
+      if (B.dots || B.edge) fxSec.appendChild(check('Auch beim Namen', B.fxName !== false, (v) => set('fxName', v)));
+      fxSec.appendChild(field('Buchstaben bewegen sich', sel(B.letters || '', [['', 'Nein'], ['wave', 'Welle'], ['bounce', 'Hüpfen'], ['shake', 'Zittern'], ['float', 'Schweben'], ['pop', 'Aufploppen beim Tippen']], (v) => set('letters', v))));
+      if (B.letters) fxSec.appendChild(el('div', { class: 'grid2' },
+        rng('Stärke', B.letAmt, 0.2, 3, 0.05, (v) => v.toFixed(2), (v) => set('letAmt', v)),
+        rng('Tempo', B.letSpeed, 0.2, 3, 0.05, (v) => v.toFixed(2), (v) => set('letSpeed', v))));
+      fxSec.appendChild(row(check('Großer Anfangsbuchstabe', B.cap, (v) => set('cap', v)), B.cap ? color('Farbe', B.capColor, (v) => set('capColor', v)) : null));
+      if (B.cap) fxSec.append(
+        el('div', { class: 'grid2' }, rng('Größe', B.capSize, 1.1, 3.5, 0.05, (v) => v.toFixed(2) + ' ×', (v) => set('capSize', v)),
+          field('Schrift', sel(B.capFont || '', [['', 'Wie der Text']].concat(Theme.fontOptions()), (v) => set('capFont', v)))),
+        check('Über mehrere Zeilen (Initiale)', B.capDrop, (v) => set('capDrop', v)));
+      box.appendChild(fxSec);
 
       const frameSec = sec('Eigener Rahmen (PNG)',
         textureField('Rahmen-Bild', B.frame, (v) => set('frame', v), { builtin: true, emptyLabel: '— kein Rahmen —', placeholder: 'kein Rahmen', hint: Theme.sizeHint(92, 24) + ', PNG mit Transparenz' }));
@@ -226,9 +280,56 @@
       return box;
     },
 
+    // Freie Blase in der Vorschau bearbeiten: Ecken der Text- und Namensfläche, ganze Blase verschieben
+    freeHandles(stage, box, L) {
+      const ns = 'http://www.w3.org/2000/svg';
+      const ov = el('div', { class: 'free-edit' });
+      const svg = document.createElementNS(ns, 'svg');
+      svg.setAttribute('viewBox', '0 0 100 100'); svg.setAttribute('preserveAspectRatio', 'none');
+      ov.appendChild(svg);
+      box.appendChild(ov);
+      const round = (Q) => Q.map((p) => [Math.round(p[0] * 1000) / 1000, Math.round(p[1] * 1000) / 1000]);
+      for (const [key, q] of [['tq', box.querySelector('.free-tq')], ['nq', box.querySelector('.free-nq')]]) {
+        if (!q) continue;
+        const n = key === 'nq' ? ' n' : '';
+        const poly = document.createElementNS(ns, 'polygon');
+        poly.setAttribute('class', 'fe-poly' + n);
+        svg.appendChild(poly);
+        const hs = [0, 1, 2, 3].map(() => el('div', { class: 'fe-h' + n, title: key === 'nq' ? 'Namensfeld-Ecke' : 'Textflächen-Ecke' }));
+        const draw = () => {
+          poly.setAttribute('points', q._quad.map((p) => p[0] * 100 + ',' + p[1] * 100).join(' '));
+          hs.forEach((h, i) => { h.style.left = q._quad[i][0] * 100 + '%'; h.style.top = q._quad[i][1] * 100 + '%'; });
+        };
+        const dragQ = (e, which) => {
+          e.preventDefault(); e.stopPropagation();
+          const r = box.getBoundingClientRect(), start = q._quad.map((p) => p.slice());
+          VN.drag(e, (dx, dy) => {
+            q._quad = start.map((p, j) => (which < 0 || j === which ? [p[0] + dx / r.width, p[1] + dy / r.height] : p));
+            draw(); Theme.fitFree(box);
+          }, (dx, dy, moved) => { if (moved) { const nv = round(q._quad); VN.mutate(() => { L.ensure()[key] = nv; }); } });
+        };
+        hs.forEach((h, i) => { h.addEventListener('mousedown', (e) => dragQ(e, i)); ov.appendChild(h); });
+        poly.addEventListener('mousedown', (e) => dragQ(e, -1));
+        draw();
+      }
+      const B = L.resolved();
+      // auf die Blase (außerhalb der Flächen) ziehen = ganze Blase verschieben
+      ov.title = VN.t('Ziehen verschiebt die ganze Blase');
+      ov.addEventListener('mousedown', (e) => {
+        if (e.target !== ov && e.target !== svg) return;
+        e.preventDefault(); e.stopPropagation();
+        const sr = stage.getBoundingClientRect(), x0 = Number(B.freeX != null ? B.freeX : 50), y0 = Number(B.freeY != null ? B.freeY : 76);
+        let nx = x0, ny = y0;
+        VN.drag(e, (dx, dy) => {
+          nx = Math.max(0, Math.min(100, x0 + dx / sr.width * 100)); ny = Math.max(0, Math.min(100, y0 + dy / sr.height * 100));
+          box.style.left = nx + '%'; box.style.top = ny + '%';
+        }, (dx, dy, moved) => { if (moved) VN.mutate(() => { const o = L.ensure(); o.freeX = Math.round(nx * 10) / 10; o.freeY = Math.round(ny * 10) / 10; }); });
+      });
+    },
+
     exportBubble(B) {
       const data = Object.assign({}, B);
-      for (const k of ['frame', 'nameFrame', 'arrowImg']) if (data[k] && !String(data[k]).startsWith('builtin:')) data[k] = '';
+      for (const k of ['frame', 'nameFrame', 'arrowImg', 'freeImg', 'nameImg']) if (data[k] && !String(data[k]).startsWith('builtin:')) data[k] = '';
       VN.api.saveText('sprechblase.vnbubble', JSON.stringify({ type: 'vn-bubble', version: 1, name: (B.label || 'Vorlage'), data }, null, 2), 'vnbubble');
     },
     async importBubble() {
@@ -561,9 +662,11 @@
       if (secId === 'speaker' && dl) { const real = VN.project.scenes.flatMap((s) => (s.type === 'story' ? s.tracks.dialog : [])).find((d) => (d.speaker || '').trim() === speaker); if (real) Object.assign(sampleClip, { color: real.color, text: real.text }); }
       if (['bubble', 'speaker', 'fonts', 'sounds', 'cursor'].includes(secId)) {
         const box = Stage.dialogEl(sampleClip, null, null, { tailX: 30 });
-        box.appendChild(el('div', { class: 'dlg-next' }, '▼'));
+        (box._nextHost || box).appendChild(el('div', { class: 'dlg-next' }, '▼'));
         Theme.styleArrow(box.querySelector('.dlg-next'), Theme.bubble(speaker, null));
         stage.appendChild(box);
+        // Freie Blase: Ecken direkt in der Vorschau ziehen
+        if (box.classList.contains('free') && secId !== 'fonts' && secId !== 'sounds' && secId !== 'cursor') Design.freeHandles(stage, box, secId === 'speaker' ? layerApi('speaker', { speaker }) : layerApi('theme', {}));
       }
       if (secId === 'choice') {
         const box = el('div', { class: 'choice-box' },

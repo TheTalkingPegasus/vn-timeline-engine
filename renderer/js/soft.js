@@ -66,6 +66,8 @@
       const kick = sim.poke.splice(0);
       for (const r of regions) {
         const P = Soft.par(r);
+        // Bones (0.9.35): jeder Bereich bekommt die Beschleunigung an seiner eigenen Stelle
+        const A = (acc && acc.byId && acc.byId[r.id]) || acc;
         const s = sim.regs[r.id] || (sim.regs[r.id] = { x: 0, y: 0, vx: 0, vy: 0 });
         for (const k of kick) { s.vx += k.x * (P.xs || 1); s.vy += k.y * (P.ys || 1); }
         // angespanntes Zucken: kurze Stöße in zufälligen Abständen (stärker = häufiger und kräftiger)
@@ -84,8 +86,8 @@
         // kleine Unterschritte für stabile Federn
         const n = Math.max(1, Math.ceil(dt / 0.008)), h = dt / n;
         for (let i = 0; i < n; i++) {
-          const fx = -k * s.x - c * s.vx - acc.x * inert * (P.xs != null ? P.xs : 1) * ACC;
-          const fy = -k * s.y - c * s.vy - acc.y * inert * (P.ys != null ? P.ys : 1) * ACC;
+          const fx = -k * s.x - c * s.vx - A.x * inert * (P.xs != null ? P.xs : 1) * ACC;
+          const fy = -k * s.y - c * s.vy - A.y * inert * (P.ys != null ? P.ys : 1) * ACC;
           s.vx += fx * h; s.vy += fy * h; s.x += s.vx * h; s.y += s.vy * h;
         }
         const lim = 0.6; s.x = Math.max(-lim, Math.min(lim, s.x)); s.y = Math.max(-lim, Math.min(lim, s.y));
@@ -322,6 +324,33 @@
       return true;
     },
 
+    // Bones (0.9.35): Verschiebung der Punkte eines fremden Gitters (Pixel w×h) durch die Bereiche.
+    // out[k*2], out[k*2+1] = Versatz in Pixeln; die Bones verformen danach weiter.
+    offsets(cfg, sim, t, mesh, out) {
+      const { w: W, h: H, pos, count } = mesh, aspect = W / H;
+      out.fill(0);
+      const regs = cfg.regions.filter((r) => r.on !== false);
+      if (!regs.length) return out;
+      FAST = ++FRAME;
+      try {
+        const moves = regs.map((r) => { const P = Soft.par(r); return { r, P, m: Soft.regionMove(r, P, sim.regs[r.id], t) }; });
+        const L8 = weightsFor(mesh, moves, aspect, 'm' + count, count, (k) => [pos[k * 2] / W, pos[k * 2 + 1] / H]);
+        for (let mi = 0; mi < moves.length; mi++) {
+          const { r, P, m } = moves[mi], L = L8[mi];
+          for (let q = 0; q < L.n; q++) {
+            const k = L.k[q], u = pos[k * 2] / W, v = pos[k * 2 + 1] / H;
+            const d = Soft.disp(r, P, m, L.lx[q], L.ly[q], L.w[q], aspect, { r, u, v, aspect });
+            out[k * 2] += d[0] * W; out[k * 2 + 1] += d[1] * H;
+          }
+        }
+      } finally { FAST = 0; }
+      return out;
+    },
+    // Mittelpunkt eines Bereichs in Bildbruchteilen (für die Beschleunigung an dieser Stelle)
+    center(r) { const b = Soft.box(r, 1); return [b.cx, b.cy]; },
+    // Anstoßen: auch Figuren mit Bones
+    EXT: new Set(),
+
     // ---------- Story-Bühne: Canvas statt <img> ----------
     // inner = span.char-inner mit <img>. Das Bild bleibt (unsichtbar) für die Größe, das Canvas liegt darüber.
     // Weich-Physik oder Gesicht-Rig: beide zeichnen über dasselbe Canvas
@@ -349,6 +378,7 @@
     pokeAll(dir, amount, assetId) {
       for (const it of LIVE) if (!assetId || it.assetId === assetId) Soft.poke(it.sim, dir, amount);
       for (const sim of ANIMS) if (!assetId || sim._asset === assetId) Soft.poke(sim, dir, amount);
+      for (const sim of Soft.EXT) if (!assetId || sim._asset === assetId) Soft.poke(sim, dir, amount);
     },
 
     // ---------- Zwischensequenzen: in den Anim-Canvas zeichnen ----------
@@ -399,21 +429,25 @@
   const WCACHE = new WeakMap();
   // Gewicht jedes Gitterpunkts je Bereich (nur Punkte mit Gewicht > 0)
   function weights(cfg, moves, gw, gh, aspect) {
-    const sig = gw + 'x' + gh + ':' + aspect.toFixed(4) + JSON.stringify(moves.map((x) => x.P));
-    const c = WCACHE.get(cfg);
+    return weightsFor(cfg, moves, aspect, gw + 'x' + gh, (gw + 1) * (gh + 1), (kk) => [(kk % (gw + 1)) / gw, Math.floor(kk / (gw + 1)) / gh]);
+  }
+  // owner = Objekt, an dem der Zwischenspeicher hängt; uvAt(k) = Bildbruchteile des Punkts k
+  function weightsFor(owner, moves, aspect, tag, count, uvAt) {
+    const sig = tag + ':' + aspect.toFixed(4) + JSON.stringify(moves.map((x) => x.P));
+    const c = WCACHE.get(owner);
     if (c && c.sig === sig) return c.list;
     const list = moves.map(({ r, P }) => {
       const Pw = P.layer ? Object.assign({}, P, { over: 0 }) : P;
       const k = [], lx = [], ly = [], w = [];
-      for (let j = 0, kk = 0; j <= gh; j++) for (let i = 0; i <= gw; i++, kk++) {
-        const u = i / gw, v = j / gh, L = Soft.local(r, u, v, aspect);
+      for (let kk = 0; kk < count; kk++) {
+        const [u, v] = uvAt(kk), L = Soft.local(r, u, v, aspect);
         const ww = Soft.weight(Pw, L[0], L[1], L[2], { r, u, v, aspect });
         if (ww <= 0) continue;
         k.push(kk); lx.push(L[0]); ly.push(L[1]); w.push(ww);
       }
       return { n: k.length, k: Int32Array.from(k), lx: Float32Array.from(lx), ly: Float32Array.from(ly), w: Float32Array.from(w) };
     });
-    WCACHE.set(cfg, { sig, list });
+    WCACHE.set(owner, { sig, list });
     return list;
   }
   function smooth(x) { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }

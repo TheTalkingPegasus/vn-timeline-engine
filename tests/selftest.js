@@ -1321,6 +1321,76 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Gesicht-Rig: Mund nur in der Maske, Lid mit Haut-Stempel, eigene Ausdrücke, Bühne und Lippensync');
   } catch (e) { general.push('Gesicht-Rig: ' + e.message); }
 
+  // 28. Weich-Physik mit Bones (0.9.35): Bereiche wippen auch auf Figuren mit Knochen; Gewichte zwischengespeichert
+  try {
+    const r = JSON.parse(await js(`(async () => {
+      const out = [];
+      if (!window.Soft || !window.Rig) return JSON.stringify(['Soft/Rig fehlt']);
+      const cfg = { on: true, regions: [{ id: 'q1', preset: 'chest', cx: 0.5, cy: 0.4, rx: 0.2, ry: 0.1, rot: 0, on: true, idle: 'breathe', idleAmp: 3 }] };
+      const mesh = { w: 200, h: 400, count: 3, pos: new Float32Array([100, 160, 100, 390, 5, 5]) };
+      const sim = Soft.newSim(), d = new Float32Array(6);
+      Soft.offsets(cfg, sim, 0.75, mesh, d);
+      if (!(Math.abs(d[1]) > 0.01)) out.push('Mitte bewegt sich nicht ' + d[1]);
+      if (d[3] || d[5]) out.push('Punkte außerhalb bewegen sich');
+      // je Bereich eigene Beschleunigung
+      Soft.step(sim, cfg.regions, { x: 0, y: 0, byId: { q1: { x: 40, y: 0 } } }, 0.05);
+      if (!(Math.abs(sim.regs.q1.vx) > 0)) out.push('Beschleunigung je Bereich wirkt nicht');
+      // Zwischenspeicher: geänderte Form wird erkannt
+      cfg.regions[0].cy = 0.95; Soft.offsets(cfg, Soft.newSim(), 0.75, mesh, d);
+      if (Math.abs(d[1]) > 1e-6 || !(Math.abs(d[3]) > 0.01)) out.push('Formänderung nicht erkannt');
+      // Figur mit Bones: Weich-Physik läuft mit
+      const p = VN.project;
+      for (const id of Object.keys(p.rigs || {}).filter((k) => Rig.has(k) && p.assets.some((a) => a.id === k && !/gittertest/.test(a.name || '')))) {
+        const had = p.softs && p.softs[id];
+        p.softs = p.softs || {}; p.softs[id] = { on: true, regions: [{ id: 'q2', preset: 'chest', cx: 0.5, cy: 0.4, rx: 0.2, ry: 0.15, rot: 0, on: true, idle: 'breathe', idleAmp: 3 }] };
+        const cv = Rig.canvasFor(id, { boneAmp: 100 }, { manual: true });
+        const inst = await cv._inst.ready;
+        if (!inst) { if (had) p.softs[id] = had; else delete p.softs[id]; continue; }
+        Rig.renderAt(inst, 0.2, 1 / 60); Rig.renderAt(inst, 0.95, 1 / 60);
+        let m = 0; if (inst.soft) for (const v of inst.soft.d) m = Math.max(m, Math.abs(v));
+        if (!(m > 0.01)) out.push('Bones-Figur ohne Weich-Physik');
+        if (had) p.softs[id] = had; else delete p.softs[id];
+        break;
+      }
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Weich-Physik mit Bones: ' + r.join(', '));
+    else log('✓ Weich-Physik mit Bones: Bereiche wippen auf Figuren mit Knochen, Beschleunigung je Bereich, Zwischenspeicher erkennt Änderungen');
+  } catch (e) { general.push('Weich-Physik mit Bones: ' + e.message); }
+
+  // 29. Freie Sprechblase und Text-Effekte (0.9.35)
+  try {
+    const r = JSON.parse(await js(`(async () => {
+      const out = [];
+      // Matrix legt die Ecken eines Rechtecks genau auf das Viereck
+      const P = [[10, 20], [300, 5], [280, 140], [30, 180]], w = 200, h = 100;
+      const m = Theme.quadMatrix(w, h, P).match(/[-\\d.e]+/g).map(Number).slice(1);
+      const ap = (x, y) => { const X = m[0] * x + m[4] * y + m[12], Y = m[1] * x + m[5] * y + m[13], W = m[3] * x + m[7] * y + m[15]; return [X / W, Y / W]; };
+      [[0, 0], [w, 0], [w, h], [0, h]].forEach((c, i) => { const q = ap(c[0], c[1]); if (Math.hypot(q[0] - P[i][0], q[1] - P[i][1]) > 0.01) out.push('Ecke ' + i + ' ' + q.map((v) => v.toFixed(2))); });
+      // Blase aufbauen
+      const t = Theme.t(), keep = JSON.stringify(t.bubble);
+      t.bubble = { preset: 'dunkel', free: true, freeImg: 'builtin:tilt', dots: true, edge: true, letters: 'wave', cap: true };
+      const stage = document.createElement('div'); stage.className = 'stage'; stage.style.width = '640px'; stage.style.height = '360px'; document.body.appendChild(stage);
+      const box = Stage.dialogEl({ id: 'x', speaker: 'Ray', color: '#fff', text: 'Hallo du da' }, null, null, { tailX: 40, full: 'Hallo du da' });
+      stage.appendChild(box);
+      await new Promise((res) => setTimeout(res, 300));
+      if (!box.classList.contains('free')) out.push('keine freie Blase');
+      if (!box.querySelector('.free-img') || !box.querySelector('.free-tq .dlg-text') || !box.querySelector('.free-nq .dlg-name')) out.push('Aufbau fehlt');
+      if (!/matrix3d/.test(box.querySelector('.free-tq').style.transform)) out.push('Textfläche nicht verzerrt');
+      const te = box.querySelector('.dlg-text');
+      if (te.querySelectorAll('.tch').length !== 11) out.push('Buchstaben nicht einzeln ' + te.querySelectorAll('.tch').length);
+      const fid = (te.style.filter.match(/#([^")]+)/) || [])[1];
+      const f = fid && document.getElementById(fid);
+      if (!f || !f.querySelector('feTile') || f.querySelectorAll('feMorphology').length < 1) out.push('Filter fehlt');
+      if (!te.classList.contains('tcap')) out.push('Initiale fehlt');
+      stage.remove();
+      t.bubble = JSON.parse(keep);
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Freie Sprechblase: ' + r.join(', '));
+    else log('✓ Freie Sprechblase: Text perspektivisch in 4 Ecken, Namensfeld, Comic-Punkte, einseitige Kontur, Buchstaben-Animation, Initiale');
+  } catch (e) { general.push('Freie Sprechblase: ' + e.message); }
+
   // 27. Kulissen-Raum (0.9.32): 3D-Flächen, Kamera, Licht durch Fenster mit Jalousie, Bühne und Spieler
   try {
     const r = JSON.parse(await js(`(async () => {
