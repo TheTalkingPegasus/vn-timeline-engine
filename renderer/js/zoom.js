@@ -58,7 +58,11 @@
         b.textContent = Math.round(st.z * 100) + ' %  ⟲';
       }
     },
-    reset() { const st = Zoom.state(); st.z = 1; st.x = 0; st.y = 0; Zoom.apply(); Zoom.changed(); },
+    reset() { const st = Zoom.state(); st.z = 1; st.x = 0; st.y = 0; Zoom.apply(); Zoom.changed(); Zoom.notify(); },
+    // Editoren mit Ziehpunkten zeichnen sie nach dem Zoomen neu, damit die Punkte gleich groß bleiben (0.9.33)
+    hooks: {},
+    z() { return Zoom.state().z || 1; },
+    notify() { cancelAnimationFrame(Zoom._nr); Zoom._nr = requestAnimationFrame(() => { for (const fn of Object.values(Zoom.hooks)) { try { fn(); } catch (e) { /* Editor nicht mehr da */ } } }); },
     // Andere Teile (z. B. Rahmen um gewählte Figuren) neu zeichnen lassen
     changed() { clearTimeout(Zoom._t); Zoom._t = setTimeout(() => { if (Zoom._needRender()) VN.render(); }, 160); },
     _needRender() { return !!document.querySelector('#center .tf-box'); },
@@ -74,7 +78,7 @@
       st.z = nz;
       // ganz herausgezoomt: wieder mittig
       if (Math.abs(st.z - 1) < 0.02) { st.z = 1; st.x = 0; st.y = 0; }
-      Zoom.apply(); Zoom.changed();
+      Zoom.apply(); Zoom.changed(); Zoom.notify();
     }
   });
 

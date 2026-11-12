@@ -1,3 +1,22 @@
+// Leiste beim Zeichnen mit dem Stift (0.9.33): Fertig, letzten Punkt zurück, Abbrechen – auch ohne Tastatur
+window.PenBar = {
+  show(stage, n, o) {
+    let bar = stage.querySelector(':scope > .pen-bar');
+    if (!n) { if (bar) bar.remove(); return; }
+    if (!bar) {
+      bar = VN.el('div', { class: 'pen-bar' });
+      for (const ev of ['mousedown', 'click', 'dblclick', 'wheel']) bar.addEventListener(ev, (e) => e.stopPropagation());
+      stage.appendChild(bar);
+    }
+    const min = o.min || 2;
+    bar.innerHTML = '';
+    bar.append(
+      VN.el('span', { class: 'small' }, VN.tf('{n} Punkte', { n }) + ' · ' + VN.t(n < min ? 'weiter klicken …' : 'Doppelklick oder Enter beendet')),
+      VN.el('button', { class: 'btn tiny primary', disabled: n < min, onclick: () => o.finish() }, '✓ ' + VN.t('Fertig')),
+      VN.el('button', { class: 'btn tiny', onclick: () => o.undo() }, '↶ ' + VN.t('Punkt zurück')),
+      VN.el('button', { class: 'btn tiny', onclick: () => o.cancel() }, '✕ ' + VN.t('Abbrechen')));
+  }
+};
 // Editor „Figuren → Weich-Physik“: Ellipsen-Masken aufs Bild ziehen, Vorlage wählen, testen
 (function () {
   const { el } = VN;
@@ -95,10 +114,11 @@
       // Zeichenstift: Punkte in Arbeit (noch kein Bereich)
       let pen = [];
       SoftEd._pen = { finish: () => finishPen(), cancel: () => { pen = []; draw(); }, active: () => pen.length > 0 };
+      if (window.Zoom) Zoom.hooks.soft = () => { if (svg.isConnected) draw(); };
       function draw() {
         svg.innerHTML = '';
         const W = img.naturalWidth || 1000, H = img.naturalHeight || 1000;
-        const hs = Math.max(6, H * 0.008);
+        const sw = svg.getBoundingClientRect().width, hs = sw ? 6 * W / sw : Math.max(6, H * 0.008);
         for (const r of regs()) {
           const sel = VN.ui.softSel === r.id;
           const cls = 'sr' + (sel ? ' sel' : '') + (r.on === false ? ' off' : '');
@@ -168,6 +188,7 @@
           svg.appendChild(mk('path', { d: pathOf(pen.length >= 3 ? tmp : pen, W, H, false), class: 'sr sel sr-draft' }));
           pen.forEach((q, i) => svg.appendChild(mk(q[2] ? 'rect' : 'circle', q[2] ? { x: q[0] * W - hs, y: q[1] * H - hs, width: hs * 2, height: hs * 2, class: 'sr-h' + (i === 0 ? ' first' : '') } : { cx: q[0] * W, cy: q[1] * H, r: hs, class: 'sr-h' + (i === 0 ? ' first' : '') })));
         }
+        if (window.PenBar) PenBar.show(stage, pen.length, { finish: () => finishPen(), undo: () => { pen.pop(); draw(); }, cancel: () => { pen = []; draw(); }, min: 3 });
       }
       function insertPt(r, at) {
         // nächstes Segment des Punkt-Umrisses finden

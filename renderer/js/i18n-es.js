@@ -5575,7 +5575,11 @@ window.VN_I18N_ES = {
 "Öffnungen (Fenster und Türen)": "Aberturas (ventanas y puertas)",
 "Werden aus dem Bild ausgeschnitten – du musst sie im PNG nicht selbst freistellen. Licht und Durchblick gehen hindurch.": "Se recortan de la imagen: no tienes que hacerlas transparentes en el PNG. La luz y la vista pasan a través.",
 "Links %": "Izquierda %",
-"Oben %": "Arriba %"
+"Oben %": "Arriba %",
+"{n} Punkte": "{n} puntos",
+"weiter klicken …": "sigue haciendo clic …",
+"Doppelklick oder Enter beendet": "doble clic o Intro termina",
+"Punkt zurück": "Deshacer punto"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

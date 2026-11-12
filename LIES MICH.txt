@@ -21,6 +21,8 @@ NEU IN 0.9.33 · Kulissen-Vorlagen
   „Ins Projekt holen“.
 - Öffnungen als Daten: Fenster und Türen werden an der Wand gespeichert und automatisch aus jedem Bild ausgeschnitten – du musst sie
   im PNG nicht mehr selbst freistellen. Im Inspektor unter „Öffnungen“ hinzufügen, verschieben und in der Größe ändern.
+- Zeichnen mit dem Stift (Gesicht-Rig, Weich-Physik): unten auf der Bühne zeigt eine Leiste die Punkte mit „✓ Fertig“, „↶ Punkt zurück“
+  und „✕ Abbrechen“ – ohne Tastatur. Punkte und Anfasser bleiben beim Zoomen gleich groß, die Bühne nutzt die ganze Fensterhöhe.
 - Figuren-Maßstab: neue Räume passen zu einer Figur, die das Bild vom Kopf bis zur Hüfte füllt (Raumhöhe etwa 1,5 × Figur, Türen etwas
   höher als die Figur, breite Räume). Bestehende Kulissen behalten ihren Maßstab.
 

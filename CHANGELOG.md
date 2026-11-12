@@ -9,6 +9,9 @@ All notable changes. German details: `LIES MICH.txt`.
   “🏠 Sets” – select and “Import into project”.
 - **Openings as data:** windows and doors are stored on the wall and cut out of any image automatically – you no longer
   have to make them transparent in the PNG yourself. Add, move and resize them in the inspector (“Openings”).
+- **Drawing with the pen** (face rig, soft physics): a bar at the bottom of the stage shows the number of points with
+  “✓ Done”, “↶ Undo point” and “✕ Cancel” – no keyboard needed. Points and handles now stay the same size on screen when
+  zooming, and the editing stage uses the full window height.
 - **Character scale:** new rooms are built to match a character that fills the screen from head to hip (room height
   about 1.5 × the character, doors slightly taller than the character, wide rooms). Existing sets keep their scale.
 

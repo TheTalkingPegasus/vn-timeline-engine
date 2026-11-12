@@ -110,7 +110,8 @@
         svg.innerHTML = '';
         const F = VN.project.faces[id];
         if (mode === 'test') return;
-        const r = hs();
+        // Punkte immer gleich groß auf dem Bildschirm (egal wie groß das Bild ist oder wie weit gezoomt)
+        const sw = svg.getBoundingClientRect().width, r = sw ? 5.5 * W / sw : hs();
         if (F && mode === 'setup') {
           for (const P of parts()) {
             const line = mk('path', { d: pathOf(P.pts, P.close), fill: P.close ? 'rgba(63,191,166,0.08)' : 'none', stroke: P.col, 'stroke-width': 2, 'vector-effect': 'non-scaling-stroke' });
@@ -164,8 +165,10 @@
           svg.appendChild(mk('path', { d: pathOf(pen, false), fill: 'none', stroke: '#e8a43a', 'stroke-width': 2, 'stroke-dasharray': '5 3', 'vector-effect': 'non-scaling-stroke' }));
           for (const q of pen) svg.appendChild(mk('circle', { cx: q[0] * W, cy: q[1] * H, r, fill: '#e8a43a' }));
         }
+        if (window.PenBar) PenBar.show(stage, pen.length, { finish: finishPen, undo: () => { pen.pop(); drawLines(); }, cancel: () => { pen = []; drawLines(); } });
       }
       FaceEd._redraw = drawLines;
+      if (window.Zoom) Zoom.hooks.face = () => { if (svg.isConnected) drawLines(); };
       const touch = () => { const F = VN.project.faces[id]; if (F) F._rev = (F._rev || 0) + 1; };
       function ensure() { VN.project.faces[id] = VN.project.faces[id] || Face.blank(); return VN.project.faces[id]; }
       function insertPt(P, at) {

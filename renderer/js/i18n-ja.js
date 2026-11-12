@@ -5575,7 +5575,11 @@ window.VN_I18N_JA = {
 "Öffnungen (Fenster und Türen)": "開口部（窓とドア）",
 "Werden aus dem Bild ausgeschnitten – du musst sie im PNG nicht selbst freistellen. Licht und Durchblick gehen hindurch.": "画像から切り抜かれます。PNGで透明にする必要はありません。光と視線が通ります。",
 "Links %": "左 %",
-"Oben %": "上 %"
+"Oben %": "上 %",
+"{n} Punkte": "{n} 点",
+"weiter klicken …": "クリックを続けて…",
+"Doppelklick oder Enter beendet": "ダブルクリックかEnterで完了",
+"Punkt zurück": "点を戻す"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",
