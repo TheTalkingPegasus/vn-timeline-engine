@@ -2,6 +2,17 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.38 – Trigger track, hang-ons, puffed cheeks, swallowing
+- **Trigger track** in the timeline: fire actions (quests, items, variables, money, plugins …) at a step without a
+  dialogue, choice or image; optional conditions; once per save or every time.
+- **Hang-ons in the soft-physics editor:** pin your own PNGs to the character. One pin: hangs from it and swings like a
+  pendulum, reacting to the character and to the jiggling spot beneath. Two pins: stretched between both spots.
+  In front of or behind the character, mirrored copy, effects (wobble, shake, pulse, float, spin, blink).
+  Also on characters with bones and copied along with “Copy soft physics”.
+- **Bend** for hang-ons: hair strands, braids and tails bend along their length and the tip swings behind.
+- **New soft-physics presets:** “Puffed cheeks” (with a new “Puff up” slider and a light wobble) and “Throat
+  (swallowing)” – now and then, or on cue via the action “Nudge soft physics → Swallow”.
+
 ## 0.9.37 – Recent projects, copy soft physics, endless loops, muffle
 - **Recently opened projects** on the start screen: thumbnail (background of the start scene), name, folder, date and
   number of scenes – one click opens. Missing folders are greyed out and can be removed. Also in the “Project ▾” menu.
