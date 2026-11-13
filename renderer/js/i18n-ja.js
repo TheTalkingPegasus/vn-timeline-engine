@@ -5633,7 +5633,15 @@ window.VN_I18N_JA = {
 "Ersetzen": "置き換え",
 "Masken dieser Figur": "このキャラのマスク",
 "Masken einer anderen Figur auf diese übertragen": "他のキャラのマスクをこのキャラに移す",
-"Übernehmen von …": "次から引き継ぐ…"
+"Übernehmen von …": "次から引き継ぐ…",
+"Übergang beim Wiederholen": "繰り返し時のつなぎ",
+"nahtlos": "シームレス",
+"überblenden": "クロスフェード",
+"Gedämpft (wie aus einem anderen Zimmer)": "こもった音（別の部屋から聞こえるように）",
+"aus": "オフ",
+"Wiederholen, solange der Clip läuft (endlos)": "クリップが続く間くり返す（エンドレス）",
+"Ausblenden am Ende": "終わりにフェードアウト",
+"Der Ton läuft vom ersten bis zum letzten Schritt des Clips immer weiter. Zieh den Clip in der Timeline länger, damit er länger läuft.": "クリップの最初から最後のステップまで音が流れ続けます。長く鳴らすにはタイムラインでクリップを伸ばしてください。"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

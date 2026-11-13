@@ -312,6 +312,8 @@
           range('Lautstärke', c.vol != null ? c.vol : 70, 0, 100, 1, (v) => Math.round(v) + ' %', set(c, 'vol')),
           range('Ein-/Ausblenden', c.fade != null ? c.fade : 1, 0, 5, 0.1, (v) => v.toFixed(1) + ' s', set(c, 'fade')),
           check('Wiederholen (Loop)', c.loop !== false, set(c, 'loop')),
+          c.loop !== false ? range('Übergang beim Wiederholen', c.loopFade || 0, 0, 4, 0.1, (v) => (v < 0.05 ? VN.t('nahtlos') : v.toFixed(1) + ' s ' + VN.t('überblenden')), set(c, 'loopFade')) : null,
+          range('Gedämpft (wie aus einem anderen Zimmer)', c.muffle || 0, 0, 100, 1, (v) => (v < 1 ? VN.t('aus') : Math.round(v) + ' %'), set(c, 'muffle')),
           check('Nach dem Clip weiterlaufen (auch in nächste Szenen)', c.carry, set(c, 'carry')),
           Tools.musicMode(c),
           timing);
@@ -326,6 +328,11 @@
             return select(c.who || '', [['', 'Automatisch (' + ((d && d.speaker) || 'Sprecher der Zeile') + ')'], ...names.map((n) => [n, n])], (v) => VN.mutate(() => { if (v) c.who = v; else delete c.who; }));
           })()) : null,
           tb === 'voice' && c.asset ? Tools.voiceFx(c) : null,
+          tb === 'sfx' ? check('Wiederholen, solange der Clip läuft (endlos)', !!c.loop, set(c, 'loop')) : null,
+          tb === 'sfx' && c.loop ? range('Übergang beim Wiederholen', c.loopFade != null ? c.loopFade : 0.5, 0, 4, 0.1, (v) => (v < 0.05 ? VN.t('nahtlos') : v.toFixed(1) + ' s ' + VN.t('überblenden')), set(c, 'loopFade')) : null,
+          tb === 'sfx' && c.loop ? range('Ausblenden am Ende', c.fadeOut != null ? c.fadeOut : 0.6, 0, 4, 0.1, (v) => v.toFixed(1) + ' s', set(c, 'fadeOut')) : null,
+          tb === 'sfx' && c.loop ? el('div', { class: 'muted small' }, VN.t('Der Ton läuft vom ersten bis zum letzten Schritt des Clips immer weiter. Zieh den Clip in der Timeline länger, damit er länger läuft.')) : null,
+          range('Gedämpft (wie aus einem anderen Zimmer)', c.muffle || 0, 0, 100, 1, (v) => (v < 1 ? VN.t('aus') : Math.round(v) + ' %'), set(c, 'muffle')),
           tb === 'sfx' ? field('Untertitel für Gehörlose (optional)', text(c.caption, set(c, 'caption'))) : null,
           field('Schritt', num(c.start + 1, (v) => VN.mutate(() => { c.start = Math.max(0, Math.round(v) - 1); s.beats = Math.max(s.beats, c.start + 1); }), { min: 1 })));
       }

@@ -5552,7 +5552,15 @@ window.VN_I18N_EN = {
 "Ersetzen": "Replace",
 "Masken dieser Figur": "masks of this character",
 "Masken einer anderen Figur auf diese übertragen": "Transfer the masks of another character to this one",
-"Übernehmen von …": "Take over from …"
+"Übernehmen von …": "Take over from …",
+"Übergang beim Wiederholen": "Transition when repeating",
+"nahtlos": "seamless",
+"überblenden": "crossfade",
+"Gedämpft (wie aus einem anderen Zimmer)": "Muffled (as if from another room)",
+"aus": "off",
+"Wiederholen, solange der Clip läuft (endlos)": "Repeat as long as the clip lasts (endless)",
+"Ausblenden am Ende": "Fade out at the end",
+"Der Ton läuft vom ersten bis zum letzten Schritt des Clips immer weiter. Zieh den Clip in der Timeline länger, damit er länger läuft.": "The sound keeps playing from the first to the last step of the clip. Drag the clip longer in the timeline to make it run longer."
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",

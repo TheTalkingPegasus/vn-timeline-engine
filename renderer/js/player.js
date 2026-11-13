@@ -639,7 +639,7 @@
       const sc = VN.scene(run.scene);
       if (sc && sc.type === 'hub') { run.bgKey = null; showBg(VN.Life ? VN.Life.hubBg(sc, run.rs) : sc.bg, 'fade', 1.4, sc.bgLook); if (run.scene === sc.id) showFxExtra(hubFx(sc)); }
       else if (run.bg && run.bgClip !== undefined) { const b = run.bg, l = run.bgClip; run.bgKey = null; showBg(b, 'fade', 1.4, l); }
-      if (sc) showAmbient([...(sc.type === 'story' ? Stage.state(sc, run.beat).musicX || [] : []), ...ambNow(sc)]);
+      if (sc) showAmbient([...(sc.type === 'story' ? Stage.state(sc, run.beat).musicX || [] : []), ...ambNow(sc), ...(sc.type === 'story' ? sfxLoops(sc, run.beat) : [])]);
     }
     renderHud();
     renderDebug();
@@ -861,9 +861,14 @@
     const tl = VN.tracksOf(s);
     for (const t of tl) {
       if ((t.base !== 'voice' && t.base !== 'sfx') || !VN.trackOn(s, t, tl)) continue;
-      for (const c of s.tracks[t.key] || []) if (c.start === b && c.asset) { playOnce(c.asset, c.vol, c.delay, t.base, c.in, c.out, t.key === 'voice' ? c : null); if (t.base === 'sfx' && c.caption) E.caption(VN.tr(c.id + ':cap', c.caption)); }
+      for (const c of s.tracks[t.key] || []) {
+        if (!c.asset) continue;
+        // Endlos (0.9.37): läuft, solange der Clip in der Timeline reicht – dafür sorgt showAmbient
+        if (t.base === 'sfx' && c.loop) { if (c.start === b && c.caption) E.caption(VN.tr(c.id + ':cap', c.caption)); continue; }
+        if (c.start === b) { playOnce(c.asset, c.vol, c.delay, t.base, c.in, c.out, t.key === 'voice' || c.muffle ? c : null); if (t.base === 'sfx' && c.caption) E.caption(VN.tr(c.id + ':cap', c.caption)); }
+      }
     }
-    showAmbient([...(st.musicX || []), ...ambNow(s)]);
+    showAmbient([...(st.musicX || []), ...ambNow(s), ...sfxLoops(s, b, tl)]);
     showFxExtra(st.fxX || []);
     if (window.VNPlugin) VNPlugin.hook('onBeat', s, b, ctx());
     // Code-Spur (0.9.16): läuft einmal, bevor der Text erscheint, damit {Variablen} schon den neuen Wert zeigen
@@ -903,6 +908,15 @@
 
   // Ambient-Sounds der Zeit & Kalender (Tageszeit, Jahreszeit, Ort)
   const ambNow = (s) => (VN.Life && VN.Life.ambientNow ? VN.Life.ambientNow(run.rs, s) : []);
+  // Soundeffekte mit „Wiederholen“, deren Clip den Schritt abdeckt (0.9.37)
+  const sfxLoops = (s, b, tl) => {
+    const out = [];
+    for (const t of tl || VN.tracksOf(s)) {
+      if (t.base !== 'sfx' || !VN.trackOn(s, t, tl)) continue;
+      for (const c of s.tracks[t.key] || []) if (c.loop && c.asset && b >= c.start && b < c.start + (c.len || 1)) out.push(['sfx:' + c.id, Object.assign({}, c, { _ch: 'sfx', vol: c.vol != null ? c.vol : 90, loopFade: c.loopFade != null ? c.loopFade : 0.5 })]);
+    }
+    return out;
+  };
   // Hub-Objekte liegen normal über der Welt; während eines Hub-Dialogs hinter den Figuren
   function hubUp() { hubBox.classList.remove('pl-hub-under'); if (hubBox.parentNode === world) stage.insertBefore(hubBox, black); }
   // Zu welchem Hub gehört ein Hub-Dialog? Fest zugeordnet, sonst der Hub, dessen Ereignis/Objekt ihn startet

@@ -5633,7 +5633,15 @@ window.VN_I18N_ES = {
 "Ersetzen": "Reemplazar",
 "Masken dieser Figur": "máscaras de este personaje",
 "Masken einer anderen Figur auf diese übertragen": "Transferir las máscaras de otro personaje a este",
-"Übernehmen von …": "Tomar de …"
+"Übernehmen von …": "Tomar de …",
+"Übergang beim Wiederholen": "Transición al repetir",
+"nahtlos": "sin cortes",
+"überblenden": "fundido cruzado",
+"Gedämpft (wie aus einem anderen Zimmer)": "Amortiguado (como desde otra habitación)",
+"aus": "no",
+"Wiederholen, solange der Clip läuft (endlos)": "Repetir mientras dure el clip (sin fin)",
+"Ausblenden am Ende": "Desvanecer al final",
+"Der Ton läuft vom ersten bis zum letzten Schritt des Clips immer weiter. Zieh den Clip in der Timeline länger, damit er länger läuft.": "El sonido sigue sonando desde el primer hasta el último paso del clip. Alarga el clip en la línea de tiempo para que dure más."
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

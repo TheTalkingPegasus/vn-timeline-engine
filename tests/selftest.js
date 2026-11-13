@@ -1441,6 +1441,31 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Weich-Physik kopieren: Masken von einer Figur auf eine andere übertragen, unabhängig und rückgängig machbar');
   } catch (e) { general.push('Weich-Physik kopieren: ' + e.message); }
 
+  // 32. Endlos-Schleife mit Überblenden und Dämpfen (0.9.37)
+  try {
+    const r = JSON.parse(await js(`(async () => {
+      const out = [];
+      if (!VN.Looper || !Fx.muffleFreq) return JSON.stringify(['fehlt']);
+      if (Fx.muffleFreq(0) !== 0 || !(Fx.muffleFreq(50) > Fx.muffleFreq(100)) || Fx.muffleFreq(100) > 400) out.push('Dämpf-Kurve');
+      const L = VN.Looper('vnasset://x/none.ogg', { xf: 0.4 });
+      L.volume = 0.5;
+      if (L.volume !== 0.5 || L.els.length !== 2 || !L.paused) out.push('Looper-Grundwerte');
+      // Soundeffekt mit Wiederholen: zählt nur, solange der Clip den Schritt abdeckt
+      const s = VN.project.scenes.find((x) => x.type === 'story' && x.tracks.sfx && x.tracks.sfx.length);
+      if (s) {
+        const c = s.tracks.sfx[0], keep = JSON.stringify(c);
+        Object.assign(c, { loop: true, start: 0, len: 2 });
+        const st = Stage.state(s, 1);
+        if (!st) out.push('Zustand');
+        Object.assign(c, JSON.parse(keep));
+        delete c.loop; if (JSON.parse(keep).loop) c.loop = JSON.parse(keep).loop;
+      }
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Schleife/Dämpfen: ' + r.join(', '));
+    else log('✓ Schleife und Dämpfen: Looper mit zwei Elementen, Dämpf-Kurve');
+  } catch (e) { general.push('Schleife/Dämpfen: ' + e.message); }
+
   // 27. Kulissen-Raum (0.9.32): 3D-Flächen, Kamera, Licht durch Fenster mit Jalousie, Bühne und Spieler
   try {
     const r = JSON.parse(await js(`(async () => {

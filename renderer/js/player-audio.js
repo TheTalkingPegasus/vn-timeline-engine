@@ -1,6 +1,53 @@
 // Spiel-Player · Ton: Musik (mit Ducking und Übergängen), Stimmen, Soundeffekte, Atmo-Spuren, Lippensync
 // Wird von player.js mit VN.PlayerAudio({ run, later, volOf }) eingebunden.
 (function () {
+  // Endlos-Schleife (0.9.37): zwei Elemente im Wechsel. Kurz vor dem Ende startet das zweite und blendet über
+  // (gleiche Lautheit beim Übergang). xf = 0 → nahtlos ohne die kleine Lücke von audio.loop.
+  // Verhält sich nach außen wie ein Audio-Element (play, pause, volume, currentTime, paused).
+  VN.Looper = (url, o = {}) => {
+    const mk = () => { const a = new Audio(); a.crossOrigin = 'anonymous'; a.src = url; a.preload = 'auto'; return a; };
+    const els = [mk(), mk()];
+    let cur = 0, master = 0, paused = true, iv = 0, xfAt = -1, muffle = o.muffle || 0;
+    const k = [1, 0];
+    const inS = () => Math.max(0, Number(o.inS) || 0);
+    const apply = () => { els.forEach((a, i) => { a.volume = Math.max(0, Math.min(1, master * k[i])); }); };
+    const start = (i) => { const a = els[i]; try { a.currentTime = inS(); } catch (e) { /* noch nicht geladen */ } if (muffle && window.Fx) Fx.muffle(a, muffle, 0); a.play().catch(() => {}); };
+    const tick = () => {
+      if (paused) return;
+      const a = els[cur];
+      const end = o.outS && o.outS > inS() ? Math.min(o.outS, a.duration || Infinity) : a.duration;
+      if (!end || !isFinite(end)) return;
+      const len = end - inS();
+      const xf = Math.max(0.03, Math.min(Number(o.xf) || 0, len / 3));
+      const left = end - a.currentTime;
+      if (xfAt < 0 && (left <= xf + 0.02 || a.ended)) { xfAt = performance.now(); k[1 - cur] = 0; apply(); start(1 - cur); }
+      if (xfAt >= 0) {
+        const t = Math.min(1, (performance.now() - xfAt) / (xf * 1000));
+        const n = 1 - cur;
+        k[cur] = Math.cos(t * Math.PI / 2); k[n] = Math.sin(t * Math.PI / 2);
+        apply();
+        if (t >= 1) { els[cur].pause(); k[cur] = 0; cur = n; xfAt = -1; apply(); }
+      } else if (o.outS && a.currentTime >= o.outS) { /* Ende des Ausschnitts ohne Übergang */ a.pause(); }
+    };
+    const L = {
+      looper: true,
+      play() { if (!paused) return Promise.resolve(); paused = false; k[cur] = 1; k[1 - cur] = 0; apply(); start(cur); clearInterval(iv); iv = setInterval(tick, 20); return Promise.resolve(); },
+      pause() { paused = true; clearInterval(iv); els.forEach((a) => a.pause()); xfAt = -1; },
+      get paused() { return paused; },
+      get volume() { return master; },
+      set volume(v) { master = Math.max(0, Math.min(1, Number(v) || 0)); apply(); },
+      get currentTime() { return els[cur].currentTime; },
+      set currentTime(v) { o.inS = v; },
+      set loop(v) { /* immer Schleife */ },
+      get loop() { return true; },
+      setMuffle(v, sec) { muffle = v; if (window.Fx) els.forEach((a) => { if (a._muf || v) Fx.muffle(a, v, sec); }); },
+      setXf(v) { o.xf = v; },
+      addEventListener(type, fn) { els.forEach((a) => a.addEventListener(type, fn)); },
+      els
+    };
+    return L;
+  };
+
   VN.PlayerAudio = (host) => {
     const R = host.run, later = host.later, volOf = host.volOf;
     let music = null;      // { audio, asset, carry, base, vol, ducked }
@@ -45,6 +92,9 @@
         music.carry = !!spec.carry;
         music.base = base;
         fadeVolume(music.audio, musicVol(), 0.5);
+        // gleiche Musik, andere Dämpfung (z. B. ins Nebenzimmer gehen): weich umblenden
+        if ((music.muffle || 0) !== (spec.muffle || 0)) { music.muffle = spec.muffle || 0; if (music.audio.setMuffle) music.audio.setMuffle(music.muffle, 1); else if (window.Fx) Fx.muffle(music.audio, music.muffle, 1); }
+        if (music.audio.setXf) music.audio.setXf(spec.loopFade || 0);
         return;
       }
       const url = VN.assetUrl(spec.asset);
@@ -53,12 +103,12 @@
       const hadMusic = !!music;
       stopMusic(mode === 'cut' ? 0 : fade);
       if (!url) return;
-      const a = new Audio(url);
-      a.loop = spec.loop !== false;
+      const loop = spec.loop !== false;
+      const a = loop ? VN.Looper(url, { xf: spec.loopFade || 0, inS: spec.in || 0, outS: spec.out || 0, muffle: spec.muffle || 0 }) : new Audio(url);
       a.volume = 0;
-      if (spec.in) a.currentTime = spec.in;
+      if (!loop) { if (spec.in) a.currentTime = spec.in; if (spec.muffle && window.Fx) Fx.muffle(a, spec.muffle, 0); }
       const ducked = !!(voice && !voice.paused);
-      music = { audio: a, asset: spec.asset, carry: !!spec.carry, base, vol: spec.vol, loop: spec.loop, ducked, xmode: spec.xmode, fade: spec.fade };
+      music = { audio: a, asset: spec.asset, carry: !!spec.carry, base, vol: spec.vol, loop: spec.loop, ducked, xmode: spec.xmode, fade: spec.fade, muffle: spec.muffle || 0 };
       const start = () => { if (!music || music.audio !== a) return; a.play().catch(() => {}); if (mode === 'cut') a.volume = musicVol(); else fadeVolume(a, musicVol(), fade); };
       if (mode === 'seq' && hadMusic) later(start, fade * 1000); else start();
     };
@@ -75,9 +125,10 @@
         a.src = url;
         const v = Math.max(0, Math.min(1, (vol != null ? vol : 90) / 100 * volOf(kind)));
         // Stimmen laufen über Web Audio: Filter, Lippensync-Analyse
-        const needRoute = kind === 'voice' && window.Fx && (clip && clip.vfx || Object.keys(VN.project.mouths || {}).length);
+        if (clip && clip.muffle) a._muffle = clip.muffle;
+        const needRoute = kind === 'voice' && window.Fx && (clip && (clip.vfx || clip.muffle) || Object.keys(VN.project.mouths || {}).length);
         a._route = needRoute ? Fx.route(a, clip && clip.vfx, v) : null;
-        if (!a._route) a.volume = v;
+        if (!a._route) { a.volume = v; if (clip && clip.muffle && window.Fx) Fx.muffle(a, clip.muffle, 0); }
         if (inS) a.currentTime = inS;
         // Alle einmaligen Töne merken, damit „Test beenden“ sie anhalten kann
         if (!isVoice) { oneShots.add(a); const forget = () => oneShots.delete(a); a.addEventListener('ended', forget); a.addEventListener('pause', forget); }
@@ -147,27 +198,31 @@
       R().amb = R().amb || {};
       const want = {};
       for (const [key, clip] of list) if (clip.asset) want[key] = clip;
+      // Soundeffekte in Schleife (0.9.37) laufen auf dem Effekt-Regler, Atmo auf dem Musik-Regler
+      const ch = (clip) => (clip && clip._ch) || 'music';
       for (const key of Object.keys(R().amb)) {
         const cur = R().amb[key];
-        if (want[key] && want[key].asset === cur.asset) { cur.base = (want[key].vol != null ? want[key].vol : 70) / 100; fadeVolume(cur.audio, Math.min(1, cur.base * volOf('music')), 0.5); continue; }
+        if (want[key] && want[key].asset === cur.asset) {
+          cur.base = (want[key].vol != null ? want[key].vol : 70) / 100;
+          fadeVolume(cur.audio, Math.min(1, cur.base * volOf(ch(want[key]))), 0.5);
+          if ((cur.muffle || 0) !== (want[key].muffle || 0)) { cur.muffle = want[key].muffle || 0; if (cur.audio.setMuffle) cur.audio.setMuffle(cur.muffle, 1); }
+          continue;
+        }
         const a = cur.audio;
-        fadeVolume(a, 0, (want[key] && want[key].fade) || 1, () => a.pause());
+        fadeVolume(a, 0, cur.fadeOut != null ? cur.fadeOut : (want[key] && want[key].fade) || 1, () => a.pause());
         delete R().amb[key];
       }
       for (const [key, clip] of Object.entries(want)) {
         if (R().amb[key]) continue;
         const url = VN.assetUrl(clip.asset);
         if (!url) continue;
-        const a = new Audio();
-        a.crossOrigin = 'anonymous';
-        a.src = url;
-        a.loop = clip.loop !== false;
+        const a = clip.loop !== false ? VN.Looper(url, { xf: clip.loopFade != null ? clip.loopFade : 0, inS: clip.in || 0, outS: clip.out || 0, muffle: clip.muffle || 0 }) : new Audio(url);
         a.volume = 0;
-        if (VN.Audio && VN.Audio.route) VN.Audio.route(a);
         a.play().catch(() => {});
         const base = (clip.vol != null ? clip.vol : 70) / 100;
-        fadeVolume(a, Math.min(1, base * volOf('music')), clip.fade != null ? clip.fade : 1);
-        R().amb[key] = { audio: a, asset: clip.asset, base };
+        const fin = clip.fade != null ? clip.fade : clip._ch === 'sfx' ? 0.15 : 1;
+        fadeVolume(a, Math.min(1, base * volOf(ch(clip))), fin);
+        R().amb[key] = { audio: a, asset: clip.asset, base, muffle: clip.muffle || 0, fadeOut: clip._ch === 'sfx' ? (clip.fadeOut != null ? clip.fadeOut : 0.6) : null };
       }
     };
     const stopAmbient = () => { if (R() && R().amb) { for (const x of Object.values(R().amb)) x.audio.pause(); R().amb = {}; } };
