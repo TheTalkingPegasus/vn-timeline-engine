@@ -1391,6 +1391,81 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Freie Sprechblase: Text perspektivisch in 4 Ecken, Namensfeld, Comic-Punkte, einseitige Kontur, Buchstaben-Animation, Initiale');
   } catch (e) { general.push('Freie Sprechblase: ' + e.message); }
 
+  // 30. Zuletzt geöffnete Projekte (0.9.37)
+  try {
+    const r = JSON.parse(await js(`(async () => {
+      const out = [];
+      if (!VN.api.recentList) return JSON.stringify(['API fehlt']);
+      await VN.save();
+      await new Promise((res) => setTimeout(res, 300));
+      const l = await VN.api.recentList();
+      const me = l.find((x) => x.dir === VN.dir);
+      if (!me) out.push('aktuelles Projekt fehlt in der Liste');
+      else if (!me.ok || me.title !== VN.project.title) out.push('Eintrag falsch ' + JSON.stringify([me.ok, me.title]));
+      const o = await VN.api.recentOpen(VN.dir);
+      if (!o || !o.data || o.dir !== VN.dir) out.push('Öffnen klappt nicht');
+      if (await VN.api.recentOpen('/gibt/es/nicht')) out.push('fremder Ordner geöffnet');
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Zuletzt geöffnet: ' + r.join(', '));
+    else log('✓ Zuletzt geöffnet: Projekt landet in der Liste, lässt sich direkt öffnen, fremde Ordner nicht');
+  } catch (e) { general.push('Zuletzt geöffnet: ' + e.message); }
+
+  // 31. Weich-Physik von Figur zu Figur kopieren (0.9.37)
+  try {
+    const r = JSON.parse(await js(`(async () => {
+      const out = [];
+      const p = VN.project, imgs = p.assets.filter((a) => a.kind === 'image');
+      if (imgs.length < 2 || !window.FmtCopy) return JSON.stringify(['zu wenig Bilder']);
+      const A = imgs[0].id, B = imgs[1].id, keep = JSON.stringify(p.softs || {});
+      p.softs = p.softs || {};
+      p.softs[A] = { on: true, regions: [{ id: 'sa1', preset: 'chest', cx: 0.5, cy: 0.4, rx: 0.1, ry: 0.05, rot: 0, on: true }, { id: 'sa2', preset: 'cloth', cx: 0.5, cy: 0.7, rx: 0.2, ry: 0.1, rot: 0, on: true }] };
+      delete p.softs[B];
+      const menu = FmtCopy.softItems({ asset: A });
+      if (!menu.length) out.push('kein Menüpunkt zum Kopieren');
+      FmtCopy.copySoft(A);
+      if (!FmtCopy.softItems({ asset: B }).some((x) => /einfügen/i.test(x.label) || /Paste/i.test(x.label))) out.push('kein Menüpunkt zum Einfügen');
+      FmtCopy.pasteSoft(B);
+      const d = p.softs[B];
+      if (!d || d.regions.length !== 2) out.push('nicht eingefügt');
+      else if (d.regions.some((x) => x.id === 'sa1' || x.id === 'sa2')) out.push('gleiche IDs');
+      else if (d.regions[0].cx !== 0.5 || d.regions[1].preset !== 'cloth') out.push('Werte falsch');
+      d.regions[0].cx = 0.3;
+      if (p.softs[A].regions[0].cx !== 0.5) out.push('nicht unabhängig');
+      VN.undo();
+      if ((VN.project.softs || {})[B]) out.push('Rückgängig klappt nicht');
+      VN.project.softs = JSON.parse(keep);
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Weich-Physik kopieren: ' + r.join(', '));
+    else log('✓ Weich-Physik kopieren: Masken von einer Figur auf eine andere übertragen, unabhängig und rückgängig machbar');
+  } catch (e) { general.push('Weich-Physik kopieren: ' + e.message); }
+
+  // 32. Endlos-Schleife mit Überblenden und Dämpfen (0.9.37)
+  try {
+    const r = JSON.parse(await js(`(async () => {
+      const out = [];
+      if (!VN.Looper || !Fx.muffleFreq) return JSON.stringify(['fehlt']);
+      if (Fx.muffleFreq(0) !== 0 || !(Fx.muffleFreq(50) > Fx.muffleFreq(100)) || Fx.muffleFreq(100) > 400) out.push('Dämpf-Kurve');
+      const L = VN.Looper('vnasset://x/none.ogg', { xf: 0.4 });
+      L.volume = 0.5;
+      if (L.volume !== 0.5 || L.els.length !== 2 || !L.paused) out.push('Looper-Grundwerte');
+      // Soundeffekt mit Wiederholen: zählt nur, solange der Clip den Schritt abdeckt
+      const s = VN.project.scenes.find((x) => x.type === 'story' && x.tracks.sfx && x.tracks.sfx.length);
+      if (s) {
+        const c = s.tracks.sfx[0], keep = JSON.stringify(c);
+        Object.assign(c, { loop: true, start: 0, len: 2 });
+        const st = Stage.state(s, 1);
+        if (!st) out.push('Zustand');
+        Object.assign(c, JSON.parse(keep));
+        delete c.loop; if (JSON.parse(keep).loop) c.loop = JSON.parse(keep).loop;
+      }
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Schleife/Dämpfen: ' + r.join(', '));
+    else log('✓ Schleife und Dämpfen: Looper mit zwei Elementen, Dämpf-Kurve');
+  } catch (e) { general.push('Schleife/Dämpfen: ' + e.message); }
+
   // 27. Kulissen-Raum (0.9.32): 3D-Flächen, Kamera, Licht durch Fenster mit Jalousie, Bühne und Spieler
   try {
     const r = JSON.parse(await js(`(async () => {

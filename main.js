@@ -472,10 +472,55 @@ ipcMain.handle('project:save', async (_e, { dir, data }) => {
   const file = path.join(projectDir, 'project.json');
   const tmp = file + '.tmp';
   // Text kommt fertig aus der Oberfläche (schneller als ein großes Objekt über IPC zu schicken)
-  fs.writeFileSync(tmp, typeof data === 'string' ? data : JSON.stringify(data, null, 2), 'utf8');
+  const text = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+  fs.writeFileSync(tmp, text, 'utf8');
   fs.renameSync(tmp, file);
+  try { touchRecent(projectDir, typeof data === 'string' ? null : data, text); } catch (e) { /* Liste ist nur Komfort */ }
   return true;
 });
+
+// ---------- Zuletzt geöffnete Projekte (0.9.37) ----------
+const RECENT_MAX = 12;
+const recentFile = () => path.join(app.getPath('userData'), 'recent.json');
+const readRecent = () => { try { const r = JSON.parse(fs.readFileSync(recentFile(), 'utf8')); return Array.isArray(r) ? r : []; } catch (e) { return []; } };
+const writeRecent = (list) => { try { fs.mkdirSync(path.dirname(recentFile()), { recursive: true }); fs.writeFileSync(recentFile(), JSON.stringify(list.slice(0, RECENT_MAX))); } catch (e) { /* egal */ } };
+let recentLast = { dir: '', title: '', t: 0 };
+function touchRecent(dir, data, text) {
+  if (!data && text) { try { data = JSON.parse(text); } catch (e) { data = null; } }
+  const title = (data && data.title) || path.basename(dir);
+  const now = Date.now();
+  // nicht bei jedem Speichern schreiben: nur wenn sich etwas ändert oder eine Minute vergangen ist
+  if (recentLast.dir === dir && recentLast.title === title && now - recentLast.t < 60000) return;
+  recentLast = { dir, title, t: now };
+  const list = readRecent();
+  const old = list.find((r) => path.resolve(r.dir) === path.resolve(dir)) || {};
+  const scenes = data && Array.isArray(data.scenes) ? data.scenes.length : old.scenes || 0;
+  writeRecent([{ dir, title, time: now, thumb: old.thumb || '', scenes }].concat(list.filter((r) => path.resolve(r.dir) !== path.resolve(dir))));
+}
+// Vorschaubild kommt fertig aus der Oberfläche (dort sind alle Bildformate schon geladen, auch SVG)
+ipcMain.handle('recent:thumb', (_e, url) => {
+  if (gameMode || !projectDir || typeof url !== 'string' || !/^data:image\/(jpeg|png|webp);base64,/.test(url) || url.length > 200000) return false;
+  const list = readRecent(), r = list.find((x) => path.resolve(x.dir) === path.resolve(projectDir));
+  if (!r || r.thumb === url) return false;
+  r.thumb = url; writeRecent(list); return true;
+});
+ipcMain.handle('recent:list', () => readRecent().map((r) => ({ dir: r.dir, title: r.title, time: r.time, thumb: r.thumb || '', scenes: r.scenes || 0, ok: fs.existsSync(path.join(r.dir, 'project.json')) })));
+ipcMain.handle('recent:open', async (_e, dir) => {
+  // nur Ordner aus der eigenen Liste
+  const r = readRecent().find((x) => path.resolve(x.dir) === path.resolve(String(dir || '')));
+  if (!r) return null;
+  const file = path.join(r.dir, 'project.json');
+  try {
+    const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+    approve(r.dir);
+    return { dir: r.dir, data };
+  } catch (err) {
+    dialog.showErrorBox('Projekt konnte nicht geöffnet werden', String(err.message || err));
+    return null;
+  }
+});
+ipcMain.handle('recent:remove', (_e, dir) => { writeRecent(readRecent().filter((r) => path.resolve(r.dir) !== path.resolve(String(dir || '')))); return true; });
+ipcMain.handle('recent:show', (_e, dir) => { const r = readRecent().find((x) => path.resolve(x.dir) === path.resolve(String(dir || ''))); if (r && fs.existsSync(r.dir)) shell.openPath(r.dir); return !!r; });
 
 ipcMain.handle('asset:pick', async (_e, { dir, kind }) => {
   if (gameMode || !projectDir) return [];
@@ -1000,7 +1045,7 @@ function runAutotest() {
 
 // Im exportierten Spiel gibt es nur Lesezugriff auf die Spieldateien und Schreiben in Spielstände.
 if (gameMode) {
-  for (const ch of ['project:new', 'project:learn', 'project:open', 'plugins:write', 'plugins:addExample', 'plugins:addBundled', 'export:windows', 'export:web', 'file:openText']) {
+  for (const ch of ['project:new', 'project:learn', 'project:open', 'recent:list', 'recent:open', 'recent:remove', 'recent:show', 'recent:thumb', 'plugins:write', 'plugins:addExample', 'plugins:addBundled', 'export:windows', 'export:web', 'file:openText']) {
     ipcMain.removeHandler(ch);
     ipcMain.handle(ch, () => denied(ch + ' im Spiel'));
   }

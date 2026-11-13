@@ -2788,3 +2788,21 @@ body.vz-panning, body.vz-panning * { cursor: grabbing !important; }
 
 /* Schwarze Icons (0.9.36) auf hellem Grund zeigen */
 .lib-thumb.light:not(.snd):not(.other) { background-color: #e9ecf1; background-image: linear-gradient(45deg, #dde1e8 25%, transparent 25%, transparent 75%, #dde1e8 75%), linear-gradient(45deg, #dde1e8 25%, transparent 25%, transparent 75%, #dde1e8 75%); }
+
+/* Zuletzt geöffnete Projekte auf dem Startbildschirm (0.9.37) */
+.welcome-card.has-recent { width: 1000px; max-width: 95vw; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 32px; align-items: stretch; }
+.welcome-card .w-recent { text-align: left; display: flex; flex-direction: column; min-height: 0; border-left: 1px solid var(--line); padding-left: 28px; }
+.w-recent-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.w-recent-head h2 { margin: 0; font-size: 16px; }
+.w-recent-list { display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: min(560px, 70vh); padding-right: 4px; }
+.w-rc { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 10px; border: 1px solid transparent; background: var(--bg3, rgba(255,255,255,0.03)); cursor: pointer; transition: background 0.12s, border-color 0.12s; }
+.w-rc:hover { background: rgba(232, 164, 58, 0.08); border-color: rgba(232, 164, 58, 0.45); }
+.w-rc.missing { opacity: 0.55; cursor: default; }
+.w-rc.missing:hover { background: var(--bg3, rgba(255,255,255,0.03)); border-color: transparent; }
+.w-rc-thumb { flex: 0 0 auto; width: 96px; height: 54px; border-radius: 6px; background: #0e0f13 center / cover no-repeat; display: flex; align-items: center; justify-content: center; font-size: 22px; border: 1px solid var(--line); }
+.w-rc-txt { flex: 1 1 auto; min-width: 0; }
+.w-rc-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.w-rc-path { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; direction: rtl; text-align: left; }
+.w-rc-acts { display: flex; gap: 2px; opacity: 0; transition: opacity 0.12s; }
+.w-rc:hover .w-rc-acts, .w-rc.missing .w-rc-acts { opacity: 1; }
+@media (max-width: 900px) { .welcome-card.has-recent { grid-template-columns: 1fr; } .welcome-card .w-recent { border-left: none; padding-left: 0; border-top: 1px solid var(--line); padding-top: 18px; } }

@@ -713,9 +713,40 @@
         else if (fxName === 'cave') reverb(3.2, 2.2, 0.6);
         else if (fxName === 'whisper') { const h = ctx.createBiquadFilter(); h.type = 'highpass'; h.frequency.value = 900; chain(h); gain.gain.value = vol * 0.85; reverb(0.8, 4, 0.2); }
         else if (fxName === 'thought') { const l = ctx.createBiquadFilter(); l.type = 'lowpass'; l.frequency.value = 4200; chain(l); reverb(1.8, 2.5, 0.4); }
+        // Gedämpft (0.9.37): wie durch eine Wand
+        const mf = Fx.muffleFreq(audio._muffle);
+        if (mf) { const l = ctx.createBiquadFilter(); l.type = 'lowpass'; l.frequency.value = mf; l.Q.value = 0.6; chain(l); audio._muf = l; }
         node.connect(gain); gain.connect(an); an.connect(VN.Audio ? VN.Audio.bus(ctx) : ctx.destination); audio._vnSrc = src;
         return { an, gain, data: new Uint8Array(an.fftSize) };
       } catch (e) { console.warn('Audio-Kette', e); audio.volume = vol; return null; }
+    },
+    // Dämpfen 0–100 → Grenzfrequenz eines Tiefpasses (0 = aus). 100 ≈ dumpfes Wummern durch die Wand.
+    muffleFreq(amount) {
+      const k = Math.max(0, Math.min(100, Number(amount) || 0)) / 100;
+      return k > 0 ? Math.round(16000 * Math.pow(220 / 16000, k)) : 0;
+    },
+    // Ein Element gedämpft abspielen (oder die Dämpfung weich ändern). Nur mit CORS möglich, sonst bliebe es stumm.
+    muffle(audio, amount, sec) {
+      if (!audio) return;
+      audio._muffle = amount;
+      const f = Fx.muffleFreq(amount);
+      if (audio._muf) {
+        const c = audio._muf.context;
+        try { audio._muf.frequency.cancelScheduledValues(c.currentTime); audio._muf.frequency.setTargetAtTime(f || 20000, c.currentTime, Math.max(0.01, (sec != null ? sec : 0.6) / 3)); } catch (e) { audio._muf.frequency.value = f || 20000; }
+        return;
+      }
+      if (!f || audio.crossOrigin !== 'anonymous') return;
+      const ctx = Fx.ctx();
+      if (!ctx) return;
+      try {
+        const src = audio._vnSrc || ctx.createMediaElementSource(audio);
+        try { src.disconnect(); } catch (e) { /* noch nicht verbunden */ }
+        const l = ctx.createBiquadFilter(); l.type = 'lowpass'; l.frequency.value = f; l.Q.value = 0.6;
+        // etwas Bass bleibt durch Wände hörbar: leicht anheben
+        const sh = ctx.createBiquadFilter(); sh.type = 'lowshelf'; sh.frequency.value = 180; sh.gain.value = 3;
+        src.connect(l); l.connect(sh); sh.connect(VN.Audio ? VN.Audio.bus(ctx) : ctx.destination);
+        audio._vnSrc = src; audio._muf = l;
+      } catch (e) { console.warn('Dämpfen', e); }
     },
     level(r) {
       if (!r || !r.an) return 0;

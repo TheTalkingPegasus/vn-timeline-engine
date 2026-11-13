@@ -2,6 +2,17 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.37 – Recent projects, copy soft physics, endless loops, muffle
+- **Recently opened projects** on the start screen: thumbnail (background of the start scene), name, folder, date and
+  number of scenes – one click opens. Missing folders are greyed out and can be removed. Also in the “Project ▾” menu.
+- **Copy soft physics between characters:** right-click a character (timeline or stage) → “Copy soft physics”, then on
+  another character “Paste soft physics” (replace or add). In the soft-physics editor: “Take over from …”.
+- **Endless sound effects:** “Repeat as long as the clip lasts” – the sound keeps playing until the clip ends, with
+  a seamless or crossfaded transition and a fade-out at the end.
+- **Music and ambience loop without the small gap**, optionally with a crossfade when repeating.
+- **Muffled (as if from another room):** slider for music, sound effects and voices. Same music with a different
+  muffle in the next scene blends over smoothly.
+
 ## 0.9.36 – Icons in the starter pack
 - **216 new icons** in the asset library (starter pack), each motif in four styles: colourful (comic style), simple
   black, simple white, futuristic neon (with and without a hexagon frame). Motifs: files & folders (folder, text, image,

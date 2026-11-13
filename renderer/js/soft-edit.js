@@ -72,6 +72,15 @@ window.PenBar = {
       for (const a of imgs) { const o = el('option', { value: a.id }, a.name + (p.softs[a.id] && (p.softs[a.id].regions || []).length ? ' · ' + VN.t('mit Weich-Physik') : '')); if (a.id === id) o.selected = true; s.appendChild(o); }
       center.appendChild(el('div', { class: 'view-head' }, s,
         data ? el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: data.on !== false, onchange: (e) => VN.mutate(() => { data.on = e.target.checked; }) }), VN.t('aktiv')) : null,
+        // Von einer anderen Figur übernehmen (0.9.37): gleicher Körper, anderer Kopf
+        (() => {
+          const others = imgs.filter((a) => a.id !== id && p.softs[a.id] && (p.softs[a.id].regions || []).length);
+          if (!others.length || !window.FmtCopy) return null;
+          const sel = el('select', { class: 'small-input', title: VN.t('Masken einer anderen Figur auf diese übertragen'), onchange: (e) => { const from = e.target.value; e.target.value = ''; if (from) FmtCopy.pasteSoft(id, { data: JSON.parse(JSON.stringify(p.softs[from])), name: (VN.asset(from) || {}).name || '' }); } },
+            el('option', { value: '' }, VN.t('Übernehmen von …')));
+          for (const a of others) sel.appendChild(el('option', { value: a.id }, a.name + ' (' + p.softs[a.id].regions.length + ')'));
+          return sel;
+        })(),
         el('div', { class: 'spacer' }),
         data && (data.regions || []).length ? el('div', { class: 'seg' },
           el('button', { class: !testing ? 'active' : '', onclick: () => { VN.ui.softTest = false; VN.render(); } }, VN.t('Bereiche')),
