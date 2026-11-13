@@ -5617,7 +5617,13 @@ window.VN_I18N_ES = {
 "Schräg (Persona-Stil)": "Inclinada (estilo Persona)",
 "Gekippt (wird schmaler)": "Inclinada (se estrecha)",
 "Ausruf (Zacken)": "Grito (picos)",
-"Comic rund mit Spitze": "Cómic redonda con cola"
+"Comic rund mit Spitze": "Cómic redonda con cola",
+"Zuletzt geöffnet": "Abiertos recientemente",
+"Klick öffnet das Projekt": "Haz clic para abrir el proyecto",
+"Ordner nicht gefunden": "Carpeta no encontrada",
+"Ordner öffnen": "Abrir carpeta",
+"Aus der Liste entfernen (das Projekt bleibt erhalten)": "Quitar de la lista (el proyecto se conserva)",
+"gestern": "ayer"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

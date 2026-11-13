@@ -5617,7 +5617,13 @@ window.VN_I18N_JA = {
 "Schräg (Persona-Stil)": "斜め（ペルソナ風）",
 "Gekippt (wird schmaler)": "傾き（細くなる）",
 "Ausruf (Zacken)": "叫び（ギザギザ）",
-"Comic rund mit Spitze": "コミック丸型（しっぽ付き）"
+"Comic rund mit Spitze": "コミック丸型（しっぽ付き）",
+"Zuletzt geöffnet": "最近開いたプロジェクト",
+"Klick öffnet das Projekt": "クリックで開く",
+"Ordner nicht gefunden": "フォルダーが見つかりません",
+"Ordner öffnen": "フォルダーを開く",
+"Aus der Liste entfernen (das Projekt bleibt erhalten)": "一覧から外す（プロジェクトは残ります）",
+"gestern": "昨日"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

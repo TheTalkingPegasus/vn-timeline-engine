@@ -296,7 +296,7 @@
       m.appendChild(VN.el('div', {
         class: 'mi' + (it.danger ? ' danger' : '') + (it.disabled ? ' disabled' : ''),
         onclick: () => { if (it.disabled) return; VN.closeMenu(); it.action(); }
-      }, VN.el('span', null, it.label), it.hint ? VN.el('span', { class: 'muted small' }, it.hint) : null));
+      }, VN.el('span', it.notr ? { 'data-notr': '' } : null, it.label), it.hint ? VN.el('span', { class: 'muted small' }, it.hint) : null));
     }
     m.hidden = false;
     const r = m.getBoundingClientRect();

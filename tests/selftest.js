@@ -1391,6 +1391,26 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Freie Sprechblase: Text perspektivisch in 4 Ecken, Namensfeld, Comic-Punkte, einseitige Kontur, Buchstaben-Animation, Initiale');
   } catch (e) { general.push('Freie Sprechblase: ' + e.message); }
 
+  // 30. Zuletzt geöffnete Projekte (0.9.37)
+  try {
+    const r = JSON.parse(await js(`(async () => {
+      const out = [];
+      if (!VN.api.recentList) return JSON.stringify(['API fehlt']);
+      await VN.save();
+      await new Promise((res) => setTimeout(res, 300));
+      const l = await VN.api.recentList();
+      const me = l.find((x) => x.dir === VN.dir);
+      if (!me) out.push('aktuelles Projekt fehlt in der Liste');
+      else if (!me.ok || me.title !== VN.project.title) out.push('Eintrag falsch ' + JSON.stringify([me.ok, me.title]));
+      const o = await VN.api.recentOpen(VN.dir);
+      if (!o || !o.data || o.dir !== VN.dir) out.push('Öffnen klappt nicht');
+      if (await VN.api.recentOpen('/gibt/es/nicht')) out.push('fremder Ordner geöffnet');
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Zuletzt geöffnet: ' + r.join(', '));
+    else log('✓ Zuletzt geöffnet: Projekt landet in der Liste, lässt sich direkt öffnen, fremde Ordner nicht');
+  } catch (e) { general.push('Zuletzt geöffnet: ' + e.message); }
+
   // 27. Kulissen-Raum (0.9.32): 3D-Flächen, Kamera, Licht durch Fenster mit Jalousie, Bühne und Spieler
   try {
     const r = JSON.parse(await js(`(async () => {

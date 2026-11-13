@@ -9,7 +9,8 @@
 <body>
 
 <div id="welcome">
-  <div class="welcome-card">
+  <div class="welcome-card" id="welcome-card">
+    <div class="w-main">
     <div class="w-lang" id="w-lang" data-notr><button data-lang="en">English</button><button data-lang="de">Deutsch</button><button data-lang="es">Español</button><button data-lang="ja">日本語</button></div>
     <div class="logo-big"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#1d1404" stroke-width="2.4" stroke-linecap="round"><path d="M3 7h18M3 12h12M3 17h7"/></svg></div>
     <h1>VN Timeline Engine</h1>
@@ -22,6 +23,8 @@
       <button class="btn big" id="w-open">Projekt öffnen</button>
     </div>
     <p class="muted small">Ein Projekt ist ein Ordner mit einer <code>project.json</code> und einem <code>assets</code>-Ordner. Es wird automatisch gespeichert.</p>
+    </div>
+    <div class="w-recent" id="w-recent" hidden></div>
   </div>
 </div>
 

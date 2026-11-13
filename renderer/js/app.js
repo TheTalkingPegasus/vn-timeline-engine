@@ -54,6 +54,8 @@
       VN.save();
       VN.render();
       if (data.tutorial && !VN.ui.noAutoTour) setTimeout(() => Tour.start('main'), 500);
+      // Vorschaubild für „Zuletzt geöffnet“ (nach dem ersten Speichern)
+      setTimeout(() => App.recentThumb(), 1500);
       Export.stats = null;
       Export.badgeSoon();
     },
@@ -84,6 +86,67 @@
     async openProject() {
       const r = await api.openProject();
       if (r) App.load(r.dir, r.data);
+    },
+    // Zuletzt geöffnete Projekte (0.9.37)
+    async openRecent(dir) {
+      const r = await api.recentOpen(dir);
+      if (r) App.load(r.dir, r.data);
+      else App.renderRecent();
+    },
+    // Bild für die Liste: erster Hintergrund der Startszene (sonst irgendeiner), 320 × 180
+    recentThumb() {
+      const p = VN.project;
+      if (!p || !api.recentThumb) return;
+      const scenes = (p.scenes || []).slice().sort((a, b) => (b.id === p.startScene) - (a.id === p.startScene));
+      let id = null;
+      for (const sc of scenes) { const c = sc.tracks && (sc.tracks.bg || []).find((x) => x && x.asset && (p.assets || []).some((a) => a.id === x.asset && a.kind === 'image')); if (c) { id = c.asset; break; } }
+      if (!id) return;
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const cv = document.createElement('canvas'); cv.width = 320; cv.height = 180;
+          const g = cv.getContext('2d'), iw = img.naturalWidth || 320, ih = img.naturalHeight || 180, k = Math.max(320 / iw, 180 / ih);
+          g.fillStyle = '#0e0f13'; g.fillRect(0, 0, 320, 180);
+          g.drawImage(img, (320 - iw * k) / 2, (180 - ih * k) / 2, iw * k, ih * k);
+          api.recentThumb(cv.toDataURL('image/jpeg', 0.8));
+        } catch (e) { /* ohne Bild */ }
+      };
+      img.src = VN.assetUrl(id);
+    },
+    recentWhen(t) {
+      const d = new Date(t), now = new Date(), lang = (VN.I18n && VN.I18n.lang) || 'de';
+      const day = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+      const diff = Math.round((day(now) - day(d)) / 86400000);
+      const hm = d.toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' });
+      if (diff === 0) return VN.t('heute') + ' ' + hm;
+      if (diff === 1) return VN.t('gestern') + ' ' + hm;
+      return d.toLocaleDateString(lang, { day: 'numeric', month: 'short', year: d.getFullYear() === now.getFullYear() ? undefined : 'numeric' });
+    },
+    async renderRecent() {
+      const box = document.getElementById('w-recent'), card = document.getElementById('welcome-card');
+      if (!box || !api.recentList) return;
+      let list = [];
+      try { list = await api.recentList(); } catch (e) { list = []; }
+      box.innerHTML = '';
+      box.hidden = !list.length;
+      card.classList.toggle('has-recent', !!list.length);
+      if (!list.length) return;
+      box.appendChild(el('div', { class: 'w-recent-head' }, el('h2', null, VN.t('Zuletzt geöffnet')), el('span', { class: 'muted small' }, VN.t('Klick öffnet das Projekt'))));
+      const ul = el('div', { class: 'w-recent-list' });
+      for (const r of list) {
+        const item = el('div', { class: 'w-rc' + (r.ok ? '' : ' missing'), title: r.dir, onclick: () => { if (r.ok) App.openRecent(r.dir); } },
+          el('div', { class: 'w-rc-thumb', style: r.thumb ? { backgroundImage: `url("${r.thumb}")` } : {} }, r.thumb ? null : '🎬'),
+          el('div', { class: 'w-rc-txt' },
+            el('div', { class: 'w-rc-title', 'data-notr': '' }, r.title || '—'),
+            el('div', { class: 'w-rc-path muted small', 'data-notr': '' }, '\u200E' + r.dir + '\u200E'),
+            el('div', { class: 'w-rc-meta muted small' }, r.ok ? App.recentWhen(r.time) + (r.scenes ? ' · ' + r.scenes + ' ' + VN.t(r.scenes === 1 ? 'Szene' : 'Szenen') : '') : VN.t('Ordner nicht gefunden'))),
+          el('div', { class: 'w-rc-acts' },
+            r.ok ? el('button', { class: 'btn ghost tiny', title: VN.t('Ordner öffnen'), onclick: (e) => { e.stopPropagation(); api.recentShow(r.dir); } }, '📁') : null,
+            el('button', { class: 'btn ghost tiny', title: VN.t('Aus der Liste entfernen (das Projekt bleibt erhalten)'), onclick: async (e) => { e.stopPropagation(); await api.recentRemove(r.dir); App.renderRecent(); } }, '✕')));
+        ul.appendChild(item);
+      }
+      box.appendChild(ul);
     },
 
     // Szenenliste mit Kapiteln (Ordnern) und Suche
@@ -346,6 +409,7 @@
   $('b-help').onclick = (e) => Tour.helpMenu(e.currentTarget);
   $('w-new').onclick = () => App.newProject(false);
   $('w-open').onclick = () => App.openProject();
+  App.renderRecent();
   // Ton-Einstellungen im Editor: getrennte Geräte für Vorschau und Test-Spiel
   App.audioSettings = async () => {
     const S = VN.settings;
@@ -370,13 +434,18 @@
   const langBtns = () => document.querySelectorAll('#w-lang button').forEach((b) => b.classList.toggle('on', b.dataset.lang === VN.I18n.lang));
   document.querySelectorAll('#w-lang button').forEach((b) => { b.onclick = () => { VN.I18n.set(b.dataset.lang); langBtns(); }; });
   langBtns();
-  $('b-file').onclick = (e) => {
+  $('b-file').onclick = async (e) => {
     const r = e.currentTarget.getBoundingClientRect();
+    // zuletzt geöffnete Projekte (ohne das aktuelle)
+    let rec = [];
+    try { rec = api.recentList ? (await api.recentList()).filter((x) => x.ok && x.dir !== VN.dir).slice(0, 6) : []; } catch (err) { rec = []; }
+    const recItems = rec.length ? ['sep', { head: 'Zuletzt geöffnet' }].concat(rec.map((x) => ({ label: x.title || x.dir, hint: App.recentWhen(x.time), notr: true, action: async () => { await VN.save(); App.openRecent(x.dir); } }))) : [];
     VN.menu(r.left, r.bottom + 4, [
       { head: 'Projekt' },
       { label: 'Speichern', hint: 'Strg+S', action: async () => { await VN.save(); VN.toast('Gespeichert'); } },
       { label: 'Neues Projekt …', action: async () => { await VN.save(); App.newProject(false); } },
       { label: 'Projekt öffnen …', action: async () => { await VN.save(); App.openProject(); } },
+      ...recItems,
       'sep',
       { label: 'Beispielprojekt anlegen …', action: async () => { await VN.save(); App.newProject('demo'); } },
       { label: 'Tutorial-Projekt anlegen …', action: async () => { await VN.save(); App.newProject('tutorial'); } },
