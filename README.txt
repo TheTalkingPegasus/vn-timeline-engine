@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototype 0.9.36
+VN Timeline Engine · Prototype 0.9.37
 ====================================
 (Deutsch: siehe LIES MICH.txt)
 
@@ -15,6 +15,8 @@ Without installing (ZIP):
    isn't signed: "More info" → "Run anyway".
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
+
+NEW IN 0.9.37 · Recently opened projects on the start screen, copy soft physics between characters, endless sound effects with crossfade, gapless music loops, muffle slider (sound from another room)
 
 NEW IN 0.9.36 · 216 icons in the starter pack (files, symbols, messages) – colourful, simple black, simple white, futuristic neon with and without frame
 
