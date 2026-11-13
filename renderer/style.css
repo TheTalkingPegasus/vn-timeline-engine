@@ -2806,3 +2806,13 @@ body.vz-panning, body.vz-panning * { cursor: grabbing !important; }
 .w-rc-acts { display: flex; gap: 2px; opacity: 0; transition: opacity 0.12s; }
 .w-rc:hover .w-rc-acts, .w-rc.missing .w-rc-acts { opacity: 1; }
 @media (max-width: 900px) { .welcome-card.has-recent { grid-template-columns: 1fr; } .welcome-card .w-recent { border-left: none; padding-left: 0; border-top: 1px solid var(--line); padding-top: 18px; } }
+
+/* Anhänger im Weich-Physik-Editor (0.9.38) */
+.soft-svg .sh-pin circle { fill: rgba(80,170,255,0.35); stroke: #50aaff; stroke-width: 2; vector-effect: non-scaling-stroke; cursor: move; }
+.soft-svg .sh-pin circle.dot { fill: #50aaff; }
+.soft-svg .sh-pin.sel circle { stroke: #fff; fill: rgba(80,170,255,0.55); }
+.soft-svg .sh-pin.off { opacity: 0.4; }
+.soft-svg .sh-line { stroke: #50aaff; stroke-width: 1.5; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; pointer-events: none; opacity: 0.6; }
+.soft-svg .sh-line.sel { opacity: 1; }
+.soft-svg .sh-lbl { fill: #fff; paint-order: stroke; stroke: rgba(0,0,0,0.7); stroke-width: 3px; font-weight: 600; pointer-events: none; }
+.rig-hang { pointer-events: none; }

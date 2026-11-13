@@ -86,25 +86,27 @@
 
   // ---------- Weich-Physik von Figur zu Figur (0.9.37) ----------
   // Gehört zum Bild, nicht zum Clip: gleicher Körper, anderer Kopf → Masken einmal einstellen, dann übertragen.
-  const softOf = (assetId) => { const d = VN.project.softs && VN.project.softs[assetId]; return d && (d.regions || []).length ? d : null; };
+  const softOf = (assetId) => { const d = VN.project.softs && VN.project.softs[assetId]; return d && ((d.regions || []).length || (d.hangs || []).length) ? d : null; };
   const assetName = (id) => (VN.asset(id) || {}).name || VN.t('Figur');
   F.copySoft = (assetId) => {
     const d = softOf(assetId);
     if (!d) return;
     F.soft = { from: assetId, name: assetName(assetId), data: JSON.parse(JSON.stringify(d)) };
-    VN.toast(VN.tf('Weich-Physik von „{name}“ kopiert ({n} Bereiche)', { name: F.soft.name, n: d.regions.length }));
+    VN.toast(VN.tf('Weich-Physik von „{name}“ kopiert ({n} Bereiche)', { name: F.soft.name, n: (d.regions || []).length + (d.hangs || []).length }));
   };
   // src = { data, name } (Zwischenablage oder eine andere Figur)
   F.pasteSoft = (target, src) => {
     src = src || F.soft;
     if (!src || !target) return;
-    const fresh = () => src.data.regions.map((r) => Object.assign(JSON.parse(JSON.stringify(r)), { id: VN.uid('sr') }));
+    const fresh = () => (src.data.regions || []).map((r) => Object.assign(JSON.parse(JSON.stringify(r)), { id: VN.uid('sr') }));
+    // Anhänger (0.9.38) gehen mit
+    const freshH = () => (src.data.hangs || []).map((h) => Object.assign(JSON.parse(JSON.stringify(h)), { id: VN.uid('hg') }));
     const go = (mode) => {
       VN.mutate(() => {
         const p = VN.project;
         p.softs = p.softs || {};
-        if (mode === 'add' && p.softs[target]) p.softs[target].regions = (p.softs[target].regions || []).concat(fresh());
-        else p.softs[target] = Object.assign(JSON.parse(JSON.stringify(src.data)), { regions: fresh() });
+        if (mode === 'add' && p.softs[target]) { p.softs[target].regions = (p.softs[target].regions || []).concat(fresh()); if ((src.data.hangs || []).length) p.softs[target].hangs = (p.softs[target].hangs || []).concat(freshH()); }
+        else p.softs[target] = Object.assign(JSON.parse(JSON.stringify(src.data)), { regions: fresh(), hangs: freshH() });
       });
       VN.toast(VN.tf('Weich-Physik von „{from}“ bei „{to}“ eingefügt', { from: src.name, to: assetName(target) }));
     };
@@ -113,7 +115,7 @@
     const back = el('div', { class: 'modal-back', onclick: (ev) => { if (ev.target === back) back.remove(); } });
     back.appendChild(el('div', { class: 'modal fc-modal' },
       el('strong', { style: { fontSize: '16px' } }, '🫧 ' + VN.t('Weich-Physik einfügen')),
-      el('div', { class: 'muted small' }, VN.tf('„{to}“ hat schon {n} Bereiche. Ersetzen oder die neuen dazulegen?', { to: assetName(target), n: softOf(target).regions.length })),
+      el('div', { class: 'muted small' }, VN.tf('„{to}“ hat schon {n} Bereiche. Ersetzen oder die neuen dazulegen?', { to: assetName(target), n: (softOf(target).regions || []).length + (softOf(target).hangs || []).length })),
       el('div', { class: 'row gap8', style: { justifyContent: 'flex-end' } },
         el('button', { class: 'btn', onclick: () => back.remove() }, VN.t('Abbrechen')),
         el('button', { class: 'btn', onclick: () => { back.remove(); go('add'); } }, VN.t('Dazulegen')),

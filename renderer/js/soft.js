@@ -16,25 +16,52 @@
     ears: { label: 'Ohren / Schwanz', k: 45, c: 3, inert: 1.1, xs: 1, ys: 0.6, anchor: 'bottom', anchorAmt: 1, idle: 'sway', idleAmp: 0.5, idleSpeed: 1.2, squash: 0, feather: 0.3, strength: 1, over: 0 },
     tail: { label: 'Schwanz / Zopf (Pendeln)', k: 30, c: 2.6, inert: 1.2, xs: 1, ys: 1, anchor: 'pin', anchorAmt: 0.7, pendulum: true, idle: 'sway', idleAmp: 0.6, idleSpeed: 0.9, squash: 0, feather: 0.25, strength: 1, over: 0 },
     cheeks: { label: 'Wangen', k: 220, c: 9, inert: 0.7, xs: 0.4, ys: 1, anchor: '', anchorAmt: 0, idle: '', idleAmp: 0, idleSpeed: 1, squash: 0.4, feather: 0.5, strength: 0.6, over: 0 },
+    // 0.9.38: aufgeblähte Backen (wackeln leicht) und Kehle beim Schlucken
+    puff: { label: 'Dicke Backen (aufgebläht)', k: 160, c: 4, inert: 0.8, xs: 0.6, ys: 0.8, anchor: '', anchorAmt: 0, idle: 'wobble', idleAmp: 0.6, idleSpeed: 1.4, squash: 0.3, feather: 0.55, strength: 0.8, over: 0.3, puff: 1 },
+    throat: { label: 'Kehle (Schlucken)', k: 200, c: 9, inert: 0.4, xs: 0.3, ys: 0.5, anchor: '', anchorAmt: 0, idle: 'swallow', idleAmp: 1, idleSpeed: 1, squash: 0, feather: 0.5, strength: 0.5, over: 0.15 },
     jelly: { label: 'Gelee / Schleim', k: 60, c: 2, inert: 1.2, xs: 1, ys: 1, anchor: 'bottom', anchorAmt: 0.6, idle: 'breathe', idleAmp: 0.6, idleSpeed: 2, squash: 1, feather: 0.45, strength: 1.2, over: 0 }
   };
   const ANCHORS = [['', 'Frei schwebend'], ['top', 'Oben fest'], ['bottom', 'Unten fest'], ['left', 'Links fest'], ['right', 'Rechts fest'], ['pin', '📍 Ankerpunkt (frei gesetzt)']];
-  const IDLES = [['', 'Keine'], ['breathe', 'Atmen (auf & ab)'], ['sway', 'Schwanken (seitlich)'], ['wave', 'Welle (wehen)']];
+  const IDLES = [['', 'Keine'], ['breathe', 'Atmen (auf & ab)'], ['sway', 'Schwanken (seitlich)'], ['wave', 'Welle (wehen)'], ['wobble', 'Wackeln (leicht)'], ['swallow', 'Schlucken (ab und zu)']];
+  const GULP = 0.85; // Dauer eines Schluckens in Sekunden
   const PAD = 0.08; // Rand um das Bild, damit Bereiche über die Bildkante schwingen dürfen
   const GRID = 46;  // Gitterpunkte über die Bildbreite
   const ACC = 0.25; // wie stark Beschleunigung der Figur auf die Bereiche wirkt
 
   // alle Schlüssel, die eine Vorlage setzen kann (zum Zurücksetzen)
   // Zusätze für jede Vorlage: angespanntes Zucken und Puls (Herzschlag), Standard aus
-  const EXTRA = { twitch: 0, pulse: 0, bpm: 72 };
+  const EXTRA = { twitch: 0, pulse: 0, bpm: 72, puff: 0 };
   const PKEYS = [...new Set(Object.values(PRESETS).flatMap((x) => Object.keys(x)).concat(Object.keys(EXTRA)))].filter((k) => k !== 'label');
+  // Biegung der Anhänger: Anzahl der Abschnitte
+  const BEND_N = 10;
+  // Dreieck aus dem Bild (s0..s2, Bildpixel) auf das Ziel-Dreieck (d0..d2) abbilden
+  function tri(ctx, img, s0, s1, s2, d0, d1, d2) {
+    const den = (s1[0] - s0[0]) * (s2[1] - s0[1]) - (s2[0] - s0[0]) * (s1[1] - s0[1]);
+    if (Math.abs(den) < 1e-9) return;
+    const m11 = ((d1[0] - d0[0]) * (s2[1] - s0[1]) - (d2[0] - d0[0]) * (s1[1] - s0[1])) / den;
+    const m12 = ((d2[0] - d0[0]) * (s1[0] - s0[0]) - (d1[0] - d0[0]) * (s2[0] - s0[0])) / den;
+    const m21 = ((d1[1] - d0[1]) * (s2[1] - s0[1]) - (d2[1] - d0[1]) * (s1[1] - s0[1])) / den;
+    const m22 = ((d2[1] - d0[1]) * (s1[0] - s0[0]) - (d1[1] - d0[1]) * (s2[0] - s0[0])) / den;
+    const tx = d0[0] - m11 * s0[0] - m12 * s0[1], ty = d0[1] - m21 * s0[0] - m22 * s0[1];
+    // etwas größer ausschneiden, damit zwischen den Dreiecken keine feinen Linien bleiben
+    const cx = (d0[0] + d1[0] + d2[0]) / 3, cy = (d0[1] + d1[1] + d2[1]) / 3;
+    const g = (p) => { const dx = p[0] - cx, dy = p[1] - cy, l = Math.hypot(dx, dy) || 1; return [p[0] + dx / l * 0.8, p[1] + dy / l * 0.8]; };
+    const e0 = g(d0), e1 = g(d1), e2 = g(d2);
+    ctx.save();
+    ctx.beginPath(); ctx.moveTo(e0[0], e0[1]); ctx.lineTo(e1[0], e1[1]); ctx.lineTo(e2[0], e2[1]); ctx.closePath(); ctx.clip();
+    ctx.transform(m11, m21, m12, m22, tx, ty);
+    ctx.drawImage(img, 0, 0);
+    ctx.restore();
+  }
+
   const Soft = (window.Soft = {
     PRESETS, ANCHORS, IDLES, PAD, PKEYS,
 
     data(assetId) { const s = VN.project && VN.project.softs && VN.project.softs[assetId]; return s || null; },
     cfg(assetId) {
       const s = Soft.data(assetId);
-      if (!s || s.on === false || !(s.regions && s.regions.some((r) => r.on !== false))) return null;
+      if (!s || s.on === false || !((s.regions && s.regions.some((r) => r.on !== false)) || Soft.hangsOf(s).length)) return null;
+      if (!s.regions) s.regions = [];
       return s;
     },
     // Werte eines Bereichs: Vorlage + eigene Anpassungen
@@ -64,11 +91,16 @@
       // bis 0,1 s je Bild in Echtzeit (Unterschritte halten die Federn stabil) – sonst wirkt es bei wenig FPS wie Zeitlupe
       dt = Math.min(0.1, Math.max(0, dt || 0));
       const kick = sim.poke.splice(0);
+      // für die Anhänger merken (0.9.38): Beschleunigung der Figur und Stöße
+      sim._acc = { x: (acc && acc.x) || 0, y: (acc && acc.y) || 0 };
+      if (kick.length) (sim._hk || (sim._hk = [])).push(...kick);
       for (const r of regions) {
         const P = Soft.par(r);
         // Bones (0.9.35): jeder Bereich bekommt die Beschleunigung an seiner eigenen Stelle
         const A = (acc && acc.byId && acc.byId[r.id]) || acc;
         const s = sim.regs[r.id] || (sim.regs[r.id] = { x: 0, y: 0, vx: 0, vy: 0 });
+        s.time = (s.time || 0) + dt;
+        if (sim.gulpReq && P.idle === 'swallow') s.gulp = s.time;
         for (const k of kick) { s.vx += k.x * (P.xs || 1); s.vy += k.y * (P.ys || 1); }
         // angespanntes Zucken: kurze Stöße in zufälligen Abständen (stärker = häufiger und kräftiger)
         const tw = Math.max(0, Number(P.twitch) || 0);
@@ -92,8 +124,11 @@
         }
         const lim = 0.6; s.x = Math.max(-lim, Math.min(lim, s.x)); s.y = Math.max(-lim, Math.min(lim, s.y));
       }
+      sim.gulpReq = 0;
     },
     poke(sim, dir, amount) {
+      // Schlucken auslösen (0.9.38): läuft in Bereichen mit „Schlucken“ sofort einmal ab
+      if (dir === 'gulp') { sim.gulpReq = (sim.gulpReq || 0) + 1; return; }
       const a = (Number(amount) || 1) * 0.22;
       const d = dir === 'up' ? [0, -1] : dir === 'left' ? [-1, 0] : dir === 'right' ? [1, 0] : dir === 'random' ? [Math.random() * 2 - 1, Math.random() * 2 - 1] : [0, 1];
       sim.poke.push({ x: d[0] * a, y: d[1] * a });
@@ -109,13 +144,33 @@
       if (P.idle === 'breathe') idleY = Math.sin(t * sp + ph * 0.2) * amp;
       else if (P.idle === 'sway') idleX = Math.sin(t * sp + ph) * amp * 1.4;
       else if (P.idle === 'wave') { idleX = Math.sin(t * sp + ph) * amp; wave = amp; }
+      else if (P.idle === 'wobble') { idleX = (Math.sin(t * sp * 2.3 + ph) * 0.6 + Math.sin(t * sp * 3.7 + ph * 2) * 0.4) * amp * 0.45; idleY = (Math.sin(t * sp * 2.9 + ph * 3) * 0.6 + Math.sin(t * sp * 4.3 + ph) * 0.4) * amp * 0.45; }
+      // Schlucken: alle paar Sekunden (oder auf Anstoß) wandert eine Wölbung von oben nach unten
+      let gulp = null;
+      if (P.idle === 'swallow') {
+        let q = -1;
+        if (s && s.gulp != null && s.time - s.gulp < GULP) q = (s.time - s.gulp) / GULP;
+        else if (Number(P.idleAmp) > 0) {
+          const T = 5 / Math.max(0.1, Number(P.idleSpeed) || 1), k = Math.floor((t + ph) / T);
+          const jit = (Math.sin(k * 12.9898 + ph * 4.1) * 43758.5453) % 1;
+          const st0 = k * T + Math.abs(jit) * T * 0.5 - ph;
+          if (t >= st0 && t < st0 + GULP) q = (t - st0) / GULP;
+        }
+        if (q >= 0) {
+          const e = q < 0.5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2;
+          gulp = { pos: -1.1 + 2.4 * e, amp: Math.sin(q * Math.PI) * Math.max(0.3, Number(P.idleAmp) || 1), lift: Math.sin(Math.min(1, q * 2) * Math.PI) };
+        }
+      }
       // Stauchen: nach unten gezogen → länger und schmaler, nach oben → kürzer und breiter
       const sq = Math.max(-0.35, Math.min(0.35, (dy + idleY * 0.6) * (Number(P.squash) || 0) * 4));
       // Zittern bei Anspannung (fein, schnell) und Puls (der Bereich schwillt im Herzschlag kurz an)
       const tw = Math.max(0, Number(P.twitch) || 0);
       if (tw) { idleX += (Math.sin(t * 47 + ph) + Math.sin(t * 31 + ph * 2)) * 0.0006 * tw; idleY += Math.sin(t * 39 + ph * 3) * 0.0006 * tw; }
-      const sw = (Number(P.pulse) || 0) ? Soft.heart(t + ph * 0.05, P.bpm) * Number(P.pulse) * 0.05 : 0;
-      return { dx: dx + idleX, dy: dy + idleY, sq, wave, t, sp, sw };
+      let sw = (Number(P.pulse) || 0) ? Soft.heart(t + ph * 0.05, P.bpm) * Number(P.pulse) * 0.05 : 0;
+      // Aufblähen (0.9.38): Bereich dauerhaft gewölbt, beim Wackeln atmet die Wölbung leicht mit
+      const pf = Number(P.puff) || 0;
+      if (pf) sw += pf * 0.22 * (1 + (P.idle === 'wobble' ? Math.sin(t * sp * 1.9 + ph) * 0.12 * (Number(P.idleAmp) || 0) : 0));
+      return { dx: dx + idleX, dy: dy + idleY, sq, wave, t, sp, sw, gulp };
     },
 
     // Freie Form (0.9.28): Umriss aus Punkten (Lasso / Zeichenstift), auf Wunsch rund (Catmull-Rom)
@@ -249,6 +304,12 @@
       if (m.sq) { const b = Soft.box(r, aspect); dy += ly * b.ry * m.sq * w; dx -= lx * b.rx * m.sq * 0.5 * w; }
       if (m.sw) { const b = Soft.box(r, aspect); dx += lx * b.rx * m.sw * w; dy += ly * b.ry * m.sw * w; }
       if (m.wave) dx += Math.sin(m.t * m.sp * 1.3 - ly * 2.4) * m.wave * 0.8 * w * aw;
+      if (m.gulp) {
+        // Wölbung an der Stelle, an der der Bissen gerade ist; die Kehle hebt sich am Anfang kurz
+        const b = Soft.box(r, aspect), g = Math.exp(-Math.pow((ly - m.gulp.pos) / 0.38, 2)) * m.gulp.amp;
+        dx += lx * b.rx * g * 0.35 * w;
+        dy += (-m.gulp.lift * 0.12 + g * 0.08) * b.ry * w;
+      }
       return [dx, dy];
     },
 
@@ -292,6 +353,7 @@
       const iw = W / (1 + 2 * PAD), ih = H / (1 + 2 * PAD), ox = W * PAD / (1 + 2 * PAD), oy = H * PAD / (1 + 2 * PAD);
       const aspect = NW / NH;
       const regs = cfg.regions.filter((r) => r.on !== false);
+      let ops = null;
       FAST = ++FRAME;
       try {
       const moves = regs.map((r) => { const P = Soft.par(r); return { r, P, m: Soft.regionMove(r, P, sim.regs[r.id], t) }; });
@@ -317,11 +379,185 @@
         const lm = layerMesh(r, P, m, aspect, iw, ih, ox, oy);
         drawMesh(S, lm, 0);
       }
+      // 3) Anhänger (0.9.38): Pins sitzen auf dem verformten Bild und wippen mit
+      if (Soft.hangsOf(cfg).length) {
+        const dispAt = (u, v) => {
+          let dx = 0, dy = 0;
+          for (const { r, P, m } of moves) {
+            const L = Soft.local(r, u, v, aspect), E = { r, u, v, aspect };
+            const w = Soft.weight(P.layer ? Object.assign({}, P, { over: 0 }) : P, L[0], L[1], L[2], E);
+            if (w <= 0) continue;
+            const d = Soft.disp(r, P, m, L[0], L[1], w, aspect, E);
+            dx += d[0]; dy += d[1];
+          }
+          return [ox + (u + dx) * iw, oy + (v + dy) * ih];
+        };
+        ops = Soft.hangFrame(cfg, sim, t, dispAt, iw, ih, sim._acc || { x: 0, y: 0 });
+      }
       } finally { FAST = 0; }
       const ctx = out.getContext('2d');
       ctx.clearRect(0, 0, W, H);
+      if (ops) Soft.paintHangs(ctx, ops, true);
       ctx.drawImage(S.cv, 0, 0, W, H, 0, 0, W, H);
+      if (ops) Soft.paintHangs(ctx, ops, false);
       return true;
+    },
+
+    // ---------- Anhänger (0.9.38): eigene PNGs an Pins, mit Pendel-Physik und Effekten ----------
+    HANG_FX: [['', 'Keiner'], ['wobble', 'Wackeln'], ['shake', 'Zittern'], ['pulse', 'Pulsieren'], ['float', 'Schweben'], ['spin', 'Drehen'], ['blink', 'Blinken']],
+    hangsOf(cfg) { return ((cfg && cfg.hangs) || []).filter((a) => a && a.on !== false && a.asset && a.pins && a.pins.length); },
+    newHang(asset, pin) {
+      return { id: VN.uid ? VN.uid('hg') : 'hg' + Math.random().toString(36).slice(2, 8), name: (VN.asset && VN.asset(asset) || {}).name || VN.t('Anhänger'), asset, on: true,
+        pins: [pin || [0.5, 0.3]], anchor: [0.5, 0.06], anchor2: [0.5, 0.94], size: 0.14, rot: 0, behind: false, flip: false,
+        swing: true, weight: 1, stiff: 0.15, damp: 0.3, fx: '', fxAmp: 1, fxSpeed: 1 };
+    },
+    _himg: new Map(),
+    hangImg(asset) {
+      let im = Soft._himg.get(asset);
+      const url = VN.assetUrl(asset);
+      if (!im || im._url !== url) { im = new Image(); im.crossOrigin = 'anonymous'; im._url = url; im.src = url; Soft._himg.set(asset, im); }
+      return im.complete && im.naturalWidth ? im : null;
+    },
+    // Physik und Lage aller Anhänger für ein Bild. pinAt(u, v) → Pixel auf der Zeichenfläche,
+    // iw/ih = Bildgröße in Pixeln (ih = eine Figurenhöhe), acc = Beschleunigung der ganzen Figur (Bildrichtung)
+    hangFrame(cfg, sim, t, pinAt, iw, ih, acc) {
+      const hs = Soft.hangsOf(cfg);
+      const st0 = sim.hang || (sim.hang = {});
+      const dt = sim._ht != null ? Math.min(0.1, Math.max(0, t - sim._ht)) : 0;
+      sim._ht = t;
+      const kicks = sim._hk ? sim._hk.splice(0) : [];
+      const ops = [];
+      for (const a of hs) {
+        const img = Soft.hangImg(a.asset);
+        if (!img) continue;
+        const P1 = pinAt(a.pins[0][0], a.pins[0][1]);
+        const P2 = a.pins[1] ? pinAt(a.pins[1][0], a.pins[1][1]) : null;
+        const st = st0[a.id] || (st0[a.id] = { th: 0, om: 0, f: {} });
+        const dw = (Number(a.size) || 0.14) * iw, dh = dw * img.naturalHeight / img.naturalWidth;
+        // Pendel: hängt am Pin, schwingt bei Bewegung der Figur und der Stelle darunter (z. B. wippende Brust)
+        if (!P2 && a.swing !== false && dt > 0) {
+          const la = Soft.feed(st.f, P1[0] / ih, P1[1] / ih, dt);
+          const inert = Number(a.weight != null ? a.weight : 1);
+          const ax = ((acc.x || 0) + la.x) * inert, ay = ((acc.y || 0) + la.y) * inert;
+          const anc = a.anchor || [0.5, 0];
+          const L = Math.max(0.025, Math.hypot((0.5 - anc[0]) * dw, (0.5 - anc[1]) * dh) / ih);
+          const k = Math.max(0, Number(a.stiff) || 0) * 60, c = 0.4 + Math.max(0, Number(a.damp != null ? a.damp : 0.3)) * 9;
+          for (const kk of kicks) st.om += (kk.x * 6 - kk.y * 2 * Math.sin(st.th)) * inert;
+          const n = Math.max(1, Math.ceil(dt / 0.008)), h = dt / n, G = 6;
+          for (let i = 0; i < n; i++) {
+            const g = Math.max(0.5, G - ay);
+            const al = -(g / L) * Math.sin(st.th) + (ax / L) * Math.cos(st.th) * 0.35 - k * st.th - c * st.om;
+            st.om += al * h; st.th += st.om * h;
+          }
+          st.th = Math.max(-1.45, Math.min(1.45, st.th));
+        } else if (P2 || a.swing === false) { st.th = 0; st.om = 0; }
+        // Biegung (0.9.38): Kette aus Abschnitten, jeder folgt dem vorigen verzögert (Haarsträhne, Schweif)
+        const bend = !P2 ? Math.max(0, Math.min(1, Number(a.bend) || 0)) : 0;
+        if (bend > 0 && dt > 0) {
+          const N = BEND_N;
+          const ch = st.ch && st.ch.a.length === N ? st.ch : (st.ch = { a: new Array(N).fill(0), w: new Array(N).fill(0), om0: st.om });
+          const ang = (Number(a.rot) || 0) * Math.PI / 180 + st.th;
+          const rootAl = (st.om - (ch.om0 != null ? ch.om0 : st.om)) / dt; ch.om0 = st.om;
+          const la = st.fb ? Soft.feed(st.fb, P1[0] / ih, P1[1] / ih, dt) : (st.fb = {}, Soft.feed(st.fb, P1[0] / ih, P1[1] / ih, dt));
+          const inert = Number(a.weight != null ? a.weight : 1);
+          const wx = ((acc.x || 0) + la.x) * inert, wy = ((acc.y || 0) + la.y) * inert;
+          // in die Richtung des Anhängers drehen
+          const cs = Math.cos(-ang), sn = Math.sin(-ang), lx = wx * cs - wy * sn, ly = wx * sn + wy * cs;
+          const ax0 = Soft.hangAxis(a, dw, dh);
+          const segPx = ax0 ? ax0.far / N : 0;
+          const kb = 45 + Math.pow(1 - bend, 2) * 700, cb = 2 + (Number(a.damp != null ? a.damp : 0.3)) * 10;
+          const n = Math.max(1, Math.ceil(dt / 0.006)), h = dt / n;
+          for (let it = 0; it < n; it++) {
+            for (let i = 0; i < N; i++) {
+              const par = i ? ch.a[i - 1] : 0, parW = i ? ch.w[i - 1] : 0;
+              const da = ax0 ? ax0.u : [0, 1];
+              const d = [da[0] * Math.cos(ch.a[i]) - da[1] * Math.sin(ch.a[i]), da[0] * Math.sin(ch.a[i]) + da[1] * Math.cos(ch.a[i])];
+              const Li = Math.max(0.01, (i + 0.5) * segPx / ih);
+              const perp = -(d[0] * ly - d[1] * lx);
+              // Schwerkraft zieht jeden Abschnitt zurück in die Ruhelage (so wie das Bild gezeichnet ist)
+              const grav = -(4 / Li) * Math.sin(st.th + ch.a[i]) * 0.15;
+              const al = -kb * (ch.a[i] - par) - cb * (ch.w[i] - parW) + perp / Li * 0.1 - rootAl * 0.3 + grav;
+              ch.w[i] += al * h;
+            }
+            for (let i = 0; i < N; i++) {
+              ch.a[i] += ch.w[i] * h;
+              const par = i ? ch.a[i - 1] : 0;
+              if (ch.a[i] - par > 0.35) ch.a[i] = par + 0.35; else if (ch.a[i] - par < -0.35) ch.a[i] = par - 0.35;
+            }
+          }
+        } else if (!bend) st.ch = null;
+        // Effekte
+        const ph = [...String(a.id)].reduce((q, ch) => q + ch.charCodeAt(0), 0) * 0.37;
+        const amp = Number(a.fxAmp != null ? a.fxAmp : 1), sp = Number(a.fxSpeed || 1);
+        let fa = 0, fsc = 1, fx = 0, fy = 0, alpha = 1;
+        if (a.fx === 'wobble') fa = Math.sin(t * Math.PI * 2 * 0.9 * sp + ph) * 0.2 * amp;
+        else if (a.fx === 'shake') { const q = Math.floor(t * 24 * sp); const rnd = (z) => { const v = Math.sin(z * 12.9898 + ph * 78.233) * 43758.5453; return v - Math.floor(v) - 0.5; }; fx = rnd(q) * 0.012 * amp * ih; fy = rnd(q + 7.1) * 0.012 * amp * ih; fa = rnd(q + 3.3) * 0.08 * amp; }
+        else if (a.fx === 'pulse') fsc = 1 + Math.sin(t * Math.PI * 2 * 1.1 * sp + ph) * 0.08 * amp;
+        else if (a.fx === 'float') fy = Math.sin(t * Math.PI * 2 * 0.45 * sp + ph) * 0.012 * amp * ih;
+        else if (a.fx === 'spin') fa = t * Math.PI * 2 * 0.3 * sp * (amp || 1);
+        else if (a.fx === 'blink') alpha = 0.55 + 0.45 * Math.cos(t * Math.PI * 2 * 0.7 * sp + ph) * Math.min(1, amp);
+        ops.push({ a, img, P1, P2, th: st.th, fa, fsc, fx, fy, alpha, dw, dh, chain: bend > 0 && st.ch ? st.ch.a.slice() : null });
+      }
+      return ops;
+    },
+    // Längsachse eines Anhängers: vom Haltepunkt zur gegenüberliegenden Kante (oben gehalten → nach unten)
+    hangAxis(a, dw, dh) {
+      const A = a.anchor || [0.5, 0.06];
+      const dx = (0.5 - A[0]) * dw, dy = (0.5 - A[1]) * dh;
+      if (Math.hypot(dx, dy) < Math.min(dw, dh) * 0.08) return null; // in der Mitte gehalten: nichts zu biegen
+      const vert = Math.abs(dy) >= Math.abs(dx);
+      const u = vert ? [0, Math.sign(dy)] : [Math.sign(dx), 0], v = [-u[1], u[0]];
+      const ext = (d) => (d[0] > 0 ? (1 - A[0]) * dw : d[0] < 0 ? A[0] * dw : 0) + (d[1] > 0 ? (1 - A[1]) * dh : d[1] < 0 ? A[1] * dh : 0);
+      return { u, v, far: ext(u), near: ext([-u[0], -u[1]]), vp: ext(v), vn: ext([-v[0], -v[1]]) };
+    },
+    // Bild entlang der Kette verformt zeichnen (Dreiecke mit eigener Abbildung). Koordinaten: Haltepunkt = 0,0
+    drawBent(ctx, img, a, dw, dh, X, ch) {
+      const A = a.anchor || [0.5, 0.06], nw = img.naturalWidth, nh = img.naturalHeight, k = nw / dw;
+      const N = ch.length, seg = X.far / N;
+      const rot = (p, t) => [p[0] * Math.cos(t) - p[1] * Math.sin(t), p[0] * Math.sin(t) + p[1] * Math.cos(t)];
+      // Gelenke und Querrichtungen
+      const P = [[0, 0]], nrm = [];
+      for (let i = 0; i < N; i++) { const d = rot(X.u, ch[i]); P.push([P[i][0] + d[0] * seg, P[i][1] + d[1] * seg]); }
+      for (let i = 0; i <= N; i++) nrm.push(rot(X.v, i === 0 ? ch[0] * 0.5 : i === N ? ch[N - 1] : (ch[i - 1] + ch[i]) / 2));
+      const src = (sAlong, t) => [A[0] * nw + (X.u[0] * sAlong + X.v[0] * t) * k, A[1] * nh + (X.u[1] * sAlong + X.v[1] * t) * k];
+      const dst = (i, t) => [P[i][0] + nrm[i][0] * t, P[i][1] + nrm[i][1] * t];
+      const quad = (s0, s1, d00, d01, d10, d11) => {
+        const S00 = src(s0, -X.vn), S01 = src(s0, X.vp), S10 = src(s1, -X.vn), S11 = src(s1, X.vp);
+        tri(ctx, img, S00, S01, S11, d00, d01, d11);
+        tri(ctx, img, S00, S11, S10, d00, d11, d10);
+      };
+      // Stück vor dem Haltepunkt: starr
+      if (X.near > 0.5) quad(-X.near, 0, [X.u[0] * -X.near - X.v[0] * X.vn, X.u[1] * -X.near - X.v[1] * X.vn], [X.u[0] * -X.near + X.v[0] * X.vp, X.u[1] * -X.near + X.v[1] * X.vp], dst(0, -X.vn), dst(0, X.vp));
+      for (let i = 0; i < N; i++) quad(i * seg, (i + 1) * seg, dst(i, -X.vn), dst(i, X.vp), dst(i + 1, -X.vn), dst(i + 1, X.vp));
+    },
+    paintHangs(ctx, ops, behind) {
+      for (const o of ops) {
+        const a = o.a;
+        if (!!a.behind !== behind) continue;
+        const nw = o.img.naturalWidth, nh = o.img.naturalHeight;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, Math.min(1, o.alpha));
+        if (o.P2) {
+          // zwischen zwei Pins gespannt: Ankerpunkt 1 auf Pin 1, Ankerpunkt 2 auf Pin 2
+          const A1 = a.anchor || [0.5, 0.06], A2 = a.anchor2 || [0.5, 0.94];
+          const ax = (A2[0] - A1[0]) * nw, ay = (A2[1] - A1[1]) * nh;
+          const dx = o.P2[0] - o.P1[0], dy = o.P2[1] - o.P1[1];
+          const sc = Math.hypot(dx, dy) / Math.max(1, Math.hypot(ax, ay));
+          ctx.translate(o.P1[0] + o.fx, o.P1[1] + o.fy);
+          ctx.rotate(Math.atan2(dy, dx) - Math.atan2(ay, ax) + o.fa);
+          ctx.scale(sc * o.fsc * (a.flip ? -1 : 1), sc * o.fsc);
+          ctx.drawImage(o.img, -A1[0] * nw, -A1[1] * nh, nw, nh);
+        } else {
+          const A = a.anchor || [0.5, 0.06];
+          ctx.translate(o.P1[0] + o.fx, o.P1[1] + o.fy);
+          ctx.rotate((Number(a.rot) || 0) * Math.PI / 180 + o.th + o.fa);
+          ctx.scale(o.fsc * (a.flip ? -1 : 1), o.fsc);
+          const ax0 = o.chain ? Soft.hangAxis(a, o.dw, o.dh) : null;
+          if (ax0) Soft.drawBent(ctx, o.img, a, o.dw, o.dh, ax0, a.flip ? o.chain.map((x) => -x) : o.chain);
+          else ctx.drawImage(o.img, -A[0] * o.dw, -A[1] * o.dh, o.dw, o.dh);
+        }
+        ctx.restore();
+      }
     },
 
     // Bones (0.9.35): Verschiebung der Punkte eines fremden Gitters (Pixel w×h) durch die Bereiche.
@@ -580,9 +816,9 @@
     VN.registerAction('softPoke', {
       label: '〰 Weich-Physik anstoßen', make: () => ({ dir: 'down', amount: 1 }),
       apply: (a) => Soft.pokeAll(a.dir || 'down', a.amount != null ? a.amount : 1, a.asset || ''),
-      text: (a) => '〰 ' + VN.t('Weich anstoßen') + ' (' + VN.t({ down: 'nach unten', up: 'nach oben', left: 'nach links', right: 'nach rechts', random: 'zufällig' }[a.dir || 'down']) + ')',
+      text: (a) => '〰 ' + VN.t('Weich anstoßen') + ' (' + VN.t({ down: 'nach unten', up: 'nach oben', left: 'nach links', right: 'nach rechts', random: 'zufällig', gulp: 'Schlucken' }[a.dir || 'down']) + ')',
       row: (row, a, sel) => {
-        row.appendChild(sel(a.dir || 'down', [['down', 'nach unten'], ['up', 'nach oben'], ['left', 'nach links'], ['right', 'nach rechts'], ['random', 'zufällig']], (v) => VN.mutate(() => { a.dir = v; })));
+        row.appendChild(sel(a.dir || 'down', [['down', 'nach unten'], ['up', 'nach oben'], ['left', 'nach links'], ['right', 'nach rechts'], ['random', 'zufällig'], ['gulp', 'Schlucken']], (v) => VN.mutate(() => { a.dir = v; })));
         row.appendChild(el('input', { type: 'number', step: '0.1', min: '0', value: a.amount != null ? a.amount : 1, style: { width: '70px' }, title: VN.t('Stärke'), onchange: (e) => VN.mutate(() => { a.amount = Number(e.target.value) || 0; }) }));
         const s = VN.assetSelect('image', a.asset || '', (v) => VN.mutate(() => { a.asset = v; }));
         s.style.maxWidth = '160px'; s.title = VN.t('nur dieses Bild (leer = alle)');

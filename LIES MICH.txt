@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.37
+VN Timeline Engine · Prototyp 0.9.38
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,17 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.38 · Auslöser-Spur, Anhänger, Dicke Backen, Schlucken
+- Auslöser-Spur in der Timeline: Aktionen (Quests, Gegenstände, Variablen, Geld, Plugins …) an einem Schritt auslösen, ohne Dialog,
+  Auswahl oder Bild; optional mit Bedingung; einmal pro Spielstand oder jedes Mal.
+- Anhänger im Weich-Physik-Editor: eigene PNGs an die Figur pinnen. Ein Pin: hängt daran und schwingt wie ein Pendel, reagiert auf die
+  Figur und die wippende Stelle darunter. Zwei Pins: zwischen beiden Stellen aufgespannt. Vor oder hinter der Figur, gespiegelt
+  kopieren, Effekte (Wackeln, Zittern, Pulsieren, Schweben, Drehen, Blinken). Auch bei Figuren mit Bones und beim Kopieren der
+  Weich-Physik.
+- Biegung für Anhänger: Haarsträhnen, Zöpfe und Schweife biegen sich der Länge nach, die Spitze schwingt nach.
+- Neue Weich-Physik-Vorlagen: „Dicke Backen“ (mit neuem Regler „Aufblähen“ und leichtem Wackeln) und „Kehle (Schlucken)“ – ab und zu
+  oder gezielt über die Aktion „Weich-Physik anstoßen → Schlucken“.
 
 NEU IN 0.9.37 · Zuletzt geöffnet, Weich-Physik kopieren, Endlos-Schleife, Dämpfen
 - Zuletzt geöffnete Projekte auf dem Startbildschirm: Vorschaubild (Hintergrund der Startszene), Name, Ordner, Datum und Szenenzahl –

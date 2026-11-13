@@ -35,7 +35,8 @@ window.PenBar = {
     ['idleSpeed', 'Ruhe: Tempo', 0.2, 4, 0.05],
     ['twitch', 'Zucken (angespannt)', 0, 2, 0.05],
     ['pulse', 'Puls (Herzschlag)', 0, 2, 0.05],
-    ['bpm', 'Puls: Schläge/Min', 30, 180, 1]
+    ['bpm', 'Puls: Schläge/Min', 30, 180, 1],
+    ['puff', 'Aufblähen', 0, 2, 0.05]
   ];
 
   const TOOLS = [['select', '↖ Wählen'], ['ellipse', '◯ Ellipse'], ['lasso', '➰ Lasso'], ['pen', '✒ Stift']];
@@ -67,7 +68,7 @@ window.PenBar = {
       if (!VN.asset(VN.ui.softAsset)) VN.ui.softAsset = (imgs.find((a) => p.softs[a.id]) || imgs.find((a) => /char|figur/i.test(a.name + a.file)) || imgs[0] || {}).id;
       const id = VN.ui.softAsset;
       const data = p.softs[id] || null;
-      const testing = !!VN.ui.softTest && data;
+      const testing = !!VN.ui.softTest && data && ((data.regions || []).length || (data.hangs || []).length);
       const s = el('select', { class: 'small-input', onchange: (e) => { VN.ui.softAsset = e.target.value; VN.ui.softSel = null; VN.render(); } });
       for (const a of imgs) { const o = el('option', { value: a.id }, a.name + (p.softs[a.id] && (p.softs[a.id].regions || []).length ? ' · ' + VN.t('mit Weich-Physik') : '')); if (a.id === id) o.selected = true; s.appendChild(o); }
       center.appendChild(el('div', { class: 'view-head' }, s,
@@ -82,7 +83,7 @@ window.PenBar = {
           return sel;
         })(),
         el('div', { class: 'spacer' }),
-        data && (data.regions || []).length ? el('div', { class: 'seg' },
+        data && ((data.regions || []).length || (data.hangs || []).length) ? el('div', { class: 'seg' },
           el('button', { class: !testing ? 'active' : '', onclick: () => { VN.ui.softTest = false; VN.render(); } }, VN.t('Bereiche')),
           el('button', { class: testing ? 'active' : '', onclick: () => { VN.ui.softTest = true; VN.render(); } }, VN.t('▶ Testen'))) : null));
       const body = el('div', { class: 'soft-body' });
@@ -119,7 +120,7 @@ window.PenBar = {
       const pathOf = (pts, W, H, close) => pts.map((q, i) => (i ? 'L' : 'M') + (q[0] * W).toFixed(1) + ' ' + (q[1] * H).toFixed(1)).join(' ') + (close ? ' Z' : '');
       const stop = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
       // Zeichen-Werkzeuge zeichnen auch über bestehende Bereiche hinweg (Wählen nur mit „Auswählen“)
-      const drawing = () => (VN.ui.softTool || 'select') !== 'select' || !!VN.ui.softPinMode;
+      const drawing = () => (VN.ui.softTool || 'select') !== 'select' || !!VN.ui.softPinMode || !!VN.ui.hangPin;
       // Zeichenstift: Punkte in Arbeit (noch kein Bereich)
       let pen = [];
       SoftEd._pen = { finish: () => finishPen(), cancel: () => { pen = []; draw(); }, active: () => pen.length > 0 };
@@ -190,6 +191,28 @@ window.PenBar = {
             });
           });
           svg.appendChild(pg);
+        }
+        // Anhänger (0.9.38): Pins zeigen, die des gewählten ziehbar
+        for (const h of (data && data.hangs) || []) {
+          const sel = VN.ui.softHang === h.id;
+          const pts = (h.pins || []).map((q) => [q[0] * W, q[1] * H]);
+          if (pts.length === 2) svg.appendChild(mk('line', { x1: pts[0][0], y1: pts[0][1], x2: pts[1][0], y2: pts[1][1], class: 'sh-line' + (sel ? ' sel' : '') }));
+          pts.forEach((q, i) => {
+            const g = mk('g', { class: 'sh-pin' + (sel ? ' sel' : '') + (h.on === false ? ' off' : '') });
+            g.appendChild(mk('circle', { cx: q[0], cy: q[1], r: hs * (sel ? 1.7 : 1.1) }));
+            g.appendChild(mk('circle', { cx: q[0], cy: q[1], r: hs * 0.5, class: 'dot' }));
+            if (sel) { const tx = mk('text', { x: q[0] + hs * 2.2, y: q[1] - hs * 1.4, class: 'sh-lbl', 'font-size': Math.round(H * 0.018) }); tx.textContent = (h.pins.length > 1 ? (i + 1) + ' · ' : '') + (h.name || ''); g.appendChild(tx); }
+            g.addEventListener('mousedown', (ev) => {
+              if (VN.ui.hangPin) return;
+              stop(ev);
+              if (VN.ui.softHang !== h.id) { VN.ui.softHang = h.id; VN.ui.softSel = null; VN.render(); return; }
+              const o = h.pins.map((x) => x.slice()), [u0, v0] = toImg(ev);
+              VN.drag(ev, (dx, dy, e2) => { const [u, v] = toImg(e2); h.pins[i] = [o[i][0] + u - u0, o[i][1] + v - v0]; draw(); }, (dx, dy, moved) => {
+                if (!moved) return; const nv = h.pins.map((x) => [r4(x[0]), r4(x[1])]); h.pins = o; VN.mutate(() => { h.pins = nv; });
+              });
+            });
+            svg.appendChild(g);
+          });
         }
         // Zeichenstift in Arbeit
         if (pen.length) {
@@ -270,6 +293,13 @@ window.PenBar = {
       stage.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
         e.preventDefault();
+        if (VN.ui.hangPin) {
+          const hp = VN.ui.hangPin, h = ((data && data.hangs) || []).find((x) => x.id === hp.id);
+          const [pu, pv] = toImg(e);
+          VN.ui.hangPin = null;
+          if (h) VN.mutate(() => { h.pins[hp.i] = [r4(pu), r4(pv)]; }); else VN.render();
+          return;
+        }
         if (VN.ui.softPinMode) {
           const r = regs().find((x) => x.id === VN.ui.softPinMode);
           const [pu, pv] = toImg(e);
@@ -345,6 +375,7 @@ window.PenBar = {
         el('button', { class: 'btn small', onclick: () => anim('shake') }, VN.t('Schütteln')),
         walkBtn,
         el('button', { class: 'btn small', onclick: () => Soft.pokeAll('down', 1, id) }, VN.t('Anstoßen ↓')),
+        (Soft.data(id) && (Soft.data(id).regions || []).some((r) => Soft.par(r).idle === 'swallow')) ? el('button', { class: 'btn small', onclick: () => Soft.pokeAll('gulp', 1, id) }, VN.t('Schlucken')) : null,
         el('button', { class: 'btn small', onclick: () => { off = [0, 0]; box.style.transform = ''; } }, VN.t('Zurück zur Mitte'))));
       stage.appendChild(el('div', { class: 'muted small', style: { position: 'absolute', top: '10px', left: '12px' } }, VN.t('Tipp: Zieh die Figur mit der Maus hin und her.')));
     },
@@ -360,18 +391,19 @@ window.PenBar = {
         el('div', { class: 'logic-row' }, el('span', { class: 'muted small' }, VN.t('Vorlage')), pre),
         el('div', { class: 'seg soft-tools' }, ...TOOLS.map(([k, l]) => el('button', { class: (VN.ui.softTool || 'select') === k ? 'active' : '', onclick: () => { VN.ui.softTool = k; VN.render(); } }, VN.t(l)))),
         el('div', { class: 'muted small' }, VN.t(TOOL_HINT[VN.ui.softTool || 'select']))));
+      side.appendChild(SoftEd.hangCard(id, data));
       const regs = (data && data.regions) || [];
       if (!regs.length) return side;
       const list = el('div', { class: 'soft-list' });
       for (const r of regs) {
-        list.appendChild(el('div', { class: 'soft-item' + (VN.ui.softSel === r.id ? ' active' : ''), onclick: () => { VN.ui.softSel = r.id; VN.render(); } },
+        list.appendChild(el('div', { class: 'soft-item' + (VN.ui.softSel === r.id && !VN.ui.softHang ? ' active' : ''), onclick: () => { VN.ui.softSel = r.id; VN.ui.softHang = null; VN.render(); } },
           el('input', { type: 'checkbox', checked: r.on !== false, onclick: (e) => e.stopPropagation(), onchange: (e) => VN.mutate(() => { r.on = e.target.checked; }) }),
           el('span', { class: 'grow' }, r.name || VN.t((Soft.PRESETS[r.preset] || {}).label || 'Bereich')),
           el('span', { class: 'muted small' }, VN.t((Soft.PRESETS[r.preset] || {}).label || ''))));
       }
       side.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, VN.t('Bereiche')), list));
       const r = regs.find((x) => x.id === VN.ui.softSel);
-      if (!r) return side;
+      if (!r || VN.ui.softHang) return side;
       const P = Soft.par(r);
       const poly = r.shape === 'poly' && r.pts && r.pts.length >= 3;
       const card = el('div', { class: 'opt-card' });
@@ -406,6 +438,88 @@ window.PenBar = {
           el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { regs.splice(regs.indexOf(r), 1); VN.ui.softSel = null; if (!regs.length) delete p.softs[id]; }) }, VN.t('Entfernen'))));
       side.appendChild(card);
       return side;
+    },
+
+    // ---------- Anhänger (0.9.38): PNGs an Pins, schwingen mit, eigene Effekte ----------
+    hangCard(id, data) {
+      const p = VN.project;
+      const card = el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, VN.t('Anhänger (eigene PNGs)')));
+      const hangs = (data && data.hangs) || [];
+      const imgs = VN.assetsOf('image').filter((a) => a.id !== id);
+      const add = el('select', { onchange: (e) => {
+        const a = e.target.value; e.target.value = '';
+        if (!a) return;
+        const h = Soft.newHang(a, [0.5, 0.35]);
+        VN.mutate(() => { p.softs[id] = p.softs[id] || { on: true, regions: [] }; (p.softs[id].hangs = p.softs[id].hangs || []).push(h); });
+        VN.ui.softHang = h.id; VN.ui.softSel = null; VN.ui.hangPin = { id: h.id, i: 0 }; VN.render();
+      } }, el('option', { value: '' }, '+ ' + VN.t('Anhänger hinzufügen …')));
+      for (const a of imgs) add.appendChild(el('option', { value: a.id }, a.name));
+      card.append(add, el('div', { class: 'muted small' }, VN.t('Ohrring, Kette, Anhänger, Schwanz, Abzeichen … Ein Pin: hängt daran und schwingt. Zwei Pins: wird zwischen beiden aufgespannt.')));
+      if (hangs.length) {
+        const list = el('div', { class: 'soft-list' });
+        for (const h of hangs) {
+          list.appendChild(el('div', { class: 'soft-item' + (VN.ui.softHang === h.id ? ' active' : ''), onclick: () => { VN.ui.softHang = h.id; VN.ui.softSel = null; VN.render(); } },
+            el('input', { type: 'checkbox', checked: h.on !== false, onclick: (e) => e.stopPropagation(), onchange: (e) => VN.mutate(() => { h.on = e.target.checked; }) }),
+            el('span', { class: 'grow' }, h.name || VN.t('Anhänger')),
+            el('span', { class: 'muted small' }, (h.pins || []).length > 1 ? VN.t('2 Pins') : VN.t('1 Pin'))));
+        }
+        card.appendChild(list);
+      }
+      const h = hangs.find((x) => x.id === VN.ui.softHang);
+      if (!h) return card;
+      const set = (k) => (v) => VN.mutate(() => { h[k] = v; });
+      const row = (label, ...kids) => el('div', { class: 'logic-row' }, el('span', { class: 'muted small', style: { width: '112px' } }, VN.t(label)), ...kids);
+      const slider = (k, label, min, max, step, def, fmt) => {
+        const val = h[k] != null ? h[k] : def;
+        const out = el('span', { class: 'muted small' }, fmt ? fmt(val) : String(val));
+        const inp = el('input', { type: 'range', min, max, step, value: val,
+          oninput: (e) => { h[k] = Number(e.target.value); out.textContent = fmt ? fmt(h[k]) : e.target.value; },
+          onchange: (e) => { const v = Number(e.target.value); h[k] = val; VN.mutate(() => { h[k] = v; }); } });
+        return el('label', { class: 'soft-sl' }, el('span', null, VN.t(label)), inp, out);
+      };
+      const pick = el('select', { onchange: (e) => VN.mutate(() => { h.asset = e.target.value; }) });
+      for (const a of imgs) { const o = el('option', { value: a.id }, a.name); if (a.id === h.asset) o.selected = true; pick.appendChild(o); }
+      const pinBtn = (i, label) => el('button', { class: 'btn tiny' + (VN.ui.hangPin && VN.ui.hangPin.id === h.id && VN.ui.hangPin.i === i ? ' primary' : ''), onclick: () => { VN.ui.hangPin = VN.ui.hangPin && VN.ui.hangPin.i === i ? null : { id: h.id, i }; VN.render(); } },
+        VN.ui.hangPin && VN.ui.hangPin.id === h.id && VN.ui.hangPin.i === i ? VN.t('Jetzt ins Bild klicken …') : '📍 ' + VN.t(label));
+      const anchors = [['0.5,0.06', 'oben Mitte'], ['0.5,0.5', 'Mitte'], ['0.5,0.94', 'unten Mitte'], ['0.06,0.5', 'links Mitte'], ['0.94,0.5', 'rechts Mitte'], ['0.06,0.06', 'oben links'], ['0.94,0.06', 'oben rechts']];
+      const ancSel = (key, def) => {
+        const cur = (h[key] || def).map((x) => +x.toFixed(2)).join(',');
+        const s2 = el('select', { onchange: (e) => VN.mutate(() => { h[key] = e.target.value.split(',').map(Number); }) });
+        let found = false;
+        for (const [v, l] of anchors) { const o = el('option', { value: v }, VN.t(l)); if (v === cur) { o.selected = true; found = true; } s2.appendChild(o); }
+        if (!found) { const o = el('option', { value: cur }, VN.t('eigene Stelle')); o.selected = true; s2.appendChild(o); }
+        return s2;
+      };
+      const two = (h.pins || []).length > 1;
+      const fxSel = el('select', { onchange: (e) => VN.mutate(() => { h.fx = e.target.value; }) });
+      for (const [v, l] of Soft.HANG_FX) { const o = el('option', { value: v }, VN.t(l)); if (v === (h.fx || '')) o.selected = true; fxSel.appendChild(o); }
+      const box = el('div', { class: 'opt-card' },
+        el('div', { class: 'sec-title' }, VN.t('Anhänger')),
+        row('Name', el('input', { type: 'text', value: h.name || '', style: { flex: 1 }, onchange: (e) => VN.mutate(() => { h.name = e.target.value; }) })),
+        row('Bild', pick),
+        el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } }, pinBtn(0, two ? 'Pin 1 setzen' : 'Pin setzen'),
+          two ? pinBtn(1, 'Pin 2 setzen') : null,
+          el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { if (two) h.pins = [h.pins[0]]; else h.pins = [h.pins[0], [r4(Math.min(1, h.pins[0][0] + 0.08)), r4(h.pins[0][1])]]; }) }, two ? VN.t('Nur ein Pin') : '+ ' + VN.t('Zweiter Pin'))),
+        el('div', { class: 'muted small' }, VN.t(two ? 'Pins im Bild ziehen. Das PNG wird zwischen Pin 1 und Pin 2 aufgespannt und geht mit beiden Stellen mit.' : 'Pin im Bild ziehen. Das PNG hängt mit seinem Haltepunkt daran und schwingt, wenn sich die Figur oder die Stelle darunter bewegt.')),
+        row(two ? 'Haltepunkt 1' : 'Haltepunkt', ancSel('anchor', [0.5, 0.06])),
+        two ? row('Haltepunkt 2', ancSel('anchor2', [0.5, 0.94])) : null,
+        two ? null : slider('size', 'Größe', 0.02, 0.8, 0.005, 0.14, (v) => Math.round(v * 100) + ' %'),
+        two ? null : slider('rot', 'Drehung', -180, 180, 1, 0, (v) => v + '°'),
+        el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!h.behind, onchange: (e) => VN.mutate(() => { h.behind = e.target.checked; }) }), VN.t('Hinter der Figur')),
+        el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!h.flip, onchange: (e) => VN.mutate(() => { h.flip = e.target.checked; }) }), VN.t('Spiegeln')),
+        two ? null : el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: h.swing !== false, onchange: (e) => VN.mutate(() => { h.swing = e.target.checked; }) }), VN.t('Schwingt (Pendel)')),
+        !two ? slider('bend', 'Biegung', 0, 1, 0.01, 0, (v) => (v < 0.01 ? VN.t('steif') : Math.round(v * 100) + ' %')) : null,
+        !two && (h.bend || 0) > 0 ? el('div', { class: 'muted small' }, VN.t('Biegt sich der Länge nach, die Spitze schwingt nach – für Haarsträhnen, Zöpfe und Schweife. Der Haltepunkt sollte an einem Ende sitzen (oben, unten, links oder rechts).')) : null,
+        !two && h.swing !== false ? slider('weight', 'Trägheit', 0, 3, 0.05, 1) : null,
+        !two && h.swing !== false ? slider('stiff', 'Steifheit', 0, 1, 0.01, 0.15) : null,
+        !two && h.swing !== false ? slider('damp', 'Dämpfung', 0, 1, 0.01, 0.3) : null,
+        row('Effekt', fxSel),
+        h.fx ? slider('fxAmp', 'Effekt: Stärke', 0, 3, 0.05, 1) : null,
+        h.fx ? slider('fxSpeed', 'Effekt: Tempo', 0.1, 4, 0.05, 1) : null,
+        el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } },
+          el('button', { class: 'btn tiny', onclick: () => { const c = JSON.parse(JSON.stringify(h)); c.id = VN.uid('hg'); c.pins = h.pins.map((q) => [r4(1 - q[0]), q[1]]); c.flip = !h.flip; c.name = (h.name || '') + ' ' + VN.t('(gespiegelt)'); VN.mutate(() => { hangs.push(c); }); VN.ui.softHang = c.id; } }, VN.t('Gespiegelt kopieren')),
+          el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { hangs.splice(hangs.indexOf(h), 1); VN.ui.softHang = null; }) }, VN.t('Entfernen'))));
+      return el('div', null, card, box);
     },
 
     inspector() {

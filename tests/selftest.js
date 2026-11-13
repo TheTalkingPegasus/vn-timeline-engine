@@ -1466,6 +1466,109 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Schleife und Dämpfen: Looper mit zwei Elementen, Dämpf-Kurve');
   } catch (e) { general.push('Schleife/Dämpfen: ' + e.message); }
 
+  // 33. Auslöser-Spur (0.9.38)
+  try {
+    const r = JSON.parse(await js(`(async () => {
+      const out = [];
+      const s = VN.project.scenes.find((x) => x.type === 'story');
+      const t = VN.tracksOf(s).find((x) => x.key === 'trigger');
+      if (!t) return JSON.stringify(['Spur fehlt']);
+      if (!Array.isArray(s.tracks.trigger)) out.push('Spur nicht im Projekt');
+      const c = Story.addClip(s, t, 0);
+      if (!c || !Array.isArray(c.actions) || c.once !== true) out.push('neuer Clip falsch');
+      const v = VN.project.vars.find((x) => x.type !== 'flag');
+      if (v && c) {
+        VN.mutate(() => { c.actions.push({ type: 'addVar', var: v.id, value: 7 }); });
+        Player.start(s.id, 0, {});
+        await new Promise((res) => setTimeout(res, 900));
+        const got = Player.state && Player.state.rs && Player.state.rs.vars ? Player.state.rs.vars[v.id] : null;
+        const want = (v.type === 'flag' ? 0 : Number(v.start) || 0) + 7;
+        if (got == null || Number(got) !== want) out.push('Aktion nicht ausgelöst ' + got + ' statt ' + want);
+        if (!Player.state.rs.fired[c.id]) out.push('nicht als ausgelöst gemerkt');
+        Player.close(true);
+      }
+      VN.mutate(() => { s.tracks.trigger = s.tracks.trigger.filter((x) => x !== c && x.id !== (c && c.id)); });
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Auslöser-Spur: ' + r.join(', '));
+    else log('✓ Auslöser-Spur: Clip anlegen, Aktion wird beim Erreichen des Schritts ausgelöst');
+  } catch (e) { general.push('Auslöser-Spur: ' + e.message); }
+
+  // 34. Anhänger an der Weich-Physik (0.9.38)
+  try {
+    const r = JSON.parse(await js(`(async () => {
+      const out = [];
+      const p = VN.project, img = p.assets.find((a) => a.kind === 'image');
+      if (!img || !Soft.newHang) return JSON.stringify(['fehlt']);
+      const keep = JSON.stringify(p.softs || {});
+      p.softs = p.softs || {};
+      const h = Soft.newHang(img.id, [0.5, 0.3]);
+      p.softs.__t = { on: true, regions: [], hangs: [h] };
+      const cfg = Soft.cfg('__t');
+      if (!cfg || Soft.hangsOf(cfg).length !== 1) out.push('nur mit Anhänger nicht aktiv');
+      // eigenes Testbild (die Test-Projekte haben keine Bilddateien)
+      const c0 = document.createElement('canvas'); c0.width = 20; c0.height = 40; const g0 = c0.getContext('2d'); g0.fillStyle = '#f00'; g0.fillRect(0, 0, 20, 40);
+      const im = new Image(); im.src = c0.toDataURL(); await new Promise((res) => { im.onload = res; setTimeout(res, 500); });
+      im._url = VN.assetUrl(img.id); Soft._himg.set(img.id, im);
+      if (!Soft.hangImg(img.id)) out.push('Bild lädt nicht');
+      const sim = Soft.newSim();
+      const pin = (u, v) => [u * 100, v * 200];
+      Soft.hangFrame(cfg, sim, 0, pin, 100, 200, { x: 0, y: 0 });
+      let ops;
+      for (let i = 1; i <= 10; i++) ops = Soft.hangFrame(cfg, sim, i / 60, pin, 100, 200, { x: 40, y: 0 });
+      if (!ops || !ops.length) return JSON.stringify(out.concat(['keine Zeichen-Angaben']));
+      if (!(Math.abs(ops[0].th) > 0.01)) out.push('schwingt nicht ' + ops[0].th);
+      // Biegung: Kette folgt verzögert, wird verformt gezeichnet
+      h.bend = 0.8;
+      for (let i = 11; i <= 30; i++) ops = Soft.hangFrame(cfg, sim, i / 60, pin, 100, 200, { x: i < 20 ? 40 : -40, y: 0 });
+      if (!ops[0].chain || !ops[0].chain.some((x) => Math.abs(x) > 0.002)) out.push('Biegung bewegt sich nicht');
+      else if (ops[0].chain.some((x) => !isFinite(x) || Math.abs(x) > 4)) out.push('Biegung instabil');
+      const cb = document.createElement('canvas'); cb.width = 100; cb.height = 200;
+      Soft.paintHangs(cb.getContext('2d'), ops, false);
+      { const dd = cb.getContext('2d').getImageData(0, 0, 100, 200).data; let nn = 0; for (let i = 3; i < dd.length; i += 4) if (dd[i] > 10) nn++; if (nn < 20) out.push('gebogen nichts gezeichnet'); }
+      h.bend = 0;
+      // zwei Pins: liegt zwischen beiden
+      h.pins = [[0.2, 0.5], [0.8, 0.5]];
+      ops = Soft.hangFrame(cfg, sim, 0.5, pin, 100, 200, { x: 0, y: 0 });
+      if (!ops.length || !ops[0].P2 || ops[0].th !== 0) out.push('zwei Pins falsch');
+      const cv = document.createElement('canvas'); cv.width = 100; cv.height = 200;
+      Soft.paintHangs(cv.getContext('2d'), ops, false);
+      const d = cv.getContext('2d').getImageData(0, 0, 100, 200).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 10) n++;
+      if (n < 20) out.push('nichts gezeichnet');
+      p.softs = JSON.parse(keep);
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Anhänger: ' + r.join(', '));
+    else log('✓ Anhänger: PNG an einem Pin schwingt bei Bewegung, zwischen zwei Pins aufgespannt, wird gezeichnet');
+  } catch (e) { general.push('Anhänger: ' + e.message); }
+
+  // 35. Dicke Backen und Schlucken (0.9.38)
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [];
+      if (!Soft.PRESETS.puff || !Soft.PRESETS.throat) return JSON.stringify(['Vorlagen fehlen']);
+      const a = Soft.newRegion('puff', 0.5, 0.5, 0.1, 0.1), P = Soft.par(a);
+      const m = Soft.regionMove(a, P, { x: 0, y: 0, vx: 0, vy: 0 }, 1);
+      if (!(m.sw > 0.1)) out.push('bläht nicht auf ' + m.sw);
+      const d = Soft.disp(a, P, m, 0.8, 0, 1, 1, null);
+      if (!(d[0] > 0)) out.push('Wölbung nicht nach außen');
+      const th = Soft.newRegion('throat', 0.5, 0.5, 0.1, 0.1), Q = Soft.par(th);
+      const sim = Soft.newSim();
+      Soft.poke(sim, 'gulp', 1);
+      Soft.step(sim, [th], { x: 0, y: 0 }, 0.016);
+      for (let i = 0; i < 20; i++) Soft.step(sim, [th], { x: 0, y: 0 }, 0.016);
+      const mm = Soft.regionMove(th, Q, sim.regs[th.id], 0);
+      if (!mm.gulp) out.push('Schlucken auf Anstoß fehlt');
+      else { const dd = Soft.disp(th, Q, mm, 0.6, mm.gulp.pos, 1, 1, null); if (!(dd[0] > 0)) out.push('Kehle dehnt sich nicht'); }
+      for (let i = 0; i < 80; i++) Soft.step(sim, [th], { x: 0, y: 0 }, 0.016);
+      const m3 = Soft.regionMove(Object.assign({}, th, { idleAmp: 0 }), Object.assign({}, Q, { idleAmp: 0 }), sim.regs[th.id], 0);
+      if (m3.gulp) out.push('Schlucken hört nicht auf');
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Backen/Schlucken: ' + r.join(', '));
+    else log('✓ Dicke Backen wölben sich, Schlucken läuft auf Anstoß einmal durch die Kehle');
+  } catch (e) { general.push('Backen/Schlucken: ' + e.message); }
+
   // 27. Kulissen-Raum (0.9.32): 3D-Flächen, Kamera, Licht durch Fenster mit Jalousie, Bühne und Spieler
   try {
     const r = JSON.parse(await js(`(async () => {

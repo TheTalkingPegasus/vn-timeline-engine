@@ -881,6 +881,18 @@
       if (myRun !== run || gains === null) return;
       if (gains && gains.length) showGains(gains);
     }
+    // Auslöser-Spur (0.9.38): wie die Code-Spur, aber mit fertigen Aktionen und optionalen Bedingungen
+    const trigT = tl.find((t) => t.key === 'trigger');
+    for (const c of trigT && VN.trackOn(s, trigT, tl) ? s.tracks.trigger || [] : []) {
+      if (c.start !== b || !(c.actions || []).length) continue;
+      if (c.once !== false && run.rs.fired[c.id]) continue;
+      if (!VN.checkConds(c.conds, run.rs)) continue;
+      run.rs.fired[c.id] = true;
+      const myRun = run;
+      const gains = await doActions(c.actions, c.id);
+      if (myRun !== run || gains === null) return;
+      if (gains && gains.length) showGains(gains);
+    }
     if (run.blocked === 'video') { run.pendingDialog = st.dialog; } else showDialog(st.dialog);
     run.pendingChoice = st.choice;
     if (st.dialog && st.dialog.start === b && st.dialog.actions && st.dialog.actions.length && !run.rs.fired[st.dialog.id]) {

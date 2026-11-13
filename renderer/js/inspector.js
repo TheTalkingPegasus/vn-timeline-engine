@@ -215,6 +215,15 @@
         const [ta, msg] = VN.Formula.editor(c, 'code', true, 8);
         ta.style.width = '100%';
         box.append(field('Code (läuft, sobald dieser Schritt beginnt)', ta), msg, timing, Inspector.codeHelp());
+      } else if (tb === 'trigger') {
+        c.actions = c.actions || []; c.conds = c.conds || [];
+        box.append(
+          field('Name (nur für dich, z. B. „Quest: Schlüssel gefunden“)', text(c.name, set(c, 'name'), VN.t('z. B. Quest-Moment'))),
+          el('div', { class: 'muted small' }, VN.t('Löst die Aktionen aus, sobald das Spiel diesen Schritt erreicht – ohne dass ein Dialog, eine Auswahl oder ein Bild dafür nötig ist.')),
+          VN.actionEditor(c.actions, 'Auslösen'),
+          VN.condEditor(c.conds, 'Nur wenn (optional)'),
+          field('Wie oft', select(c.once === false ? 'always' : 'once', [['once', 'Einmal pro Spielstand'], ['always', 'Jedes Mal, wenn der Schritt erreicht wird']], (v) => VN.mutate(() => { c.once = v !== 'always'; }))),
+          field('Schritt', num(c.start + 1, (v) => VN.mutate(() => { c.start = Math.max(0, Math.round(v) - 1); s.beats = Math.max(s.beats, c.start + 1); }), { min: 1 })));
       } else if (tb === 'cam') {
         box.appendChild(Tools.camInspector(s, c, t, timing));
       } else if (tb === 'video') {

@@ -6,6 +6,7 @@
   const clipLabel = (c, t) => {
     if (c.set) { const f = Stage.figure(c.set); return '◆ ' + (f ? f.name : 'Ebenen-Figur'); }
     if (t.kind === 'code') { const l = String(c.code || '').split('\n').map((x) => x.trim()).filter((x) => x && x[0] !== '#'); return '🧮 ' + (l[0] || VN.t('leerer Code')) + (l.length > 1 ? ' (+' + (l.length - 1) + ')' : ''); }
+    if (t.kind === 'trigger') { const n = (c.actions || []).length; return '⚡ ' + (c.name || (n ? (c.actions || []).slice(0, 2).map((a) => VN.actionText ? VN.actionText(a) : a.type).join(' · ') + (n > 2 ? ' (+' + (n - 2) + ')' : '') : VN.t('Auslöser – noch keine Aktion'))) + ((c.conds || []).length ? ' · ' + VN.t('mit Bedingung') : '') + (c.once === false ? ' · ↻' : ''); }
     if (t.kind === 'camera') return 'Kamera · ' + Math.round(c.zoom || 100) + ' %' + (c.panX || c.panY ? ' · Schwenk' : '') + (c.shake ? ' · Wackeln' : '');
     if (t.kind === 'video' && c.anim) { const an = window.Anim && Anim.get(c.anim); return '🎬 ' + (an ? an.name : 'Animation fehlt') + ' · live'; }
     if (t.kind === 'video') { const a = VN.asset(c.asset); return (a ? a.name : 'kein Video gewählt') + (c.layer === 'front' ? ' · Zwischensequenz' : ' · Hintergrund'); }
@@ -192,6 +193,7 @@
         case 'cam': return { ...base, len: remaining, zoom: 130, panX: 0, panY: -8, rot: 0, shake: 0, dur: 1.2, ease: 'ease-in-out', keys: [] };
         case 'video': return { ...base, len: 1, asset: assetId || null, layer: 'front', loop: false, muted: false, vol: 90, fit: 'cover', waitEnd: true, skippable: true };
         case 'code': return { ...base, len: 1, code: '' };
+        case 'trigger': return { ...base, len: 1, name: '', actions: [], conds: [], once: true };
         case 'music': return { ...base, len: remaining, asset: assetId || null, vol: 70, loop: true, carry: false, fade: 1 };
         default: return { ...base, len: 1, asset: assetId || null, vol: 90, delay: 0 };
       }
@@ -497,6 +499,7 @@
           const hint = t.kind === 'overlay' ? 'Doppelklick: Farb-/Licht-Ebene · Partikel und Filter aus „Effekte“ links hierher ziehen'
             : t.kind === 'camera' ? 'Doppelklick: Kamerafahrt (Zoom, Schwenk, Wackeln) · Vorlagen aus „Effekte“ links'
             : t.kind === 'code' ? 'Doppelklick: Code, der an diesem Schritt läuft (z. B. gold += 5)'
+            : t.kind === 'trigger' ? 'Doppelklick: Auslöser – Quest, Gegenstand, Variable … an diesem Schritt, ohne Dialog'
             : t.kind === 'video' ? 'WebM- oder MP4-Video hierher ziehen (Zwischensequenz oder Hintergrund)'
             : t.kind === 'image' ? 'Bild hierher ziehen oder doppelklicken'
             : t.kind === 'audio' ? 'Audio hierher ziehen (OGG, WAV, MP3 …)'
