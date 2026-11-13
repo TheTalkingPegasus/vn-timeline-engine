@@ -692,6 +692,8 @@
       const fl = /scaleX\(-1\)/.test(inst.cv.style.transform || '');
       const cw = inst.cv.width, ch = inst.cv.height;
       const unit = rc && rc.height ? rc.height / (1 + 2 * PAD) : mesh.h;
+      // ganze Figur auf dem Bildschirm (für die Anhänger, 0.9.38)
+      if (rc && rc.height) { const fa = Soft.feed(S.ff || (S.ff = {}), (rc.left + rc.width / 2) / unit, (rc.top + rc.height / 2) / unit, dt); acc.x = fl ? -fa.x : fa.x; acc.y = fa.y; }
       for (const r of regs) {
         const c = Soft.center(r), key = c[0].toFixed(3) + ',' + c[1].toFixed(3);
         let an = S.anchors[r.id];
@@ -715,6 +717,43 @@
     return { pos: S.p, count: mesh.count, w: mesh.w, h: mesh.h };
   }
 
+  // Anhänger (0.9.38) bei Figuren mit Bones: eigene 2D-Ebenen vor und hinter dem Figuren-Canvas.
+  // Pins hängen am nächsten Gitterpunkt und gehen so mit Knochen und Weich-Physik mit.
+  function drawHangs(inst, t) {
+    const S = inst.soft, cfg = S && window.Soft ? Soft.cfg(inst.assetId) : null;
+    const hs = cfg ? Soft.hangsOf(cfg) : [];
+    if (!hs.length || !inst.cv.parentNode) {
+      if (inst.hangCv) { inst.hangCv.forEach((c) => c.remove()); inst.hangCv = null; }
+      return;
+    }
+    const cv = inst.cv;
+    if (!inst.hangCv || !inst.hangCv[0].isConnected) {
+      inst.hangCv = [document.createElement('canvas'), document.createElement('canvas')];
+      inst.hangCv.forEach((c) => { c.className = 'rig-canvas rig-hang'; });
+      cv.before(inst.hangCv[0]); cv.after(inst.hangCv[1]);
+    }
+    const mesh = inst.mesh, pos = mesh.pos, out = inst.out;
+    const near = inst.hangNear || (inst.hangNear = {});
+    const pinAt = (u, v) => {
+      const key = u.toFixed(4) + ',' + v.toFixed(4);
+      let k = near[key];
+      if (k == null) {
+        let bd = Infinity; k = 0;
+        for (let i = 0; i < mesh.count; i++) { const dx = pos[i * 2] - u * mesh.w, dy = pos[i * 2 + 1] - v * mesh.h, dd = dx * dx + dy * dy; if (dd < bd) { bd = dd; k = i; } }
+        near[key] = k;
+      }
+      return [out[k * 2] + (u * mesh.w - pos[k * 2]), out[k * 2 + 1] + (v * mesh.h - pos[k * 2 + 1])];
+    };
+    const ops = Soft.hangFrame(cfg, S.sim, t, pinAt, mesh.w, mesh.h, S.sim._acc || { x: 0, y: 0 });
+    inst.hangCv.forEach((c, i) => {
+      if (c.width !== cv.width || c.height !== cv.height) { c.width = cv.width; c.height = cv.height; }
+      if (c._css !== cv.style.cssText) { c._css = cv.style.cssText; c.style.cssText = cv.style.cssText; }
+      const g = c.getContext('2d');
+      g.clearRect(0, 0, c.width, c.height);
+      Soft.paintHangs(g, ops, i === 0);
+    });
+  }
+
   function drawFrame(inst, now, dt, forced) {
     const { mesh, rig } = inst;
     const t = now - inst.t0;
@@ -723,6 +762,7 @@
     inst.lastMats = mats;
     Rig.skin(softMesh(inst, t, inst.static ? 0 : dt) || mesh, inst.wts, rig, mats, inst.out, inst.static ? 0 : t, inst.static ? 0 : inst.amp);
     inst.skinned = true;
+    drawHangs(inst, t);
     if (inst.face) {
       const sf = inst.face.surface(now * 1000);
       if (sf && sf._ver !== inst.faceVer) { inst.faceVer = sf._ver; setTex(inst, sf); }
@@ -795,6 +835,7 @@
         if (!inst.cv.isConnected) {
           live.delete(inst);
           if (inst.soft) Soft.EXT.delete(inst.soft.sim);
+          if (inst.hangCv) { inst.hangCv.forEach((c) => c.remove()); inst.hangCv = null; }
           if (inst.face) Face.LIVE.delete(inst.face);
           if (inst.res) { releaseRes(inst.res); inst.res = null; if (glFree && inst.resToken) glFree.unregister(inst.resToken); }
           freeOwn(inst);

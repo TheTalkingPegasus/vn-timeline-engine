@@ -34,7 +34,8 @@
     data(assetId) { const s = VN.project && VN.project.softs && VN.project.softs[assetId]; return s || null; },
     cfg(assetId) {
       const s = Soft.data(assetId);
-      if (!s || s.on === false || !(s.regions && s.regions.some((r) => r.on !== false))) return null;
+      if (!s || s.on === false || !((s.regions && s.regions.some((r) => r.on !== false)) || Soft.hangsOf(s).length)) return null;
+      if (!s.regions) s.regions = [];
       return s;
     },
     // Werte eines Bereichs: Vorlage + eigene Anpassungen
@@ -64,6 +65,9 @@
       // bis 0,1 s je Bild in Echtzeit (Unterschritte halten die Federn stabil) – sonst wirkt es bei wenig FPS wie Zeitlupe
       dt = Math.min(0.1, Math.max(0, dt || 0));
       const kick = sim.poke.splice(0);
+      // für die Anhänger merken (0.9.38): Beschleunigung der Figur und Stöße
+      sim._acc = { x: (acc && acc.x) || 0, y: (acc && acc.y) || 0 };
+      if (kick.length) (sim._hk || (sim._hk = [])).push(...kick);
       for (const r of regions) {
         const P = Soft.par(r);
         // Bones (0.9.35): jeder Bereich bekommt die Beschleunigung an seiner eigenen Stelle
@@ -292,6 +296,7 @@
       const iw = W / (1 + 2 * PAD), ih = H / (1 + 2 * PAD), ox = W * PAD / (1 + 2 * PAD), oy = H * PAD / (1 + 2 * PAD);
       const aspect = NW / NH;
       const regs = cfg.regions.filter((r) => r.on !== false);
+      let ops = null;
       FAST = ++FRAME;
       try {
       const moves = regs.map((r) => { const P = Soft.par(r); return { r, P, m: Soft.regionMove(r, P, sim.regs[r.id], t) }; });
@@ -317,11 +322,118 @@
         const lm = layerMesh(r, P, m, aspect, iw, ih, ox, oy);
         drawMesh(S, lm, 0);
       }
+      // 3) Anhänger (0.9.38): Pins sitzen auf dem verformten Bild und wippen mit
+      if (Soft.hangsOf(cfg).length) {
+        const dispAt = (u, v) => {
+          let dx = 0, dy = 0;
+          for (const { r, P, m } of moves) {
+            const L = Soft.local(r, u, v, aspect), E = { r, u, v, aspect };
+            const w = Soft.weight(P.layer ? Object.assign({}, P, { over: 0 }) : P, L[0], L[1], L[2], E);
+            if (w <= 0) continue;
+            const d = Soft.disp(r, P, m, L[0], L[1], w, aspect, E);
+            dx += d[0]; dy += d[1];
+          }
+          return [ox + (u + dx) * iw, oy + (v + dy) * ih];
+        };
+        ops = Soft.hangFrame(cfg, sim, t, dispAt, iw, ih, sim._acc || { x: 0, y: 0 });
+      }
       } finally { FAST = 0; }
       const ctx = out.getContext('2d');
       ctx.clearRect(0, 0, W, H);
+      if (ops) Soft.paintHangs(ctx, ops, true);
       ctx.drawImage(S.cv, 0, 0, W, H, 0, 0, W, H);
+      if (ops) Soft.paintHangs(ctx, ops, false);
       return true;
+    },
+
+    // ---------- Anhänger (0.9.38): eigene PNGs an Pins, mit Pendel-Physik und Effekten ----------
+    HANG_FX: [['', 'Keiner'], ['wobble', 'Wackeln'], ['shake', 'Zittern'], ['pulse', 'Pulsieren'], ['float', 'Schweben'], ['spin', 'Drehen'], ['blink', 'Blinken']],
+    hangsOf(cfg) { return ((cfg && cfg.hangs) || []).filter((a) => a && a.on !== false && a.asset && a.pins && a.pins.length); },
+    newHang(asset, pin) {
+      return { id: VN.uid ? VN.uid('hg') : 'hg' + Math.random().toString(36).slice(2, 8), name: (VN.asset && VN.asset(asset) || {}).name || VN.t('Anhänger'), asset, on: true,
+        pins: [pin || [0.5, 0.3]], anchor: [0.5, 0.06], anchor2: [0.5, 0.94], size: 0.14, rot: 0, behind: false, flip: false,
+        swing: true, weight: 1, stiff: 0.15, damp: 0.3, fx: '', fxAmp: 1, fxSpeed: 1 };
+    },
+    _himg: new Map(),
+    hangImg(asset) {
+      let im = Soft._himg.get(asset);
+      const url = VN.assetUrl(asset);
+      if (!im || im._url !== url) { im = new Image(); im.crossOrigin = 'anonymous'; im._url = url; im.src = url; Soft._himg.set(asset, im); }
+      return im.complete && im.naturalWidth ? im : null;
+    },
+    // Physik und Lage aller Anhänger für ein Bild. pinAt(u, v) → Pixel auf der Zeichenfläche,
+    // iw/ih = Bildgröße in Pixeln (ih = eine Figurenhöhe), acc = Beschleunigung der ganzen Figur (Bildrichtung)
+    hangFrame(cfg, sim, t, pinAt, iw, ih, acc) {
+      const hs = Soft.hangsOf(cfg);
+      const st0 = sim.hang || (sim.hang = {});
+      const dt = sim._ht != null ? Math.min(0.1, Math.max(0, t - sim._ht)) : 0;
+      sim._ht = t;
+      const kicks = sim._hk ? sim._hk.splice(0) : [];
+      const ops = [];
+      for (const a of hs) {
+        const img = Soft.hangImg(a.asset);
+        if (!img) continue;
+        const P1 = pinAt(a.pins[0][0], a.pins[0][1]);
+        const P2 = a.pins[1] ? pinAt(a.pins[1][0], a.pins[1][1]) : null;
+        const st = st0[a.id] || (st0[a.id] = { th: 0, om: 0, f: {} });
+        const dw = (Number(a.size) || 0.14) * iw, dh = dw * img.naturalHeight / img.naturalWidth;
+        // Pendel: hängt am Pin, schwingt bei Bewegung der Figur und der Stelle darunter (z. B. wippende Brust)
+        if (!P2 && a.swing !== false && dt > 0) {
+          const la = Soft.feed(st.f, P1[0] / ih, P1[1] / ih, dt);
+          const inert = Number(a.weight != null ? a.weight : 1);
+          const ax = ((acc.x || 0) + la.x) * inert, ay = ((acc.y || 0) + la.y) * inert;
+          const anc = a.anchor || [0.5, 0];
+          const L = Math.max(0.025, Math.hypot((0.5 - anc[0]) * dw, (0.5 - anc[1]) * dh) / ih);
+          const k = Math.max(0, Number(a.stiff) || 0) * 60, c = 0.4 + Math.max(0, Number(a.damp != null ? a.damp : 0.3)) * 9;
+          for (const kk of kicks) st.om += (kk.x * 6 - kk.y * 2 * Math.sin(st.th)) * inert;
+          const n = Math.max(1, Math.ceil(dt / 0.008)), h = dt / n, G = 6;
+          for (let i = 0; i < n; i++) {
+            const g = Math.max(0.5, G - ay);
+            const al = -(g / L) * Math.sin(st.th) + (ax / L) * Math.cos(st.th) * 0.35 - k * st.th - c * st.om;
+            st.om += al * h; st.th += st.om * h;
+          }
+          st.th = Math.max(-1.45, Math.min(1.45, st.th));
+        } else if (P2 || a.swing === false) { st.th = 0; st.om = 0; }
+        // Effekte
+        const ph = [...String(a.id)].reduce((q, ch) => q + ch.charCodeAt(0), 0) * 0.37;
+        const amp = Number(a.fxAmp != null ? a.fxAmp : 1), sp = Number(a.fxSpeed || 1);
+        let fa = 0, fsc = 1, fx = 0, fy = 0, alpha = 1;
+        if (a.fx === 'wobble') fa = Math.sin(t * Math.PI * 2 * 0.9 * sp + ph) * 0.2 * amp;
+        else if (a.fx === 'shake') { const q = Math.floor(t * 24 * sp); const rnd = (z) => { const v = Math.sin(z * 12.9898 + ph * 78.233) * 43758.5453; return v - Math.floor(v) - 0.5; }; fx = rnd(q) * 0.012 * amp * ih; fy = rnd(q + 7.1) * 0.012 * amp * ih; fa = rnd(q + 3.3) * 0.08 * amp; }
+        else if (a.fx === 'pulse') fsc = 1 + Math.sin(t * Math.PI * 2 * 1.1 * sp + ph) * 0.08 * amp;
+        else if (a.fx === 'float') fy = Math.sin(t * Math.PI * 2 * 0.45 * sp + ph) * 0.012 * amp * ih;
+        else if (a.fx === 'spin') fa = t * Math.PI * 2 * 0.3 * sp * (amp || 1);
+        else if (a.fx === 'blink') alpha = 0.55 + 0.45 * Math.cos(t * Math.PI * 2 * 0.7 * sp + ph) * Math.min(1, amp);
+        ops.push({ a, img, P1, P2, th: st.th, fa, fsc, fx, fy, alpha, dw, dh });
+      }
+      return ops;
+    },
+    paintHangs(ctx, ops, behind) {
+      for (const o of ops) {
+        const a = o.a;
+        if (!!a.behind !== behind) continue;
+        const nw = o.img.naturalWidth, nh = o.img.naturalHeight;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, Math.min(1, o.alpha));
+        if (o.P2) {
+          // zwischen zwei Pins gespannt: Ankerpunkt 1 auf Pin 1, Ankerpunkt 2 auf Pin 2
+          const A1 = a.anchor || [0.5, 0.06], A2 = a.anchor2 || [0.5, 0.94];
+          const ax = (A2[0] - A1[0]) * nw, ay = (A2[1] - A1[1]) * nh;
+          const dx = o.P2[0] - o.P1[0], dy = o.P2[1] - o.P1[1];
+          const sc = Math.hypot(dx, dy) / Math.max(1, Math.hypot(ax, ay));
+          ctx.translate(o.P1[0] + o.fx, o.P1[1] + o.fy);
+          ctx.rotate(Math.atan2(dy, dx) - Math.atan2(ay, ax) + o.fa);
+          ctx.scale(sc * o.fsc * (a.flip ? -1 : 1), sc * o.fsc);
+          ctx.drawImage(o.img, -A1[0] * nw, -A1[1] * nh, nw, nh);
+        } else {
+          const A = a.anchor || [0.5, 0.06];
+          ctx.translate(o.P1[0] + o.fx, o.P1[1] + o.fy);
+          ctx.rotate((Number(a.rot) || 0) * Math.PI / 180 + o.th + o.fa);
+          ctx.scale(o.fsc * (a.flip ? -1 : 1), o.fsc);
+          ctx.drawImage(o.img, -A[0] * o.dw, -A[1] * o.dh, o.dw, o.dh);
+        }
+        ctx.restore();
+      }
     },
 
     // Bones (0.9.35): Verschiebung der Punkte eines fremden Gitters (Pixel w×h) durch die Bereiche.

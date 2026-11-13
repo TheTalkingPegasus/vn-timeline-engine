@@ -1494,6 +1494,45 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Auslöser-Spur: Clip anlegen, Aktion wird beim Erreichen des Schritts ausgelöst');
   } catch (e) { general.push('Auslöser-Spur: ' + e.message); }
 
+  // 34. Anhänger an der Weich-Physik (0.9.38)
+  try {
+    const r = JSON.parse(await js(`(async () => {
+      const out = [];
+      const p = VN.project, img = p.assets.find((a) => a.kind === 'image');
+      if (!img || !Soft.newHang) return JSON.stringify(['fehlt']);
+      const keep = JSON.stringify(p.softs || {});
+      p.softs = p.softs || {};
+      const h = Soft.newHang(img.id, [0.5, 0.3]);
+      p.softs.__t = { on: true, regions: [], hangs: [h] };
+      const cfg = Soft.cfg('__t');
+      if (!cfg || Soft.hangsOf(cfg).length !== 1) out.push('nur mit Anhänger nicht aktiv');
+      // eigenes Testbild (die Test-Projekte haben keine Bilddateien)
+      const c0 = document.createElement('canvas'); c0.width = 20; c0.height = 40; const g0 = c0.getContext('2d'); g0.fillStyle = '#f00'; g0.fillRect(0, 0, 20, 40);
+      const im = new Image(); im.src = c0.toDataURL(); await new Promise((res) => { im.onload = res; setTimeout(res, 500); });
+      im._url = VN.assetUrl(img.id); Soft._himg.set(img.id, im);
+      if (!Soft.hangImg(img.id)) out.push('Bild lädt nicht');
+      const sim = Soft.newSim();
+      const pin = (u, v) => [u * 100, v * 200];
+      Soft.hangFrame(cfg, sim, 0, pin, 100, 200, { x: 0, y: 0 });
+      let ops;
+      for (let i = 1; i <= 10; i++) ops = Soft.hangFrame(cfg, sim, i / 60, pin, 100, 200, { x: 40, y: 0 });
+      if (!ops || !ops.length) return JSON.stringify(out.concat(['keine Zeichen-Angaben']));
+      if (!(Math.abs(ops[0].th) > 0.01)) out.push('schwingt nicht ' + ops[0].th);
+      // zwei Pins: liegt zwischen beiden
+      h.pins = [[0.2, 0.5], [0.8, 0.5]];
+      ops = Soft.hangFrame(cfg, sim, 0.5, pin, 100, 200, { x: 0, y: 0 });
+      if (!ops.length || !ops[0].P2 || ops[0].th !== 0) out.push('zwei Pins falsch');
+      const cv = document.createElement('canvas'); cv.width = 100; cv.height = 200;
+      Soft.paintHangs(cv.getContext('2d'), ops, false);
+      const d = cv.getContext('2d').getImageData(0, 0, 100, 200).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 10) n++;
+      if (n < 20) out.push('nichts gezeichnet');
+      p.softs = JSON.parse(keep);
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Anhänger: ' + r.join(', '));
+    else log('✓ Anhänger: PNG an einem Pin schwingt bei Bewegung, zwischen zwei Pins aufgespannt, wird gezeichnet');
+  } catch (e) { general.push('Anhänger: ' + e.message); }
+
   // 27. Kulissen-Raum (0.9.32): 3D-Flächen, Kamera, Licht durch Fenster mit Jalousie, Bühne und Spieler
   try {
     const r = JSON.parse(await js(`(async () => {
