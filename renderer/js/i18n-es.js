@@ -5641,7 +5641,17 @@ window.VN_I18N_ES = {
 "aus": "no",
 "Wiederholen, solange der Clip läuft (endlos)": "Repetir mientras dure el clip (sin fin)",
 "Ausblenden am Ende": "Desvanecer al final",
-"Der Ton läuft vom ersten bis zum letzten Schritt des Clips immer weiter. Zieh den Clip in der Timeline länger, damit er länger läuft.": "El sonido sigue sonando desde el primer hasta el último paso del clip. Alarga el clip en la línea de tiempo para que dure más."
+"Der Ton läuft vom ersten bis zum letzten Schritt des Clips immer weiter. Zieh den Clip in der Timeline länger, damit er länger läuft.": "El sonido sigue sonando desde el primer hasta el último paso del clip. Alarga el clip en la línea de tiempo para que dure más.",
+"Auslöser – noch keine Aktion": "Disparador – sin acción aún",
+"mit Bedingung": "con condición",
+"Name (nur für dich, z. B. „Quest: Schlüssel gefunden“)": "Nombre (solo para ti, p. ej. «Misión: llave encontrada»)",
+"z. B. Quest-Moment": "p. ej. momento de misión",
+"Löst die Aktionen aus, sobald das Spiel diesen Schritt erreicht – ohne dass ein Dialog, eine Auswahl oder ein Bild dafür nötig ist.": "Ejecuta las acciones en cuanto el juego llega a este paso, sin necesidad de diálogo, elección ni imagen.",
+"Auslösen": "Ejecutar",
+"Nur wenn (optional)": "Solo si (opcional)",
+"Einmal pro Spielstand": "Una vez por partida",
+"Jedes Mal, wenn der Schritt erreicht wird": "Cada vez que se llega al paso",
+"Doppelklick: Auslöser – Quest, Gegenstand, Variable … an diesem Schritt, ohne Dialog": "Doble clic: disparador – misión, objeto, variable … en este paso, sin diálogo"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

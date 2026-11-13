@@ -8,6 +8,8 @@
     { key: 'video', label: 'Video', kind: 'video', color: '#d08ad8', fg: '#22102a' });
   // Code-Spur (0.9.16): kleine Rechen-Befehle, die an einem Schritt laufen (gold += 5, give("Schlüssel") …)
   VN.TRACKS.splice(VN.TRACKS.findIndex((t) => t.key === 'choice') + 1, 0, { key: 'code', label: 'Code', kind: 'code', color: '#9be15d', fg: '#132007' });
+  // Auslöser-Spur (0.9.38): Aktionen an einem Schritt auslösen, ohne Dialog, Auswahl oder Bild (Quest-Momente usw.)
+  VN.TRACKS.splice(VN.TRACKS.findIndex((t) => t.key === 'code') + 1, 0, { key: 'trigger', label: 'Auslöser', kind: 'trigger', color: '#f0d24a', fg: '#2a2203' });
 
   VN.BLENDS = [
     ['normal', 'Normal'],

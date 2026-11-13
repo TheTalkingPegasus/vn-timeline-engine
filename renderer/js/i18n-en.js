@@ -5560,7 +5560,17 @@ window.VN_I18N_EN = {
 "aus": "off",
 "Wiederholen, solange der Clip läuft (endlos)": "Repeat as long as the clip lasts (endless)",
 "Ausblenden am Ende": "Fade out at the end",
-"Der Ton läuft vom ersten bis zum letzten Schritt des Clips immer weiter. Zieh den Clip in der Timeline länger, damit er länger läuft.": "The sound keeps playing from the first to the last step of the clip. Drag the clip longer in the timeline to make it run longer."
+"Der Ton läuft vom ersten bis zum letzten Schritt des Clips immer weiter. Zieh den Clip in der Timeline länger, damit er länger läuft.": "The sound keeps playing from the first to the last step of the clip. Drag the clip longer in the timeline to make it run longer.",
+"Auslöser – noch keine Aktion": "Trigger – no action yet",
+"mit Bedingung": "with condition",
+"Name (nur für dich, z. B. „Quest: Schlüssel gefunden“)": "Name (just for you, e.g. “Quest: key found”)",
+"z. B. Quest-Moment": "e.g. quest moment",
+"Löst die Aktionen aus, sobald das Spiel diesen Schritt erreicht – ohne dass ein Dialog, eine Auswahl oder ein Bild dafür nötig ist.": "Fires the actions as soon as the game reaches this step – no dialogue, choice or image needed.",
+"Auslösen": "Fire",
+"Nur wenn (optional)": "Only if (optional)",
+"Einmal pro Spielstand": "Once per save",
+"Jedes Mal, wenn der Schritt erreicht wird": "Every time the step is reached",
+"Doppelklick: Auslöser – Quest, Gegenstand, Variable … an diesem Schritt, ohne Dialog": "Double-click: trigger – quest, item, variable … at this step, without dialogue"
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",

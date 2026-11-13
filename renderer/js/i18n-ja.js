@@ -5641,7 +5641,17 @@ window.VN_I18N_JA = {
 "aus": "オフ",
 "Wiederholen, solange der Clip läuft (endlos)": "クリップが続く間くり返す（エンドレス）",
 "Ausblenden am Ende": "終わりにフェードアウト",
-"Der Ton läuft vom ersten bis zum letzten Schritt des Clips immer weiter. Zieh den Clip in der Timeline länger, damit er länger läuft.": "クリップの最初から最後のステップまで音が流れ続けます。長く鳴らすにはタイムラインでクリップを伸ばしてください。"
+"Der Ton läuft vom ersten bis zum letzten Schritt des Clips immer weiter. Zieh den Clip in der Timeline länger, damit er länger läuft.": "クリップの最初から最後のステップまで音が流れ続けます。長く鳴らすにはタイムラインでクリップを伸ばしてください。",
+"Auslöser – noch keine Aktion": "トリガー – まだアクションなし",
+"mit Bedingung": "条件付き",
+"Name (nur für dich, z. B. „Quest: Schlüssel gefunden“)": "名前（自分用、例：「クエスト：鍵を見つけた」）",
+"z. B. Quest-Moment": "例：クエストの場面",
+"Löst die Aktionen aus, sobald das Spiel diesen Schritt erreicht – ohne dass ein Dialog, eine Auswahl oder ein Bild dafür nötig ist.": "ゲームがこのステップに来た時点でアクションを実行します。会話・選択肢・画像は不要です。",
+"Auslösen": "実行",
+"Nur wenn (optional)": "条件（任意）",
+"Einmal pro Spielstand": "セーブごとに1回",
+"Jedes Mal, wenn der Schritt erreicht wird": "ステップに来るたび毎回",
+"Doppelklick: Auslöser – Quest, Gegenstand, Variable … an diesem Schritt, ohne Dialog": "ダブルクリック：トリガー – このステップでクエスト・アイテム・変数…（会話なし）"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

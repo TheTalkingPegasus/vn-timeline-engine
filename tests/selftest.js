@@ -1466,6 +1466,34 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Schleife und Dämpfen: Looper mit zwei Elementen, Dämpf-Kurve');
   } catch (e) { general.push('Schleife/Dämpfen: ' + e.message); }
 
+  // 33. Auslöser-Spur (0.9.38)
+  try {
+    const r = JSON.parse(await js(`(async () => {
+      const out = [];
+      const s = VN.project.scenes.find((x) => x.type === 'story');
+      const t = VN.tracksOf(s).find((x) => x.key === 'trigger');
+      if (!t) return JSON.stringify(['Spur fehlt']);
+      if (!Array.isArray(s.tracks.trigger)) out.push('Spur nicht im Projekt');
+      const c = Story.addClip(s, t, 0);
+      if (!c || !Array.isArray(c.actions) || c.once !== true) out.push('neuer Clip falsch');
+      const v = VN.project.vars.find((x) => x.type !== 'flag');
+      if (v && c) {
+        VN.mutate(() => { c.actions.push({ type: 'addVar', var: v.id, value: 7 }); });
+        Player.start(s.id, 0, {});
+        await new Promise((res) => setTimeout(res, 900));
+        const got = Player.state && Player.state.rs && Player.state.rs.vars ? Player.state.rs.vars[v.id] : null;
+        const want = (v.type === 'flag' ? 0 : Number(v.start) || 0) + 7;
+        if (got == null || Number(got) !== want) out.push('Aktion nicht ausgelöst ' + got + ' statt ' + want);
+        if (!Player.state.rs.fired[c.id]) out.push('nicht als ausgelöst gemerkt');
+        Player.close(true);
+      }
+      VN.mutate(() => { s.tracks.trigger = s.tracks.trigger.filter((x) => x !== c && x.id !== (c && c.id)); });
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Auslöser-Spur: ' + r.join(', '));
+    else log('✓ Auslöser-Spur: Clip anlegen, Aktion wird beim Erreichen des Schritts ausgelöst');
+  } catch (e) { general.push('Auslöser-Spur: ' + e.message); }
+
   // 27. Kulissen-Raum (0.9.32): 3D-Flächen, Kamera, Licht durch Fenster mit Jalousie, Bühne und Spieler
   try {
     const r = JSON.parse(await js(`(async () => {
