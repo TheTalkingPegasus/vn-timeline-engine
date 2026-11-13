@@ -506,6 +506,8 @@ window.PenBar = {
         el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!h.behind, onchange: (e) => VN.mutate(() => { h.behind = e.target.checked; }) }), VN.t('Hinter der Figur')),
         el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!h.flip, onchange: (e) => VN.mutate(() => { h.flip = e.target.checked; }) }), VN.t('Spiegeln')),
         two ? null : el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: h.swing !== false, onchange: (e) => VN.mutate(() => { h.swing = e.target.checked; }) }), VN.t('Schwingt (Pendel)')),
+        !two ? slider('bend', 'Biegung', 0, 1, 0.01, 0, (v) => (v < 0.01 ? VN.t('steif') : Math.round(v * 100) + ' %')) : null,
+        !two && (h.bend || 0) > 0 ? el('div', { class: 'muted small' }, VN.t('Biegt sich der Länge nach, die Spitze schwingt nach – für Haarsträhnen, Zöpfe und Schweife. Der Haltepunkt sollte an einem Ende sitzen (oben, unten, links oder rechts).')) : null,
         !two && h.swing !== false ? slider('weight', 'Trägheit', 0, 3, 0.05, 1) : null,
         !two && h.swing !== false ? slider('stiff', 'Steifheit', 0, 1, 0.01, 0.15) : null,
         !two && h.swing !== false ? slider('damp', 'Dämpfung', 0, 1, 0.01, 0.3) : null,

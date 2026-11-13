@@ -1518,6 +1518,15 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
       for (let i = 1; i <= 10; i++) ops = Soft.hangFrame(cfg, sim, i / 60, pin, 100, 200, { x: 40, y: 0 });
       if (!ops || !ops.length) return JSON.stringify(out.concat(['keine Zeichen-Angaben']));
       if (!(Math.abs(ops[0].th) > 0.01)) out.push('schwingt nicht ' + ops[0].th);
+      // Biegung: Kette folgt verzögert, wird verformt gezeichnet
+      h.bend = 0.8;
+      for (let i = 11; i <= 30; i++) ops = Soft.hangFrame(cfg, sim, i / 60, pin, 100, 200, { x: i < 20 ? 40 : -40, y: 0 });
+      if (!ops[0].chain || !ops[0].chain.some((x) => Math.abs(x) > 0.002)) out.push('Biegung bewegt sich nicht');
+      else if (ops[0].chain.some((x) => !isFinite(x) || Math.abs(x) > 4)) out.push('Biegung instabil');
+      const cb = document.createElement('canvas'); cb.width = 100; cb.height = 200;
+      Soft.paintHangs(cb.getContext('2d'), ops, false);
+      { const dd = cb.getContext('2d').getImageData(0, 0, 100, 200).data; let nn = 0; for (let i = 3; i < dd.length; i += 4) if (dd[i] > 10) nn++; if (nn < 20) out.push('gebogen nichts gezeichnet'); }
+      h.bend = 0;
       // zwei Pins: liegt zwischen beiden
       h.pins = [[0.2, 0.5], [0.8, 0.5]];
       ops = Soft.hangFrame(cfg, sim, 0.5, pin, 100, 200, { x: 0, y: 0 });

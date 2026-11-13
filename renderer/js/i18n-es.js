@@ -5680,7 +5680,10 @@ window.VN_I18N_ES = {
 "Effekt: Stärke": "Efecto: intensidad",
 "Effekt: Tempo": "Efecto: velocidad",
 "(gespiegelt)": "(reflejado)",
-"Blinken": "Parpadear"
+"Blinken": "Parpadear",
+"Biegung": "Curvatura",
+"steif": "rígido",
+"Biegt sich der Länge nach, die Spitze schwingt nach – für Haarsträhnen, Zöpfe und Schweife. Der Haltepunkt sollte an einem Ende sitzen (oben, unten, links oder rechts).": "Se curva a lo largo y la punta sigue el movimiento con retraso: para mechones, trenzas y colas. El punto de sujeción debe estar en un extremo (arriba, abajo, izquierda o derecha)."
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",
