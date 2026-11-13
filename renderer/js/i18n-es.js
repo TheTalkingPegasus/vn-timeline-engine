@@ -5623,7 +5623,17 @@ window.VN_I18N_ES = {
 "Ordner nicht gefunden": "Carpeta no encontrada",
 "Ordner öffnen": "Abrir carpeta",
 "Aus der Liste entfernen (das Projekt bleibt erhalten)": "Quitar de la lista (el proyecto se conserva)",
-"gestern": "ayer"
+"gestern": "ayer",
+"Weich-Physik von „{name}“ kopiert ({n} Bereiche)": "Física blanda de «{name}» copiada ({n} áreas)",
+"Weich-Physik von „{from}“ bei „{to}“ eingefügt": "Física blanda de «{from}» pegada en «{to}»",
+"Weich-Physik einfügen": "Pegar física blanda",
+"Weich-Physik kopieren": "Copiar física blanda",
+"„{to}“ hat schon {n} Bereiche. Ersetzen oder die neuen dazulegen?": "«{to}» ya tiene {n} áreas. ¿Reemplazarlas o añadir las nuevas?",
+"Dazulegen": "Añadir",
+"Ersetzen": "Reemplazar",
+"Masken dieser Figur": "máscaras de este personaje",
+"Masken einer anderen Figur auf diese übertragen": "Transferir las máscaras de otro personaje a este",
+"Übernehmen von …": "Tomar de …"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

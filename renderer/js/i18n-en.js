@@ -5542,7 +5542,17 @@ window.VN_I18N_EN = {
 "Ordner nicht gefunden": "Folder not found",
 "Ordner öffnen": "Open folder",
 "Aus der Liste entfernen (das Projekt bleibt erhalten)": "Remove from the list (the project is kept)",
-"gestern": "yesterday"
+"gestern": "yesterday",
+"Weich-Physik von „{name}“ kopiert ({n} Bereiche)": "Soft physics of “{name}” copied ({n} areas)",
+"Weich-Physik von „{from}“ bei „{to}“ eingefügt": "Soft physics of “{from}” pasted onto “{to}”",
+"Weich-Physik einfügen": "Paste soft physics",
+"Weich-Physik kopieren": "Copy soft physics",
+"„{to}“ hat schon {n} Bereiche. Ersetzen oder die neuen dazulegen?": "“{to}” already has {n} areas. Replace them or add the new ones?",
+"Dazulegen": "Add",
+"Ersetzen": "Replace",
+"Masken dieser Figur": "masks of this character",
+"Masken einer anderen Figur auf diese übertragen": "Transfer the masks of another character to this one",
+"Übernehmen von …": "Take over from …"
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",

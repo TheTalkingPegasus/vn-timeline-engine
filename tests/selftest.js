@@ -1411,6 +1411,36 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Zuletzt geöffnet: Projekt landet in der Liste, lässt sich direkt öffnen, fremde Ordner nicht');
   } catch (e) { general.push('Zuletzt geöffnet: ' + e.message); }
 
+  // 31. Weich-Physik von Figur zu Figur kopieren (0.9.37)
+  try {
+    const r = JSON.parse(await js(`(async () => {
+      const out = [];
+      const p = VN.project, imgs = p.assets.filter((a) => a.kind === 'image');
+      if (imgs.length < 2 || !window.FmtCopy) return JSON.stringify(['zu wenig Bilder']);
+      const A = imgs[0].id, B = imgs[1].id, keep = JSON.stringify(p.softs || {});
+      p.softs = p.softs || {};
+      p.softs[A] = { on: true, regions: [{ id: 'sa1', preset: 'chest', cx: 0.5, cy: 0.4, rx: 0.1, ry: 0.05, rot: 0, on: true }, { id: 'sa2', preset: 'cloth', cx: 0.5, cy: 0.7, rx: 0.2, ry: 0.1, rot: 0, on: true }] };
+      delete p.softs[B];
+      const menu = FmtCopy.softItems({ asset: A });
+      if (!menu.length) out.push('kein Menüpunkt zum Kopieren');
+      FmtCopy.copySoft(A);
+      if (!FmtCopy.softItems({ asset: B }).some((x) => /einfügen/i.test(x.label) || /Paste/i.test(x.label))) out.push('kein Menüpunkt zum Einfügen');
+      FmtCopy.pasteSoft(B);
+      const d = p.softs[B];
+      if (!d || d.regions.length !== 2) out.push('nicht eingefügt');
+      else if (d.regions.some((x) => x.id === 'sa1' || x.id === 'sa2')) out.push('gleiche IDs');
+      else if (d.regions[0].cx !== 0.5 || d.regions[1].preset !== 'cloth') out.push('Werte falsch');
+      d.regions[0].cx = 0.3;
+      if (p.softs[A].regions[0].cx !== 0.5) out.push('nicht unabhängig');
+      VN.undo();
+      if ((VN.project.softs || {})[B]) out.push('Rückgängig klappt nicht');
+      VN.project.softs = JSON.parse(keep);
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Weich-Physik kopieren: ' + r.join(', '));
+    else log('✓ Weich-Physik kopieren: Masken von einer Figur auf eine andere übertragen, unabhängig und rückgängig machbar');
+  } catch (e) { general.push('Weich-Physik kopieren: ' + e.message); }
+
   // 27. Kulissen-Raum (0.9.32): 3D-Flächen, Kamera, Licht durch Fenster mit Jalousie, Bühne und Spieler
   try {
     const r = JSON.parse(await js(`(async () => {

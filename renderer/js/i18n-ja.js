@@ -5623,7 +5623,17 @@ window.VN_I18N_JA = {
 "Ordner nicht gefunden": "フォルダーが見つかりません",
 "Ordner öffnen": "フォルダーを開く",
 "Aus der Liste entfernen (das Projekt bleibt erhalten)": "一覧から外す（プロジェクトは残ります）",
-"gestern": "昨日"
+"gestern": "昨日",
+"Weich-Physik von „{name}“ kopiert ({n} Bereiche)": "「{name}」のソフト物理をコピーしました（{n} 範囲）",
+"Weich-Physik von „{from}“ bei „{to}“ eingefügt": "「{from}」のソフト物理を「{to}」に貼り付けました",
+"Weich-Physik einfügen": "ソフト物理を貼り付け",
+"Weich-Physik kopieren": "ソフト物理をコピー",
+"„{to}“ hat schon {n} Bereiche. Ersetzen oder die neuen dazulegen?": "「{to}」にはすでに {n} 個の範囲があります。置き換えますか、追加しますか？",
+"Dazulegen": "追加",
+"Ersetzen": "置き換え",
+"Masken dieser Figur": "このキャラのマスク",
+"Masken einer anderen Figur auf diese übertragen": "他のキャラのマスクをこのキャラに移す",
+"Übernehmen von …": "次から引き継ぐ…"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",
