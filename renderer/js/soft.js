@@ -16,17 +16,21 @@
     ears: { label: 'Ohren / Schwanz', k: 45, c: 3, inert: 1.1, xs: 1, ys: 0.6, anchor: 'bottom', anchorAmt: 1, idle: 'sway', idleAmp: 0.5, idleSpeed: 1.2, squash: 0, feather: 0.3, strength: 1, over: 0 },
     tail: { label: 'Schwanz / Zopf (Pendeln)', k: 30, c: 2.6, inert: 1.2, xs: 1, ys: 1, anchor: 'pin', anchorAmt: 0.7, pendulum: true, idle: 'sway', idleAmp: 0.6, idleSpeed: 0.9, squash: 0, feather: 0.25, strength: 1, over: 0 },
     cheeks: { label: 'Wangen', k: 220, c: 9, inert: 0.7, xs: 0.4, ys: 1, anchor: '', anchorAmt: 0, idle: '', idleAmp: 0, idleSpeed: 1, squash: 0.4, feather: 0.5, strength: 0.6, over: 0 },
+    // 0.9.38: aufgeblähte Backen (wackeln leicht) und Kehle beim Schlucken
+    puff: { label: 'Dicke Backen (aufgebläht)', k: 160, c: 4, inert: 0.8, xs: 0.6, ys: 0.8, anchor: '', anchorAmt: 0, idle: 'wobble', idleAmp: 0.6, idleSpeed: 1.4, squash: 0.3, feather: 0.55, strength: 0.8, over: 0.3, puff: 1 },
+    throat: { label: 'Kehle (Schlucken)', k: 200, c: 9, inert: 0.4, xs: 0.3, ys: 0.5, anchor: '', anchorAmt: 0, idle: 'swallow', idleAmp: 1, idleSpeed: 1, squash: 0, feather: 0.5, strength: 0.5, over: 0.15 },
     jelly: { label: 'Gelee / Schleim', k: 60, c: 2, inert: 1.2, xs: 1, ys: 1, anchor: 'bottom', anchorAmt: 0.6, idle: 'breathe', idleAmp: 0.6, idleSpeed: 2, squash: 1, feather: 0.45, strength: 1.2, over: 0 }
   };
   const ANCHORS = [['', 'Frei schwebend'], ['top', 'Oben fest'], ['bottom', 'Unten fest'], ['left', 'Links fest'], ['right', 'Rechts fest'], ['pin', '📍 Ankerpunkt (frei gesetzt)']];
-  const IDLES = [['', 'Keine'], ['breathe', 'Atmen (auf & ab)'], ['sway', 'Schwanken (seitlich)'], ['wave', 'Welle (wehen)']];
+  const IDLES = [['', 'Keine'], ['breathe', 'Atmen (auf & ab)'], ['sway', 'Schwanken (seitlich)'], ['wave', 'Welle (wehen)'], ['wobble', 'Wackeln (leicht)'], ['swallow', 'Schlucken (ab und zu)']];
+  const GULP = 0.85; // Dauer eines Schluckens in Sekunden
   const PAD = 0.08; // Rand um das Bild, damit Bereiche über die Bildkante schwingen dürfen
   const GRID = 46;  // Gitterpunkte über die Bildbreite
   const ACC = 0.25; // wie stark Beschleunigung der Figur auf die Bereiche wirkt
 
   // alle Schlüssel, die eine Vorlage setzen kann (zum Zurücksetzen)
   // Zusätze für jede Vorlage: angespanntes Zucken und Puls (Herzschlag), Standard aus
-  const EXTRA = { twitch: 0, pulse: 0, bpm: 72 };
+  const EXTRA = { twitch: 0, pulse: 0, bpm: 72, puff: 0 };
   const PKEYS = [...new Set(Object.values(PRESETS).flatMap((x) => Object.keys(x)).concat(Object.keys(EXTRA)))].filter((k) => k !== 'label');
   // Biegung der Anhänger: Anzahl der Abschnitte
   const BEND_N = 10;
@@ -95,6 +99,8 @@
         // Bones (0.9.35): jeder Bereich bekommt die Beschleunigung an seiner eigenen Stelle
         const A = (acc && acc.byId && acc.byId[r.id]) || acc;
         const s = sim.regs[r.id] || (sim.regs[r.id] = { x: 0, y: 0, vx: 0, vy: 0 });
+        s.time = (s.time || 0) + dt;
+        if (sim.gulpReq && P.idle === 'swallow') s.gulp = s.time;
         for (const k of kick) { s.vx += k.x * (P.xs || 1); s.vy += k.y * (P.ys || 1); }
         // angespanntes Zucken: kurze Stöße in zufälligen Abständen (stärker = häufiger und kräftiger)
         const tw = Math.max(0, Number(P.twitch) || 0);
@@ -118,8 +124,11 @@
         }
         const lim = 0.6; s.x = Math.max(-lim, Math.min(lim, s.x)); s.y = Math.max(-lim, Math.min(lim, s.y));
       }
+      sim.gulpReq = 0;
     },
     poke(sim, dir, amount) {
+      // Schlucken auslösen (0.9.38): läuft in Bereichen mit „Schlucken“ sofort einmal ab
+      if (dir === 'gulp') { sim.gulpReq = (sim.gulpReq || 0) + 1; return; }
       const a = (Number(amount) || 1) * 0.22;
       const d = dir === 'up' ? [0, -1] : dir === 'left' ? [-1, 0] : dir === 'right' ? [1, 0] : dir === 'random' ? [Math.random() * 2 - 1, Math.random() * 2 - 1] : [0, 1];
       sim.poke.push({ x: d[0] * a, y: d[1] * a });
@@ -135,13 +144,33 @@
       if (P.idle === 'breathe') idleY = Math.sin(t * sp + ph * 0.2) * amp;
       else if (P.idle === 'sway') idleX = Math.sin(t * sp + ph) * amp * 1.4;
       else if (P.idle === 'wave') { idleX = Math.sin(t * sp + ph) * amp; wave = amp; }
+      else if (P.idle === 'wobble') { idleX = (Math.sin(t * sp * 2.3 + ph) * 0.6 + Math.sin(t * sp * 3.7 + ph * 2) * 0.4) * amp * 0.45; idleY = (Math.sin(t * sp * 2.9 + ph * 3) * 0.6 + Math.sin(t * sp * 4.3 + ph) * 0.4) * amp * 0.45; }
+      // Schlucken: alle paar Sekunden (oder auf Anstoß) wandert eine Wölbung von oben nach unten
+      let gulp = null;
+      if (P.idle === 'swallow') {
+        let q = -1;
+        if (s && s.gulp != null && s.time - s.gulp < GULP) q = (s.time - s.gulp) / GULP;
+        else if (Number(P.idleAmp) > 0) {
+          const T = 5 / Math.max(0.1, Number(P.idleSpeed) || 1), k = Math.floor((t + ph) / T);
+          const jit = (Math.sin(k * 12.9898 + ph * 4.1) * 43758.5453) % 1;
+          const st0 = k * T + Math.abs(jit) * T * 0.5 - ph;
+          if (t >= st0 && t < st0 + GULP) q = (t - st0) / GULP;
+        }
+        if (q >= 0) {
+          const e = q < 0.5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2;
+          gulp = { pos: -1.1 + 2.4 * e, amp: Math.sin(q * Math.PI) * Math.max(0.3, Number(P.idleAmp) || 1), lift: Math.sin(Math.min(1, q * 2) * Math.PI) };
+        }
+      }
       // Stauchen: nach unten gezogen → länger und schmaler, nach oben → kürzer und breiter
       const sq = Math.max(-0.35, Math.min(0.35, (dy + idleY * 0.6) * (Number(P.squash) || 0) * 4));
       // Zittern bei Anspannung (fein, schnell) und Puls (der Bereich schwillt im Herzschlag kurz an)
       const tw = Math.max(0, Number(P.twitch) || 0);
       if (tw) { idleX += (Math.sin(t * 47 + ph) + Math.sin(t * 31 + ph * 2)) * 0.0006 * tw; idleY += Math.sin(t * 39 + ph * 3) * 0.0006 * tw; }
-      const sw = (Number(P.pulse) || 0) ? Soft.heart(t + ph * 0.05, P.bpm) * Number(P.pulse) * 0.05 : 0;
-      return { dx: dx + idleX, dy: dy + idleY, sq, wave, t, sp, sw };
+      let sw = (Number(P.pulse) || 0) ? Soft.heart(t + ph * 0.05, P.bpm) * Number(P.pulse) * 0.05 : 0;
+      // Aufblähen (0.9.38): Bereich dauerhaft gewölbt, beim Wackeln atmet die Wölbung leicht mit
+      const pf = Number(P.puff) || 0;
+      if (pf) sw += pf * 0.22 * (1 + (P.idle === 'wobble' ? Math.sin(t * sp * 1.9 + ph) * 0.12 * (Number(P.idleAmp) || 0) : 0));
+      return { dx: dx + idleX, dy: dy + idleY, sq, wave, t, sp, sw, gulp };
     },
 
     // Freie Form (0.9.28): Umriss aus Punkten (Lasso / Zeichenstift), auf Wunsch rund (Catmull-Rom)
@@ -275,6 +304,12 @@
       if (m.sq) { const b = Soft.box(r, aspect); dy += ly * b.ry * m.sq * w; dx -= lx * b.rx * m.sq * 0.5 * w; }
       if (m.sw) { const b = Soft.box(r, aspect); dx += lx * b.rx * m.sw * w; dy += ly * b.ry * m.sw * w; }
       if (m.wave) dx += Math.sin(m.t * m.sp * 1.3 - ly * 2.4) * m.wave * 0.8 * w * aw;
+      if (m.gulp) {
+        // Wölbung an der Stelle, an der der Bissen gerade ist; die Kehle hebt sich am Anfang kurz
+        const b = Soft.box(r, aspect), g = Math.exp(-Math.pow((ly - m.gulp.pos) / 0.38, 2)) * m.gulp.amp;
+        dx += lx * b.rx * g * 0.35 * w;
+        dy += (-m.gulp.lift * 0.12 + g * 0.08) * b.ry * w;
+      }
       return [dx, dy];
     },
 
@@ -781,9 +816,9 @@
     VN.registerAction('softPoke', {
       label: '〰 Weich-Physik anstoßen', make: () => ({ dir: 'down', amount: 1 }),
       apply: (a) => Soft.pokeAll(a.dir || 'down', a.amount != null ? a.amount : 1, a.asset || ''),
-      text: (a) => '〰 ' + VN.t('Weich anstoßen') + ' (' + VN.t({ down: 'nach unten', up: 'nach oben', left: 'nach links', right: 'nach rechts', random: 'zufällig' }[a.dir || 'down']) + ')',
+      text: (a) => '〰 ' + VN.t('Weich anstoßen') + ' (' + VN.t({ down: 'nach unten', up: 'nach oben', left: 'nach links', right: 'nach rechts', random: 'zufällig', gulp: 'Schlucken' }[a.dir || 'down']) + ')',
       row: (row, a, sel) => {
-        row.appendChild(sel(a.dir || 'down', [['down', 'nach unten'], ['up', 'nach oben'], ['left', 'nach links'], ['right', 'nach rechts'], ['random', 'zufällig']], (v) => VN.mutate(() => { a.dir = v; })));
+        row.appendChild(sel(a.dir || 'down', [['down', 'nach unten'], ['up', 'nach oben'], ['left', 'nach links'], ['right', 'nach rechts'], ['random', 'zufällig'], ['gulp', 'Schlucken']], (v) => VN.mutate(() => { a.dir = v; })));
         row.appendChild(el('input', { type: 'number', step: '0.1', min: '0', value: a.amount != null ? a.amount : 1, style: { width: '70px' }, title: VN.t('Stärke'), onchange: (e) => VN.mutate(() => { a.amount = Number(e.target.value) || 0; }) }));
         const s = VN.assetSelect('image', a.asset || '', (v) => VN.mutate(() => { a.asset = v; }));
         s.style.maxWidth = '160px'; s.title = VN.t('nur dieses Bild (leer = alle)');

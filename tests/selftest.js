@@ -1542,6 +1542,33 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Anhänger: PNG an einem Pin schwingt bei Bewegung, zwischen zwei Pins aufgespannt, wird gezeichnet');
   } catch (e) { general.push('Anhänger: ' + e.message); }
 
+  // 35. Dicke Backen und Schlucken (0.9.38)
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [];
+      if (!Soft.PRESETS.puff || !Soft.PRESETS.throat) return JSON.stringify(['Vorlagen fehlen']);
+      const a = Soft.newRegion('puff', 0.5, 0.5, 0.1, 0.1), P = Soft.par(a);
+      const m = Soft.regionMove(a, P, { x: 0, y: 0, vx: 0, vy: 0 }, 1);
+      if (!(m.sw > 0.1)) out.push('bläht nicht auf ' + m.sw);
+      const d = Soft.disp(a, P, m, 0.8, 0, 1, 1, null);
+      if (!(d[0] > 0)) out.push('Wölbung nicht nach außen');
+      const th = Soft.newRegion('throat', 0.5, 0.5, 0.1, 0.1), Q = Soft.par(th);
+      const sim = Soft.newSim();
+      Soft.poke(sim, 'gulp', 1);
+      Soft.step(sim, [th], { x: 0, y: 0 }, 0.016);
+      for (let i = 0; i < 20; i++) Soft.step(sim, [th], { x: 0, y: 0 }, 0.016);
+      const mm = Soft.regionMove(th, Q, sim.regs[th.id], 0);
+      if (!mm.gulp) out.push('Schlucken auf Anstoß fehlt');
+      else { const dd = Soft.disp(th, Q, mm, 0.6, mm.gulp.pos, 1, 1, null); if (!(dd[0] > 0)) out.push('Kehle dehnt sich nicht'); }
+      for (let i = 0; i < 80; i++) Soft.step(sim, [th], { x: 0, y: 0 }, 0.016);
+      const m3 = Soft.regionMove(Object.assign({}, th, { idleAmp: 0 }), Object.assign({}, Q, { idleAmp: 0 }), sim.regs[th.id], 0);
+      if (m3.gulp) out.push('Schlucken hört nicht auf');
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Backen/Schlucken: ' + r.join(', '));
+    else log('✓ Dicke Backen wölben sich, Schlucken läuft auf Anstoß einmal durch die Kehle');
+  } catch (e) { general.push('Backen/Schlucken: ' + e.message); }
+
   // 27. Kulissen-Raum (0.9.32): 3D-Flächen, Kamera, Licht durch Fenster mit Jalousie, Bühne und Spieler
   try {
     const r = JSON.parse(await js(`(async () => {

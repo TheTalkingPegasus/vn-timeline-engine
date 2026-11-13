@@ -5683,7 +5683,13 @@ window.VN_I18N_JA = {
 "Blinken": "点滅",
 "Biegung": "しなり",
 "steif": "硬い",
-"Biegt sich der Länge nach, die Spitze schwingt nach – für Haarsträhnen, Zöpfe und Schweife. Der Haltepunkt sollte an einem Ende sitzen (oben, unten, links oder rechts).": "長さ方向にしなり、先端が遅れて揺れます。髪の房・三つ編み・しっぽ向け。留め位置は端（上・下・左・右）に置いてください。"
+"Biegt sich der Länge nach, die Spitze schwingt nach – für Haarsträhnen, Zöpfe und Schweife. Der Haltepunkt sollte an einem Ende sitzen (oben, unten, links oder rechts).": "長さ方向にしなり、先端が遅れて揺れます。髪の房・三つ編み・しっぽ向け。留め位置は端（上・下・左・右）に置いてください。",
+"Dicke Backen (aufgebläht)": "ふくらんだ頬",
+"Kehle (Schlucken)": "喉（ごくり）",
+"Wackeln (leicht)": "ゆらゆら（軽く）",
+"Schlucken (ab und zu)": "ごくり（時々）",
+"Schlucken": "ごくり",
+"Aufblähen": "ふくらませる"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

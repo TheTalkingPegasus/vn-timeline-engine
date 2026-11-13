@@ -35,7 +35,8 @@ window.PenBar = {
     ['idleSpeed', 'Ruhe: Tempo', 0.2, 4, 0.05],
     ['twitch', 'Zucken (angespannt)', 0, 2, 0.05],
     ['pulse', 'Puls (Herzschlag)', 0, 2, 0.05],
-    ['bpm', 'Puls: Schläge/Min', 30, 180, 1]
+    ['bpm', 'Puls: Schläge/Min', 30, 180, 1],
+    ['puff', 'Aufblähen', 0, 2, 0.05]
   ];
 
   const TOOLS = [['select', '↖ Wählen'], ['ellipse', '◯ Ellipse'], ['lasso', '➰ Lasso'], ['pen', '✒ Stift']];
@@ -374,6 +375,7 @@ window.PenBar = {
         el('button', { class: 'btn small', onclick: () => anim('shake') }, VN.t('Schütteln')),
         walkBtn,
         el('button', { class: 'btn small', onclick: () => Soft.pokeAll('down', 1, id) }, VN.t('Anstoßen ↓')),
+        (Soft.data(id) && (Soft.data(id).regions || []).some((r) => Soft.par(r).idle === 'swallow')) ? el('button', { class: 'btn small', onclick: () => Soft.pokeAll('gulp', 1, id) }, VN.t('Schlucken')) : null,
         el('button', { class: 'btn small', onclick: () => { off = [0, 0]; box.style.transform = ''; } }, VN.t('Zurück zur Mitte'))));
       stage.appendChild(el('div', { class: 'muted small', style: { position: 'absolute', top: '10px', left: '12px' } }, VN.t('Tipp: Zieh die Figur mit der Maus hin und her.')));
     },
