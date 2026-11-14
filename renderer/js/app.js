@@ -371,8 +371,66 @@
     }
   });
 
+  // ---------- Scroll-Position beim Neuzeichnen behalten (0.9.39) ----------
+  // Nach einem Klick wird die Oberfläche neu aufgebaut; ohne das hier springt jede Liste nach oben.
+  // Gemerkt werden nur Bereiche, die wirklich gescrollt wurden; wiedergefunden über ihren Weg im Aufbau.
+  const SCROLLED = new Set();
+  document.addEventListener('scroll', (e) => { const t = e.target; if (t && t.nodeType === 1 && t.closest && t.closest('#app')) SCROLLED.add(t); }, true);
+  const sig = (n) => n.tagName + '.' + ((n.classList && n.classList[0]) || '') + (n.id ? '#' + n.id : '');
+  const pathOf = (n) => {
+    const out = [];
+    while (n && n.id !== 'app' && n.parentElement) {
+      const p = n.parentElement, s = sig(n);
+      let i = 0; for (const c of p.children) { if (c === n) break; if (sig(c) === s) i++; }
+      out.unshift([s, i]);
+      if (n.id && n.id !== 'app') { out[0].push(n.id); break; }
+      n = p;
+    }
+    return out;
+  };
+  const findPath = (path) => {
+    if (!path.length) return null;
+    let n = path[0][2] ? document.getElementById(path[0][2]) : document.getElementById('app');
+    for (let k = path[0][2] ? 1 : 0; n && k < path.length; k++) {
+      const [s, i] = path[k];
+      let j = 0, hit = null;
+      for (const c of n.children) { if (sig(c) === s) { if (j === i) { hit = c; break; } j++; } }
+      n = hit;
+    }
+    return n;
+  };
+  // Seitenleiste links bleibt immer stehen; Mitte und rechts nur innerhalb derselben Ansicht / Unterseite
+  const ctxNow = () => [VN.ui.view, VN.ui.sysTab, VN.ui.figSub, VN.ui.designSec].join('|');
+  const saveScroll = () => {
+    const list = [];
+    for (const n of SCROLLED) {
+      if (!n.isConnected) { SCROLLED.delete(n); continue; }
+      if (n.scrollTop > 0 || n.scrollLeft > 0) { const path = pathOf(n); list.push({ path, top: n.scrollTop, left: n.scrollLeft, ctx: n.closest('#left') ? 'L' : ctxNow() }); }
+    }
+    return list;
+  };
+  const restoreScroll = (list) => {
+    const again = [];
+    for (const it of list) {
+      if (it.ctx !== 'L' && it.ctx !== ctxNow()) continue;
+      const n = findPath(it.path);
+      if (!n) continue;
+      // nur zurücksetzen, wenn der Neuaufbau ganz oben angefangen hat (eigene Einstellungen einer Ansicht gehen vor)
+      if (n.scrollTop === 0 && n.scrollLeft === 0) {
+        n.scrollTop = it.top; n.scrollLeft = it.left;
+        if (n.scrollTop < it.top - 1) again.push([it, n]);
+      }
+      SCROLLED.add(n);
+    }
+    // Inhalt, der erst einen Moment später fertig ist (Bilder, Vorschauen): einmal nachfassen
+    if (again.length) requestAnimationFrame(() => { for (const [it, n] of again) if (n.isConnected && n.scrollTop < it.top - 1) n.scrollTop = it.top; });
+  };
   VN.render = () => {
     if (!VN.project) return;
+    const keepScroll = saveScroll();
+    try { VN._render(); } finally { restoreScroll(keepScroll); }
+  };
+  VN._render = () => {
     const title = document.getElementById('project-title');
     if (document.activeElement !== title) title.value = VN.project.title || '';
     document.querySelectorAll('#view-tabs .tab').forEach((b) => b.classList.toggle('active', b.dataset.view === VN.ui.view));
