@@ -1599,6 +1599,35 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Pfade: Sprung aus einer Website/App im Gerät verbindet den Hub mit der Szene, Ziel ist erreichbar');
   } catch (e) { general.push('Pfade/Geräte: ' + e.message); }
 
+  // 37. Zeit durch Tun und in Echtzeit (0.9.39)
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [];
+      const p = VN.project, L = VN.Life;
+      if (!L || !L.spend) return JSON.stringify(['fehlt']);
+      const keep = JSON.stringify(p.time);
+      p.time.enabled = true; VN.migrate(p);
+      const F = p.time.flow;
+      if (!F || F.activity !== false || F.perSlot !== 10) out.push('Standardwerte');
+      F.activity = true; F.perSlot = 4; F.hub = 1;
+      const rs = VN.newRunState(); L.initRun(rs);
+      const s0 = rs.time.slot, d0 = rs.time.day;
+      for (let i = 0; i < 3; i++) L.spend(rs, L.costOf('hub'));
+      if (rs.time.slot !== s0) out.push('wechselt zu früh');
+      L.spend(rs, L.costOf('hub'));
+      if (rs.time.slot === s0 && rs.time.day === d0) out.push('wechselt nicht nach 4 Punkten');
+      if (L.costOf('hub', 0) !== 0 || L.costOf('hub', 6) !== 6 || L.costOf('choice', '') !== Number(F.choice)) out.push('eigene Kosten');
+      const g = VN.applyActions([{ type: 'time', mode: 'pts', amount: 8 }], rs, 'x');
+      if (!g.time) out.push('Aktion Zeitpunkte wechselt nicht');
+      F.activity = false;
+      if (L.costOf('hub') !== 0) out.push('aus, kostet trotzdem');
+      p.time = JSON.parse(keep); VN.migrate(p);
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Zeit durch Tun: ' + r.join(', '));
+    else log('✓ Zeit durch Tun: Zeitpunkte sammeln, eigene Kosten, Aktion „um … Zeitpunkte“');
+  } catch (e) { general.push('Zeit durch Tun: ' + e.message); }
+
   // 27. Kulissen-Raum (0.9.32): 3D-Flächen, Kamera, Licht durch Fenster mit Jalousie, Bühne und Spieler
   try {
     const r = JSON.parse(await js(`(async () => {

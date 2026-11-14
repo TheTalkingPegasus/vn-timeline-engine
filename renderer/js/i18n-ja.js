@@ -5690,7 +5690,26 @@ window.VN_I18N_JA = {
 "Schlucken (ab und zu)": "ごくり（時々）",
 "Schlucken": "ごくり",
 "Aufblähen": "ふくらませる",
-"Sprung aus einem Gerät (PC, Handy)": "端末（PC・スマホ）からの移動"
+"Sprung aus einem Gerät (PC, Handy)": "端末（PC・スマホ）からの移動",
+"Wie vergeht die Zeit?": "時間の進み方",
+"Die Aktion „Zeit vergehen lassen“ funktioniert immer. Zusätzlich kann die Zeit von selbst vergehen:": "アクション「時間を進める」は常に使えます。さらに時間が自動で進むようにもできます：",
+"Durch Tun: jede Tätigkeit kostet Zeitpunkte": "行動で：行動ごとに時間ポイントを消費",
+"Zeitpunkte pro Tageszeit": "時間帯ごとのポイント",
+"Hub-Objekt benutzen": "ハブのオブジェクトを使う",
+"Antwort in einer Auswahl": "選択肢の回答",
+"Story-Szene zu Ende": "ストーリーシーン終了",
+"Jeder Klick in einer Szene": "シーン内のクリックごと",
+"Beispiel: 10 Punkte pro Tageszeit, Hub-Objekt 1 Punkt → nach 10 Dingen ist es Mittag. Einzelne Objekte und Antworten können eigene Kosten haben („Pause machen“ = 5, „kurz umsehen“ = 0). Mit der Aktion „Zeit vergehen lassen → um … Zeitpunkte“ geht es auch gezielt.": "例：1時間帯10ポイント、ハブのオブジェクト1ポイント → 10回で昼。オブジェクトや回答ごとに個別の消費も可能（「休憩する」=5、「ちょっと見回す」=0）。アクション「時間を進める → …ポイント」で狙って進めることもできます。",
+"In Echtzeit: Tageszeit wechselt nach einer Wartezeit": "リアルタイム：一定時間で時間帯が変わる",
+"Eine Tageszeit dauert": "1つの時間帯の長さ",
+"Minuten echte Spielzeit": "分（実際のプレイ時間）",
+"Läuft": "進む場所",
+"nur in Hubs (Story-Szenen pausieren)": "ハブのみ（ストーリーは停止）",
+"Menüs, Geräte, Pausen und Minispiele halten die Uhr an.": "メニュー・端末・ポーズ・ミニゲーム中は時計が止まります。",
+"um … Zeitpunkte (z. B. Pause)": "…時間ポイント（例：休憩）",
+"Kostet Zeit (Zeitpunkte)": "時間を消費（ポイント）",
+"leer = Standard ({n}) · von {m} pro Tageszeit": "空欄＝標準（{n}）・1時間帯 {m}",
+"Die Spielzeit läuft in Tageszeiten. Sie ändert sich durch die Aktion „Zeit vergehen lassen“ (z. B. nach einem Job oder beim Schlafen) und – wenn oben eingeschaltet – durch Tun oder in Echtzeit. Prüfen kannst du sie mit der Bedingung „Zeit / Kalender“.": "ゲーム内の時間は時間帯で進みます。アクション「時間を進める」（仕事の後や睡眠時など）と、上で有効にした場合は行動やリアルタイムでも変わります。条件「時間／カレンダー」で確認できます。"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

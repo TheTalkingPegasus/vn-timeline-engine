@@ -5609,7 +5609,26 @@ window.VN_I18N_EN = {
 "Schlucken (ab und zu)": "Swallowing (now and then)",
 "Schlucken": "Swallow",
 "Aufblähen": "Puff up",
-"Sprung aus einem Gerät (PC, Handy)": "Jump from a device (PC, phone)"
+"Sprung aus einem Gerät (PC, Handy)": "Jump from a device (PC, phone)",
+"Wie vergeht die Zeit?": "How does time pass?",
+"Die Aktion „Zeit vergehen lassen“ funktioniert immer. Zusätzlich kann die Zeit von selbst vergehen:": "The action “Let time pass” always works. Time can also pass on its own:",
+"Durch Tun: jede Tätigkeit kostet Zeitpunkte": "By doing things: every activity costs time points",
+"Zeitpunkte pro Tageszeit": "Time points per time of day",
+"Hub-Objekt benutzen": "Using a hub object",
+"Antwort in einer Auswahl": "Answer in a choice",
+"Story-Szene zu Ende": "Story scene finished",
+"Jeder Klick in einer Szene": "Every click in a scene",
+"Beispiel: 10 Punkte pro Tageszeit, Hub-Objekt 1 Punkt → nach 10 Dingen ist es Mittag. Einzelne Objekte und Antworten können eigene Kosten haben („Pause machen“ = 5, „kurz umsehen“ = 0). Mit der Aktion „Zeit vergehen lassen → um … Zeitpunkte“ geht es auch gezielt.": "Example: 10 points per time of day, hub object 1 point → after 10 things it is noon. Single objects and answers can have their own cost (“Take a break” = 5, “Look around briefly” = 0). The action “Let time pass → by … time points” does it on purpose.",
+"In Echtzeit: Tageszeit wechselt nach einer Wartezeit": "In real time: time of day changes after a while",
+"Eine Tageszeit dauert": "A time of day lasts",
+"Minuten echte Spielzeit": "minutes of real play time",
+"Läuft": "Runs",
+"nur in Hubs (Story-Szenen pausieren)": "only in hubs (story scenes pause)",
+"Menüs, Geräte, Pausen und Minispiele halten die Uhr an.": "Menus, devices, pauses and minigames stop the clock.",
+"um … Zeitpunkte (z. B. Pause)": "by … time points (e.g. break)",
+"Kostet Zeit (Zeitpunkte)": "Costs time (time points)",
+"leer = Standard ({n}) · von {m} pro Tageszeit": "empty = default ({n}) · of {m} per time of day",
+"Die Spielzeit läuft in Tageszeiten. Sie ändert sich durch die Aktion „Zeit vergehen lassen“ (z. B. nach einem Job oder beim Schlafen) und – wenn oben eingeschaltet – durch Tun oder in Echtzeit. Prüfen kannst du sie mit der Bedingung „Zeit / Kalender“.": "Game time runs in times of day. It changes through the action “Let time pass” (e.g. after a job or when sleeping) and – if switched on above – by doing things or in real time. Check it with the condition “Time / calendar”."
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",

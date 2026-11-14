@@ -696,7 +696,9 @@
           run.pendingChoice = null;
           const myRun = run;
           if (window.VNPlugin) VNPlugin.hook('onChoice', o, clip, ctx());
-          const gains = await doActions(VN.Life ? VN.Life.optActions(o) : o.actions, o.id);
+          const tc = VN.Life && VN.Life.costOf ? VN.Life.costOf('choice', o.timeCost) : 0;
+          const oActs = VN.Life ? VN.Life.optActions(o) : o.actions;
+          const gains = await doActions(tc ? [{ type: 'time', mode: 'pts', amount: tc }, ...(oActs || [])] : oActs, o.id);
           if (myRun !== run || gains === null) return;
           showGains(gains);
           if (o.target && VN.scene(o.target)) enterScene(o.target, 0);
@@ -810,6 +812,8 @@
       const ev = VN.World.pickEvent(run.rs, id);
       if (ev) { st.done[ev.id] = Date.now(); st.ret = id; return enterScene(ev.scene, 0, { noEvent: true }); }
     }
+    // Zeit durch Tun (0.9.39): eine Story-Szene ist zu Ende
+    { const pv = VN.scene(run.scene); if (pv && pv.type === 'story' && pv.id !== id && !run.replay && VN.Life && VN.Life.costOf && VN.Life.spend(run.rs, VN.Life.costOf('scene'))) renderHud(); }
     // Hub-Dialoge (0.7.4): von einem Hub in eine Story-Szene → „↩ Zurück“ führt wieder in diesen Hub
     const prevScene = VN.scene(run.scene);
     const fromHub = prevScene && prevScene.type === 'hub' && s.type === 'story';
@@ -844,6 +848,7 @@
 
   async function enterBeat(b, opts = {}) {
     const s = VN.scene(run.scene);
+    if (b > 0 && b === run.beat + 1 && !run.replay && VN.Life && VN.Life.costOf) { const k = VN.Life.costOf('step'); if (k && VN.Life.spend(run.rs, k)) renderHud(); }
     run.beat = b;
     run.choicesShown = false;
     choiceBox.hidden = true;
@@ -1012,7 +1017,8 @@
           if (o.once) run.rs.seen['obj:' + o.id] = true;
           if (o.sfx) playOnce(o.sfx, 90, 0, 'sfx');
           const myRun = run;
-          const g0 = await doActions(o.actions, o.id);
+          const tcH = VN.Life && VN.Life.costOf ? VN.Life.costOf('hub', o.timeCost) : 0;
+          const g0 = await doActions(tcH ? [{ type: 'time', mode: 'pts', amount: tcH }, ...(o.actions || [])] : o.actions, o.id);
           if (myRun !== run || g0 === null) return;
           const gains = g0 || [];
           const go = () => {
@@ -1188,6 +1194,19 @@
     ctrl.hidden = false;
     hud.hidden = false;
     IDP.startClock();
+    clearInterval(realIv); realIv = setInterval(realTick, 1000);
+  }
+  // Zeit in Echtzeit (0.9.39): läuft nur, solange gespielt wird (nicht in Menüs, Geräten, Minispielen)
+  let realIv = 0;
+  function realTick() {
+    if (!run || !session || !VN.Life || !VN.Life.timeOn()) return;
+    const F = VN.project.time.flow;
+    if (!F || !F.real || run.overlay || run.blocked || run.ended || run.replay || document.hidden) return;
+    const sc = VN.scene(run.scene);
+    if (!sc || ((F.realWhere || 'hubs') === 'hubs' && sc.type !== 'hub')) return;
+    const t = VN.Life.initRun(run.rs).time;
+    t.rsec = (Number(t.rsec) || 0) + 1;
+    if (t.rsec >= Math.max(1, Number(F.realMin) || 5) * 60) { t.rsec = 0; doActions([{ type: 'time', mode: 'add', amount: 1 }], 'realtime'); }
   }
 
   function newGame(sceneId, beat) {
@@ -1845,6 +1864,7 @@
       if (devCtl) { const c = devCtl; devCtl = null; c.close(); }
       stopWait();
       IDP.stopClock();
+      clearInterval(realIv); realIv = 0;
       clearTimers();
       stopTyping();
       stopVoice();
