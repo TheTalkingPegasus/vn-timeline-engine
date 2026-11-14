@@ -77,6 +77,15 @@
   };
 
   const Inspector = (window.Inspector = {
+    // Zeit durch Tun (0.9.39): eigene Kosten für ein Hub-Objekt oder eine Antwort (leer = Standard)
+    timeCostField(o, kind) {
+      const T = VN.project.time;
+      if (!T || !T.enabled || !T.flow || !T.flow.activity) return null;
+      const def = Number(T.flow[kind]) || 0;
+      return field('Kostet Zeit (Zeitpunkte)', el('div', { class: 'row gap8' },
+        el('input', { type: 'number', min: 0, step: 1, value: o.timeCost != null ? o.timeCost : '', placeholder: String(def), style: { width: '80px' }, onchange: (e) => VN.mutate(() => { if (e.target.value === '') delete o.timeCost; else o.timeCost = Math.max(0, Number(e.target.value) || 0); }) }),
+        el('span', { class: 'muted small' }, VN.tf('leer = Standard ({n}) · von {m} pro Tageszeit', { n: def, m: Number(T.flow.perSlot) || 10 }))));
+    },
     render(root) {
       root.innerHTML = '';
       const s = VN.curScene();
@@ -296,6 +305,7 @@
             field('Nach dem Wählen', select(o.afterPick == null ? '' : o.afterPick, [['', '— wie bei der Auswahl eingestellt —'], ['none', 'bleibt normal'], ['grey', 'ausgrauen („schon gefragt“), weiter wählbar'], ['hide', 'ausblenden (nur einmal wählbar)']], (v) => VN.mutate(() => { if (v) o.afterPick = v; else delete o.afterPick; }))),
             VN.Life ? VN.Life.relField(o) : null,
             VN.actionEditor(o.actions || (o.actions = []), 'Bei Auswahl ausführen'),
+            Inspector.timeCostField(o, 'choice'),
             el('div', { class: 'row gap4' },
               el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const n = VN.createAltScene(s, o.text); o.target = n.id; }) }, 'Alternativer Pfad: neue Szene'),
               el('button', { class: 'btn tiny danger', disabled: c.options.length <= 1, onclick: () => VN.mutate(() => { c.options.splice(i, 1); }) }, 'Entfernen'))));
@@ -589,6 +599,7 @@
         field('Meldung anzeigen (optional)', el('textarea', { style: { minHeight: '60px' }, onchange: (e) => set(o, 'message')(e.target.value) }, o.message || '')),
         VN.useOnEditor ? VN.useOnEditor(s, o) : null,
         assetField('Sound beim Klick', 'audio', o.sfx, set(o, 'sfx')),
+        Inspector.timeCostField(o, 'hub'),
         Inspector.designLink('Bild bei Maus darüber, Leuchtfarbe, Stile'),
         el('div', { class: 'sec-title' }, 'Ebene'),
         el('div', { class: 'row gap4' },

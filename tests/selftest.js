@@ -1569,6 +1569,65 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Dicke Backen wölben sich, Schlucken läuft auf Anstoß einmal durch die Kehle');
   } catch (e) { general.push('Backen/Schlucken: ' + e.message); }
 
+  // 36. Pfade: Sprünge aus Geräten (PC/Handy) sind Verbindungen (0.9.39)
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [];
+      const p = VN.project, DV = VN.Devices || window.DV;
+      if (!DV || !DV.newDevice) return JSON.stringify(['Geräte fehlen']);
+      const keep = JSON.stringify({ devices: p.devices, web: p.web, scenes: p.scenes.map((x) => x.id) });
+      p.devices = p.devices || { enabled: true, list: [] }; p.devices.enabled = true; p.devices.list = p.devices.list || [];
+      const d = DV.newDevice('desktop'); d.inMenu = false; d.hud = false; d.key = '';
+      if (!d.apps.some((a) => a.type === 'web')) d.apps.push(DV.fixApp({ id: VN.uid('app'), type: 'web' }));
+      p.devices.list.push(d);
+      const target = { id: VN.uid('sc'), type: 'story', name: 'Ziel aus dem PC', beats: 1, tracks: {}, next: null };
+      VN.ensureTracks ? VN.ensureTracks(target) : null;
+      p.scenes.push(target);
+      p.web = p.web || { sites: [] }; p.web.sites = p.web.sites || [];
+      const site = DV.newSite(); site.pages[0].els[0].actions = [{ type: 'goto', scene: target.id }];
+      p.web.sites.push(site);
+      const hub = { id: VN.uid('sc'), type: 'hub', name: 'Zimmer mit PC', objects: [{ id: VN.uid('o'), name: 'PC', actions: [{ type: 'device', device: d.id, app: '' }] }], events: [] };
+      p.scenes.push(hub);
+      const e = VN.edgesOf(hub).find((x) => x.to === target.id);
+      if (!e) out.push('keine Verbindung vom Hub mit PC zur Szene');
+      if (!VN.reachable().has(target.id)) out.push('Ziel gilt als nicht erreichbar');
+      const k = JSON.parse(keep);
+      p.devices = k.devices; p.web = k.web; p.scenes = p.scenes.filter((x) => k.scenes.includes(x.id));
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Pfade/Geräte: ' + r.join(', '));
+    else log('✓ Pfade: Sprung aus einer Website/App im Gerät verbindet den Hub mit der Szene, Ziel ist erreichbar');
+  } catch (e) { general.push('Pfade/Geräte: ' + e.message); }
+
+  // 37. Zeit durch Tun und in Echtzeit (0.9.39)
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [];
+      const p = VN.project, L = VN.Life;
+      if (!L || !L.spend) return JSON.stringify(['fehlt']);
+      const keep = JSON.stringify(p.time);
+      p.time.enabled = true; VN.migrate(p);
+      const F = p.time.flow;
+      if (!F || F.activity !== false || F.perSlot !== 10) out.push('Standardwerte');
+      F.activity = true; F.perSlot = 4; F.hub = 1;
+      const rs = VN.newRunState(); L.initRun(rs);
+      const s0 = rs.time.slot, d0 = rs.time.day;
+      for (let i = 0; i < 3; i++) L.spend(rs, L.costOf('hub'));
+      if (rs.time.slot !== s0) out.push('wechselt zu früh');
+      L.spend(rs, L.costOf('hub'));
+      if (rs.time.slot === s0 && rs.time.day === d0) out.push('wechselt nicht nach 4 Punkten');
+      if (L.costOf('hub', 0) !== 0 || L.costOf('hub', 6) !== 6 || L.costOf('choice', '') !== Number(F.choice)) out.push('eigene Kosten');
+      const g = VN.applyActions([{ type: 'time', mode: 'pts', amount: 8 }], rs, 'x');
+      if (!g.time) out.push('Aktion Zeitpunkte wechselt nicht');
+      F.activity = false;
+      if (L.costOf('hub') !== 0) out.push('aus, kostet trotzdem');
+      p.time = JSON.parse(keep); VN.migrate(p);
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Zeit durch Tun: ' + r.join(', '));
+    else log('✓ Zeit durch Tun: Zeitpunkte sammeln, eigene Kosten, Aktion „um … Zeitpunkte“');
+  } catch (e) { general.push('Zeit durch Tun: ' + e.message); }
+
   // 27. Kulissen-Raum (0.9.32): 3D-Flächen, Kamera, Licht durch Fenster mit Jalousie, Bühne und Spieler
   try {
     const r = JSON.parse(await js(`(async () => {

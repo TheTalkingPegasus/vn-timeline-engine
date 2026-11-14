@@ -5689,7 +5689,27 @@ window.VN_I18N_ES = {
 "Wackeln (leicht)": "Tambaleo (suave)",
 "Schlucken (ab und zu)": "Tragar (de vez en cuando)",
 "Schlucken": "Tragar",
-"Aufblähen": "Inflar"
+"Aufblähen": "Inflar",
+"Sprung aus einem Gerät (PC, Handy)": "Salto desde un dispositivo (PC, móvil)",
+"Wie vergeht die Zeit?": "¿Cómo pasa el tiempo?",
+"Die Aktion „Zeit vergehen lassen“ funktioniert immer. Zusätzlich kann die Zeit von selbst vergehen:": "La acción «Dejar pasar el tiempo» siempre funciona. Además, el tiempo puede pasar solo:",
+"Durch Tun: jede Tätigkeit kostet Zeitpunkte": "Por actividad: cada acción cuesta puntos de tiempo",
+"Zeitpunkte pro Tageszeit": "Puntos de tiempo por franja",
+"Hub-Objekt benutzen": "Usar un objeto del hub",
+"Antwort in einer Auswahl": "Respuesta en una elección",
+"Story-Szene zu Ende": "Escena de historia terminada",
+"Jeder Klick in einer Szene": "Cada clic en una escena",
+"Beispiel: 10 Punkte pro Tageszeit, Hub-Objekt 1 Punkt → nach 10 Dingen ist es Mittag. Einzelne Objekte und Antworten können eigene Kosten haben („Pause machen“ = 5, „kurz umsehen“ = 0). Mit der Aktion „Zeit vergehen lassen → um … Zeitpunkte“ geht es auch gezielt.": "Ejemplo: 10 puntos por franja, objeto del hub 1 punto → tras 10 cosas es mediodía. Objetos y respuestas pueden tener su propio coste («Descansar» = 5, «Echar un vistazo» = 0). Con la acción «Dejar pasar el tiempo → … puntos» también se hace a propósito.",
+"In Echtzeit: Tageszeit wechselt nach einer Wartezeit": "En tiempo real: la franja cambia tras un rato",
+"Eine Tageszeit dauert": "Una franja dura",
+"Minuten echte Spielzeit": "minutos de juego real",
+"Läuft": "Corre",
+"nur in Hubs (Story-Szenen pausieren)": "solo en hubs (las escenas pausan)",
+"Menüs, Geräte, Pausen und Minispiele halten die Uhr an.": "Los menús, dispositivos, pausas y minijuegos detienen el reloj.",
+"um … Zeitpunkte (z. B. Pause)": "… puntos de tiempo (p. ej. descanso)",
+"Kostet Zeit (Zeitpunkte)": "Cuesta tiempo (puntos)",
+"leer = Standard ({n}) · von {m} pro Tageszeit": "vacío = estándar ({n}) · de {m} por franja",
+"Die Spielzeit läuft in Tageszeiten. Sie ändert sich durch die Aktion „Zeit vergehen lassen“ (z. B. nach einem Job oder beim Schlafen) und – wenn oben eingeschaltet – durch Tun oder in Echtzeit. Prüfen kannst du sie mit der Bedingung „Zeit / Kalender“.": "El tiempo del juego avanza por franjas. Cambia con la acción «Dejar pasar el tiempo» (p. ej. tras un trabajo o al dormir) y, si está activado arriba, por actividad o en tiempo real. Compruébalo con la condición «Tiempo / calendario»."
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

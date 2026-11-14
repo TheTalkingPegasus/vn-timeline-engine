@@ -2,7 +2,7 @@
 (function () {
   const { el } = VN;
   const NW = 200, NH = 70;
-  const COLORS = { next: '#4fb3c8', choice: '#f0a35e', hub: '#e8c86a', event: '#c58cf0', back: '#7fd09a', battle: '#e0605a', action: '#7fd09a' };
+  const COLORS = { next: '#4fb3c8', choice: '#f0a35e', hub: '#e8c86a', event: '#c58cf0', back: '#7fd09a', battle: '#e0605a', action: '#7fd09a', device: '#6ab0ff' };
   let zoom = 1;
 
   const Graph = (window.Graph = {
@@ -71,6 +71,7 @@
         el('div', null, el('span', { class: 'ln', style: { background: COLORS.choice } }), 'Antwort einer Auswahl'),
         el('div', null, el('span', { class: 'ln', style: { background: COLORS.hub } }), 'Objekt im Hub'),
         VN.World && VN.World.on() ? el('div', null, el('span', { class: 'ln', style: { background: COLORS.event } }), 'Ereignis am Ort (gestrichelt grün: zurück)') : null,
+        VN.Devices && VN.Devices.on() ? el('div', null, el('span', { class: 'ln', style: { background: COLORS.device } }), 'Sprung aus einem Gerät (PC, Handy)') : null,
         el('div', null, el('span', { class: 'ln', style: { background: 'transparent', border: '1px dashed #9a9ca8', height: '0' } }), 'Gestrichelt: nicht erreichbar')));
       root.appendChild(wrap);
 

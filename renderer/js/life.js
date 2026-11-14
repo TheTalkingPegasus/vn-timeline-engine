@@ -8,6 +8,8 @@
     // ---------- Grundeinstellungen ----------
     ensure(p) {
       p.time = VN.fill(p.time, { enabled: false, slots: ['Morgen', 'Mittag', 'Abend', 'Nacht'].map(VN.t), days: ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'].map(VN.t), startDay: 0, startSlot: 0, hud: true, autoDaytime: true, dayMap: {}, seasonsOn: false, seasons: ['Frühling', 'Sommer', 'Herbst', 'Winter'].map(VN.t), seasonDays: 7, startSeason: 0, ambient: [] });
+      // Wie die Zeit vergeht (0.9.39): durch Tun (Zeitpunkte) und/oder in Echtzeit – zusätzlich zur Aktion
+      p.time.flow = VN.fill(p.time.flow, { activity: false, perSlot: 10, hub: 1, choice: 1, scene: 2, step: 0, real: false, realMin: 5, realWhere: 'hubs' });
       p.economy = VN.fill(p.economy, { enabled: false });
       p.shops = p.shops || [];
       p.pluginData = p.pluginData || {};
@@ -63,6 +65,26 @@
       const n = T.slots.length;
       return n === 4 ? SLOT_DAY[rs.time.slot] : SLOT_DAY[Math.min(3, Math.floor(rs.time.slot / n * 4))];
     },
+    // Zeitpunkte sammeln (0.9.39): ist eine Tageszeit „voll“, geht es zur nächsten. Rückgabe: Anzahl gewechselter Tageszeiten
+    spend(rs, n) {
+      const T = VN.project.time;
+      n = Number(n) || 0;
+      if (!T || !T.enabled || n <= 0) return 0;
+      Life.initRun(rs);
+      const per = Math.max(1, Number(T.flow && T.flow.perSlot) || 10);
+      rs.time.pts = (Number(rs.time.pts) || 0) + n;
+      const k = Math.floor(rs.time.pts / per);
+      rs.time.pts -= k * per;
+      if (k > 0) Life.advance(rs, { mode: 'add', amount: k });
+      return k;
+    },
+    // Kosten einer Tätigkeit: eigener Wert am Objekt/an der Antwort, sonst der Standard aus den Einstellungen
+    costOf(kind, own) {
+      const T = VN.project.time, F = T && T.flow;
+      if (!T || !T.enabled || !F || !F.activity) return 0;
+      if (own != null && own !== '') return Math.max(0, Number(own) || 0);
+      return Math.max(0, Number(F[kind]) || 0);
+    },
     advance(rs, a) {
       const T = VN.project.time, n = T.slots.length;
       Life.initRun(rs);
@@ -113,12 +135,14 @@
       return true;
     },
     applyAction(a, rs, gains) {
+      if (a.type === 'time' && a.mode === 'pts') { if (Life.spend(rs, a.amount)) gains.time = true; return true; }
       if (a.type === 'time') { Life.advance(rs, a); gains.time = true; return true; }
       if (a.type === 'shop' && a.shop) { gains.pending.push(Life.openShop(a.shop, rs)); return true; }
       return false;
     },
     actionText(a) {
       const T = VN.project.time;
+      if (a.type === 'time' && a.mode === 'pts') return 'Zeit: ' + (a.amount || 1) + ' Zeitpunkte';
       if (a.type === 'time') return a.mode === 'nextDay' ? 'Nächster Tag (' + (T.slots[Number(a.slot) || 0] || '') + ')' : a.mode === 'to' ? 'Zeit bis ' + (T.slots[Number(a.slot) || 0] || '?') : 'Zeit + ' + (a.amount || 1) + ' Tageszeit' + ((a.amount || 1) > 1 ? 'en' : '');
       if (a.type === 'shop') { const s = VN.project.shops.find((x) => x.id === a.shop); return 'Laden: ' + (s ? s.name : '?'); }
       return null;
@@ -126,8 +150,8 @@
     actionRow(row, a, sel, inp) {
       const p = VN.project;
       if (a.type === 'time') {
-        row.appendChild(sel(a.mode || 'add', [['add', 'um … Tageszeiten weiter'], ['to', 'bis zur Tageszeit'], ['nextDay', 'nächster Tag']], (v) => VN.mutate(() => { a.mode = v; a.amount = 1; a.slot = 0; })));
-        if ((a.mode || 'add') === 'add') row.appendChild(inp(a.amount != null ? a.amount : 1, (x) => VN.mutate(() => { a.amount = Number(x); }), 'number'));
+        row.appendChild(sel(a.mode || 'add', [['add', 'um … Tageszeiten weiter'], ['pts', 'um … Zeitpunkte (z. B. Pause)'], ['to', 'bis zur Tageszeit'], ['nextDay', 'nächster Tag']], (v) => VN.mutate(() => { a.mode = v; a.amount = v === 'pts' ? Math.max(1, Math.round((Number(p.time.flow && p.time.flow.perSlot) || 10) / 2)) : 1; a.slot = 0; })));
+        if ((a.mode || 'add') === 'add' || a.mode === 'pts') row.appendChild(inp(a.amount != null ? a.amount : 1, (x) => VN.mutate(() => { a.amount = Number(x); }), 'number'));
         else row.appendChild(sel(a.slot || 0, p.time.slots.map((n, i) => [i, n]), (x) => VN.mutate(() => { a.slot = Number(x); })));
         if (!p.time.enabled) row.appendChild(el('span', { class: 'muted small' }, '(Zeit ist aus)'));
         return true;
@@ -274,7 +298,8 @@
       const p = VN.project, T = p.time;
       const txt = (v, fn, w) => el('input', { type: 'text', value: v || '', style: { width: w || '120px' }, onchange: (e) => VN.mutate(() => fn(e.target.value)) });
       const sel = (v, opts, fn) => { const s = el('select', { onchange: (e) => VN.mutate(() => fn(e.target.value)) }); for (const [k, l] of opts) { const o = el('option', { value: k }, l); if (String(k) === String(v)) o.selected = true; s.appendChild(o); } return s; };
-      body.appendChild(el('p', { class: 'muted' }, 'Die Spielzeit läuft in Tageszeiten. Sie ändert sich nur durch die Aktion „Zeit vergehen lassen“ (z. B. nach einem Job oder beim Schlafen). Prüfen kannst du sie mit der Bedingung „Zeit / Kalender“.'));
+      body.appendChild(Life.flowCard());
+      body.appendChild(el('p', { class: 'muted' }, 'Die Spielzeit läuft in Tageszeiten. Sie ändert sich durch die Aktion „Zeit vergehen lassen“ (z. B. nach einem Job oder beim Schlafen) und – wenn oben eingeschaltet – durch Tun oder in Echtzeit. Prüfen kannst du sie mit der Bedingung „Zeit / Kalender“.'));
       const slots = el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'Tageszeiten (in dieser Reihenfolge)'));
       T.slots.forEach((s, i) => slots.appendChild(el('div', { class: 'logic-row' },
         el('span', { class: 'muted small', style: { width: '18px' } }, String(i + 1)),
@@ -324,6 +349,31 @@
         el('div', { class: 'grid2', style: { alignItems: 'start' } }, seasons, amb),
         el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, 'So läuft die Zeit (Vorschau)'), strip,
           el('div', { class: 'muted small' }, 'Tipp: Eine Antwort „Schlafen gehen“ mit der Aktion „Zeit vergehen lassen → nächster Tag“ und Hub-Objekte mit der Bedingung „Tageszeit ist Abend“ – fertig ist ein Tagesablauf.')));
+    },
+
+    // ---------- Wie vergeht die Zeit? (0.9.39) ----------
+    flowCard() {
+      const T = VN.project.time, F = T.flow;
+      const set = (k) => (v) => VN.mutate(() => { F[k] = v; });
+      const num = (k, min, max, w) => el('input', { type: 'number', min, max, step: 1, value: F[k], style: { width: w || '64px' }, onchange: (e) => VN.mutate(() => { F[k] = Math.max(min, Math.min(max, Number(e.target.value) || 0)); }) });
+      const chk = (k, label) => el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!F[k], onchange: (e) => set(k)(e.target.checked) }), VN.t(label));
+      const row = (label, ...kids) => el('div', { class: 'logic-row' }, el('span', { style: { minWidth: '210px' } }, VN.t(label)), ...kids);
+      const card = el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, VN.t('Wie vergeht die Zeit?')),
+        el('div', { class: 'muted small' }, VN.t('Die Aktion „Zeit vergehen lassen“ funktioniert immer. Zusätzlich kann die Zeit von selbst vergehen:')),
+        chk('activity', 'Durch Tun: jede Tätigkeit kostet Zeitpunkte'));
+      if (F.activity) card.append(
+        row('Zeitpunkte pro Tageszeit', num('perSlot', 1, 999)),
+        row('Hub-Objekt benutzen', num('hub', 0, 999), el('span', { class: 'muted small' }, VN.t('Punkte'))),
+        row('Antwort in einer Auswahl', num('choice', 0, 999), el('span', { class: 'muted small' }, VN.t('Punkte'))),
+        row('Story-Szene zu Ende', num('scene', 0, 999), el('span', { class: 'muted small' }, VN.t('Punkte'))),
+        row('Jeder Klick in einer Szene', num('step', 0, 999), el('span', { class: 'muted small' }, VN.t('Punkte'))),
+        el('div', { class: 'muted small' }, VN.t('Beispiel: 10 Punkte pro Tageszeit, Hub-Objekt 1 Punkt → nach 10 Dingen ist es Mittag. Einzelne Objekte und Antworten können eigene Kosten haben („Pause machen“ = 5, „kurz umsehen“ = 0). Mit der Aktion „Zeit vergehen lassen → um … Zeitpunkte“ geht es auch gezielt.')));
+      card.append(chk('real', 'In Echtzeit: Tageszeit wechselt nach einer Wartezeit'));
+      if (F.real) card.append(
+        row('Eine Tageszeit dauert', num('realMin', 1, 600), el('span', { class: 'muted small' }, VN.t('Minuten echte Spielzeit'))),
+        row('Läuft', (() => { const s = el('select', { onchange: (e) => set('realWhere')(e.target.value) }); for (const [v, l] of [['hubs', 'nur in Hubs (Story-Szenen pausieren)'], ['all', 'überall']]) { const o = el('option', { value: v }, VN.t(l)); if (v === (F.realWhere || 'hubs')) o.selected = true; s.appendChild(o); } return s; })()),
+        el('div', { class: 'muted small' }, VN.t('Menüs, Geräte, Pausen und Minispiele halten die Uhr an.')));
+      return card;
     },
 
     shopsTab(body) {

@@ -2,6 +2,15 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.39 – Time by doing things or in real time, device paths, scroll fix
+- **Time can pass on its own** (Game systems → Time → “How does time pass?”):
+  - **By doing things:** time points per time of day; costs for using a hub object, an answer in a choice, the end of a
+    story scene and every click in a scene; own cost per hub object and answer; action “Let time pass → by … time points”.
+  - **In real time:** a time of day lasts X minutes (only in hubs or everywhere); menus, devices and minigames stop the clock.
+- **Paths:** jumps from a device (website, app, message, post on the PC/phone) are drawn as a 💻/📱 line from the scene
+  or hub that opens the device; websites now count for “reachable”.
+- **Editor keeps the scroll position** when it redraws after a click (e.g. game systems lists no longer jump to the top).
+
 ## 0.9.38 – Trigger track, hang-ons, puffed cheeks, swallowing
 - **Trigger track** in the timeline: fire actions (quests, items, variables, money, plugins …) at a step without a
   dialogue, choice or image; optional conditions; once per save or every time.

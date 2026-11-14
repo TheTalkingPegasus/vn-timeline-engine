@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.38
+VN Timeline Engine · Prototyp 0.9.39
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,16 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.39 · Zeit durch Tun oder in Echtzeit, Pfade aus Geräten, Scroll-Fix
+- Zeit kann von selbst vergehen (Spielsysteme → Zeit → „Wie vergeht die Zeit?“):
+  - Durch Tun: Zeitpunkte pro Tageszeit; Kosten für Hub-Objekt benutzen, Antwort in einer Auswahl, Ende einer Story-Szene und jeden
+    Klick in einer Szene; eigene Kosten pro Hub-Objekt und Antwort; Aktion „Zeit vergehen lassen → um … Zeitpunkte“.
+  - In Echtzeit: eine Tageszeit dauert X Minuten (nur in Hubs oder überall); Menüs, Geräte und Minispiele halten die Uhr an.
+- Pfade: Sprünge aus einem Gerät (Website, App, Nachricht, Beitrag am PC/Handy) erscheinen als 💻/📱-Linie von der Szene oder dem
+  Hub, der das Gerät öffnet; Websites zählen jetzt auch für „erreichbar“.
+- Der Editor behält die Scroll-Position, wenn er nach einem Klick neu zeichnet (z. B. springen Listen in den Spielsystemen nicht mehr
+  nach oben).
 
 NEU IN 0.9.38 · Auslöser-Spur, Anhänger, Dicke Backen, Schlucken
 - Auslöser-Spur in der Timeline: Aktionen (Quests, Gegenstände, Variablen, Geld, Plugins …) an einem Schritt auslösen, ohne Dialog,

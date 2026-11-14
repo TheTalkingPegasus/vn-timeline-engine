@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototype 0.9.38
+VN Timeline Engine · Prototype 0.9.39
 ====================================
 (Deutsch: siehe LIES MICH.txt)
 
@@ -15,6 +15,8 @@ Without installing (ZIP):
    isn't signed: "More info" → "Run anyway".
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
+
+NEW IN 0.9.39 · Time passes by doing things (time points) or in real time, device jumps shown in Paths, editor keeps scroll position
 
 NEW IN 0.9.38 · Trigger track in the timeline, hang-ons (your own PNGs pinned to the character, swinging, bending, effects), puffed cheeks and swallowing presets
 
