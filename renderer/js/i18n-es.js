@@ -5689,7 +5689,8 @@ window.VN_I18N_ES = {
 "Wackeln (leicht)": "Tambaleo (suave)",
 "Schlucken (ab und zu)": "Tragar (de vez en cuando)",
 "Schlucken": "Tragar",
-"Aufblähen": "Inflar"
+"Aufblähen": "Inflar",
+"Sprung aus einem Gerät (PC, Handy)": "Salto desde un dispositivo (PC, móvil)"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

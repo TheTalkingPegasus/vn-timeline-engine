@@ -488,9 +488,36 @@
     if (!DV.on()) return [];
     const out = [];
     const walk = (x, d) => { if (!x || typeof x !== 'object' || d > 10) return; if (Array.isArray(x)) { for (const y of x) walk(y, d + 1); return; } if (x.type && VN.SCENE_ACTIONS.includes(x.type) && x.scene) out.push(x.scene); for (const k in x) walk(x[k], d + 1); };
-    walk(DV.cfg().list, 0); walk(DV.threads(), 0); walk(DV.posts(), 0);
+    walk(DV.cfg().list, 0); walk(DV.threads(), 0); walk(DV.posts(), 0); walk(DV.sites(), 0);
     return out;
   });
+
+  // Wohin man aus einem Gerät heraus kommt (0.9.39): Apps, Unterhaltungen, Beiträge und Websites dieses Geräts
+  DV.targets = (devId) => {
+    const d = DV.dev(devId);
+    if (!d || !DV.on()) return [];
+    const out = [];
+    const walk = (x, k) => { if (!x || typeof x !== 'object' || k > 12) return; if (Array.isArray(x)) { for (const y of x) walk(y, k + 1); return; } if (x.type && VN.SCENE_ACTIONS.includes(x.type) && x.scene) out.push(x.scene); if (x.type === 'plugin') { if (x.onWin) out.push(x.onWin); if (x.onLose) out.push(x.onLose); } for (const q in x) walk(x[q], k + 1); };
+    walk(d.apps, 0);
+    if (d.apps.some((a) => a.type === 'messages')) walk(DV.threads().filter((t) => DV.onDev(t, d)), 0);
+    if (d.apps.some((a) => a.type === 'social')) walk(DV.posts(), 0);
+    if (d.apps.some((a) => a.type === 'web')) walk(DV.sites(), 0);
+    return [...new Set(out)].filter((id) => VN.scene(id));
+  };
+  // Pfade: Szene/Hub, die ein Gerät öffnet → alle Szenen, zu denen man im Gerät springen kann
+  const baseEdgesDV = VN.edgesOf;
+  VN.edgesOf = (s) => {
+    const out = baseEdgesDV(s);
+    if (!DV.on()) return out;
+    const devs = new Set();
+    const walk = (x, k) => { if (!x || typeof x !== 'object' || k > 12) return; if (Array.isArray(x)) { for (const y of x) walk(y, k + 1); return; } if (x.type === 'device' && x.device) devs.add(x.device); for (const q in x) if (q !== 'tracks' && x[q] && typeof x[q] === 'object') walk(x[q], k + 1); };
+    if (s.type === 'story') for (const q of Object.keys(s.tracks || {})) walk(s.tracks[q], 0); else { walk(s.objects, 0); walk(s.events, 0); }
+    for (const id of devs) {
+      const d = DV.dev(id);
+      for (const to of DV.targets(id)) if (to !== s.id && !out.some((e) => e.to === to)) out.push({ to, label: (d.kind === 'desktop' ? '💻 ' : '📱 ') + d.name, kind: 'device' });
+    }
+    return out;
+  };
 
   // ---------- Prüfungen ----------
   DV.issues = () => {

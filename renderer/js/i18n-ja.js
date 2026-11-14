@@ -5689,7 +5689,8 @@ window.VN_I18N_JA = {
 "Wackeln (leicht)": "ゆらゆら（軽く）",
 "Schlucken (ab und zu)": "ごくり（時々）",
 "Schlucken": "ごくり",
-"Aufblähen": "ふくらませる"
+"Aufblähen": "ふくらませる",
+"Sprung aus einem Gerät (PC, Handy)": "端末（PC・スマホ）からの移動"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

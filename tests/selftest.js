@@ -1569,6 +1569,36 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Dicke Backen wölben sich, Schlucken läuft auf Anstoß einmal durch die Kehle');
   } catch (e) { general.push('Backen/Schlucken: ' + e.message); }
 
+  // 36. Pfade: Sprünge aus Geräten (PC/Handy) sind Verbindungen (0.9.39)
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [];
+      const p = VN.project, DV = VN.Devices || window.DV;
+      if (!DV || !DV.newDevice) return JSON.stringify(['Geräte fehlen']);
+      const keep = JSON.stringify({ devices: p.devices, web: p.web, scenes: p.scenes.map((x) => x.id) });
+      p.devices = p.devices || { enabled: true, list: [] }; p.devices.enabled = true; p.devices.list = p.devices.list || [];
+      const d = DV.newDevice('desktop'); d.inMenu = false; d.hud = false; d.key = '';
+      if (!d.apps.some((a) => a.type === 'web')) d.apps.push(DV.fixApp({ id: VN.uid('app'), type: 'web' }));
+      p.devices.list.push(d);
+      const target = { id: VN.uid('sc'), type: 'story', name: 'Ziel aus dem PC', beats: 1, tracks: {}, next: null };
+      VN.ensureTracks ? VN.ensureTracks(target) : null;
+      p.scenes.push(target);
+      p.web = p.web || { sites: [] }; p.web.sites = p.web.sites || [];
+      const site = DV.newSite(); site.pages[0].els[0].actions = [{ type: 'goto', scene: target.id }];
+      p.web.sites.push(site);
+      const hub = { id: VN.uid('sc'), type: 'hub', name: 'Zimmer mit PC', objects: [{ id: VN.uid('o'), name: 'PC', actions: [{ type: 'device', device: d.id, app: '' }] }], events: [] };
+      p.scenes.push(hub);
+      const e = VN.edgesOf(hub).find((x) => x.to === target.id);
+      if (!e) out.push('keine Verbindung vom Hub mit PC zur Szene');
+      if (!VN.reachable().has(target.id)) out.push('Ziel gilt als nicht erreichbar');
+      const k = JSON.parse(keep);
+      p.devices = k.devices; p.web = k.web; p.scenes = p.scenes.filter((x) => k.scenes.includes(x.id));
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Pfade/Geräte: ' + r.join(', '));
+    else log('✓ Pfade: Sprung aus einer Website/App im Gerät verbindet den Hub mit der Szene, Ziel ist erreichbar');
+  } catch (e) { general.push('Pfade/Geräte: ' + e.message); }
+
   // 27. Kulissen-Raum (0.9.32): 3D-Flächen, Kamera, Licht durch Fenster mit Jalousie, Bühne und Spieler
   try {
     const r = JSON.parse(await js(`(async () => {
