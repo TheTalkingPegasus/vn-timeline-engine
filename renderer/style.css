@@ -2834,3 +2834,25 @@ body.vz-panning, body.vz-panning * { cursor: grabbing !important; }
 .ap-knob { position: absolute; top: 50%; left: 0; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: #fff; box-shadow: 0 0 8px rgba(140, 150, 255, 0.8); opacity: 0; transition: opacity .15s; }
 .ap-seek:hover .ap-knob, .ap-seek.drag .ap-knob { opacity: 1; }
 .ap-time { font-size: 11px; color: var(--muted, #9a93ad); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Im Spiel nichts markieren/herausziehen (0.9.41) – Eingabefelder ausgenommen */
+#player, #player * { -webkit-user-select: none; user-select: none; -webkit-user-drag: none; -webkit-tap-highlight-color: transparent; }
+#player input, #player textarea, #player [contenteditable="true"] { -webkit-user-select: text; user-select: text; }
+#player ::selection { background: transparent; }
+#player input::selection, #player textarea::selection { background: rgba(165, 140, 240, 0.45); }
+
+/* Freikaufen auf Websites (0.9.41) */
+.dv-web-blurhint { flex-direction: column; gap: 1.2cqw; }
+.dv-web-buy { pointer-events: auto; cursor: pointer; display: inline-flex; align-items: center; gap: 0.8cqw; padding: 1cqw 2.2cqw; border: 0; border-radius: 99px; font: 700 2.6cqw/1 system-ui, sans-serif; color: #fff; background: linear-gradient(135deg, #c38cff, #5f8dff); box-shadow: 0 0.4cqw 1.6cqw rgba(0,0,0,.45); text-shadow: none; transition: transform .12s, filter .12s; }
+.dv-web-buy:hover { transform: scale(1.05); filter: brightness(1.1); }
+.dv-web-buy.ask { background: linear-gradient(135deg, #ffb35c, #ff6f61); }
+.dv-web-buy.poor { filter: grayscale(.6) brightness(.85); }
+.dv-web-buy .money-chip { font-size: inherit; }
+.dv-web-buymsg { font: 600 2.2cqw/1.2 system-ui, sans-serif; color: #ffd0d0; }
+
+/* Bild erhalten (0.9.41) */
+.pl-gain-item.pic .gi { border-radius: 0.6cqh; background-size: cover; background-position: center; }
+.pl-getpic { flex-direction: column; gap: 2cqh; animation: plGetPic .35s ease-out; }
+.pl-getpic img { max-height: 84%; border-radius: 1cqh; box-shadow: 0 1cqh 5cqh rgba(0,0,0,.6); }
+.pl-getpic-t { font: 700 3cqh/1 system-ui, sans-serif; color: #fff; text-shadow: 0 0.3cqh 1cqh rgba(0,0,0,.7); }
+@keyframes plGetPic { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }

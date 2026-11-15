@@ -1651,6 +1651,32 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Alternative Szene übernimmt den Hintergrund der Auswahl');
   } catch (e) { general.push('Alternative Szene / Hintergrund: ' + e.message); }
 
+  // 39. Freikaufen und Bild erhalten (0.9.41)
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [], p = VN.project;
+      const hadCur = p.currencies.length; if (!hadCur) p.currencies.push({ id: 'cT', name: 'Gold', start: 0 });
+      const cur = p.currencies[0];
+      const rs = VN.newRunState(); rs.money[cur.id] = 30;
+      const e = { id: 'eT', kind: 'image', blur: 8, blurConds: [], blurPrice: 50, blurCur: cur.id };
+      if (!VN.Devices.elBlurred(e, rs)) out.push('nicht verschwommen');
+      if (VN.Devices.buyEl(e, rs)) out.push('zu wenig Geld gekauft');
+      rs.money[cur.id] = 80;
+      if (!VN.Devices.buyEl(e, rs) || rs.money[cur.id] !== 30) out.push('Kauf/Abzug');
+      if (VN.Devices.elBlurred(e, rs)) out.push('nach Kauf noch verschwommen');
+      const img = p.assets.find((x) => x.kind === 'image');
+      const was = img.gallery;
+      const g = VN.applyActions([{ type: 'getPic', image: img.id, show: 'note' }], rs);
+      if (!img.gallery || !g.some((x) => x.kind === 'pic')) out.push('Bild erhalten');
+      if (VN.lootName({ kind: 'pic', id: img.id }).indexOf(img.name) < 0) out.push('Name');
+      if (!was) delete img.gallery;
+      if (!hadCur) p.currencies.pop();
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Freikaufen / Bild erhalten: ' + r.join(', '));
+    else log('✓ Freikaufen von verschwommenen Bildern und „Bild erhalten“');
+  } catch (e) { general.push('Freikaufen / Bild erhalten: ' + e.message); }
+
   // 27. Kulissen-Raum (0.9.32): 3D-Flächen, Kamera, Licht durch Fenster mit Jalousie, Bühne und Spieler
   try {
     const r = JSON.parse(await js(`(async () => {

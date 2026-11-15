@@ -222,6 +222,7 @@
 
   VN.lootName = (g) => {
     if (g.kind === 'text') return g.text || '';
+    if (g.kind === 'pic') { const as = VN.asset(g.id); return '🖼 ' + (as ? as.name : ''); }
     if (g.kind === 'money') { const c = VN.project.currencies.find((x) => x.id === g.id); return g.count + ' ' + (c ? VN.tr(c.id + ':name', c.name) : 'Geld'); }
     const it = VN.project.items.find((x) => x.id === g.id);
     return (g.count > 1 ? g.count + '× ' : '') + (it ? VN.tr(it.id + ':name', it.name) : 'Gegenstand');

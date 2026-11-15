@@ -1,6 +1,6 @@
 # VN Timeline Engine – guide for AI assistants
 
-Engine 0.9.40 · project format 1 · generated 2026-11-15
+Engine 0.9.41 · project format 1 · generated 2026-11-15
 
 This file explains a VN Timeline Engine project so that any AI can read and change it **without the engine source code**. 
 The engine is a free visual novel editor that works like a video editor: every scene is a timeline, every column ("step") is one click of the player.
@@ -42,7 +42,7 @@ The engine is a free visual novel editor that works like a video editor: every s
 - `cam` – Camera / Kamera (cam): `{"id":"<unique id>","start":0,"len":3,"zoom":130,"panX":0,"panY":-8,"rot":0,"shake":0,"dur":1.2,"ease":"ease-in-out","keys":[]}`
 - `video` – Video (video): `{"id":"<unique id>","start":0,"len":1,"asset":null,"layer":"front","loop":false,"muted":false,"vol":90,"fit":"cover","waitEnd":true,"skippable":true}`
 - `dialog` – Dialogue / Dialog (dialog): `{"id":"<unique id>","start":0,"len":1,"speaker":"","color":"#ffffff","text":"Neuer Text …","speed":40,"actions":[]}`
-- `choice` – Choice / Auswahl (choice): `{"id":"<unique id>","start":0,"len":1,"options":[{"id":"opt_1oe7j","text":"Antwort A","target":null,"conds":[],"actions":[]},{"id":"opt_1pogz","text":"Antwort B","target":null,"conds":[],"actions":[]}]}`
+- `choice` – Choice / Auswahl (choice): `{"id":"<unique id>","start":0,"len":1,"options":[{"id":"opt_1ozr5","text":"Antwort A","target":null,"conds":[],"actions":[]},{"id":"opt_1po9f","text":"Antwort B","target":null,"conds":[],"actions":[]}]}`
 - `code` – Code (code): `{"id":"<unique id>","start":0,"len":1,"code":""}`
 - `trigger` – Trigger / Auslöser (trigger): `{"id":"<unique id>","start":0,"len":1,"name":"","actions":[],"conds":[],"once":true}`
 - `music` – Music / Musik (music): `{"id":"<unique id>","start":0,"len":3,"asset":null,"vol":70,"loop":true,"carry":false,"fade":1}`
@@ -56,7 +56,7 @@ The engine is a free visual novel editor that works like a video editor: every s
 ```
 
 - Object position/size in % of the screen. `target` = scene opened on click. `invisible: true` = clickable area only. A story scene with `next: "@return"` returns to the hub afterwards. `bgSlots: { "<time slot index>": "<asset id>" }` = background per time of day. `fx: [{ id, particles: "rain"|"snow"|"dust"|"sparks"|"petals"|"fireflies", density, speed, size, wind, color, conds }]` = particles over the hub.
-- Assets may have `folder` ("Characters/Ray") – only for the editor file list. Minigame plugin actions can have `onWin` / `onLose` (scene id, hub id or "@gameover") and `winActs` / `loseActs` (action lists run when the minigame ends – rewards like giveItem, money, rel, socialFollowers); `gameOver: { title, text, bg, retry }` on the project sets the game-over screen. Hub objects can idle: `idle` ("float"|"bob"|"breathe"|"sway"|"wind"|"pulse"|"flicker"|"shake"|"spin"), `idleSpeed` (seconds), `idleAmt` (0–20); `bones: true` animates an image that has bones (optional `idleAnim`). Website elements: `blend` (CSS mix-blend-mode), `blur` (0–20), `blurConds` (sharp once true), `blurHint`. Contacts: `folCur` (currency id = followers), `folGrow: [{ when: "day"|"week"|"weekday", wd, mode: "pct"|"add", amount, conds }]`. `liveChats: [{ id, name, title, viewers, pos, users: [{ id, name, color }], msgs: [{ id, user, text, gap }], replies: [{ id, text, at, conds, actions }] }]` with action `{ type: "liveChat", op: "start"|"stop", chat }`. `stamina: { enabled, max, start, style, costMinigame, costTravel, regenSlot, refillDay, tired: {...}, empty: { mode: "sleep"|"none", scene } }` with action `{ type: "stamina", op: "add"|"pct"|"set", amount }`. Cutscene actors: `mask: { on, shape: "rect"|"ellipse"|"poly", invert, pts, x, y, w, h, rot, keys }`. `time.seasonsOn`, `time.seasons`, `time.seasonDays`, `time.ambient: [{ id, asset, slot, season, where: "all"|"hubs"|"<scene id>", vol }]`.
+- Assets may have `folder` ("Characters/Ray") – only for the editor file list. Minigame plugin actions can have `onWin` / `onLose` (scene id, hub id or "@gameover") and `winActs` / `loseActs` (action lists run when the minigame ends – rewards like giveItem, money, rel, socialFollowers); `gameOver: { title, text, bg, retry }` on the project sets the game-over screen. Hub objects can idle: `idle` ("float"|"bob"|"breathe"|"sway"|"wind"|"pulse"|"flicker"|"shake"|"spin"), `idleSpeed` (seconds), `idleAmt` (0–20); `bones: true` animates an image that has bones (optional `idleAnim`). Website elements: `blend` (CSS mix-blend-mode), `blur` (0–20), `blurConds` (sharp once true), `blurHint`, `blurPrice` + `blurCur` (player can pay to unblur; stays sharp). Contacts: `folCur` (currency id = followers), `folGrow: [{ when: "day"|"week"|"weekday", wd, mode: "pct"|"add", amount, conds }]`. `liveChats: [{ id, name, title, viewers, pos, users: [{ id, name, color }], msgs: [{ id, user, text, gap }], replies: [{ id, text, at, conds, actions }] }]` with action `{ type: "liveChat", op: "start"|"stop", chat }`. `stamina: { enabled, max, start, style, costMinigame, costTravel, regenSlot, refillDay, tired: {...}, empty: { mode: "sleep"|"none", scene } }` with action `{ type: "stamina", op: "add"|"pct"|"set", amount }`. Cutscene actors: `mask: { on, shape: "rect"|"ellipse"|"poly", invert, pts, x, y, w, h, rot, keys }`. `time.seasonsOn`, `time.seasons`, `time.seasonDays`, `time.ambient: [{ id, asset, slot, season, where: "all"|"hubs"|"<scene id>", vol }]`.
 - Events run when the hub is entered: `{ id, trigger: "first"|"always"|"cond", conds, mode: "lines"|"scene", lines: [{ id, speaker, text, style: ""|"phone"|"note" }], scene: "<story scene id>" }`. `mode: "scene"` plays a whole timeline over the hub (characters, phone chat, choices) and comes back. `when: "enter"|"cond"` (cond = as soon as `conds` are true, also while the player is in the hub) and `repeat: "once"|"always"|"times"|"daily"` (+ `times`) set how often it runs – never twice in one visit. Older projects use `trigger: "first"|"always"|"cond"`, which still works.
 
 ## Jointed puppets (characters made of body parts)
@@ -160,11 +160,13 @@ Operators: `>=`, `>`, `<=`, `<`, `==`, `!=`.
 - `loot`: `{ "type": "loot", "table": "<loot table id>" }`
 - `rel`: `{ "type": "rel", "char": "<relation char id>", "amount": 10 }  – relationship points (needs Relationships on)`
 - `gift`: `{ "type": "gift", "char": "<relation char id>" }  – player chooses a gift`
+- `getPic`: `{ "type": "getPic", "image": "<asset id>", "show": "note|big|quiet" }  – the player receives a picture (no character, no chat); it is added to the gallery`
 - `charPic`: `{ "type": "charPic", "id": "<unique id>", "char": "<relation char id>", "image": "<asset id>", "text": "Message", "style": "phone|bubble|window" }  – character sends a picture; it is added to the gallery`
 - `time`: `{ "type": "time", "mode": "advance", "amount": 1 }  (needs Time & Calendar on)`
 - `shop`: `{ "type": "shop", "shop": "<shop id>" }`
 - `goto`: `{"type":"goto","scene":""}  – ➜ Go to scene or hub / ➜ Zu Szene oder Hub wechseln`
 - `code`: `{"type":"code","code":""}  – 🧮 Math / code / 🧮 Rechnen / Code`
+- `getPic`: `{"type":"getPic","image":"","show":"note"}  – 🖼 Receive picture (gallery) / 🖼 Bild erhalten (Galerie)`
 - `know`: `{"type":"know","key":"","value":true}  – 🧠 Remember knowledge (across playthroughs) / 🧠 Wissen merken (über Durchläufe)`
 - `ach`: `{"type":"ach","ach":""}  – 🏆 Unlock achievement / 🏆 Erfolg freischalten  (only when that game system is switched on)`
 - `screen`: `{"type":"screen","screen":"stats"}  – 📋 Open screen / 📋 Bildschirm öffnen`

@@ -5630,7 +5630,23 @@ window.VN_I18N_EN = {
 "leer = Standard ({n}) · von {m} pro Tageszeit": "empty = default ({n}) · of {m} per time of day",
 "Die Spielzeit läuft in Tageszeiten. Sie ändert sich durch die Aktion „Zeit vergehen lassen“ (z. B. nach einem Job oder beim Schlafen) und – wenn oben eingeschaltet – durch Tun oder in Echtzeit. Prüfen kannst du sie mit der Bedingung „Zeit / Kalender“.": "Game time runs in times of day. It changes through the action “Let time pass” (e.g. after a job or when sleeping) and – if switched on above – by doing things or in real time. Check it with the condition “Time / calendar”.",
 "Klicken oder ziehen, um zu springen": "Click or drag to jump",
-"Im Spiel bewegen (Bones, Weich-Physik, Gesicht – was die Figur hat)": "Move in game (bones, soft physics, face – whatever the figure has)"
+"Im Spiel bewegen (Bones, Weich-Physik, Gesicht – was die Figur hat)": "Move in game (bones, soft physics, face – whatever the figure has)",
+"Nicht genug Geld.": "Not enough money.",
+"Wirklich zahlen?": "Really pay?",
+"Freikaufen": "Unlock",
+"Freikaufen für": "Unlock for",
+"0 = nicht freikaufbar": "0 = cannot be bought",
+"Auf dem Bild erscheint ein Knopf „🔓 Freikaufen“. Ein Klick fragt nach, der zweite zahlt – danach bleibt das Bild scharf.": "A “🔓 Unlock” button appears on the image. The first click asks, the second pays – then the image stays sharp.",
+"Preis eintragen, damit der Spieler das Bild selbst freikaufen kann.": "Enter a price so the player can unlock the image themselves.",
+"Zum Freikaufen gegen Geld zuerst unter Spielsysteme eine Währung anlegen.": "To unlock with money, first create a currency under Game systems.",
+"🖼 Bild erhalten (Galerie)": "🖼 Receive picture (gallery)",
+"in die Galerie": "to the gallery",
+"groß zeigen": "show large",
+"kurz einblenden": "show briefly",
+"groß zeigen (Klick schließt)": "show large (click closes)",
+"still (nur Galerie)": "silently (gallery only)",
+"Neues Bild in der Galerie": "New picture in the gallery",
+"Neues Bild": "New picture"
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",

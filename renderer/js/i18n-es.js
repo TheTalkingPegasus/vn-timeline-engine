@@ -5711,7 +5711,23 @@ window.VN_I18N_ES = {
 "leer = Standard ({n}) · von {m} pro Tageszeit": "vacío = estándar ({n}) · de {m} por franja",
 "Die Spielzeit läuft in Tageszeiten. Sie ändert sich durch die Aktion „Zeit vergehen lassen“ (z. B. nach einem Job oder beim Schlafen) und – wenn oben eingeschaltet – durch Tun oder in Echtzeit. Prüfen kannst du sie mit der Bedingung „Zeit / Kalender“.": "El tiempo del juego avanza por franjas. Cambia con la acción «Dejar pasar el tiempo» (p. ej. tras un trabajo o al dormir) y, si está activado arriba, por actividad o en tiempo real. Compruébalo con la condición «Tiempo / calendario».",
 "Klicken oder ziehen, um zu springen": "Haz clic o arrastra para saltar",
-"Im Spiel bewegen (Bones, Weich-Physik, Gesicht – was die Figur hat)": "Mover en el juego (huesos, física blanda, cara – lo que tenga la figura)"
+"Im Spiel bewegen (Bones, Weich-Physik, Gesicht – was die Figur hat)": "Mover en el juego (huesos, física blanda, cara – lo que tenga la figura)",
+"Nicht genug Geld.": "No tienes suficiente dinero.",
+"Wirklich zahlen?": "¿Pagar de verdad?",
+"Freikaufen": "Desbloquear",
+"Freikaufen für": "Desbloquear por",
+"0 = nicht freikaufbar": "0 = no se puede comprar",
+"Auf dem Bild erscheint ein Knopf „🔓 Freikaufen“. Ein Klick fragt nach, der zweite zahlt – danach bleibt das Bild scharf.": "Aparece un botón «🔓 Desbloquear» sobre la imagen. El primer clic pregunta, el segundo paga; después la imagen queda nítida.",
+"Preis eintragen, damit der Spieler das Bild selbst freikaufen kann.": "Introduce un precio para que el jugador pueda desbloquear la imagen.",
+"Zum Freikaufen gegen Geld zuerst unter Spielsysteme eine Währung anlegen.": "Para desbloquear con dinero, crea primero una moneda en Sistemas de juego.",
+"🖼 Bild erhalten (Galerie)": "🖼 Recibir imagen (galería)",
+"in die Galerie": "a la galería",
+"groß zeigen": "mostrar en grande",
+"kurz einblenden": "mostrar brevemente",
+"groß zeigen (Klick schließt)": "mostrar en grande (clic cierra)",
+"still (nur Galerie)": "en silencio (solo galería)",
+"Neues Bild in der Galerie": "Nueva imagen en la galería",
+"Neues Bild": "Nueva imagen"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

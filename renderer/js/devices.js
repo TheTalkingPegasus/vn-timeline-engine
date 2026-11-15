@@ -146,7 +146,20 @@
     if (DV.elBlurred(e, rs)) st.filter = ((st.filter || '') + ` blur(${(Number(e.blur) * 0.15).toFixed(2)}cqw)`).trim();
     return st;
   };
-  DV.elBlurred = (e, rs) => Number(e.blur) > 0 && !(rs && (e.blurConds || []).length && VN.checkConds(e.blurConds, rs));
+  DV.elBlurred = (e, rs) => Number(e.blur) > 0 && !(rs && (e.blurConds || []).length && VN.checkConds(e.blurConds, rs)) && !(rs && DV.elBought(e, rs));
+  // Freikaufen (0.9.41): verschwommenes Bild gegen Geld scharf machen – bleibt danach für den Spielstand scharf
+  DV.elBuyCur = (e) => { const L = VN.project.currencies || []; return Number(e.blurPrice) > 0 ? L.find((c) => c.id === e.blurCur) || L[0] || null : null; };
+  DV._pvBought = {}; // nur Vorschau im Editor
+  DV.elBought = (e, rs) => !!(rs && rs.chat && (rs.chat.bought || {})[e.id]);
+  DV.buyEl = (e, rs) => {
+    const c = DV.elBuyCur(e), price = Math.round(Number(e.blurPrice) || 0);
+    if (!c || price <= 0) return false;
+    if ((rs.money[c.id] || 0) < price) return false;
+    rs.money[c.id] -= price;
+    const S = DV.st(rs); (S.bought || (S.bought = {}))[e.id] = 1;
+    if (VN.did) VN.did(rs, 'spend', c.id);
+    return true;
+  };
   DV.BLENDS = [['normal', 'Normal'], ['multiply', 'Multiplizieren'], ['screen', 'Negativ multiplizieren'], ['plus-lighter', 'Addieren'], ['overlay', 'Ineinanderkopieren'], ['soft-light', 'Weiches Licht'], ['hard-light', 'Hartes Licht'], ['darken', 'Abdunkeln'], ['lighten', 'Aufhellen'], ['color-dodge', 'Farbig abwedeln'], ['color-burn', 'Farbig nachbelichten'], ['difference', 'Differenz (Subtrahieren)'], ['exclusion', 'Ausschluss'], ['hue', 'Farbton'], ['saturation', 'Sättigung'], ['color', 'Farbe'], ['luminosity', 'Luminanz']];
   DV.EL = { kind: 'text', x: 10, y: 10, w: 40, h: 8, text: '', image: '', color: '#1c1e24', bg: '', size: 4, bold: false, align: 'left', font: '', radius: 0, border: '', shadow: 0, shadowColor: '#000000', alpha: 100, blend: 'normal', blur: 0, blurConds: [], blurHint: '', grad: '', ls: 0, link: '', actions: [], conds: [], mode: 'password', answer: '', place: '', fail: '', okLink: '', okActions: [], results: [] };
   DV.fixEl = (e) => { VN.fill(e, Object.assign({ id: VN.uid('we') }, JSON.parse(JSON.stringify(DV.EL)))); return e; };
@@ -804,11 +817,29 @@
         const clickable = !!(e.link || (e.actions || []).length);
         if (e.kind === 'image') {
           const img = el('div', { class: 'dv-web-el img' + (clickable ? ' link' : ''), style: Object.assign(st, { backgroundImage: e.image && VN.assetUrl(e.image) ? `url("${VN.assetUrl(e.image)}")` : '' }), onclick: clickable ? (ev) => { ev.stopPropagation(); click(e); } : null });
-          if (!(e.blurHint && DV.elBlurred(e, rs))) return img;
+          const cur = DV.elBuyCur(e);
+          if (!((e.blurHint || cur) && DV.elBlurred(e, rs))) return img;
           // Verschwommenes Bild mit Hinweis („🔒 Erst freischalten“) – der Hinweis bleibt scharf
           const wrap = el('div', { class: 'dv-web-el dv-web-blurwrap', style: { left: st.left, top: st.top, width: st.width, height: st.height, borderRadius: st.borderRadius || '', mixBlendMode: st.mixBlendMode || '' } });
           Object.assign(img.style, { left: '0', top: '0', width: '100%', height: '100%', mixBlendMode: '' });
-          wrap.append(img, el('div', { class: 'dv-web-blurhint' }, XF(tr(e.id + ':hint', e.blurHint))));
+          const hint = el('div', { class: 'dv-web-blurhint' }, e.blurHint ? el('div', null, XF(tr(e.id + ':hint', e.blurHint))) : null);
+          if (cur) {
+            // Freikaufen: erster Klick fragt nach, zweiter zahlt
+            const price = Math.round(Number(e.blurPrice) || 0), has = (rs.money[cur.id] || 0) >= price;
+            const ask = msg._ask === e.id;
+            const btn = el('button', { class: 'dv-web-buy' + (ask ? ' ask' : '') + (has ? '' : ' poor'), onclick: (ev) => {
+              ev.stopPropagation();
+              if (!has) { msg[e.id + ':buy'] = tp('Nicht genug Geld.'); snd('click'); draw(); return; }
+              if (!ask) { msg._ask = e.id; snd('click'); draw(); return; }
+              msg._ask = null;
+              if (o.preview) { DV._pvBought[e.id] = 1; snd('item'); draw(); return; }
+              if (DV.buyEl(e, rs)) { snd('item'); if (H.refresh) H.refresh(); draw(); }
+            } }, ask ? tp('Wirklich zahlen?') + ' ' : '🔓 ' + tp('Freikaufen') + ' · ', VN.moneyChip ? VN.moneyChip(cur, price) : String(price));
+            hint.append(btn);
+            if (msg[e.id + ':buy']) hint.append(el('div', { class: 'dv-web-buymsg' }, msg[e.id + ':buy']));
+            if (o.preview && DV._pvBought[e.id]) return img.style.filter = String(img.style.filter || '').replace(/blur\([^)]*\)/, ''), img;
+          }
+          wrap.append(img, hint);
           return wrap;
         }
         if (e.kind === 'box') return el('div', { class: 'dv-web-el box', style: st });
