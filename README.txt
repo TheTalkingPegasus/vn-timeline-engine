@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototype 0.9.39
+VN Timeline Engine · Prototype 0.9.40
 ====================================
 (Deutsch: siehe LIES MICH.txt)
 
@@ -15,6 +15,8 @@ Without installing (ZIP):
    isn't signed: "More info" → "Run anyway".
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
+
+NEW IN 0.9.40 · Hub characters move (also in the editor), audio preview with stop, spectrum and seek bar, alternative scenes take the background along
 
 NEW IN 0.9.39 · Time passes by doing things (time points) or in real time, device jumps shown in Paths, editor keeps scroll position
 
