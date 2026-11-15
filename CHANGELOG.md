@@ -2,6 +2,23 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.42 – Emojis, emoji picker, hub decoration and layers, everything designable
+- **33 emojis in the starter pack**, in two styles: glossy vector and pixel art (faces plus heart, broken heart, star,
+  fire, sparkles, 100).
+- **Emoji picker while writing** chat messages, player replies, social posts and website texts (😊 button): starter-pack
+  emojis, pixel emojis, your own images or regular emojis. Image emojis become `{emo=…}` and show as a small picture at line
+  height (also in dialog). Size and height in the line: Messages → Settings.
+- **Hub:** objects can have **no hitbox** (decoration – not clickable, no glow, no name; clicks go through to what is
+  behind, or optionally catch them). **Layer list** in the inspector (drag, ↑/↓, one/all the way forward/back), also via
+  right-click and Ctrl+↑/↓ – e.g. hide characters behind furniture.
+- **Unlock button fully designable** (“🎨 Design button”): texts, confirm on/off, price on/off, font, size, style, colors,
+  gradient and angle, own image, corners, padding, border, shadow, glow, hover effect, position, darkening, hint text;
+  “apply to all unlock buttons”.
+- **Quest symbol replaceable:** default, own image (PNG/GIF), own character/emoji or none – with size, color and fill; per
+  pop-up or for all at once (Design → Quest pop-ups).
+- **“Receive picture” shown large is designable** (Design → “Picture received”: frame, colors, font, background, sound);
+  text below the picture, small hint or no text per action.
+
 ## 0.9.41 – Pay to unblur, receive pictures, no selecting in the game
 - **Pay to unblur:** a blurred website image can get a price (“Unlock for” + currency). In the game a “🔓 Unlock” button
   appears; the first click asks, the second pays – the picture then stays sharp for that save. Works together with “Sharp when”.
