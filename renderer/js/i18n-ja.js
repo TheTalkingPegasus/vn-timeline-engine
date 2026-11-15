@@ -5828,7 +5828,22 @@ window.VN_I18N_JA = {
 "Stauchen entlang": "圧縮の方向",
 "der Bahn": "軌道",
 "senkrecht zur Maskenkante": "マスクの縁に垂直",
-"Wie ein weicher Ballon gegen eine Wand: kurz vor der Kante staucht sich das Bild zusammen und wird etwas breiter, dahinter verschwindet es.": "柔らかい風船を壁に押し当てるように：縁の手前で画像が縮んで少し広がり、その先は消えます。"
+"Wie ein weicher Ballon gegen eine Wand: kurz vor der Kante staucht sich das Bild zusammen und wird etwas breiter, dahinter verschwindet es.": "柔らかい風船を壁に押し当てるように：縁の手前で画像が縮んで少し広がり、その先は消えます。",
+"Bei Kontakt mit Anhänger": "アクセサリーとの接触時",
+"reagiert, wenn ein Anhänger in seine Maske fährt": "アクセサリーがマスクに入ると反応",
+"jedem Anhänger mit Maske": "マスク付きのすべてのアクセサリー",
+"Zurückziehen beim Austreten": "抜ける時に引く",
+"Wölben, solange drin": "入っている間ふくらむ",
+"Wölben: Tempo": "ふくらみ：速さ",
+"Nachwackeln": "余韻の揺れ",
+"Wackeln klingt ab": "揺れが収まる速さ",
+"nein": "いいえ",
+"beim Eintreten": "入る時",
+"beim Austreten": "抜ける時",
+"Jede Reaktion lässt sich einzeln abschalten (Regler auf 0). „Wölben“ bläht den Bereich auf, solange der Anhänger in der Maske ist – z. B. volle Backen.": "各反応は個別にオフにできます（スライダーを0に）。「ふくらむ」はアクセサリーがマスク内にある間、範囲を膨らませます（例：頬張り）。",
+"Kontakt melden (Bereiche und andere Anhänger können reagieren)": "接触を通知（範囲や他のアクセサリーが反応できる）",
+"Bei Kontakt": "接触時",
+"Wippt bei Kontakt": "接触時に揺れる"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

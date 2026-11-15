@@ -5828,7 +5828,22 @@ window.VN_I18N_ES = {
 "Stauchen entlang": "Comprimir a lo largo de",
 "der Bahn": "el trayecto",
 "senkrecht zur Maskenkante": "perpendicular al borde de la máscara",
-"Wie ein weicher Ballon gegen eine Wand: kurz vor der Kante staucht sich das Bild zusammen und wird etwas breiter, dahinter verschwindet es.": "Como un globo blando contra una pared: justo antes del borde la imagen se comprime y se ensancha un poco; detrás desaparece."
+"Wie ein weicher Ballon gegen eine Wand: kurz vor der Kante staucht sich das Bild zusammen und wird etwas breiter, dahinter verschwindet es.": "Como un globo blando contra una pared: justo antes del borde la imagen se comprime y se ensancha un poco; detrás desaparece.",
+"Bei Kontakt mit Anhänger": "Al contacto con colgante",
+"reagiert, wenn ein Anhänger in seine Maske fährt": "reacciona cuando un colgante entra en su máscara",
+"jedem Anhänger mit Maske": "cualquier colgante con máscara",
+"Zurückziehen beim Austreten": "Retroceder al salir",
+"Wölben, solange drin": "Abultar mientras está dentro",
+"Wölben: Tempo": "Abultar: velocidad",
+"Nachwackeln": "Temblor posterior",
+"Wackeln klingt ab": "El temblor se calma",
+"nein": "no",
+"beim Eintreten": "al entrar",
+"beim Austreten": "al salir",
+"Jede Reaktion lässt sich einzeln abschalten (Regler auf 0). „Wölben“ bläht den Bereich auf, solange der Anhänger in der Maske ist – z. B. volle Backen.": "Cada reacción se puede desactivar por separado (control a 0). «Abultar» infla la zona mientras el colgante está en la máscara, p. ej. mejillas llenas.",
+"Kontakt melden (Bereiche und andere Anhänger können reagieren)": "Avisar contacto (zonas y otros colgantes pueden reaccionar)",
+"Bei Kontakt": "Al contacto",
+"Wippt bei Kontakt": "Rebota al contacto"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

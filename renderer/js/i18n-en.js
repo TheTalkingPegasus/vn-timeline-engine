@@ -5748,7 +5748,22 @@ window.VN_I18N_EN = {
 "Stauchen entlang": "Compress along",
 "der Bahn": "the path",
 "senkrecht zur Maskenkante": "perpendicular to the mask edge",
-"Wie ein weicher Ballon gegen eine Wand: kurz vor der Kante staucht sich das Bild zusammen und wird etwas breiter, dahinter verschwindet es.": "Like a soft balloon against a wall: just before the edge the picture compresses and gets a bit wider, behind it it disappears."
+"Wie ein weicher Ballon gegen eine Wand: kurz vor der Kante staucht sich das Bild zusammen und wird etwas breiter, dahinter verschwindet es.": "Like a soft balloon against a wall: just before the edge the picture compresses and gets a bit wider, behind it it disappears.",
+"Bei Kontakt mit Anhänger": "On contact with hang-on",
+"reagiert, wenn ein Anhänger in seine Maske fährt": "reacts when a hang-on moves into its mask",
+"jedem Anhänger mit Maske": "any hang-on with a mask",
+"Zurückziehen beim Austreten": "Pull back on leaving",
+"Wölben, solange drin": "Bulge while inside",
+"Wölben: Tempo": "Bulge: speed",
+"Nachwackeln": "Wobble after",
+"Wackeln klingt ab": "Wobble fades",
+"nein": "no",
+"beim Eintreten": "on entering",
+"beim Austreten": "on leaving",
+"Jede Reaktion lässt sich einzeln abschalten (Regler auf 0). „Wölben“ bläht den Bereich auf, solange der Anhänger in der Maske ist – z. B. volle Backen.": "Each reaction can be switched off on its own (slider to 0). “Bulge” puffs the area up while the hang-on is in the mask – e.g. full cheeks.",
+"Kontakt melden (Bereiche und andere Anhänger können reagieren)": "Report contact (areas and other hang-ons can react)",
+"Bei Kontakt": "On contact",
+"Wippt bei Kontakt": "Bounces on contact"
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",
