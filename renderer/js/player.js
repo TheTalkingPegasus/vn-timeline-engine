@@ -945,6 +945,7 @@
     return hubs.find(uses) || prev || null;
   }
   // under: nur Hintergrund und Objekte zeichnen (Hub liegt hinter einem Hub-Dialog), keine Ereignisse
+
   function showHub(s, entering, returning, under) {
     run.hubShown = s.id;
     if (!under && run.scene === s.id) showFxExtra(hubFx(s));
@@ -979,9 +980,8 @@
       const inv = !!o.invisible;
       let look = inv ? el('span') : url ? el('img', { src: url, draggable: 'false', class: hovUrl ? 'base' : null }) : el('div', { class: 'ph' }, VN.tr(o.id + ':name', o.name || 'Objekt'));
       // Bild mit Bones (0.9.24): atmet, wackelt und spielt optional eine Idle-Animation
-      if (!inv && url && o.bones && window.Rig && Rig.has(o.asset)) {
-        try { const clip = { idleAnim: o.idleAnim || undefined, boneAmp: o.boneAmp != null ? o.boneAmp : 100 }, hold = {}; const cv = Rig.canvasFor(o.asset, clip, window.Anim ? { extraFn: Anim.extraFnFor(clip, hold) } : {}); cv.classList.add('pl-hcv'); if (hovUrl) cv.classList.add('base'); look = cv; } catch (er) { console.error('Hub-Objekt mit Bones', er); }
-      }
+      // 0.9.40: Figuren im Hub bewegen sich automatisch wie in Szenen (Bones, Weich-Physik, Gesicht), außer es ist abgeschaltet
+      if (!inv && url) { const al = VN.hubAnimLook(o, url); if (al) { look = al; if (hovUrl) look.classList.add('base'); } }
       if (!inv) VN.applyLook(look, o);
       const node = el('div', {
         class: 'pl-hobj' + (!inv && (o.hover || 'glow') !== 'none' ? ' hover-' + (o.hover || 'glow') : '') + (hovUrl && !inv ? ' has-hov' : '') + (inv ? ' invisible' : ''),

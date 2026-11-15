@@ -71,9 +71,37 @@
 
   const set = (obj, key) => (v) => VN.mutate(() => { obj[key] = v; });
 
-  VN.createAltScene = (src, label) => {
+  VN.createAltScene = (src, label, at) => {
     const s = VN.newStoryScene('Alternativ: ' + (label || 'neuer Pfad'), (src.x || 0) + 280, (src.y || 0) + 140 + Math.random() * 60);
+    VN.carryBg(src, s, at);
     return s;
+  };
+  // Hintergrund mitnehmen (0.9.40): der Hintergrund, der bei der Auswahl zu sehen ist, steht auch am Anfang der neuen Szene –
+  // ohne Übergang, damit es nahtlos weitergeht. Aus einem Hub: das Hub-Bild
+  VN.carryBg = (src, dst, at) => {
+    try {
+      if (!src || !dst || dst.type !== 'story') return;
+      const fresh = (c) => Object.assign(JSON.parse(JSON.stringify(c)), { id: VN.uid('c'), start: 0, len: dst.beats || 3, trans: 'cut', dur: 0 });
+      if (src.type === 'hub') {
+        if (typeof src.bg === 'string' && VN.asset(src.bg)) dst.tracks.bg = [{ id: VN.uid('c'), start: 0, len: dst.beats || 3, asset: src.bg, trans: 'cut', dur: 0 }];
+        return;
+      }
+      if (src.type !== 'story' || !src.tracks) return;
+      const b = Number(at) >= 0 ? Number(at) : Math.max(0, (src.beats || 1) - 1);
+      for (const t of VN.tracksOf(src)) {
+        if (t.base !== 'bg') continue;
+        const list = (src.tracks[t.key] || []).filter((c) => c.asset || (c.layers && c.layers.length));
+        // was bei diesem Schritt läuft, sonst der letzte Hintergrund davor
+        const c = list.find((x) => x.start <= b && b < x.start + (x.len || 1)) || list.filter((x) => x.start <= b).sort((p, q) => q.start - p.start)[0];
+        if (!c) continue;
+        if (t.extra) {
+          const x = (src.xtracks || []).find((y) => y.key === t.key);
+          if (x && !(dst.xtracks || []).some((y) => y.key === x.key)) (dst.xtracks || (dst.xtracks = [])).push(JSON.parse(JSON.stringify(x)));
+        }
+        dst.tracks[t.key] = [fresh(c)];
+      }
+      VN.ensureTracks(dst);
+    } catch (e) { console.warn('Hintergrund übernehmen', e); }
   };
 
   const Inspector = (window.Inspector = {
@@ -307,7 +335,7 @@
             VN.actionEditor(o.actions || (o.actions = []), 'Bei Auswahl ausführen'),
             Inspector.timeCostField(o, 'choice'),
             el('div', { class: 'row gap4' },
-              el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const n = VN.createAltScene(s, o.text); o.target = n.id; }) }, 'Alternativer Pfad: neue Szene'),
+              el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const n = VN.createAltScene(s, o.text, c.start); o.target = n.id; }) }, 'Alternativer Pfad: neue Szene'),
               el('button', { class: 'btn tiny danger', disabled: c.options.length <= 1, onclick: () => VN.mutate(() => { c.options.splice(i, 1); }) }, 'Entfernen'))));
         });
         box.appendChild(el('button', { class: 'btn', onclick: () => VN.mutate(() => { c.options.push({ id: VN.uid('opt'), text: VN.t('Neue Antwort'), target: null, conds: [], actions: [] }); }) }, '+ Antwort'));
@@ -583,8 +611,8 @@
         o.idle ? el('div', { class: 'grid2' },
           range('Dauer', Number(o.idleSpeed) || 3, 0.3, 12, 0.1, (v) => v.toFixed(1) + ' s', set(o, 'idleSpeed')),
           range('Stärke', o.idleAmt != null ? Number(o.idleAmt) : 5, 0, 20, 0.5, (v) => String(v), set(o, 'idleAmt'))) : null,
-        o.asset && window.Rig && Rig.has(o.asset) ? check('Mit Bones animieren (Atmen, Wackeln, Physik)', o.bones, set(o, 'bones')) : null,
-        o.bones && o.asset && window.Rig && Rig.has(o.asset) ? field('Idle-Animation (Bones)', select(o.idleAnim || '', [['', '— nur Atmen / Physik —'], ...(VN.project.anims || []).filter((x) => x.type === 'idle').map((x) => [x.id, x.name])], set(o, 'idleAnim'))) : null,
+        o.asset && ((window.Rig && Rig.has(o.asset)) || (window.Soft && Soft.cfgAny(o.asset))) ? check('Im Spiel bewegen (Bones, Weich-Physik, Gesicht – was die Figur hat)', o.bones !== false, (v) => VN.mutate(() => { o.bones = v; })) : null,
+        o.bones !== false && o.asset && window.Rig && Rig.has(o.asset) ? field('Idle-Animation (Bones)', select(o.idleAnim || '', [['', '— nur Atmen / Physik —'], ...(VN.project.anims || []).filter((x) => x.type === 'idle').map((x) => [x.id, x.name])], set(o, 'idleAnim'))) : null,
         field('Hitbox-Form', select(o.shape || 'rect', [['rect', 'Rechteck'], ['ellipse', 'Ellipse']], set(o, 'shape'))),
         check('Unsichtbar im Spiel (nur Klickfläche, kein Rahmen, kein Leuchten, kein Name)', o.invisible, set(o, 'invisible')),
         VN.condEditor(o.conds || (o.conds = []), 'Objekt nur sichtbar, wenn'),

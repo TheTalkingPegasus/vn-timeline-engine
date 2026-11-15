@@ -325,7 +325,7 @@
             if (e.kind === 'choice' && e.index < 0) {
               items.push({ label: 'Verbindung entfernen', danger: true, action: () => VN.mutate(() => { delete e.clip.allDone; }) });
             } else if (e.kind === 'choice') {
-              items.push({ label: 'Alternativer Pfad: neue Szene', hint: '„' + e.label + '“', action: () => VN.mutate(() => { const n = VN.createAltScene(s, e.label); e.clip.options[e.index].target = n.id; VN.ui.graphSel = n.id; }) });
+              items.push({ label: 'Alternativer Pfad: neue Szene', hint: '„' + e.label + '“', action: () => VN.mutate(() => { const n = VN.createAltScene(s, e.label, e.clip && e.clip.start); e.clip.options[e.index].target = n.id; VN.ui.graphSel = n.id; }) });
               items.push({ label: 'Verbindung entfernen', danger: true, action: () => VN.mutate(() => { e.clip.options[e.index].target = null; }) });
             } else if (e.kind === 'next') {
               items.push({ label: 'Szene dazwischen einfügen', action: () => VN.mutate(() => { const n = VN.newStoryScene(null, ((s.x || 0) + (t.x || 0)) / 2, ((s.y || 0) + (t.y || 0)) / 2 + 90); n.next = t.id; s.next = n.id; VN.ui.graphSel = n.id; }) });

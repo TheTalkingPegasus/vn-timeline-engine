@@ -5709,7 +5709,9 @@ window.VN_I18N_ES = {
 "um … Zeitpunkte (z. B. Pause)": "… puntos de tiempo (p. ej. descanso)",
 "Kostet Zeit (Zeitpunkte)": "Cuesta tiempo (puntos)",
 "leer = Standard ({n}) · von {m} pro Tageszeit": "vacío = estándar ({n}) · de {m} por franja",
-"Die Spielzeit läuft in Tageszeiten. Sie ändert sich durch die Aktion „Zeit vergehen lassen“ (z. B. nach einem Job oder beim Schlafen) und – wenn oben eingeschaltet – durch Tun oder in Echtzeit. Prüfen kannst du sie mit der Bedingung „Zeit / Kalender“.": "El tiempo del juego avanza por franjas. Cambia con la acción «Dejar pasar el tiempo» (p. ej. tras un trabajo o al dormir) y, si está activado arriba, por actividad o en tiempo real. Compruébalo con la condición «Tiempo / calendario»."
+"Die Spielzeit läuft in Tageszeiten. Sie ändert sich durch die Aktion „Zeit vergehen lassen“ (z. B. nach einem Job oder beim Schlafen) und – wenn oben eingeschaltet – durch Tun oder in Echtzeit. Prüfen kannst du sie mit der Bedingung „Zeit / Kalender“.": "El tiempo del juego avanza por franjas. Cambia con la acción «Dejar pasar el tiempo» (p. ej. tras un trabajo o al dormir) y, si está activado arriba, por actividad o en tiempo real. Compruébalo con la condición «Tiempo / calendario».",
+"Klicken oder ziehen, um zu springen": "Haz clic o arrastra para saltar",
+"Im Spiel bewegen (Bones, Weich-Physik, Gesicht – was die Figur hat)": "Mover en el juego (huesos, física blanda, cara – lo que tenga la figura)"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

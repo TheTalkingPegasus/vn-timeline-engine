@@ -5709,7 +5709,9 @@ window.VN_I18N_JA = {
 "um … Zeitpunkte (z. B. Pause)": "…時間ポイント（例：休憩）",
 "Kostet Zeit (Zeitpunkte)": "時間を消費（ポイント）",
 "leer = Standard ({n}) · von {m} pro Tageszeit": "空欄＝標準（{n}）・1時間帯 {m}",
-"Die Spielzeit läuft in Tageszeiten. Sie ändert sich durch die Aktion „Zeit vergehen lassen“ (z. B. nach einem Job oder beim Schlafen) und – wenn oben eingeschaltet – durch Tun oder in Echtzeit. Prüfen kannst du sie mit der Bedingung „Zeit / Kalender“.": "ゲーム内の時間は時間帯で進みます。アクション「時間を進める」（仕事の後や睡眠時など）と、上で有効にした場合は行動やリアルタイムでも変わります。条件「時間／カレンダー」で確認できます。"
+"Die Spielzeit läuft in Tageszeiten. Sie ändert sich durch die Aktion „Zeit vergehen lassen“ (z. B. nach einem Job oder beim Schlafen) und – wenn oben eingeschaltet – durch Tun oder in Echtzeit. Prüfen kannst du sie mit der Bedingung „Zeit / Kalender“.": "ゲーム内の時間は時間帯で進みます。アクション「時間を進める」（仕事の後や睡眠時など）と、上で有効にした場合は行動やリアルタイムでも変わります。条件「時間／カレンダー」で確認できます。",
+"Klicken oder ziehen, um zu springen": "クリックまたはドラッグで移動",
+"Im Spiel bewegen (Bones, Weich-Physik, Gesicht – was die Figur hat)": "ゲーム内で動かす（ボーン・ソフト物理・顔 – キャラにあるもの）"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

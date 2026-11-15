@@ -2,6 +2,14 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.40 – Moving hub characters, audio preview player, background for alternative scenes
+- **Hub characters move like in scenes:** bones, soft physics and face rig play automatically in hubs – now also live in
+  the hub editor – and keep exactly the size you scaled them to (opt-out per object: “Move in game”).
+- **Audio preview in the file list:** ▶ becomes ■ to stop; while playing, a bar spectrum (blue → lilac) and a length bar
+  you can click or drag to jump, with time display.
+- **Alternative scenes take the background along:** “Alternative path: new scene” puts the background visible at the
+  choice (with its settings, without a transition) into the new scene; from a hub object, the hub image.
+
 ## 0.9.39 – Time by doing things or in real time, device paths, scroll fix
 - **Time can pass on its own** (Game systems → Time → “How does time pass?”):
   - **By doing things:** time points per time of day; costs for using a hub object, an answer in a choice, the end of a

@@ -376,6 +376,35 @@
     return [w];
   };
 
+  // Hub-Objekt mit Bones/Weich-Physik/Gesicht (0.9.40): bewegte Fläche in genau der Größe des Bildes (wie „contain“),
+  // im Editor und im Spiel gleich. null, wenn die Figur nichts davon hat oder es abgeschaltet ist
+  VN.hubAnimLook = (o, url) => {
+    if (!url || !o.asset || o.bones === false) return null;
+    const rig = window.Rig && Rig.has(o.asset), soft = window.Soft && Soft.cfgAny(o.asset);
+    if (!rig && !soft) return null;
+    try {
+      const mk = VN.el;
+      const img = mk('img', { src: url, draggable: 'false' });
+      const inner = mk('div', { class: 'char-inner pl-hsoft-in' }, img);
+      const wrap = mk('div', { class: 'pl-hsoft' }, inner);
+      const fit = () => {
+        const W = wrap.clientWidth, H = wrap.clientHeight, a = img.naturalWidth / img.naturalHeight;
+        if (!W || !H || !a) return;
+        const w = Math.min(W, H * a), h = w / a;
+        inner.style.width = w + 'px'; inner.style.height = h + 'px';
+      };
+      img.addEventListener('load', fit);
+      new ResizeObserver(fit).observe(wrap);
+      if (rig) {
+        // Bones: Canvas sitzt mit seinem Rand genau um das Bild (wie auf der Bühne), das Bild selbst nur für die Größe
+        const clip = { idleAnim: o.idleAnim || undefined, boneAmp: o.boneAmp != null ? o.boneAmp : 100 }, hold = {};
+        const cv = Rig.canvasFor(o.asset, clip, window.Anim ? { extraFn: Anim.extraFnFor(clip, hold) } : {});
+        img.style.visibility = 'hidden'; inner.appendChild(cv);
+      } else Soft.attach(inner, o.asset);
+      return wrap;
+    } catch (er) { console.error('Hub-Objekt bewegt', er); return null; }
+  };
+
   // ---------- Übersetzungen ----------
   VN.lang = null; // aktive Sprache im Player (null = Original)
   VN.tr = (id, text) => {
