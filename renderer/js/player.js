@@ -1623,6 +1623,14 @@
       if (VN.stopPreview) VN.stopPreview();
       root = document.getElementById('player');
       root.innerHTML = '';
+      // 0.9.41: im Spiel nichts markieren oder herausziehen (Texte, Bilder) – nur Eingabefelder bleiben normal
+      if (!root._noSel) {
+        root._noSel = true;
+        const typing = (t) => t && t.closest && t.closest('input, textarea, select, [contenteditable="true"]');
+        root.addEventListener('dragstart', (e) => { if (!typing(e.target)) e.preventDefault(); });
+        root.addEventListener('selectstart', (e) => { if (!typing(e.target)) e.preventDefault(); });
+        root.addEventListener('mousedown', (e) => { if (e.detail > 1 && !typing(e.target)) e.preventDefault(); });
+      }
       stage = el('div', { class: 'pl-stage' });
       bgLayers = [el('img', { class: 'pl-bg', draggable: 'false' }), el('img', { class: 'pl-bg', draggable: 'false' })];
       black = el('div', { class: 'pl-black' });

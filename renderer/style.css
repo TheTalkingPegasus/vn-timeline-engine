@@ -2834,3 +2834,9 @@ body.vz-panning, body.vz-panning * { cursor: grabbing !important; }
 .ap-knob { position: absolute; top: 50%; left: 0; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: #fff; box-shadow: 0 0 8px rgba(140, 150, 255, 0.8); opacity: 0; transition: opacity .15s; }
 .ap-seek:hover .ap-knob, .ap-seek.drag .ap-knob { opacity: 1; }
 .ap-time { font-size: 11px; color: var(--muted, #9a93ad); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Im Spiel nichts markieren/herausziehen (0.9.41) – Eingabefelder ausgenommen */
+#player, #player * { -webkit-user-select: none; user-select: none; -webkit-user-drag: none; -webkit-tap-highlight-color: transparent; }
+#player input, #player textarea, #player [contenteditable="true"] { -webkit-user-select: text; user-select: text; }
+#player ::selection { background: transparent; }
+#player input::selection, #player textarea::selection { background: rgba(165, 140, 240, 0.45); }
