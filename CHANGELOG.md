@@ -2,6 +2,14 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.41 – Pay to unblur, receive pictures, no selecting in the game
+- **Pay to unblur:** a blurred website image can get a price (“Unlock for” + currency). In the game a “🔓 Unlock” button
+  appears; the first click asks, the second pays – the picture then stays sharp for that save. Works together with “Sharp when”.
+- **New action “🖼 Receive picture (gallery)”:** no character and no chat needed; the picture goes to the gallery (marked new)
+  and is shown briefly, large (click closes) or not at all.
+- **No more selecting in the game:** dragging or double-clicking no longer highlights texts and objects, and images can no
+  longer be dragged out of the game (input fields still work normally).
+
 ## 0.9.40 – Moving hub characters, audio preview player, background for alternative scenes
 - **Hub characters move like in scenes:** bones, soft physics and face rig play automatically in hubs – now also live in
   the hub editor – and keep exactly the size you scaled them to (opt-out per object: “Move in game”).
