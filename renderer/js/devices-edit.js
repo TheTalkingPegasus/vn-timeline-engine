@@ -583,6 +583,16 @@
     if (Number(e.blur)) {
       box.appendChild(el('div', { class: 'muted small' }, e.blurConds.length ? VN.t('Bleibt verschwommen, bis die Bedingungen erfüllt sind – dann wird es sanft scharf.') : VN.t('Immer verschwommen. Mit „Scharf wenn“ wird es z. B. erst nach einem Kauf oder Passwort scharf.')));
       if (e.kind === 'image') box.appendChild(row('Hinweis darauf', txt(e.blurHint, (v) => { e.blurHint = v; }, 'z. B. 🔒 Nur für Mitglieder')));
+      // Freikaufen (0.9.41): Spieler zahlt, Bild wird scharf
+      if (e.kind === 'image') {
+        const curs = VN.project.currencies || [];
+        if (curs.length) {
+          box.appendChild(row('Freikaufen für', el('span', { class: 'row gap4' },
+            el('input', { type: 'number', min: 0, step: 1, value: Number(e.blurPrice) || 0, style: { width: '72px' }, title: VN.t('0 = nicht freikaufbar'), onchange: (ev) => VN.mutate(() => { e.blurPrice = Math.max(0, Math.round(Number(ev.target.value) || 0)); if (!e.blurCur) e.blurCur = curs[0].id; }) }),
+            curs.length > 1 ? sel(e.blurCur || curs[0].id, curs.map((c) => [c.id, c.name]), (v) => { e.blurCur = v; }, { width: '110px' }) : el('span', { class: 'muted small' }, curs[0].name))));
+          box.appendChild(el('div', { class: 'muted small' }, Number(e.blurPrice) > 0 ? VN.t('Auf dem Bild erscheint ein Knopf „🔓 Freikaufen“. Ein Klick fragt nach, der zweite zahlt – danach bleibt das Bild scharf.') : VN.t('Preis eintragen, damit der Spieler das Bild selbst freikaufen kann.')));
+        } else box.appendChild(el('div', { class: 'muted small' }, VN.t('Zum Freikaufen gegen Geld zuerst unter Spielsysteme eine Währung anlegen.')));
+      }
     }
     if (e.kind !== 'input' && e.kind !== 'box') {
       box.appendChild(el('div', { class: 'sec-title', style: { marginTop: '6px' } }, VN.t('Beim Klick')));

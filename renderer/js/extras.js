@@ -35,6 +35,32 @@
   X.mark = (field, id) => { if (!id) return false; const P = X.P(); if (P[field][id]) return false; P[field][id] = Date.now(); X.save(); return true; };
 
   // ---------- Galerie ----------
+  // Aktion „🖼 Bild erhalten“ (0.9.41): ohne Figur und ohne Chat – landet in der Galerie, wahlweise groß gezeigt
+  VN.registerAction('getPic', {
+    label: '🖼 Bild erhalten (Galerie)', make: () => ({ image: '', show: 'note' }),
+    apply: (a, rs, gains) => {
+      const as = a.image && VN.asset(a.image);
+      if (!as) return;
+      as.gallery = true;
+      X.unlockNew(a.image);
+      if (VN.Idle && VN.Idle._sim) return;
+      if (a.show !== 'quiet' && gains) gains.push({ kind: 'pic', id: a.image });
+      if (a.show === 'big' && gains && gains.pending) gains.pending.push(() => new Promise((res) => {
+        const host = document.querySelector('#player .pl-stage');
+        if (!host) { res(); return; }
+        const big = VN.el('div', { class: 'gal-view pl-getpic', onclick: (e) => { e.stopPropagation(); big.remove(); res(); } },
+          VN.el('img', { src: VN.assetUrl(a.image), alt: as.name, draggable: 'false' }),
+          VN.el('div', { class: 'pl-getpic-t' }, '🖼 ' + VN.tp('Neues Bild in der Galerie')));
+        host.appendChild(big);
+      }));
+    },
+    text: (a) => { const as = a.image && VN.asset(a.image); return '🖼 ' + (as ? '„' + as.name + '“' : '?') + ' ' + VN.t('in die Galerie') + (a.show === 'big' ? ' (' + VN.t('groß zeigen') + ')' : ''); },
+    problem: (a) => (a.image && VN.asset(a.image) ? null : 'Bild fehlt'),
+    row: (row, a, sel) => {
+      row.appendChild(VN.assetSelect('image', a.image, (v) => VN.mutate(() => { a.image = v; const im = v && VN.asset(v); if (im) im.gallery = true; })));
+      row.appendChild(sel(a.show || 'note', [['note', 'kurz einblenden'], ['big', 'groß zeigen (Klick schließt)'], ['quiet', 'still (nur Galerie)']], (v) => VN.mutate(() => { a.show = v; })));
+    }
+  });
   X.galleryImages = () => VN.project.assets.filter((a) => a.kind === 'image' && a.gallery);
   X.galleryMusic = () => VN.project.assets.filter((a) => a.kind === 'audio' && a.musicRoom);
   X.replayScenes = () => VN.project.scenes.filter((s) => s.replay);

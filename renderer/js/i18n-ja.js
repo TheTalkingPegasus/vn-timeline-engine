@@ -5711,7 +5711,23 @@ window.VN_I18N_JA = {
 "leer = Standard ({n}) · von {m} pro Tageszeit": "空欄＝標準（{n}）・1時間帯 {m}",
 "Die Spielzeit läuft in Tageszeiten. Sie ändert sich durch die Aktion „Zeit vergehen lassen“ (z. B. nach einem Job oder beim Schlafen) und – wenn oben eingeschaltet – durch Tun oder in Echtzeit. Prüfen kannst du sie mit der Bedingung „Zeit / Kalender“.": "ゲーム内の時間は時間帯で進みます。アクション「時間を進める」（仕事の後や睡眠時など）と、上で有効にした場合は行動やリアルタイムでも変わります。条件「時間／カレンダー」で確認できます。",
 "Klicken oder ziehen, um zu springen": "クリックまたはドラッグで移動",
-"Im Spiel bewegen (Bones, Weich-Physik, Gesicht – was die Figur hat)": "ゲーム内で動かす（ボーン・ソフト物理・顔 – キャラにあるもの）"
+"Im Spiel bewegen (Bones, Weich-Physik, Gesicht – was die Figur hat)": "ゲーム内で動かす（ボーン・ソフト物理・顔 – キャラにあるもの）",
+"Nicht genug Geld.": "お金が足りません。",
+"Wirklich zahlen?": "本当に支払う？",
+"Freikaufen": "購入して解除",
+"Freikaufen für": "解除価格",
+"0 = nicht freikaufbar": "0 = 購入不可",
+"Auf dem Bild erscheint ein Knopf „🔓 Freikaufen“. Ein Klick fragt nach, der zweite zahlt – danach bleibt das Bild scharf.": "画像に「🔓 購入して解除」ボタンが表示されます。1回目のクリックで確認、2回目で支払い – その後画像はくっきりしたままです。",
+"Preis eintragen, damit der Spieler das Bild selbst freikaufen kann.": "価格を入れると、プレイヤーが自分で画像を解除できます。",
+"Zum Freikaufen gegen Geld zuerst unter Spielsysteme eine Währung anlegen.": "お金で解除するには、まずゲームシステムで通貨を作成してください。",
+"🖼 Bild erhalten (Galerie)": "🖼 画像を入手（ギャラリー）",
+"in die Galerie": "をギャラリーへ",
+"groß zeigen": "大きく表示",
+"kurz einblenden": "短く表示",
+"groß zeigen (Klick schließt)": "大きく表示（クリックで閉じる）",
+"still (nur Galerie)": "表示なし（ギャラリーのみ）",
+"Neues Bild in der Galerie": "ギャラリーに新しい画像",
+"Neues Bild": "新しい画像"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

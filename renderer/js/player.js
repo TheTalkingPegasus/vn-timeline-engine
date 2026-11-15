@@ -608,6 +608,11 @@
         row.appendChild(el('span', { class: 'pl-gain-item rel' + (g.count < 0 ? ' neg' : '') }, el('span', { class: 'gi heart' }, g.count < 0 ? '💔' : '♥'), (g.count > 0 ? '+' : '') + g.count + ' ' + (c ? VN.tr('name:' + c.name, c.name) : '') + (g.stage != null ? ' · ' + VN.Life.stageName(g.stage) + '!' : '')));
         continue;
       }
+      if (g.kind === 'pic') {
+        const as = VN.asset(g.id);
+        row.appendChild(el('span', { class: 'pl-gain-item pic' }, el('span', { class: 'gi', style: { backgroundImage: `url("${VN.assetUrl(g.id)}")` } }), VN.tp('Neues Bild') + (as ? ': ' + as.name : '')));
+        continue;
+      }
       let ico = null;
       if (g.kind === 'item') { const it = p.items.find((x) => x.id === g.id); ico = it && it.image ? el('span', { class: 'gi', style: { backgroundImage: `url("${VN.assetUrl(it.image)}")` } }) : el('span', { class: 'gi ph' }); }
       else { const c = p.currencies.find((x) => x.id === g.id); ico = c && c.image ? el('span', { class: 'gi', style: { backgroundImage: `url("${VN.assetUrl(c.image)}")` } }) : el('span', { class: 'gi dot', style: { background: (c && c.color) || '#e8c86a' } }); }
