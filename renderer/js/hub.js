@@ -137,7 +137,8 @@
       };
       place();
       const url = VN.assetUrl(o.asset);
-      const look = url ? el('img', { src: url, draggable: 'false' }) : el('div', { class: 'ph' }, o.name || 'Objekt');
+      // 0.9.40: auch im Editor live bewegt (Bones, Weich-Physik, Gesicht)
+      const look = (url && !VN.ui.hubIdleOff && VN.hubAnimLook(o, url)) || (url ? el('img', { src: url, draggable: 'false' }) : el('div', { class: 'ph' }, o.name || 'Objekt'));
       VN.applyLook(look, o);
       node.append(...(VN.ui.hubIdleOff ? [look] : VN.hubIdleWrap(o, look)));
       if (o.bones !== false && o.asset && ((window.Rig && Rig.has(o.asset)) || (window.Soft && Soft.cfgAny(o.asset)))) node.appendChild(el('div', { class: 'cond-badge', style: { top: 'auto', bottom: '2px' }, title: VN.t('Bewegt sich im Spiel (Bones / Weich-Physik / Gesicht)') }, '🦴'));

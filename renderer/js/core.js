@@ -533,21 +533,124 @@
   };
 
   // Audio-Vorschau im Editor
-  let previewAudio = null;
+  let previewAudio = null, previewId = null, previewAn = null, previewLoop = 0;
   VN.previewSound = (assetId, inSec, outSec) => {
-    if (previewAudio) { previewAudio.pause(); previewAudio = null; }
+    VN.stopPreview(true);
     const url = VN.assetUrl(assetId);
     if (!url) return;
-    const a = previewAudio = new Audio(url);
+    const a = previewAudio = new Audio();
+    a.crossOrigin = 'anonymous';
+    a.src = url;
     a.volume = 0.8;
+    previewId = assetId;
+    // Spektrum (0.9.40): Ton läuft über einen Analysator
+    previewAn = null;
+    try {
+      const ctx = window.Fx && Fx.ctx ? Fx.ctx() : null;
+      if (ctx) { const an = ctx.createAnalyser(); an.fftSize = 256; an.smoothingTimeConstant = 0.72; ctx.createMediaElementSource(a).connect(an); an.connect(ctx.destination); previewAn = an; }
+    } catch (e) { previewAn = null; }
     if (inSec) a.currentTime = inSec;
     a.play().catch(() => {});
+    a.addEventListener('ended', () => { if (a === previewAudio) VN.stopPreview(); });
     if (outSec) {
-      const check = () => { if (a !== previewAudio) return; if (a.currentTime >= outSec) a.pause(); else requestAnimationFrame(check); };
+      const check = () => { if (a !== previewAudio) return; if (a.currentTime >= outSec) VN.stopPreview(); else requestAnimationFrame(check); };
       requestAnimationFrame(check);
     }
+    VN.previewUi();
+    if (!previewLoop) previewLoop = requestAnimationFrame(previewDraw);
   };
-  VN.stopPreview = () => { if (previewAudio) { previewAudio.pause(); previewAudio = null; } };
+  VN.stopPreview = (quiet) => {
+    if (previewAudio) { previewAudio.pause(); previewAudio = null; }
+    previewId = null; previewAn = null;
+    if (!quiet) VN.previewUi();
+  };
+  // ▶/■ in der Dateiliste: läuft diese Datei, wird sie angehalten
+  VN.previewToggle = (assetId) => { if (previewId === assetId && previewAudio) VN.stopPreview(); else VN.previewSound(assetId); };
+
+  // Kleiner Player in der Dateiliste (0.9.40): ■, Spektrum in Lila→Blau, Längen-Balken zum Klicken/Ziehen
+  const fmtT = (s) => { s = Math.max(0, Math.floor(s || 0)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+  VN.previewDecorate = (node, assetId) => {
+    node.dataset.aid = assetId;
+    const on = previewId === assetId && !!previewAudio;
+    node.classList.toggle('playing', on);
+    const btn = node.querySelector('.play');
+    if (btn) { btn.textContent = on ? '■' : '▶'; btn.title = VN.t(on ? 'Stopp' : 'Anhören'); }
+    let pan = node.querySelector('.ap-panel');
+    if (!on) { if (pan) pan.remove(); return; }
+    if (pan) return;
+    const fill = VN.el('div', { class: 'ap-fill' }), knob = VN.el('div', { class: 'ap-knob' });
+    const seek = VN.el('div', { class: 'ap-seek', title: VN.t('Klicken oder ziehen, um zu springen') }, fill, knob);
+    pan = VN.el('div', { class: 'ap-panel' },
+      VN.el('canvas', { class: 'ap-spec', width: 240, height: 44 }),
+      VN.el('div', { class: 'ap-row' }, seek, VN.el('span', { class: 'ap-time' }, '0:00')));
+    const to = (e) => {
+      const a = previewAudio; if (!a || !isFinite(a.duration)) return;
+      const r = seek.getBoundingClientRect();
+      a.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * a.duration;
+      previewDraw.once();
+    };
+    // Ziehen am Balken darf nicht die Datei auf die Spur ziehen
+    pan.addEventListener('pointerdown', (e) => { e.stopPropagation(); node.draggable = false; });
+    pan.addEventListener('click', (e) => e.stopPropagation());
+    seek.addEventListener('pointerdown', (e) => { seek.setPointerCapture(e.pointerId); seek.classList.add('drag'); to(e); });
+    seek.addEventListener('pointermove', (e) => { if (seek.classList.contains('drag')) to(e); });
+    const up = () => { seek.classList.remove('drag'); node.draggable = true; };
+    seek.addEventListener('pointerup', up); seek.addEventListener('pointercancel', up);
+    pan.addEventListener('pointerup', () => { node.draggable = true; });
+    node.appendChild(pan);
+  };
+  VN.previewUi = () => { document.querySelectorAll('.audio-item[data-aid]').forEach((n) => VN.previewDecorate(n, n.dataset.aid)); };
+  let specBuf = null, specLvl = null;
+  function previewDraw() {
+    previewLoop = 0;
+    const a = previewAudio;
+    if (!a) return;
+    const pans = document.querySelectorAll('.audio-item.playing .ap-panel');
+    if (pans.length) {
+      const N = 30;
+      if (!specLvl) specLvl = new Float32Array(N);
+      if (previewAn) {
+        if (!specBuf || specBuf.length !== previewAn.frequencyBinCount) specBuf = new Uint8Array(previewAn.frequencyBinCount);
+        previewAn.getByteFrequencyData(specBuf);
+      }
+      // Bänder logarithmisch verteilen (tiefe Töne nicht alle in einem Balken)
+      const B = specBuf ? specBuf.length : 0;
+      for (let i = 0; i < N; i++) {
+        let v = 0;
+        if (B && !a.paused) {
+          const f0 = Math.floor(Math.pow(B * 0.75, i / N)), f1 = Math.max(f0 + 1, Math.floor(Math.pow(B * 0.75, (i + 1) / N)));
+          let m = 0; for (let k = f0; k < f1 && k < B; k++) m = Math.max(m, specBuf[k]);
+          v = m / 255;
+        }
+        specLvl[i] = v > specLvl[i] ? v : specLvl[i] * 0.86 + v * 0.14; // schnell hoch, sanft runter
+      }
+      for (const pan of pans) {
+        const cv = pan.querySelector('.ap-spec');
+        const w = Math.max(60, Math.round(cv.clientWidth * devicePixelRatio)), h = Math.round(44 * devicePixelRatio);
+        if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+        const c = cv.getContext('2d');
+        c.clearRect(0, 0, w, h);
+        const g = c.createLinearGradient(0, h, w * 0.35, 0);
+        g.addColorStop(0, '#5f8dff'); g.addColorStop(0.55, '#a58cf0'); g.addColorStop(1, '#d39cff');
+        const gap = Math.max(1, Math.round(w / N * 0.28)), bw = (w - gap * (N - 1)) / N;
+        for (let i = 0; i < N; i++) {
+          const bh = Math.max(2 * devicePixelRatio, specLvl[i] * (h - 2));
+          const x = i * (bw + gap);
+          c.fillStyle = g; c.globalAlpha = 0.95;
+          c.fillRect(x, h - bh, bw, bh);
+          c.globalAlpha = 0.18; // leiser Schein darüber
+          c.fillRect(x, h - Math.min(h, bh + 3 * devicePixelRatio), bw, 2 * devicePixelRatio);
+        }
+        c.globalAlpha = 1;
+        const d = isFinite(a.duration) ? a.duration : 0, q = d ? a.currentTime / d : 0;
+        pan.querySelector('.ap-fill').style.width = (q * 100) + '%';
+        pan.querySelector('.ap-knob').style.left = (q * 100) + '%';
+        pan.querySelector('.ap-time').textContent = fmtT(a.currentTime) + ' / ' + (d ? fmtT(d) : '–:––');
+      }
+    }
+    previewLoop = requestAnimationFrame(previewDraw);
+  }
+  previewDraw.once = () => { if (!previewLoop && previewAudio) previewLoop = requestAnimationFrame(previewDraw); };
 
   VN.render = () => {};  // wird in app.js gesetzt
 })();

@@ -2821,3 +2821,16 @@ body.vz-panning, body.vz-panning * { cursor: grabbing !important; }
 .pl-hsoft { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; pointer-events: none; }
 .pl-hsoft > .pl-hsoft-in { position: relative; flex: 0 0 auto; }
 .pl-hsoft > .pl-hsoft-in > img { width: 100%; height: 100%; object-fit: fill; }
+
+/* Audio-Vorschau in der Dateiliste (0.9.40) */
+.asset.audio-item.playing { flex-wrap: wrap; border-color: rgba(165, 140, 240, 0.55); background: linear-gradient(180deg, rgba(165, 140, 240, 0.10), rgba(95, 141, 255, 0.06)); }
+.asset.audio-item.playing .play { background: linear-gradient(135deg, #c38cff, #5f8dff); color: #fff; box-shadow: 0 0 10px rgba(150, 140, 255, 0.45); }
+.ap-panel { flex: 1 0 100%; display: flex; flex-direction: column; gap: 5px; padding: 4px 2px 2px; cursor: default; }
+.ap-spec { width: 100%; height: 44px; display: block; }
+.ap-row { display: flex; align-items: center; gap: 8px; }
+.ap-seek { position: relative; flex: 1; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.10); cursor: pointer; touch-action: none; }
+.ap-seek::before { content: ''; position: absolute; inset: -6px 0; }
+.ap-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 3px; background: linear-gradient(90deg, #c38cff, #5f8dff); }
+.ap-knob { position: absolute; top: 50%; left: 0; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: #fff; box-shadow: 0 0 8px rgba(140, 150, 255, 0.8); opacity: 0; transition: opacity .15s; }
+.ap-seek:hover .ap-knob, .ap-seek.drag .ap-knob { opacity: 1; }
+.ap-time { font-size: 11px; color: var(--muted, #9a93ad); font-variant-numeric: tabular-nums; white-space: nowrap; }

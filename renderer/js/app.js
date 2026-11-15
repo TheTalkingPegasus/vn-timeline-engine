@@ -299,9 +299,10 @@
               el('div', { class: 'aname', style: { flex: '1', fontFamily: Theme.fontCss('asset:' + a.id), fontSize: '13px' } }, a.name),
               el('span', { class: 'muted small' }, a.file.split('.').pop().toUpperCase()), del)
           : el('div', { class: 'asset audio-item', draggable: 'true', title: a.name + ' – auf eine Audio-Spur ziehen' },
-            el('button', { class: 'play', title: 'Anhören', onclick: (e) => { e.stopPropagation(); VN.previewSound(a.id); } }, '▶'),
+            el('button', { class: 'play', title: 'Anhören', onclick: (e) => { e.stopPropagation(); VN.previewToggle(a.id); } }, '▶'),
             el('div', { class: 'aname', style: { flex: '1' } }, a.name),
             el('span', { class: 'muted small' }, a.file.split('.').pop().toUpperCase()), del);
+        if (tab === 'audio' && VN.previewDecorate) VN.previewDecorate(node, a.id);
         node.addEventListener('dragstart', (e) => {
           e.dataTransfer.setData('vn/asset-' + a.kind, a.id);
           e.dataTransfer.effectAllowed = 'copyMove';
