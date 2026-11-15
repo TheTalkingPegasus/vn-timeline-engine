@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.42
+VN Timeline Engine · Prototyp 0.9.43
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,14 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.43 · Anhänger mit Bahn, Maske und Quetschen (z. B. Essen)
+- Bahn: ein Anhänger der Weich-Physik fährt vom Pin zum Ziel und zurück – endlos oder einmal pro Anstoß „Bissen“ (Aktion
+  „〰 Weich anstoßen → Bahn abspielen (Bissen)“ oder Auslöser-Spur); Dauer, Verweilen, Versatz, Bewegung, danach schlucken.
+- Maske: Form auf die Figur zeichnen (z. B. Mundöffnung) – was hineinfährt, verschwindet wie hinter einer Wand.
+- Quetschen wie ein weicher Ballon an einer Wand: vor der Kante staucht sich das Bild (Stärke, Zone) und wird etwas breiter
+  (eigener Regler); entlang der Bahn oder senkrecht zur Maskenkante.
+- Anstoß beim Eintreten: der gewählte Weich-Physik-Bereich (z. B. Lippen, Backen) gibt bei Berührung nach.
 
 NEU IN 0.9.42 · Emojis, Emoji-Auswahl, Deko und Ebenen im Hub, alles gestaltbar
 - 33 Emojis im Starter-Pack in zwei Stilen: Vektor (glänzend) und Pixelart.
