@@ -17,6 +17,14 @@
       VN.mutate(() => { s.objects.push(o); VN.ui.sel = o.id; });
     },
 
+    // Ebene verschieben (0.9.42): +1 = eins nach vorne, -1 = eins nach hinten, ±999 = ganz
+    layer(s, o, d) {
+      const i = s.objects.indexOf(o);
+      if (i < 0) return;
+      const to = Math.max(0, Math.min(s.objects.length - 1, i + d));
+      if (to === i) return;
+      VN.mutate(() => { s.objects.splice(i, 1); s.objects.splice(to, 0, o); });
+    },
     duplicate(s, o) {
       VN.mutate(() => {
         const c = JSON.parse(JSON.stringify(o));
@@ -143,7 +151,8 @@
       node.append(...(VN.ui.hubIdleOff ? [look] : VN.hubIdleWrap(o, look)));
       if (o.bones !== false && o.asset && ((window.Rig && Rig.has(o.asset)) || (window.Soft && Soft.cfgAny(o.asset)))) node.appendChild(el('div', { class: 'cond-badge', style: { top: 'auto', bottom: '2px' }, title: VN.t('Bewegt sich im Spiel (Bones / Weich-Physik / Gesicht)') }, '🦴'));
       if (o.conds && o.conds.length) node.appendChild(el('div', { class: 'cond-badge', title: o.conds.map(VN.condText).join(' und ') }, 'Bedingung'));
-      if (VN.ui.showHitboxes) {
+      if (o.noHit) node.appendChild(el('div', { class: 'cond-badge', style: { left: '2px', right: 'auto', top: 'auto', bottom: '2px' }, title: VN.t('Keine Hitbox – nur Deko') }, VN.t('Deko')));
+      if (VN.ui.showHitboxes && !o.noHit) {
         const t = VN.scene(o.target);
         node.appendChild(el('div', { class: 'hit' + (o.shape === 'ellipse' ? ' ellipse' : '') }));
         node.appendChild(el('div', { class: 'hit-label' }, (o.name || 'Objekt') + (t ? ' → ' + t.name : o.message ? ' → Meldung' : '')));
@@ -198,6 +207,12 @@
           'sep',
           { label: '🔗 Verbinden mit …', hint: 'Aufbau, Laden, Kampf …', action: () => Connect.menu(e.clientX, e.clientY, s, o) },
           { label: '🧱 Bausteine …', hint: 'Kaufen, nur einmal …', action: () => Connect.blocks(e.clientX, e.clientY, s, o) },
+          'sep',
+          { label: o.noHit ? '☑ ' + VN.t('Keine Hitbox (Deko)') : '☐ ' + VN.t('Keine Hitbox (Deko)'), action: () => VN.mutate(() => { if (o.noHit) delete o.noHit; else { o.noHit = true; o.invisible = false; } }) },
+          { label: VN.t('Eins nach vorne'), hint: 'Strg+↑', action: () => Hub.layer(s, o, 1) },
+          { label: VN.t('Eins nach hinten'), hint: 'Strg+↓', action: () => Hub.layer(s, o, -1) },
+          { label: VN.t('Ganz nach vorne'), action: () => Hub.layer(s, o, 999) },
+          { label: VN.t('Ganz nach hinten'), action: () => Hub.layer(s, o, -999) },
           'sep',
           { label: 'Neue Szene als Ziel anlegen', action: () => VN.mutate(() => { const n = VN.createAltScene(s, o.name); o.target = n.id; }) },
           { label: 'Duplizieren', action: () => Hub.duplicate(s, o) },

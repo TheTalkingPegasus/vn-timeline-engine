@@ -2871,3 +2871,11 @@ body.vz-panning, body.vz-panning * { cursor: grabbing !important; }
 .emo-pick .emo-cell.px { image-rendering: pixelated; }
 .emo-pick .emo-cell:hover { background-color: var(--line2); transform: scale(1.08); }
 .btn.emo-btn { padding: 0 6px; font-size: 15px; }
+
+/* Hub: Ebenen-Liste (0.9.42) */
+.hub-layers { display: flex; flex-direction: column; gap: 3px; max-height: 260px; overflow: auto; }
+.hub-layer { display: flex; align-items: center; gap: 6px; padding: 3px 5px; border-radius: 6px; background: var(--bg3); cursor: grab; font-size: 12px; border: 1px solid transparent; }
+.hub-layer.on { border-color: var(--accent, #e8a43a); }
+.hub-layer.drop { border-top: 2px solid var(--accent, #e8a43a); }
+.hub-layer .hl-thumb { width: 26px; height: 26px; flex: none; border-radius: 4px; background: #0003 center / contain no-repeat; }
+.hub-layer .hl-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

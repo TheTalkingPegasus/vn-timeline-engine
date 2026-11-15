@@ -1677,6 +1677,21 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Freikaufen von verschwommenen Bildern und „Bild erhalten“');
   } catch (e) { general.push('Freikaufen / Bild erhalten: ' + e.message); }
 
+  // 40. Hub: Deko ohne Hitbox und Ebenen (0.9.42)
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [];
+      const hub = VN.newHubScene('Deko-Test');
+      hub.objects = [{ id: 'h1', name: 'A', x: 0, y: 0, w: 10, h: 10 }, { id: 'h2', name: 'B', x: 0, y: 0, w: 10, h: 10, noHit: true }, { id: 'h3', name: 'C', x: 0, y: 0, w: 10, h: 10 }];
+      Hub.layer(hub, hub.objects[0], 1); if (hub.objects.map((o) => o.id).join() !== 'h2,h1,h3') out.push('eins nach vorne');
+      Hub.layer(hub, hub.objects[2], -999); if (hub.objects.map((o) => o.id).join() !== 'h3,h2,h1') out.push('ganz nach hinten');
+      VN.project.scenes.splice(VN.project.scenes.indexOf(hub), 1);
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Hub-Ebenen: ' + r.join(', '));
+    else log('✓ Hub: Ebenen verschieben, Deko ohne Hitbox');
+  } catch (e) { general.push('Hub-Ebenen: ' + e.message); }
+
   // 27. Kulissen-Raum (0.9.32): 3D-Flächen, Kamera, Licht durch Fenster mit Jalousie, Bühne und Spieler
   try {
     const r = JSON.parse(await js(`(async () => {

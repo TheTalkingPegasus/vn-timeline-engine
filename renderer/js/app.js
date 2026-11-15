@@ -585,6 +585,11 @@
     }
     const s = VN.curScene();
     if (!s || VN.ui.view !== 'scene') return;
+    // Hub: Strg+↑/↓ = Ebene nach vorne/hinten (0.9.42), mit Umschalt ganz
+    if (s.type === 'hub' && VN.ui.sel && (e.ctrlKey || e.metaKey) && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      const o = s.objects.find((x) => x.id === VN.ui.sel);
+      if (o) { e.preventDefault(); Hub.layer(s, o, (e.key === 'ArrowUp' ? 1 : -1) * (e.shiftKey ? 999 : 1)); return; }
+    }
     if ((e.key === 'Delete' || e.key === 'Backspace') && VN.ui.sel) {
       e.preventDefault();
       if (s.type === 'story') Story.deleteClip(s, VN.ui.sel);

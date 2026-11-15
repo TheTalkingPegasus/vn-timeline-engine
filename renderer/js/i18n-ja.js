@@ -5784,7 +5784,18 @@ window.VN_I18N_JA = {
 "Normale Emojis": "通常の絵文字",
 "Bild-Emojis stehen als {emo=…} im Text und erscheinen im Spiel als kleines Bild in Zeilenhöhe.": "画像絵文字はテキスト内で {emo=…} と書かれ、ゲームでは行の高さの小さな画像として表示されます。",
 "Bild-Emojis im Text": "テキスト内の画像絵文字",
-"Höhe in der Zeile": "行内の高さ"
+"Höhe in der Zeile": "行内の高さ",
+"Keine Hitbox (nur Deko – nicht anklickbar, kein Leuchten, kein Name)": "ヒットボックスなし（装飾のみ – クリック不可・発光なし・名前なし）",
+"Gut für Möbel, Pflanzen oder Vordergrund, hinter denen Figuren stehen. Klicks gehen durch zu den Objekten dahinter.": "家具・植物・前景など、キャラが後ろに立つ物に最適。クリックは後ろのオブジェクトに届きます。",
+"Klicks dahinter abfangen (was dahinter liegt, ist hier nicht anklickbar)": "クリックを遮る（ここでは後ろの物をクリック不可）",
+"Eins nach vorne": "1つ前へ",
+"Eins nach hinten": "1つ後ろへ",
+"Eine Ebene nach vorne": "1レイヤー前へ",
+"Eine Ebene nach hinten": "1レイヤー後ろへ",
+"Ziehen zum Verschieben · Klick wählt aus": "ドラッグで移動・クリックで選択",
+"Deko": "装飾",
+"Keine Hitbox (Deko)": "ヒットボックスなし（装飾）",
+"Keine Hitbox – nur Deko": "ヒットボックスなし – 装飾のみ"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

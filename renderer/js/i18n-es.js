@@ -5784,7 +5784,18 @@ window.VN_I18N_ES = {
 "Normale Emojis": "Emojis normales",
 "Bild-Emojis stehen als {emo=…} im Text und erscheinen im Spiel als kleines Bild in Zeilenhöhe.": "Los emojis de imagen se escriben como {emo=…} en el texto y aparecen en el juego como una imagen pequeña a la altura de la línea.",
 "Bild-Emojis im Text": "Emojis de imagen en el texto",
-"Höhe in der Zeile": "Altura en la línea"
+"Höhe in der Zeile": "Altura en la línea",
+"Keine Hitbox (nur Deko – nicht anklickbar, kein Leuchten, kein Name)": "Sin zona de clic (solo decoración: no clicable, sin brillo, sin nombre)",
+"Gut für Möbel, Pflanzen oder Vordergrund, hinter denen Figuren stehen. Klicks gehen durch zu den Objekten dahinter.": "Ideal para muebles, plantas o primer plano detrás de los que hay personajes. Los clics pasan a los objetos de detrás.",
+"Klicks dahinter abfangen (was dahinter liegt, ist hier nicht anklickbar)": "Bloquear clics (lo de detrás no es clicable aquí)",
+"Eins nach vorne": "Una hacia delante",
+"Eins nach hinten": "Una hacia atrás",
+"Eine Ebene nach vorne": "Una capa hacia delante",
+"Eine Ebene nach hinten": "Una capa hacia atrás",
+"Ziehen zum Verschieben · Klick wählt aus": "Arrastra para mover · clic selecciona",
+"Deko": "Decoración",
+"Keine Hitbox (Deko)": "Sin zona de clic (decoración)",
+"Keine Hitbox – nur Deko": "Sin zona de clic: solo decoración"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

@@ -613,10 +613,14 @@
           range('Stärke', o.idleAmt != null ? Number(o.idleAmt) : 5, 0, 20, 0.5, (v) => String(v), set(o, 'idleAmt'))) : null,
         o.asset && ((window.Rig && Rig.has(o.asset)) || (window.Soft && Soft.cfgAny(o.asset))) ? check('Im Spiel bewegen (Bones, Weich-Physik, Gesicht – was die Figur hat)', o.bones !== false, (v) => VN.mutate(() => { o.bones = v; })) : null,
         o.bones !== false && o.asset && window.Rig && Rig.has(o.asset) ? field('Idle-Animation (Bones)', select(o.idleAnim || '', [['', '— nur Atmen / Physik —'], ...(VN.project.anims || []).filter((x) => x.type === 'idle').map((x) => [x.id, x.name])], set(o, 'idleAnim'))) : null,
-        field('Hitbox-Form', select(o.shape || 'rect', [['rect', 'Rechteck'], ['ellipse', 'Ellipse']], set(o, 'shape'))),
-        check('Unsichtbar im Spiel (nur Klickfläche, kein Rahmen, kein Leuchten, kein Name)', o.invisible, set(o, 'invisible')),
+        check('Keine Hitbox (nur Deko – nicht anklickbar, kein Leuchten, kein Name)', !!o.noHit, (v) => VN.mutate(() => { if (v) { o.noHit = true; o.invisible = false; } else delete o.noHit; })),
+        o.noHit ? el('div', { class: 'muted small' }, VN.t('Gut für Möbel, Pflanzen oder Vordergrund, hinter denen Figuren stehen. Klicks gehen durch zu den Objekten dahinter.')) : null,
+        o.noHit ? check('Klicks dahinter abfangen (was dahinter liegt, ist hier nicht anklickbar)', !!o.blockHit, set(o, 'blockHit')) : null,
+        o.noHit ? null : field('Hitbox-Form', select(o.shape || 'rect', [['rect', 'Rechteck'], ['ellipse', 'Ellipse']], set(o, 'shape'))),
+        o.noHit ? null : check('Unsichtbar im Spiel (nur Klickfläche, kein Rahmen, kein Leuchten, kein Name)', o.invisible, set(o, 'invisible')),
         VN.condEditor(o.conds || (o.conds = []), 'Objekt nur sichtbar, wenn'),
-        el('div', { class: 'sec-title' }, 'Beim Klick'),
+        ...(o.noHit ? [] : [el('div', { class: 'sec-title' }, 'Beim Klick'),
+
         window.Connect ? Connect.rulesUI(o) : null,
         VN.actionEditor(o.actions || (o.actions = []), 'Ausführen (z. B. Loot würfeln)'),
         field('Gehe zu Szene', VN.sceneSelect(o.target, set(o, 'target'), { exclude: s.id })),
@@ -628,14 +632,40 @@
         VN.useOnEditor ? VN.useOnEditor(s, o) : null,
         assetField('Sound beim Klick', 'audio', o.sfx, set(o, 'sfx')),
         Inspector.timeCostField(o, 'hub'),
-        Inspector.designLink('Bild bei Maus darüber, Leuchtfarbe, Stile'),
-        el('div', { class: 'sec-title' }, 'Ebene'),
-        el('div', { class: 'row gap4' },
-          el('button', { class: 'btn tiny', disabled: idx === s.objects.length - 1, onclick: () => VN.mutate(() => { s.objects.splice(idx, 1); s.objects.push(o); }) }, 'Ganz nach vorne'),
-          el('button', { class: 'btn tiny', disabled: idx === 0, onclick: () => VN.mutate(() => { s.objects.splice(idx, 1); s.objects.unshift(o); }) }, 'Ganz nach hinten')),
+        Inspector.designLink('Bild bei Maus darüber, Leuchtfarbe, Stile')]),
+        Inspector.hubLayers(s, o, idx),
         el('div', { class: 'row gap8' },
           el('button', { class: 'btn', onclick: () => Hub.duplicate(s, o) }, 'Duplizieren'),
           el('button', { class: 'btn danger', onclick: () => VN.mutate(() => { s.objects = s.objects.filter((x) => x !== o); VN.ui.sel = null; }) }, 'Löschen')));
+    },
+
+    // Ebenen im Hub (0.9.42): Reihenfolge aller Objekte, oben = ganz vorne. Ziehen oder ↑↓
+    hubLayers(s, o, idx) {
+      const mv = (from, to) => VN.mutate(() => { const [x] = s.objects.splice(from, 1); s.objects.splice(Math.max(0, Math.min(s.objects.length, to)), 0, x); });
+      const list = el('div', { class: 'hub-layers' });
+      const n = s.objects.length;
+      for (let k = n - 1; k >= 0; k--) {
+        const x = s.objects[k], u = VN.assetUrl(x.asset);
+        const row = el('div', { class: 'hub-layer' + (x === o ? ' on' : ''), draggable: 'true', title: VN.t('Ziehen zum Verschieben · Klick wählt aus'),
+          onclick: () => { VN.ui.sel = x.id; VN.render(); },
+          ondragstart: (e) => { e.dataTransfer.setData('text/hublayer', String(k)); e.dataTransfer.effectAllowed = 'move'; },
+          ondragover: (e) => { if ([...e.dataTransfer.types].includes('text/hublayer')) { e.preventDefault(); row.classList.add('drop'); } },
+          ondragleave: () => row.classList.remove('drop'),
+          ondrop: (e) => { e.preventDefault(); const from = Number(e.dataTransfer.getData('text/hublayer')); if (from !== k) mv(from, k); } },
+          el('span', { class: 'hl-thumb', style: { backgroundImage: u ? `url("${u}")` : '' } }),
+          el('span', { class: 'hl-name' }, (x.name || VN.t('Objekt')) + (x.noHit ? ' · ' + VN.t('Deko') : x.invisible ? ' · ' + VN.t('unsichtbar') : '')),
+          el('button', { class: 'btn tiny', title: VN.t('Eine Ebene nach vorne'), disabled: k === n - 1, onclick: (e) => { e.stopPropagation(); mv(k, k + 1); } }, '↑'),
+          el('button', { class: 'btn tiny', title: VN.t('Eine Ebene nach hinten'), disabled: k === 0, onclick: (e) => { e.stopPropagation(); mv(k, k - 1); } }, '↓'));
+        list.appendChild(row);
+      }
+      return el('div', { class: 'col gap4' },
+        el('div', { class: 'sec-title' }, VN.t('Ebenen (oben = vorne)')),
+        el('div', { class: 'row gap4', style: { flexWrap: 'wrap' } },
+          el('button', { class: 'btn tiny', disabled: idx === n - 1, onclick: () => mv(idx, n - 1) }, VN.t('Ganz nach vorne')),
+          el('button', { class: 'btn tiny', disabled: idx === n - 1, onclick: () => mv(idx, idx + 1) }, VN.t('Eins nach vorne')),
+          el('button', { class: 'btn tiny', disabled: idx === 0, onclick: () => mv(idx, idx - 1) }, VN.t('Eins nach hinten')),
+          el('button', { class: 'btn tiny', disabled: idx === 0, onclick: () => mv(idx, 0) }, VN.t('Ganz nach hinten'))),
+        list);
     },
 
     systems() {
