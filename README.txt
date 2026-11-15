@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototype 0.9.41
+VN Timeline Engine · Prototype 0.9.42
 ====================================
 (Deutsch: siehe LIES MICH.txt)
 
@@ -15,6 +15,8 @@ Without installing (ZIP):
    isn't signed: "More info" → "Run anyway".
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
+
+NEW IN 0.9.42 · Emojis (vector + pixel) and emoji picker, hub decoration objects and layer list, designable unlock button, quest symbol and “receive picture” view
 
 NEW IN 0.9.41 · Pay to unblur website pictures, action “Receive picture”, no text/image selecting in the game
 

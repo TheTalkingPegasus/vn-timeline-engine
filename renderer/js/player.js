@@ -983,15 +983,17 @@
       const hovUrl = o.hoverAsset ? VN.assetUrl(o.hoverAsset) : '';
       // Unsichtbare Klickfläche (0.8.0): nichts zu sehen, nur anklickbar
       const inv = !!o.invisible;
+      // Keine Hitbox (0.9.42): reine Deko – nicht anklickbar, kein Leuchten, kein Name; Klicks gehen zu Objekten dahinter
+      const deco = !!o.noHit && !inv;
       let look = inv ? el('span') : url ? el('img', { src: url, draggable: 'false', class: hovUrl ? 'base' : null }) : el('div', { class: 'ph' }, VN.tr(o.id + ':name', o.name || 'Objekt'));
       // Bild mit Bones (0.9.24): atmet, wackelt und spielt optional eine Idle-Animation
       // 0.9.40: Figuren im Hub bewegen sich automatisch wie in Szenen (Bones, Weich-Physik, Gesicht), außer es ist abgeschaltet
       if (!inv && url) { const al = VN.hubAnimLook(o, url); if (al) { look = al; if (hovUrl) look.classList.add('base'); } }
       if (!inv) VN.applyLook(look, o);
       const node = el('div', {
-        class: 'pl-hobj' + (!inv && (o.hover || 'glow') !== 'none' ? ' hover-' + (o.hover || 'glow') : '') + (hovUrl && !inv ? ' has-hov' : '') + (inv ? ' invisible' : ''),
+        class: 'pl-hobj' + (!inv && !deco && (o.hover || 'glow') !== 'none' ? ' hover-' + (o.hover || 'glow') : '') + (hovUrl && !inv && !deco ? ' has-hov' : '') + (inv ? ' invisible' : '') + (deco ? ' deco' : ''),
         style: { left: o.x + '%', top: o.y + '%', width: o.w + '%', height: o.h + '%', transform: 'rotate(' + (o.rot || 0) + 'deg)', pointerEvents: 'none' }
-      }, ...(inv ? [look] : VN.hubIdleWrap(o, look, hovUrl ? el('img', { src: hovUrl, draggable: 'false', class: 'hov' }) : null)), o.name && !inv ? el('div', { class: 'tip' }, VN.tr(o.id + ':name', o.name)) : null);
+      }, ...(inv ? [look] : VN.hubIdleWrap(o, look, hovUrl ? el('img', { src: hovUrl, draggable: 'false', class: 'hov' }) : null)), o.name && !inv && !deco ? el('div', { class: 'tip' }, VN.tr(o.id + ':name', o.name)) : null);
       if (o.glowColor) node.style.setProperty('--glow', o.glowColor);
       const hit = el('div', {
         style: { position: 'absolute', inset: '0', borderRadius: o.shape === 'ellipse' ? '50%' : '0', pointerEvents: 'auto', cursor: window.Theme ? Theme.cursor('hub', 'pointer') : 'pointer' },
@@ -1042,7 +1044,8 @@
           if (parts.length) showMessage(el('div', null, ...parts), go); else go();
         }
       });
-      node.appendChild(hit);
+      if (deco) { if (o.blockHit) node.appendChild(el('div', { style: { position: 'absolute', inset: '0', pointerEvents: 'auto', borderRadius: o.shape === 'ellipse' ? '50%' : '0' }, onclick: (e) => e.stopPropagation() })); }
+      else node.appendChild(hit);
       hubBox.appendChild(node);
     }
     if (under) return;
@@ -1628,6 +1631,8 @@
       if (VN.stopPreview) VN.stopPreview();
       root = document.getElementById('player');
       root.innerHTML = '';
+      // Bild-Emojis im Text (0.9.42): Größe und Höhe aus den Nachrichten-Einstellungen
+      { const C = VN.project.chats || {}; root.style.setProperty('--emo-size', (Number(C.emoSize) || 1.35) + 'em'); root.style.setProperty('--emo-y', (C.emoY != null ? C.emoY : -0.3) + 'em'); }
       // 0.9.41: im Spiel nichts markieren oder herausziehen (Texte, Bilder) – nur Eingabefelder bleiben normal
       if (!root._noSel) {
         root._noSel = true;

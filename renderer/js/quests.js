@@ -4,6 +4,44 @@
   const Q = (VN.Quests = {});
   const NOTIFY_KINDS = [['new', 'Neue Quest'], ['step', 'Abschnitt erledigt'], ['done', 'Quest abgeschlossen'], ['series', 'Questreihe abgeschlossen'], ['fail', 'Gescheitert']];
   Q.NOTIFY_KINDS = NOTIFY_KINDS;
+  // Symbol einer Einblendung (0.9.42): eigenes Bild, eigenes Zeichen/Emoji, oder keins – sonst das von „Alle Einblendungen“, sonst Standard
+  Q.KIND_ICON = { new: '📜', step: '✓', done: '★', series: '🏆', fail: '✗' };
+  Q.iconEl = (kind, N) => {
+    const C = (VN.project.quests || {}).notifyAll || {};
+    N = N || (((VN.project.quests || {}).notify || {})[kind]) || {};
+    const pick = N.iconMode && N.iconMode !== 'all' ? N : (N.icon || N.iconText) && !N.iconMode ? N : C;
+    if (pick.iconMode === 'none') return null;
+    const sz = Number(pick.iconSize) || 0, st = {};
+    if (sz) { st.width = sz + 'cqh'; st.height = sz + 'cqh'; st.fontSize = (sz * 0.53) + 'cqh'; }
+    if (pick.icon && VN.assetUrl(pick.icon)) return VN.el('div', { class: 'qn-ico', style: Object.assign(st, { backgroundImage: `url("${VN.assetUrl(pick.icon)}")` }) });
+    if (pick.iconColor) st.color = pick.iconColor;
+    if (pick.iconBg === 'none') st.background = 'transparent'; else if (pick.iconBg) st.background = pick.iconBg;
+    return VN.el('div', { class: 'qn-ico ph k-' + kind, style: st }, pick.iconText || Q.KIND_ICON[kind] || '★');
+  };
+  // Editor-Felder für das Symbol (Questeinstellungen und 🎨-Design)
+  Q.iconFields = (N, isAll) => {
+    const mode = N.iconMode || (N.icon ? 'img' : N.iconText ? 'text' : (isAll ? 'std' : 'all'));
+    const set = (f) => VN.mutate(f);
+    const s = VN.el('select', { onchange: (e) => set(() => { N.iconMode = e.target.value; }) });
+    for (const [v, l] of [...(isAll ? [] : [['all', 'wie „Alle Einblendungen“']]), ['std', 'Standard'], ['img', 'eigenes Bild'], ['text', 'eigenes Zeichen / Emoji'], ['none', 'kein Symbol']]) { const o = VN.el('option', { value: v }, VN.t(l)); if (v === mode) o.selected = true; s.appendChild(o); }
+    const row = VN.el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } }, VN.el('span', { class: 'muted small' }, VN.t('Symbol')), s);
+    if (mode === 'img') row.appendChild(VN.assetSelect('image', N.icon, (v) => set(() => { N.icon = v; N.iconMode = 'img'; })));
+    if (mode === 'text') row.appendChild(VN.el('input', { type: 'text', value: N.iconText || '', maxlength: 8, placeholder: '★ 🗝 ✔', style: { width: '80px' }, onchange: (e) => set(() => { N.iconText = e.target.value.trim(); N.iconMode = 'text'; }) }));
+    if (mode === 'std') { delete N.icon; delete N.iconText; }
+    if (mode !== 'none' && mode !== 'all') {
+      const col = (k, def) => VN.el('input', { type: 'color', value: /^#[0-9a-f]{6}$/i.test(N[k] || '') ? N[k] : def, onchange: (e) => set(() => { N[k] = e.target.value; }) });
+      const r2 = VN.el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } }, VN.el('span', { class: 'muted small' }, VN.t('Größe')),
+        VN.el('input', { type: 'range', min: 3, max: 16, step: 0.2, value: Number(N.iconSize) || 6.4, style: { width: '100px' }, onchange: (e) => set(() => { N.iconSize = Number(e.target.value); }) }));
+      if (mode !== 'img') {
+        r2.append(VN.el('label', { class: 'check' }, col('iconColor', '#e8a43a'), VN.t('Farbe')),
+          VN.el('label', { class: 'check' }, col('iconBg', '#2a2833'), VN.t('Fläche')),
+          VN.el('label', { class: 'check' }, VN.el('input', { type: 'checkbox', checked: N.iconBg === 'none', onchange: (e) => set(() => { if (e.target.checked) N.iconBg = 'none'; else delete N.iconBg; }) }), VN.t('ohne Fläche')));
+      }
+      r2.append(VN.el('button', { class: 'btn tiny', title: VN.t('Größe und Farben zurücksetzen'), onclick: () => set(() => { delete N.iconSize; delete N.iconColor; delete N.iconBg; }) }, '↺'));
+      return VN.el('div', { class: 'col gap4' }, row, r2);
+    }
+    return row;
+  };
   const NOTIFY_BASE = {
     new: { pos: 'top', anim: 'slide', out: 'fade', dur: 3, text: '{quest}' },
     step: { pos: 'topright', anim: 'slide', out: 'fade', dur: 2.2, text: '{abschnitt}' },

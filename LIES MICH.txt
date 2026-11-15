@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.41
+VN Timeline Engine · Prototyp 0.9.42
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,19 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.42 · Emojis, Emoji-Auswahl, Deko und Ebenen im Hub, alles gestaltbar
+- 33 Emojis im Starter-Pack in zwei Stilen: Vektor (glänzend) und Pixelart.
+- Emoji-Auswahl beim Schreiben (😊-Knopf) bei Chat-Nachrichten, Antworten, Beiträgen und Website-Texten: Emojis, Pixel-Emojis,
+  eigene Bilder oder normale Emojis. Bild-Emojis stehen als {emo=…} im Text und erscheinen als kleines Bild in Zeilenhöhe
+  (auch im Dialog). Größe und Höhe: Nachrichten → Einstellungen.
+- Hub: „Keine Hitbox (nur Deko)“ – nicht anklickbar, kein Leuchten, kein Name; Klicks gehen durch (oder werden abgefangen).
+  Ebenen-Liste im Inspektor (ziehen, ↑/↓, eins/ganz nach vorne/hinten), auch per Rechtsklick und Strg+↑/↓ – z. B. Figuren
+  hinter Möbeln verstecken.
+- Freikaufen-Knopf bis ins Detail gestaltbar („🎨 Knopf gestalten“): Texte, Nachfrage, Preis, Schrift, Farben, Verlauf, eigenes
+  Bild, Ecken, Abstände, Rand, Schatten, Leuchten, Maus darüber, Lage, Abdunkeln; „auf alle übertragen“.
+- Quest-Symbol austauschbar: Standard, eigenes Bild, eigenes Zeichen/Emoji oder keins – mit Größe, Farbe und Fläche.
+- „Bild erhalten“ groß gezeigt gestaltbar (Design → „Bild erhalten“) und Text/Hinweis pro Aktion.
 
 NEU IN 0.9.41 · Bilder freikaufen, Bilder erhalten, kein Markieren im Spiel
 - Verschwommene Website-Bilder freikaufen: Preis und Währung bei „Freikaufen für“. Im Spiel erscheint „🔓 Freikaufen“; der erste

@@ -627,11 +627,11 @@
     // ---------- Text-Effekte ----------
     // {shake}…{/shake} {wave} {glow} {b} {i} {big} {small} {color=#f00} {slow} {fast} {pause=0.5}
     TAGS: ['shake', 'wave', 'glow', 'b', 'i', 'big', 'small', 'color', 'slow', 'fast'],
-    plain(text) { return String(text || '').replace(/\{\/?(shake|wave|glow|b|i|big|small|slow|fast)\}|\{color=[^}]*\}|\{\/color\}|\{pause=[\d.]+\}/g, ''); },
+    plain(text) { return String(text || '').replace(/\{\/?(shake|wave|glow|b|i|big|small|slow|fast)\}|\{color=[^}]*\}|\{\/color\}|\{pause=[\d.]+\}|\{emo=[^}]+\}/g, ''); },
     parse(text) {
       const out = [];
       const st = { shake: 0, wave: 0, glow: 0, b: 0, i: 0, big: 0, small: 0, slow: 0, fast: 0, color: [] };
-      const re = /\{(\/?)(shake|wave|glow|b|i|big|small|slow|fast)\}|\{color=([^}]*)\}|\{\/color\}|\{pause=([\d.]+)\}/g;
+      const re = /\{(\/?)(shake|wave|glow|b|i|big|small|slow|fast)\}|\{color=([^}]*)\}|\{\/color\}|\{pause=([\d.]+)\}|\{emo=([^}]+)\}/g;
       let last = 0, m, pause = 0;
       const push = (s) => {
         for (const ch of s) {
@@ -646,13 +646,22 @@
         else if (m[3] != null) st.color.push(m[3]);
         else if (m[0] === '{/color}') st.color.pop();
         else if (m[4]) pause += Number(m[4]);
+        // Bild-Emoji im Text (0.9.42): {emo=Datei-ID} → kleines Bild in Zeilenhöhe
+        else if (m[5]) { push('\u2060'); out[out.length - 1].emo = m[5]; out[out.length - 1].ch = ''; }
         last = re.lastIndex;
       }
       push(t.slice(last));
       return out;
     },
-    hasFx(tokens) { return tokens.some((c) => c.shake || c.wave || c.glow || c.b || c.i || c.big || c.small || c.color); },
+    hasFx(tokens) { return tokens.some((c) => c.shake || c.wave || c.glow || c.b || c.i || c.big || c.small || c.color || c.emo); },
     charEl(c, idx) {
+      if (c.emo) {
+        const u = VN.assetUrl(c.emo);
+        const as = VN.asset ? VN.asset(c.emo) : null;
+        const s = el('span', { class: 'tch t-emo' + (as && as.pixel ? ' px' : '') + (c.shake ? ' t-shake' : '') + (c.wave ? ' t-wave' : '') }, u ? el('img', { src: u, alt: '', draggable: 'false' }) : '');
+        s.style.setProperty('--i', idx);
+        return s;
+      }
       if (c.ch === '\n') return document.createElement('br');
       const cls = ['tch'];
       for (const k of ['shake', 'wave', 'glow', 'b', 'i', 'big', 'small']) if (c[k]) cls.push('t-' + k);

@@ -2841,18 +2841,41 @@ body.vz-panning, body.vz-panning * { cursor: grabbing !important; }
 #player ::selection { background: transparent; }
 #player input::selection, #player textarea::selection { background: rgba(165, 140, 240, 0.45); }
 
-/* Freikaufen auf Websites (0.9.41) */
+/* Freikaufen auf Websites (0.9.41, gestaltbar ab 0.9.42) */
 .dv-web-blurhint { flex-direction: column; gap: 1.2cqw; }
-.dv-web-buy { pointer-events: auto; cursor: pointer; display: inline-flex; align-items: center; gap: 0.8cqw; padding: 1cqw 2.2cqw; border: 0; border-radius: 99px; font: 700 2.6cqw/1 system-ui, sans-serif; color: #fff; background: linear-gradient(135deg, #c38cff, #5f8dff); box-shadow: 0 0.4cqw 1.6cqw rgba(0,0,0,.45); text-shadow: none; transition: transform .12s, filter .12s; }
-.dv-web-buy:hover { transform: scale(1.05); filter: brightness(1.1); }
-.dv-web-buy.ask { background: linear-gradient(135deg, #ffb35c, #ff6f61); }
-.dv-web-buy.poor { filter: grayscale(.6) brightness(.85); }
+.dv-web-blurhint.pos-top { justify-content: flex-start; padding-top: 3cqw; }
+.dv-web-blurhint.pos-bottom { justify-content: flex-end; padding-bottom: 3cqw; }
+.dv-web-buy { pointer-events: auto; cursor: pointer; display: inline-flex; align-items: center; gap: 0.8cqw; line-height: 1; text-shadow: none; transition: transform .12s, filter .12s; }
+.dv-web-buy.hv-grow:hover { transform: scale(1.05); }
+.dv-web-buy.hv-bright:hover { filter: brightness(1.15); }
+.dv-web-buy.hv-lift:hover { transform: translateY(-0.4cqw); }
 .dv-web-buy .money-chip { font-size: inherit; }
-.dv-web-buymsg { font: 600 2.2cqw/1.2 system-ui, sans-serif; color: #ffd0d0; }
-
-/* Bild erhalten (0.9.41) */
+.dv-web-buymsg { font: 600 2.2cqw/1.2 system-ui, sans-serif; }
+/* Bild erhalten (0.9.41, gestaltbar ab 0.9.42 über 🎨 „Bild erhalten“) */
 .pl-gain-item.pic .gi { border-radius: 0.6cqh; background-size: cover; background-position: center; }
-.pl-getpic { flex-direction: column; gap: 2cqh; animation: plGetPic .35s ease-out; }
-.pl-getpic img { max-height: 84%; border-radius: 1cqh; box-shadow: 0 1cqh 5cqh rgba(0,0,0,.6); }
-.pl-getpic-t { font: 700 3cqh/1 system-ui, sans-serif; color: #fff; text-shadow: 0 0.3cqh 1cqh rgba(0,0,0,.7); }
+.pl-getpic { position: absolute; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.82); cursor: pointer; animation: plGetPic .35s ease-out; }
+.gp-panel { display: flex; flex-direction: column; align-items: center; gap: 1.6cqh; padding: 2cqh; max-width: 88%; max-height: 92%; font-family: var(--sys-font, inherit); color: var(--sys-text, #fff); }
+.gp-img { max-width: 100%; max-height: 70cqh; border-radius: calc(var(--sys-radius, 1cqh) * 0.6); display: block; }
+.gp-cap { font: 700 3.2cqh/1.2 var(--sys-tfont, system-ui); color: var(--sys-accent, #fff); text-align: center; }
+.gp-hint { font-size: 1.8cqh; opacity: .7; text-align: center; }
 @keyframes plGetPic { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
+
+/* Bild-Emojis im Text (0.9.42) */
+.t-emo { display: inline-block; width: var(--emo-size, 1.35em); height: var(--emo-size, 1.35em); vertical-align: var(--emo-y, -0.3em); margin: 0 0.04em; }
+.t-emo img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.t-emo.px img { image-rendering: pixelated; }
+.emo-pick { position: fixed; z-index: 9999; width: 360px; max-height: 380px; display: flex; flex-direction: column; background: var(--bg2); border: 1px solid var(--line2); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.5); padding: 8px; gap: 6px; }
+.emo-pick .seg { display: flex; gap: 4px; flex-wrap: wrap; }
+.emo-pick .emo-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; overflow: auto; }
+.emo-pick .emo-cell { aspect-ratio: 1; border: 0; border-radius: 6px; background: var(--bg3) center / 80% no-repeat; cursor: pointer; font-size: 22px; padding: 0; image-rendering: auto; }
+.emo-pick .emo-cell.px { image-rendering: pixelated; }
+.emo-pick .emo-cell:hover { background-color: var(--line2); transform: scale(1.08); }
+.btn.emo-btn { padding: 0 6px; font-size: 15px; }
+
+/* Hub: Ebenen-Liste (0.9.42) */
+.hub-layers { display: flex; flex-direction: column; gap: 3px; max-height: 260px; overflow: auto; }
+.hub-layer { display: flex; align-items: center; gap: 6px; padding: 3px 5px; border-radius: 6px; background: var(--bg3); cursor: grab; font-size: 12px; border: 1px solid transparent; }
+.hub-layer.on { border-color: var(--accent, #e8a43a); }
+.hub-layer.drop { border-top: 2px solid var(--accent, #e8a43a); }
+.hub-layer .hl-thumb { width: 26px; height: 26px; flex: none; border-radius: 4px; background: #0003 center / contain no-repeat; }
+.hub-layer .hl-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

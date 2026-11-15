@@ -23,6 +23,7 @@
     { key: 'relpop', label: 'Beziehungs-Einblendung', icon: '♥', images: [] },
     { key: 'relmsg', label: 'Nachricht einer Figur', icon: '💬', images: [['phone', 'Handy-Rahmen (eigenes Bild, optional)']], sounds: [['sndA', 'Nachricht kommt an']] },
     { key: 'relnote', label: 'Meldung „… hat dir geschickt“', icon: '🔔', images: [], sounds: [['sndA', 'Ton der Meldung (leer = Nachrichten-Ton)']] },
+    { key: 'getpic', label: 'Bild erhalten (groß gezeigt)', icon: '🖼', images: [], sounds: [['sndA', 'Ton beim Erhalten']] },
     { key: 'galnew', label: 'Galerie: „Neu“-Leuchten', icon: '✨', images: [], sounds: [['sndA', 'Bild freigeschaltet']] },
     { key: 'skills', label: 'Skilltree', icon: '🌳', images: [] },
     { key: 'combat', label: 'Kampf', icon: '⚔', images: [] },
@@ -245,6 +246,12 @@
         }
         box.appendChild(lay);
       }
+      // Quest-Einblendungen (0.9.42): Symbol direkt hier austauschen
+      if (VN.Quests && VN.Quests.iconFields && /^q_(new|step|done|series|fail|all)$/.test(key)) {
+        const Qc = VN.project.quests;
+        const N = key === 'q_all' ? (Qc.notifyAll = Qc.notifyAll || {}) : (Qc.notify[key.slice(2)] = Qc.notify[key.slice(2)] || {});
+        box.appendChild(sec('Symbol', VN.Quests.iconFields(N, key === 'q_all'), el('div', { class: 'muted small' }, VN.t(key === 'q_all' ? 'Gilt für alle Quest-Einblendungen, die kein eigenes Symbol haben.' : 'Eigenes Bild (PNG, auch GIF) oder Zeichen statt des Standard-Symbols.'))));
+      }
       if (kind && kind.sounds && kind.sounds.length) {
         const so = sec('Töne', el('div', { class: 'muted small' }, 'Gelten fürs ganze Projekt. Bei einer Figur oder einem einzelnen Meilenstein kannst du eigene Töne wählen – die haben Vorrang.'));
         for (const [sk, sl] of kind.sounds) so.appendChild(fld(sl, el('div', { class: 'row gap4' }, VN.assetSelect('audio', own[sk] || '', (v) => set(sk, v || '')), D[sk] ? el('button', { class: 'btn tiny', onclick: () => { try { const a = new Audio(VN.assetUrl(D[sk])); a.play().catch(() => {}); } catch (e) { /* egal */ } } }, '▶') : null)));
@@ -343,10 +350,17 @@
       const qKinds = { q_new: ['📜', 'Neue Quest', 'new'], q_step: ['✓', 'Abschnitt erledigt', 'step'], q_done: ['★', 'Quest abgeschlossen', 'done'], q_series: ['🏆', 'Questreihe abgeschlossen', 'series'], q_fail: ['✗', 'Quest gescheitert', 'fail'], q_all: ['📜', 'Neue Quest', 'new'] };
       if (qKinds[key]) {
         const [ic, title, k] = qKinds[key];
-        const box = el('div', { class: 'qn-box k-' + k }, el('div', { class: 'qn-ico ph k-' + k }, ic),
+        const box = el('div', { class: 'qn-box k-' + k }, (VN.Quests && VN.Quests.iconEl ? VN.Quests.iconEl(k) : el('div', { class: 'qn-ico ph k-' + k }, ic)),
           el('div', { class: 'qn-main' }, el('div', { class: 'qn-kind' }, T(title)), el('div', { class: 'qn-text' }, T('Der verlorene Schlüssel')), k === 'done' || k === 'series' ? el('div', { class: 'qn-rw' }, T('Belohnung') + ': 50 Gold') : null));
         stage.appendChild(el('div', { class: 'qn-wrap pos-top' }, box));
         UiDesign.apply(key, box);
+        return;
+      }
+      if (key === 'getpic') {
+        const im = (VN.assetsOf('image')[0] || {}).id;
+        const pn = VN.Extras.getPicView(im, VN.t('Neues Bild in der Galerie'));
+        stage.appendChild(pn.back);
+        UiDesign.apply(key, pn.panel, pn.back);
         return;
       }
       if (key === 'relpop') {

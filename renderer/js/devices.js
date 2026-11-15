@@ -150,6 +150,24 @@
   // Freikaufen (0.9.41): verschwommenes Bild gegen Geld scharf machen – bleibt danach für den Spielstand scharf
   DV.elBuyCur = (e) => { const L = VN.project.currencies || []; return Number(e.blurPrice) > 0 ? L.find((c) => c.id === e.blurCur) || L[0] || null : null; };
   DV._pvBought = {}; // nur Vorschau im Editor
+  // Aussehen des Freikaufen-Knopfs (0.9.42) – jedes Detail einstellbar
+  DV.BUY = { text: '🔓 Freikaufen', ask: 'Wirklich zahlen?', poor: 'Nicht genug Geld.', confirm: true, price: true, pos: 'center', size: 2.6, font: '', bold: true, italic: false, upper: false,
+    color: '#ffffff', bg1: '#c38cff', bg2: '#5f8dff', angle: 135, askBg1: '#ffb35c', askBg2: '#ff6f61', poorGray: true, radius: 99, padX: 2.2, padY: 1, border: '', borderW: 0,
+    shadow: 6, shadowColor: '#000000', glow: 0, glowColor: '#a58cf0', image: '', imageFit: 'stretch', hover: 'grow', msgColor: '#ffd0d0', hintColor: '#ffffff', hintSize: 3, dim: 18 };
+  DV.buyLook = (e) => Object.assign({}, DV.BUY, e.buy || {});
+  DV.buyStyle = (L, state) => {
+    const g = (a, b) => (L.image && VN.assetUrl(L.image) ? `url("${VN.assetUrl(L.image)}") center / ${L.imageFit === 'contain' ? 'contain' : L.imageFit === 'cover' ? 'cover' : '100% 100%'} no-repeat` : `linear-gradient(${Number(L.angle) || 0}deg, ${a}, ${b})`);
+    const sh = [];
+    if (Number(L.shadow)) sh.push(`0 ${Number(L.shadow) * 0.07}cqw ${Number(L.shadow) * 0.27}cqw ${VN.hexA ? VN.hexA(L.shadowColor || '#000000', 0.5) : L.shadowColor}`);
+    if (Number(L.glow)) sh.push(`0 0 ${Number(L.glow) * 0.3}cqw ${L.glowColor}`);
+    return {
+      background: state === 'ask' ? g(L.askBg1, L.askBg2) : g(L.bg1, L.bg2), color: L.color, fontSize: Number(L.size) + 'cqw',
+      fontFamily: (L.font && window.Theme && Theme.fontCss(L.font)) || '', fontWeight: L.bold ? '700' : '400', fontStyle: L.italic ? 'italic' : '',
+      textTransform: L.upper ? 'uppercase' : '', borderRadius: Number(L.radius) >= 99 ? '999px' : (Number(L.radius) * 0.1) + 'cqw',
+      padding: Number(L.padY) + 'cqw ' + Number(L.padX) + 'cqw', border: Number(L.borderW) && L.border ? `${Number(L.borderW) * 0.1}cqw solid ${L.border}` : '0',
+      boxShadow: sh.join(', ') || 'none', filter: state === 'poor' && L.poorGray ? 'grayscale(.6) brightness(.85)' : ''
+    };
+  };
   DV.elBought = (e, rs) => !!(rs && rs.chat && (rs.chat.bought || {})[e.id]);
   DV.buyEl = (e, rs) => {
     const c = DV.elBuyCur(e), price = Math.round(Number(e.blurPrice) || 0);
@@ -603,6 +621,7 @@
           if (e.place) out.push({ id: e.id + ':place', area: 'Websites', where, who: 'Platzhalter', text: e.place, set: (v) => { e.place = v; } });
           for (const x of e.results || []) if (x.label) out.push({ id: e.id + ':r:' + x.addr, area: 'Websites', where, who: 'Suchtreffer', text: x.label, set: (v) => { x.label = v; } });
           if (e.blurHint) out.push({ id: e.id + ':hint', area: 'Websites', where, who: 'Hinweis', text: e.blurHint, set: (v) => { e.blurHint = v; } });
+          if (Number(e.blurPrice) > 0 && e.buy) for (const [k, f, who] of [['buyText', 'text', 'Freikaufen-Knopf'], ['buyAsk', 'ask', 'Nachfrage'], ['buyPoor', 'poor', 'Zu wenig Geld']]) if (e.buy[f]) out.push({ id: e.id + ':' + k, area: 'Websites', where, who, text: e.buy[f], set: (v) => { e.buy[f] = v; } });
           if (e.fail) out.push({ id: e.id + ':fail', area: 'Websites', where, who: 'Fehlermeldung', text: e.fail, set: (v) => { e.fail = v; } });
         }
       }
@@ -664,6 +683,7 @@
     const frame = d.frame && VN.assetUrl(d.frame);
     const body = el('div', { class: desk ? 'dv-desk' + (frame ? ' has-frame' : '') : 'dv-phone' + (frame ? ' has-frame' : '') }, screen, frame ? el('img', { class: 'dv-frame', src: frame, alt: '' }) : null);
     root.appendChild(body);
+    { const C = P().chats || {}; root.style.setProperty('--emo-size', (Number(C.emoSize) || 1.35) + 'em'); root.style.setProperty('--emo-y', (C.emoY != null ? C.emoY : -0.3) + 'em'); }
     if (o.before && o.before.parentNode === host) host.insertBefore(root, o.before); else host.appendChild(root);
 
     // Uhr in der Statusleiste / Taskleiste
@@ -729,7 +749,7 @@
         if (busy) return;
         const reps = DV.replies(rs, cid, d);
         foot.hidden = !reps.length;
-        for (const r of reps) foot.appendChild(el('button', { class: 'dv-reply', onclick: (e) => { e.stopPropagation(); answer(r); } }, XF(tr(r.id + ':text', r.text || '…'))));
+        for (const r of reps) foot.appendChild(el('button', { class: 'dv-reply', onclick: (e) => { e.stopPropagation(); answer(r); } }, fmtText(el('span'), XF(tr(r.id + ':text', r.text || '…')))));
       };
       const answer = (r) => {
         if (typing) return;
@@ -822,21 +842,24 @@
           // Verschwommenes Bild mit Hinweis („🔒 Erst freischalten“) – der Hinweis bleibt scharf
           const wrap = el('div', { class: 'dv-web-el dv-web-blurwrap', style: { left: st.left, top: st.top, width: st.width, height: st.height, borderRadius: st.borderRadius || '', mixBlendMode: st.mixBlendMode || '' } });
           Object.assign(img.style, { left: '0', top: '0', width: '100%', height: '100%', mixBlendMode: '' });
-          const hint = el('div', { class: 'dv-web-blurhint' }, e.blurHint ? el('div', null, XF(tr(e.id + ':hint', e.blurHint))) : null);
+          const BL = DV.buyLook(e);
+          const BT = (k, f) => (e.buy && e.buy[f] ? XF(tr(e.id + ':' + k, e.buy[f])) : tp(DV.BUY[f]));
+          const hint = el('div', { class: 'dv-web-blurhint pos-' + (cur ? BL.pos : 'center'), style: cur ? { background: `rgba(0,0,0,${(Number(BL.dim) || 0) / 100})`, color: BL.hintColor } : {} },
+            e.blurHint ? el('div', { style: cur ? { fontSize: Number(BL.hintSize) + 'cqw', fontFamily: (BL.font && window.Theme && Theme.fontCss(BL.font)) || '' } : {} }, XF(tr(e.id + ':hint', e.blurHint))) : null);
           if (cur) {
             // Freikaufen: erster Klick fragt nach, zweiter zahlt
             const price = Math.round(Number(e.blurPrice) || 0), has = (rs.money[cur.id] || 0) >= price;
             const ask = msg._ask === e.id;
-            const btn = el('button', { class: 'dv-web-buy' + (ask ? ' ask' : '') + (has ? '' : ' poor'), onclick: (ev) => {
+            const btn = el('button', { class: 'dv-web-buy hv-' + (BL.hover || 'grow') + (ask ? ' ask' : '') + (has ? '' : ' poor'), style: DV.buyStyle(BL, ask ? 'ask' : has ? '' : 'poor'), onclick: (ev) => {
               ev.stopPropagation();
-              if (!has) { msg[e.id + ':buy'] = tp('Nicht genug Geld.'); snd('click'); draw(); return; }
-              if (!ask) { msg._ask = e.id; snd('click'); draw(); return; }
+              if (!has) { msg[e.id + ':buy'] = BT('buyPoor', 'poor'); snd('click'); draw(); return; }
+              if (!ask && BL.confirm !== false) { msg._ask = e.id; snd('click'); draw(); return; }
               msg._ask = null;
               if (o.preview) { DV._pvBought[e.id] = 1; snd('item'); draw(); return; }
               if (DV.buyEl(e, rs)) { snd('item'); if (H.refresh) H.refresh(); draw(); }
-            } }, ask ? tp('Wirklich zahlen?') + ' ' : '🔓 ' + tp('Freikaufen') + ' · ', VN.moneyChip ? VN.moneyChip(cur, price) : String(price));
+            } }, el('span', null, ask ? BT('buyAsk', 'ask') : BT('buyText', 'text')), BL.price !== false ? (VN.moneyChip ? VN.moneyChip(cur, price) : String(price)) : null);
             hint.append(btn);
-            if (msg[e.id + ':buy']) hint.append(el('div', { class: 'dv-web-buymsg' }, msg[e.id + ':buy']));
+            if (msg[e.id + ':buy']) hint.append(el('div', { class: 'dv-web-buymsg', style: { color: BL.msgColor, fontFamily: (BL.font && window.Theme && Theme.fontCss(BL.font)) || '' } }, msg[e.id + ':buy']));
             if (o.preview && DV._pvBought[e.id]) return img.style.filter = String(img.style.filter || '').replace(/blur\([^)]*\)/, ''), img;
           }
           wrap.append(img, hint);
@@ -969,7 +992,7 @@
           for (const cm of DV.postComments(s, rs)) card.appendChild(el('div', { class: 'dv-soc-cm' }, el('strong', null, name(DV.contact(cm.author)) + ' '), rich(XF(tr(cm.id, cm.text)))));
           if (S.rep[s.id]) { const r = (s.replies || []).find((x) => x.id === S.rep[s.id]); if (r) card.appendChild(el('div', { class: 'dv-soc-cm me' }, el('strong', null, tp('Du') + ' '), rich(XF(tr(r.id, r.text))))); }
           const reps = DV.postReplies(s, rs);
-          if (reps.length) card.appendChild(el('div', { class: 'dv-soc-reps' }, ...reps.map((r) => el('button', { class: 'dv-reply', onclick: (e) => { e.stopPropagation(); reply(s, r); } }, XF(tr(r.id, r.text))))));
+          if (reps.length) card.appendChild(el('div', { class: 'dv-soc-reps' }, ...reps.map((r) => el('button', { class: 'dv-reply', onclick: (e) => { e.stopPropagation(); reply(s, r); } }, fmtText(el('span'), XF(tr(r.id, r.text)))))));
           list.appendChild(card);
         }
       };

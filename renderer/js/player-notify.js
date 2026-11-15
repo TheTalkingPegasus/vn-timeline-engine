@@ -4,7 +4,6 @@
   const { el } = VN;
   const Q = () => VN.Quests;
   const KIND_TITLE = { new: 'Neue Quest', step: 'Abschnitt erledigt', done: 'Quest abgeschlossen', series: 'Questreihe abgeschlossen', fail: 'Gescheitert' };
-  const KIND_ICON = { new: '📜', step: '✓', done: '★', series: '🏆', fail: '✗' };
 
   VN.PlayerNotify = (H) => {
     const R = H.run;
@@ -58,7 +57,7 @@
       const s = ev.series, q = ev.quest, st = ev.step;
       const vals = { quest: q ? tr(q.id + ':name', q.name) : '', reihe: tr(s.id + ':name', s.name), abschnitt: st ? tr(st.id + ':name', st.name) : '', figur: Q().whoName(s) };
       const rw = ev.type === 'done' ? rewardText(q.reward) : ev.type === 'series' ? rewardText(s.reward) : ev.type === 'step' ? rewardText(st.reward) : '';
-      const icon = N.icon && VN.assetUrl(N.icon) ? el('div', { class: 'qn-ico', style: { backgroundImage: `url("${VN.assetUrl(N.icon)}")` } }) : el('div', { class: 'qn-ico ph k-' + ev.type }, KIND_ICON[ev.type]);
+      const icon = Q().iconEl(ev.type, N);
       const box = el('div', { class: 'qn-box k-' + ev.type }, icon,
         el('div', { class: 'qn-main' },
           el('div', { class: 'qn-kind' }, (s.who && s.who !== 'story' ? '♥ ' + vals.figur + ' · ' : '') + (N.title || KIND_TITLE[ev.type])),

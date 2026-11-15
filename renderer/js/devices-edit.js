@@ -35,6 +35,123 @@
   const condBtn = (list, title, label) => el('button', { class: 'btn tiny' + (list.length ? ' primary' : ''), title: VN.t(title), onclick: () => modal(VN.t(title), (c) => c.appendChild(VN.condEditor(list, VN.t('Nur wenn')))) }, (label || '🔒') + (list.length ? ' ' + list.length : ''));
   const actBtn = (list, title) => el('button', { class: 'btn tiny' + (list.length ? ' primary' : ''), title: VN.t(title), onclick: () => modal(VN.t(title), (c) => c.appendChild(VN.actionEditor(list, VN.t('Dann ausführen')))) }, '⚡' + (list.length ? ' ' + list.length : ''));
 
+  // ---------- Emojis beim Schreiben (0.9.42): Bild-Emojis aus dem Starter-Pack, eigene Bilder oder normale Emojis ----------
+  const UNI = '😀 😃 😄 😁 😆 😅 😂 🤣 🙂 😉 😊 😇 🥰 😍 🤩 😘 😋 😛 😜 🤪 😎 🤓 🤔 🤨 😐 😑 😶 🙄 😏 😬 😌 😔 😪 😴 😷 🤒 🤢 🥵 🥶 😵 🤯 🥳 😕 😟 🙁 😮 😯 😲 😳 🥺 😢 😭 😱 😖 😣 😞 😓 😩 😫 😤 😡 😠 🤬 😈 👿 💀 💩 🤡 👻 👽 🤖 ❤️ 🧡 💛 💚 💙 💜 🖤 🤍 💔 💕 💖 ✨ ⭐ 🔥 💯 💤 💢 💬 👍 👎 👌 ✌️ 🤞 👏 🙏 💪 👋 🎉 🎁 🍀 🌙 ☀️ 🌈 ☕ 🍕 🍺 🎮 📱 💻 🔑 🗝 💰 ⚔️ 🛡️'.split(' ');
+  VN.emojiBtn = (input, commit) => el('button', { class: 'btn tiny emo-btn', title: VN.t('Emoji einfügen'), onclick: (ev) => { ev.preventDefault(); VN.emojiPick(ev.currentTarget, input, commit); } }, '😊');
+  VN.emojiPick = async (anchor, input, commit) => {
+    document.querySelectorAll('.emo-pick').forEach((x) => x.remove());
+    const pos = [input.selectionStart != null ? input.selectionStart : input.value.length, input.selectionEnd != null ? input.selectionEnd : input.value.length];
+    const p = VN.project;
+    p.emoMap = p.emoMap || {};
+    let pack = [];
+    try { if (window.Library && Library.api()) pack = (await Library.api().list()).filter((x) => x && x.builtin && /^emoji/.test(x.cat)); } catch (e) { pack = []; }
+    const insert = (tok) => {
+      const v = input.value, t = v.slice(0, pos[0]) + tok + v.slice(pos[1]);
+      input.value = t; pos[0] = pos[1] = pos[0] + tok.length;
+      VN.mutate(() => commit(t));
+      box.remove();
+    };
+    const usePack = async (x) => {
+      // erst ins Projekt holen (einmal pro Emoji), dann als {emo=…} einfügen
+      let id = p.emoMap[x.id];
+      if (!id || !VN.asset(id)) {
+        const res = await Library.api().import([x.id]);
+        const added = VN.registerAssets(res);
+        if (!added.length) return;
+        VN.mutate(() => { added[0].folder = 'Emojis' + (x.cat === 'emoji_pixel' ? '/Pixel' : ''); added[0].name = Library.loc(x.name, added[0].name); if (x.cat === 'emoji_pixel') added[0].pixel = true; p.emoMap[x.id] = added[0].id; });
+        id = added[0].id;
+      }
+      insert('{emo=' + id + '}');
+    };
+    const box = el('div', { class: 'emo-pick', onclick: (e) => e.stopPropagation() });
+    const grid = el('div', { class: 'emo-grid' });
+    const tabs = [['vec', 'Emojis'], ['px', 'Pixelart'], ['own', 'Eigene Bilder'], ['uni', 'Normale Emojis']].filter(([k]) => (k !== 'vec' && k !== 'px') || pack.length);
+    let tab = VN.ui.emoTab && tabs.some((t) => t[0] === VN.ui.emoTab) ? VN.ui.emoTab : tabs[0][0];
+    const seg = el('div', { class: 'seg' });
+    const draw = () => {
+      seg.innerHTML = ''; grid.innerHTML = '';
+      for (const [k, l] of tabs) seg.appendChild(el('button', { class: 'btn tiny' + (k === tab ? ' primary' : ''), onclick: () => { tab = VN.ui.emoTab = k; draw(); } }, VN.t(l)));
+      if (tab === 'uni') for (const u of UNI) grid.appendChild(el('button', { class: 'emo-cell', title: u, onclick: () => insert(u) }, u));
+      else if (tab === 'own') {
+        const imgs = VN.assetsOf('image');
+        if (!imgs.length) grid.appendChild(el('div', { class: 'muted small', style: { gridColumn: '1 / -1' } }, VN.t('Noch keine Bilder im Projekt.')));
+        for (const a of imgs) grid.appendChild(el('button', { class: 'emo-cell', title: a.name, style: { backgroundImage: `url("${VN.assetUrl(a.id)}")` }, onclick: () => insert('{emo=' + a.id + '}') }));
+      } else for (const x of pack.filter((y) => (tab === 'px') === (y.cat === 'emoji_pixel'))) grid.appendChild(el('button', { class: 'emo-cell' + (tab === 'px' ? ' px' : ''), title: Library.loc(x.name, ''), style: { backgroundImage: `url("${Library.api().url(x)}")` }, onclick: () => usePack(x) }));
+    };
+    draw();
+    box.append(seg, grid, el('div', { class: 'muted small' }, VN.t('Bild-Emojis stehen als {emo=…} im Text und erscheinen im Spiel als kleines Bild in Zeilenhöhe.')));
+    document.body.appendChild(box);
+    const r = anchor.getBoundingClientRect();
+    box.style.left = Math.max(8, Math.min(window.innerWidth - 370, r.right - 360)) + 'px';
+    box.style.top = (r.bottom + 390 > window.innerHeight ? Math.max(8, r.top - 386) : r.bottom + 4) + 'px';
+    const off = (e) => { if (!box.contains(e.target) && e.target !== anchor) { box.remove(); document.removeEventListener('mousedown', off, true); } };
+    setTimeout(() => document.addEventListener('mousedown', off, true), 0);
+  };
+  // Textfeld mit Emoji-Knopf daneben
+  const withEmo = (input, commit) => {
+    const box = el('span', { class: 'row gap4', style: { flex: input.style.flex || '1', minWidth: input.style.minWidth || '160px', alignItems: 'flex-start' } });
+    input.style.flex = '1'; input.style.minWidth = '0';
+    box.append(input, VN.emojiBtn(input, commit));
+    return box;
+  };
+
+  // ---------- Freikaufen-Knopf gestalten (0.9.42): jedes Detail ----------
+  const buyDesign = (e, curs) => modal(VN.t('Freikaufen-Knopf gestalten'), (card) => {
+    const D = DV(), B = D.BUY;
+    e.buy = e.buy || {};
+    const L = D.buyLook(e);
+    const set = (k) => (v) => { e.buy[k] = v; };
+    const N = (k, min, max, step, unit) => el('span', { class: 'row gap4', style: { alignItems: 'center' } },
+      el('input', { type: 'range', min, max, step, value: L[k], style: { width: '120px' }, onchange: (ev) => VN.mutate(() => { e.buy[k] = Number(ev.target.value); }) }), el('span', { class: 'muted small' }, L[k] + (unit || '')));
+    const C = (k) => col(L[k], set(k));
+    const T = (k, ph) => txt(e.buy[k] || '', (v) => { if (v) e.buy[k] = v; else delete e.buy[k]; }, ph || VN.t(B[k]), { flex: '1', minWidth: '160px' });
+    // Vorschau: drei Zustände nebeneinander auf dem verschwommenen Bild
+    const cur = curs.find((c) => c.id === e.blurCur) || curs[0];
+    const pv = (state, label) => {
+      const b = el('button', { class: 'dv-web-buy hv-' + L.hover + (state ? ' ' + state : ''), style: D.buyStyle(L, state) }, el('span', null, state === 'ask' ? (e.buy.ask || VN.t(B.ask)) : (e.buy.text || VN.t(B.text))), L.price !== false && VN.moneyChip ? VN.moneyChip(cur, Number(e.blurPrice) || 0) : null);
+      const bx = el('div', { class: 'dv-web-blurhint pos-' + L.pos, style: { background: `rgba(0,0,0,${(Number(L.dim) || 0) / 100})`, color: L.hintColor, position: 'absolute' } },
+        e.blurHint ? el('div', { style: { fontSize: Number(L.hintSize) + 'cqw', fontFamily: (L.font && window.Theme && Theme.fontCss(L.font)) || '' } }, e.blurHint) : null, b,
+        state === 'poor' ? el('div', { class: 'dv-web-buymsg', style: { color: L.msgColor } }, e.buy.poor || VN.t(B.poor)) : null);
+      const url = e.image && VN.assetUrl(e.image);
+      return el('div', { class: 'col gap4', style: { flex: '1', alignItems: 'center' } },
+        el('div', { style: { position: 'relative', width: '100%', aspectRatio: '1', containerType: 'size', borderRadius: '8px', overflow: 'hidden', background: url ? `url("${url}") center / cover` : '#333' } },
+          el('div', { style: { position: 'absolute', inset: '0', backdropFilter: 'blur(10px)' } }), bx),
+        el('span', { class: 'muted small' }, VN.t(label)));
+    };
+    card.appendChild(el('div', { class: 'row gap8', style: { containerType: 'inline-size' } }, pv('', 'normal'), pv('ask', 'nach dem 1. Klick'), pv('poor', 'zu wenig Geld')));
+    const secT = (t) => el('div', { class: 'sec-title', style: { marginTop: '6px' } }, VN.t(t));
+    card.append(
+      secT('Texte'),
+      row('Knopf', T('text')), row('Nachfrage', T('ask')), row('Zu wenig Geld', T('poor')),
+      row('Ablauf', chk(L.confirm !== false, 'erst nachfragen, dann zahlen', (v) => { e.buy.confirm = v; }), chk(L.price !== false, 'Preis mit Münze zeigen', (v) => { e.buy.price = v; })),
+      secT('Schrift'),
+      row('Schriftart', sel(L.font || '', window.Theme ? Theme.fontOptions('— wie die Seite —') : [['', '—']], set('font'), { width: '170px' })),
+      row('Größe', N('size', 1, 8, 0.1)),
+      row('Stil', chk(L.bold, 'fett', set('bold')), chk(L.italic, 'kursiv', set('italic')), chk(L.upper, 'GROSSBUCHSTABEN', set('upper'))),
+      row('Farben', el('label', { class: 'check' }, C('color'), VN.t('Text')), el('label', { class: 'check' }, C('msgColor'), VN.t('Meldung „zu wenig“'))),
+      secT('Fläche'),
+      row('Verlauf', el('label', { class: 'check' }, C('bg1'), VN.t('von')), el('label', { class: 'check' }, C('bg2'), VN.t('bis')), N('angle', 0, 360, 5, '°')),
+      row('Bei Nachfrage', el('label', { class: 'check' }, C('askBg1'), VN.t('von')), el('label', { class: 'check' }, C('askBg2'), VN.t('bis'))),
+      row('Eigenes Bild', VN.assetSelect('image', L.image, (v) => VN.mutate(() => { if (v) e.buy.image = v; else delete e.buy.image; })), L.image ? sel(L.imageFit, [['stretch', 'strecken'], ['contain', 'einpassen'], ['cover', 'füllen']], set('imageFit'), { width: '110px' }) : null),
+      row('Ecken', N('radius', 0, 99, 1)),
+      row('Innenabstand', el('span', { class: 'muted small' }, VN.t('seitlich')), N('padX', 0, 6, 0.1), el('span', { class: 'muted small' }, VN.t('oben/unten')), N('padY', 0, 4, 0.1)),
+      row('Rand', el('label', { class: 'check' }, C('border'), VN.t('Farbe')), N('borderW', 0, 10, 1)),
+      row('Schatten', el('label', { class: 'check' }, C('shadowColor'), VN.t('Farbe')), N('shadow', 0, 20, 1)),
+      row('Leuchten', el('label', { class: 'check' }, C('glowColor'), VN.t('Farbe')), N('glow', 0, 20, 1)),
+      row('Zu wenig Geld', chk(L.poorGray, 'Knopf grau machen', set('poorGray'))),
+      row('Maus darüber', sel(L.hover || 'grow', [['grow', 'größer'], ['bright', 'heller'], ['lift', 'anheben'], ['none', 'nichts']], set('hover'), { width: '130px' })),
+      secT('Auf dem Bild'),
+      row('Lage', sel(L.pos, [['center', 'Mitte'], ['top', 'oben'], ['bottom', 'unten']], set('pos'), { width: '110px' })),
+      row('Abdunkeln', N('dim', 0, 90, 1, ' %')),
+      row('Hinweis-Text', el('label', { class: 'check' }, C('hintColor'), VN.t('Farbe')), N('hintSize', 1, 8, 0.1)),
+      el('div', { class: 'row gap8', style: { marginTop: '6px' } },
+        el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { delete e.buy; }) }, '↺ ' + VN.t('Standard')),
+        el('button', { class: 'btn tiny', title: VN.t('Alle Bilder mit Freikaufen auf allen Websites bekommen dieses Aussehen (Texte bleiben eigene)'), onclick: () => VN.mutate(() => {
+          const look = Object.assign({}, e.buy); delete look.text; delete look.ask; delete look.poor;
+          for (const w of (VN.project.web && VN.project.web.sites) || []) for (const g of w.pages || []) for (const x of g.els || []) if (x !== e && Number(x.blurPrice) > 0) x.buy = Object.assign({}, x.buy || {}, look);
+        }) }, '⇶ ' + VN.t('Auf alle Freikaufen-Knöpfe übertragen'))));
+  });
+
   // ---------- Follower als Spielmechanik (0.9.24) ----------
   const folPanel = (c) => modal(VN.t('Follower als Spielmechanik') + ' · ' + (c.name || '?'), (card) => {
     c.folGrow = c.folGrow || [];
@@ -184,6 +301,8 @@
     if (!DV().list().some((d) => d.apps.some((a) => a.type === 'messages'))) body.appendChild(el('div', { class: 'cond-warn' }, '⚠ ' + VN.t('Kein Gerät hat die App „Nachrichten“. Unter „Geräte“ hinzufügen.')));
     body.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, VN.t('Einstellungen')),
       el('div', { class: 'logic-row' }, chk(C.notify !== false, 'Meldung bei neuer Nachricht (Klick öffnet den Chat)', (v) => { C.notify = v; })),
+      row('Bild-Emojis im Text', el('span', { class: 'row gap4', style: { alignItems: 'center' } }, el('input', { type: 'range', min: 0.8, max: 3, step: 0.05, value: Number(C.emoSize) || 1.35, style: { width: '120px' }, onchange: (e) => VN.mutate(() => { C.emoSize = Number(e.target.value); }) }), el('span', { class: 'muted small' }, VN.t('Größe') + ' ' + (Number(C.emoSize) || 1.35).toFixed(2) + '×'),
+        el('input', { type: 'range', min: -0.6, max: 0.3, step: 0.02, value: C.emoY != null ? C.emoY : -0.3, style: { width: '90px' }, title: VN.t('Höhe in der Zeile'), onchange: (e) => VN.mutate(() => { C.emoY = Number(e.target.value); }) }), el('span', { class: 'muted small' }, VN.t('Höhe in der Zeile')))),
       row('Ton bei neuer Nachricht', sel(C.sound, [['', '— wie Beziehungs-Meldung —'], ...VN.assetsOf('audio').map((a) => [a.id, a.name])], (v) => { C.sound = v; })),
       el('div', { class: 'muted small' }, VN.t('Chat-Zeilen in der Timeline (Dialog „Als Handy-Nachricht zeigen“) landen ebenfalls im Verlauf, wenn der Sprecher ein Kontakt ist – und ältere Nachrichten erscheinen dort darüber.'))));
     // Kontakte
@@ -252,7 +371,7 @@
     t.msgs.forEach((m, i) => {
       card.appendChild(el('div', { class: 'logic-row dv-msgrow' + (m.from === 'me' ? ' me' : '') },
         el('button', { class: 'btn tiny', style: { width: '90px' }, title: VN.t('Wer schreibt? (umschalten)'), onclick: () => VN.mutate(() => { m.from = m.from === 'me' ? 'them' : 'me'; }) }, m.from === 'me' ? VN.t('Ich') : nm),
-        el('textarea', { rows: 1, onchange: (e) => VN.mutate(() => { m.text = e.target.value; }) }, m.text || ''),
+        withEmo(el('textarea', { rows: 1, onchange: (e) => VN.mutate(() => { m.text = e.target.value; }) }, m.text || ''), (v) => { m.text = v; }),
         sel(m.image, imgOpts('— Bild —'), (v) => { m.image = v; }, { width: '90px' }),
         condBtn(m.conds, 'Zeile nur, wenn … (z. B. Route)'),
         actBtn(m.actions || (m.actions = []), 'Beim Lesen dieser Nachricht ausführen (z. B. Ort freischalten)'),
@@ -268,7 +387,7 @@
     t.replies.forEach((r, i) => {
       card.appendChild(el('div', { class: 'logic-row' },
         el('span', null, '↩'),
-        txt(r.text, (v) => { r.text = v; }, 'Antwort-Text', { flex: '1', minWidth: '160px' }),
+        withEmo(txt(r.text, (v) => { r.text = v; }, 'Antwort-Text', { flex: '1', minWidth: '160px' }), (v) => { r.text = v; }),
         condBtn(r.conds, 'Antwort nur anbieten, wenn …'),
         actBtn(r.actions, 'Bei dieser Antwort ausführen'),
         el('span', { class: 'muted small' }, VN.t('danach')),
@@ -340,7 +459,7 @@
         el('button', { class: 'btn tiny', title: VN.t('Duplizieren'), onclick: () => VN.mutate(() => { const n = JSON.parse(JSON.stringify(s)); n.id = VN.uid('sp'); for (const c of n.comments) c.id = VN.uid('sc'); for (const r of n.replies) r.id = VN.uid('sr'); SO.posts.splice(i + 1, 0, n); }) }, '⧉'),
         el('button', { class: 'btn tiny danger', onclick: () => { if (confirm(VN.t('Beitrag löschen?'))) VN.mutate(() => { SO.posts.splice(i, 1); }); } }, '×')));
       card.appendChild(el('div', { class: 'logic-row' },
-        el('textarea', { rows: 2, class: 'dv-ta', style: { flex: '1', minWidth: '220px' }, placeholder: VN.t('Text des Beitrags'), onchange: (e) => VN.mutate(() => { s.text = e.target.value; }) }, s.text || ''),
+        withEmo(el('textarea', { rows: 2, class: 'dv-ta', style: { flex: '1', minWidth: '220px' }, placeholder: VN.t('Text des Beitrags'), onchange: (e) => VN.mutate(() => { s.text = e.target.value; }) }, s.text || ''), (v) => { s.text = v; }),
         thumb(s.image), sel(s.image, imgOpts('— Bild —'), (v) => { s.image = v; }, { width: '120px' })));
       card.appendChild(el('div', { class: 'logic-row' },
         el('span', { class: 'muted small' }, '♥'), num(s.likes || 0, (v) => { s.likes = Math.max(0, Math.round(v)); }),
@@ -549,7 +668,7 @@
       el('button', { class: 'btn tiny', title: VN.t('Nach hinten'), onclick: () => VN.mutate(() => { page.els.splice(idx, 1); page.els.unshift(e); }) }, '⬇'),
       el('button', { class: 'btn tiny', title: VN.t('Duplizieren'), onclick: () => VN.mutate(() => { const n = JSON.parse(JSON.stringify(e)); n.id = VN.uid('we'); n.y += 4; page.els.push(n); VN.ui.webEl = n.id; }) }, '⧉'),
       el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { page.els.splice(idx, 1); VN.ui.webEl = null; }) }, '×')));
-    if (e.kind === 'text' || e.kind === 'button') box.appendChild(el('textarea', { class: 'dv-ta', rows: 3, onchange: (ev) => VN.mutate(() => { e.text = ev.target.value; }) }, e.text || ''));
+    if (e.kind === 'text' || e.kind === 'button') box.appendChild(withEmo(el('textarea', { class: 'dv-ta', rows: 3, onchange: (ev) => VN.mutate(() => { e.text = ev.target.value; }) }, e.text || ''), (v) => { e.text = v; }));
     if (e.kind === 'image') box.appendChild(row('Bild', thumb(e.image), sel(e.image, imgOpts('— Bild wählen —'), (v) => { e.image = v; }, { width: '140px' })));
     if (e.kind !== 'image') box.appendChild(el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } },
       e.kind !== 'box' ? el('label', { class: 'check' }, col(e.color || '#1c1e24', (v) => { e.color = v; }), VN.t('Schrift')) : null,
@@ -591,6 +710,7 @@
             el('input', { type: 'number', min: 0, step: 1, value: Number(e.blurPrice) || 0, style: { width: '72px' }, title: VN.t('0 = nicht freikaufbar'), onchange: (ev) => VN.mutate(() => { e.blurPrice = Math.max(0, Math.round(Number(ev.target.value) || 0)); if (!e.blurCur) e.blurCur = curs[0].id; }) }),
             curs.length > 1 ? sel(e.blurCur || curs[0].id, curs.map((c) => [c.id, c.name]), (v) => { e.blurCur = v; }, { width: '110px' }) : el('span', { class: 'muted small' }, curs[0].name))));
           box.appendChild(el('div', { class: 'muted small' }, Number(e.blurPrice) > 0 ? VN.t('Auf dem Bild erscheint ein Knopf „🔓 Freikaufen“. Ein Klick fragt nach, der zweite zahlt – danach bleibt das Bild scharf.') : VN.t('Preis eintragen, damit der Spieler das Bild selbst freikaufen kann.')));
+          if (Number(e.blurPrice) > 0) box.appendChild(el('div', { class: 'row gap4' }, el('button', { class: 'btn tiny primary', onclick: () => buyDesign(e, curs) }, '🎨 ' + VN.t('Knopf gestalten'))));
         } else box.appendChild(el('div', { class: 'muted small' }, VN.t('Zum Freikaufen gegen Geld zuerst unter Spielsysteme eine Währung anlegen.')));
       }
     }
