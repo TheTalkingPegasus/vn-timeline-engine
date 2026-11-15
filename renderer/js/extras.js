@@ -45,13 +45,16 @@
       X.unlockNew(a.image);
       if (VN.Idle && VN.Idle._sim) return;
       if (a.show !== 'quiet' && gains) gains.push({ kind: 'pic', id: a.image });
+      const D = window.UiDesign ? UiDesign.resolve('getpic') : {};
+      if (a.show !== 'quiet' && D.sndA && window.RelMsg && RelMsg.play) RelMsg.play(D.sndA);
       if (a.show === 'big' && gains && gains.pending) gains.pending.push(() => new Promise((res) => {
         const host = document.querySelector('#player .pl-stage');
         if (!host) { res(); return; }
-        const big = VN.el('div', { class: 'gal-view pl-getpic', onclick: (e) => { e.stopPropagation(); big.remove(); res(); } },
-          VN.el('img', { src: VN.assetUrl(a.image), alt: as.name, draggable: 'false' }),
-          VN.el('div', { class: 'pl-getpic-t' }, '🖼 ' + VN.tp('Neues Bild in der Galerie')));
-        host.appendChild(big);
+        const cap = a.noCaption ? '' : a.caption ? VN.tr((a.id || a.image) + ':cap', a.caption) : VN.tp('Neues Bild in der Galerie');
+        const v = X.getPicView(a.image, cap, a.hint ? VN.tr((a.id || a.image) + ':hint', a.hint) : '');
+        v.back.addEventListener('click', (e) => { e.stopPropagation(); v.back.remove(); res(); });
+        host.appendChild(v.back);
+        if (window.UiDesign) UiDesign.apply('getpic', v.panel, v.back);
       }));
     },
     text: (a) => { const as = a.image && VN.asset(a.image); return '🖼 ' + (as ? '„' + as.name + '“' : '?') + ' ' + VN.t('in die Galerie') + (a.show === 'big' ? ' (' + VN.t('groß zeigen') + ')' : ''); },
@@ -59,8 +62,24 @@
     row: (row, a, sel) => {
       row.appendChild(VN.assetSelect('image', a.image, (v) => VN.mutate(() => { a.image = v; const im = v && VN.asset(v); if (im) im.gallery = true; })));
       row.appendChild(sel(a.show || 'note', [['note', 'kurz einblenden'], ['big', 'groß zeigen (Klick schließt)'], ['quiet', 'still (nur Galerie)']], (v) => VN.mutate(() => { a.show = v; })));
+      if (a.show === 'big') {
+        if (!a.id) a.id = VN.uid('gp');
+        row.appendChild(VN.el('input', { type: 'text', value: a.caption || '', disabled: !!a.noCaption, placeholder: VN.t('Neues Bild in der Galerie'), title: VN.t('Text unter dem Bild'), style: { flex: '1', minWidth: '140px' }, onchange: (e) => VN.mutate(() => { a.caption = e.target.value; }) }));
+        row.appendChild(VN.el('input', { type: 'text', value: a.hint || '', placeholder: VN.t('kleiner Text, z. B. „Klicken zum Schließen“'), style: { flex: '1', minWidth: '140px' }, onchange: (e) => VN.mutate(() => { a.hint = e.target.value; }) }));
+        row.appendChild(VN.el('label', { class: 'check' }, VN.el('input', { type: 'checkbox', checked: !!a.noCaption, onchange: (e) => VN.mutate(() => { a.noCaption = e.target.checked; }) }), VN.t('ohne Text')));
+        row.appendChild(VN.el('button', { class: 'btn tiny', title: VN.t('Rahmen, Farben, Schrift, Hintergrund, Ton'), onclick: () => window.UiDesign && UiDesign.edit('getpic') }, '🎨'));
+      }
     }
   });
+  // Großansicht „Bild erhalten“: Fläche dahinter + Fenster (Rahmen, Farben, Schrift über 🎨 „Bild erhalten“)
+  X.getPicView = (img, caption, hint) => {
+    const panel = VN.el('div', { class: 'sys-panel gp-panel' },
+      VN.el('img', { class: 'gp-img', src: VN.assetUrl(img) || '', draggable: 'false' }),
+      caption ? VN.el('div', { class: 'gp-cap' }, caption) : null,
+      hint ? VN.el('div', { class: 'gp-hint' }, hint) : null);
+    const back = VN.el('div', { class: 'pl-overlay pl-getpic' }, panel);
+    return { back, panel };
+  };
   X.galleryImages = () => VN.project.assets.filter((a) => a.kind === 'image' && a.gallery);
   X.galleryMusic = () => VN.project.assets.filter((a) => a.kind === 'audio' && a.musicRoom);
   X.replayScenes = () => VN.project.scenes.filter((s) => s.replay);
@@ -200,7 +219,7 @@
     for (const it of VN.project.items) if (it.use && it.use.text) out.push({ id: it.id + ':use', area: 'Gegenstände', where: it.name, who: 'Benutzen', text: it.use.text, set: (v) => { it.use.text = v; } });
     // Bild-Geschenke (Aktion „📷 Figur schickt ein Bild“), überall im Projekt
     const seen = new Set();
-    const walk = (o, d) => { if (!o || typeof o !== 'object' || d > 16) return; if (Array.isArray(o)) { for (const x of o) walk(x, d + 1); return; } if (o.type === 'charPic' && o.id && !seen.has(o.id)) { seen.add(o.id); if (o.text) out.push({ id: o.id + ':text', area: 'Bild-Geschenke', where: (VN.Life && VN.Life.relChar(o.char) || {}).name || '', who: 'Nachricht', text: o.text, set: (v) => { o.text = v; } }); if (o.notify) out.push({ id: o.id + ':note', area: 'Bild-Geschenke', where: (VN.Life && VN.Life.relChar(o.char) || {}).name || '', who: 'Meldung', text: o.notify, set: (v) => { o.notify = v; } }); } for (const k in o) if (o[k] && typeof o[k] === 'object') walk(o[k], d + 1); };
+    const walk = (o, d) => { if (!o || typeof o !== 'object' || d > 16) return; if (Array.isArray(o)) { for (const x of o) walk(x, d + 1); return; } if (o.type === 'getPic' && o.id && !seen.has(o.id)) { seen.add(o.id); const nm = (VN.asset(o.image) || {}).name || ''; if (o.caption) out.push({ id: o.id + ':cap', area: 'Bilder erhalten', where: nm, who: 'Text', text: o.caption, set: (v) => { o.caption = v; } }); if (o.hint) out.push({ id: o.id + ':hint', area: 'Bilder erhalten', where: nm, who: 'Hinweis', text: o.hint, set: (v) => { o.hint = v; } }); } if (o.type === 'charPic' && o.id && !seen.has(o.id)) { seen.add(o.id); if (o.text) out.push({ id: o.id + ':text', area: 'Bild-Geschenke', where: (VN.Life && VN.Life.relChar(o.char) || {}).name || '', who: 'Nachricht', text: o.text, set: (v) => { o.text = v; } }); if (o.notify) out.push({ id: o.id + ':note', area: 'Bild-Geschenke', where: (VN.Life && VN.Life.relChar(o.char) || {}).name || '', who: 'Meldung', text: o.notify, set: (v) => { o.notify = v; } }); } for (const k in o) if (o[k] && typeof o[k] === 'object') walk(o[k], d + 1); };
     walk(VN.project.scenes, 0); walk(VN.project.relations, 0); walk(VN.project.idle, 0); walk(VN.project.quests, 0); walk(VN.project.world, 0); walk(VN.project.items, 0);
     return out;
   };

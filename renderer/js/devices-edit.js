@@ -35,6 +35,63 @@
   const condBtn = (list, title, label) => el('button', { class: 'btn tiny' + (list.length ? ' primary' : ''), title: VN.t(title), onclick: () => modal(VN.t(title), (c) => c.appendChild(VN.condEditor(list, VN.t('Nur wenn')))) }, (label || '🔒') + (list.length ? ' ' + list.length : ''));
   const actBtn = (list, title) => el('button', { class: 'btn tiny' + (list.length ? ' primary' : ''), title: VN.t(title), onclick: () => modal(VN.t(title), (c) => c.appendChild(VN.actionEditor(list, VN.t('Dann ausführen')))) }, '⚡' + (list.length ? ' ' + list.length : ''));
 
+  // ---------- Freikaufen-Knopf gestalten (0.9.42): jedes Detail ----------
+  const buyDesign = (e, curs) => modal(VN.t('Freikaufen-Knopf gestalten'), (card) => {
+    const D = DV(), B = D.BUY;
+    e.buy = e.buy || {};
+    const L = D.buyLook(e);
+    const set = (k) => (v) => { e.buy[k] = v; };
+    const N = (k, min, max, step, unit) => el('span', { class: 'row gap4', style: { alignItems: 'center' } },
+      el('input', { type: 'range', min, max, step, value: L[k], style: { width: '120px' }, onchange: (ev) => VN.mutate(() => { e.buy[k] = Number(ev.target.value); }) }), el('span', { class: 'muted small' }, L[k] + (unit || '')));
+    const C = (k) => col(L[k], set(k));
+    const T = (k, ph) => txt(e.buy[k] || '', (v) => { if (v) e.buy[k] = v; else delete e.buy[k]; }, ph || VN.t(B[k]), { flex: '1', minWidth: '160px' });
+    // Vorschau: drei Zustände nebeneinander auf dem verschwommenen Bild
+    const cur = curs.find((c) => c.id === e.blurCur) || curs[0];
+    const pv = (state, label) => {
+      const b = el('button', { class: 'dv-web-buy hv-' + L.hover + (state ? ' ' + state : ''), style: D.buyStyle(L, state) }, el('span', null, state === 'ask' ? (e.buy.ask || VN.t(B.ask)) : (e.buy.text || VN.t(B.text))), L.price !== false && VN.moneyChip ? VN.moneyChip(cur, Number(e.blurPrice) || 0) : null);
+      const bx = el('div', { class: 'dv-web-blurhint pos-' + L.pos, style: { background: `rgba(0,0,0,${(Number(L.dim) || 0) / 100})`, color: L.hintColor, position: 'absolute' } },
+        e.blurHint ? el('div', { style: { fontSize: Number(L.hintSize) + 'cqw', fontFamily: (L.font && window.Theme && Theme.fontCss(L.font)) || '' } }, e.blurHint) : null, b,
+        state === 'poor' ? el('div', { class: 'dv-web-buymsg', style: { color: L.msgColor } }, e.buy.poor || VN.t(B.poor)) : null);
+      const url = e.image && VN.assetUrl(e.image);
+      return el('div', { class: 'col gap4', style: { flex: '1', alignItems: 'center' } },
+        el('div', { style: { position: 'relative', width: '100%', aspectRatio: '1', containerType: 'size', borderRadius: '8px', overflow: 'hidden', background: url ? `url("${url}") center / cover` : '#333' } },
+          el('div', { style: { position: 'absolute', inset: '0', backdropFilter: 'blur(10px)' } }), bx),
+        el('span', { class: 'muted small' }, VN.t(label)));
+    };
+    card.appendChild(el('div', { class: 'row gap8', style: { containerType: 'inline-size' } }, pv('', 'normal'), pv('ask', 'nach dem 1. Klick'), pv('poor', 'zu wenig Geld')));
+    const secT = (t) => el('div', { class: 'sec-title', style: { marginTop: '6px' } }, VN.t(t));
+    card.append(
+      secT('Texte'),
+      row('Knopf', T('text')), row('Nachfrage', T('ask')), row('Zu wenig Geld', T('poor')),
+      row('Ablauf', chk(L.confirm !== false, 'erst nachfragen, dann zahlen', (v) => { e.buy.confirm = v; }), chk(L.price !== false, 'Preis mit Münze zeigen', (v) => { e.buy.price = v; })),
+      secT('Schrift'),
+      row('Schriftart', sel(L.font || '', window.Theme ? Theme.fontOptions('— wie die Seite —') : [['', '—']], set('font'), { width: '170px' })),
+      row('Größe', N('size', 1, 8, 0.1)),
+      row('Stil', chk(L.bold, 'fett', set('bold')), chk(L.italic, 'kursiv', set('italic')), chk(L.upper, 'GROSSBUCHSTABEN', set('upper'))),
+      row('Farben', el('label', { class: 'check' }, C('color'), VN.t('Text')), el('label', { class: 'check' }, C('msgColor'), VN.t('Meldung „zu wenig“'))),
+      secT('Fläche'),
+      row('Verlauf', el('label', { class: 'check' }, C('bg1'), VN.t('von')), el('label', { class: 'check' }, C('bg2'), VN.t('bis')), N('angle', 0, 360, 5, '°')),
+      row('Bei Nachfrage', el('label', { class: 'check' }, C('askBg1'), VN.t('von')), el('label', { class: 'check' }, C('askBg2'), VN.t('bis'))),
+      row('Eigenes Bild', VN.assetSelect('image', L.image, (v) => VN.mutate(() => { if (v) e.buy.image = v; else delete e.buy.image; })), L.image ? sel(L.imageFit, [['stretch', 'strecken'], ['contain', 'einpassen'], ['cover', 'füllen']], set('imageFit'), { width: '110px' }) : null),
+      row('Ecken', N('radius', 0, 99, 1)),
+      row('Innenabstand', el('span', { class: 'muted small' }, VN.t('seitlich')), N('padX', 0, 6, 0.1), el('span', { class: 'muted small' }, VN.t('oben/unten')), N('padY', 0, 4, 0.1)),
+      row('Rand', el('label', { class: 'check' }, C('border'), VN.t('Farbe')), N('borderW', 0, 10, 1)),
+      row('Schatten', el('label', { class: 'check' }, C('shadowColor'), VN.t('Farbe')), N('shadow', 0, 20, 1)),
+      row('Leuchten', el('label', { class: 'check' }, C('glowColor'), VN.t('Farbe')), N('glow', 0, 20, 1)),
+      row('Zu wenig Geld', chk(L.poorGray, 'Knopf grau machen', set('poorGray'))),
+      row('Maus darüber', sel(L.hover || 'grow', [['grow', 'größer'], ['bright', 'heller'], ['lift', 'anheben'], ['none', 'nichts']], set('hover'), { width: '130px' })),
+      secT('Auf dem Bild'),
+      row('Lage', sel(L.pos, [['center', 'Mitte'], ['top', 'oben'], ['bottom', 'unten']], set('pos'), { width: '110px' })),
+      row('Abdunkeln', N('dim', 0, 90, 1, ' %')),
+      row('Hinweis-Text', el('label', { class: 'check' }, C('hintColor'), VN.t('Farbe')), N('hintSize', 1, 8, 0.1)),
+      el('div', { class: 'row gap8', style: { marginTop: '6px' } },
+        el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { delete e.buy; }) }, '↺ ' + VN.t('Standard')),
+        el('button', { class: 'btn tiny', title: VN.t('Alle Bilder mit Freikaufen auf allen Websites bekommen dieses Aussehen (Texte bleiben eigene)'), onclick: () => VN.mutate(() => {
+          const look = Object.assign({}, e.buy); delete look.text; delete look.ask; delete look.poor;
+          for (const w of (VN.project.web && VN.project.web.sites) || []) for (const g of w.pages || []) for (const x of g.els || []) if (x !== e && Number(x.blurPrice) > 0) x.buy = Object.assign({}, x.buy || {}, look);
+        }) }, '⇶ ' + VN.t('Auf alle Freikaufen-Knöpfe übertragen'))));
+  });
+
   // ---------- Follower als Spielmechanik (0.9.24) ----------
   const folPanel = (c) => modal(VN.t('Follower als Spielmechanik') + ' · ' + (c.name || '?'), (card) => {
     c.folGrow = c.folGrow || [];
@@ -591,6 +648,7 @@
             el('input', { type: 'number', min: 0, step: 1, value: Number(e.blurPrice) || 0, style: { width: '72px' }, title: VN.t('0 = nicht freikaufbar'), onchange: (ev) => VN.mutate(() => { e.blurPrice = Math.max(0, Math.round(Number(ev.target.value) || 0)); if (!e.blurCur) e.blurCur = curs[0].id; }) }),
             curs.length > 1 ? sel(e.blurCur || curs[0].id, curs.map((c) => [c.id, c.name]), (v) => { e.blurCur = v; }, { width: '110px' }) : el('span', { class: 'muted small' }, curs[0].name))));
           box.appendChild(el('div', { class: 'muted small' }, Number(e.blurPrice) > 0 ? VN.t('Auf dem Bild erscheint ein Knopf „🔓 Freikaufen“. Ein Klick fragt nach, der zweite zahlt – danach bleibt das Bild scharf.') : VN.t('Preis eintragen, damit der Spieler das Bild selbst freikaufen kann.')));
+          if (Number(e.blurPrice) > 0) box.appendChild(el('div', { class: 'row gap4' }, el('button', { class: 'btn tiny primary', onclick: () => buyDesign(e, curs) }, '🎨 ' + VN.t('Knopf gestalten'))));
         } else box.appendChild(el('div', { class: 'muted small' }, VN.t('Zum Freikaufen gegen Geld zuerst unter Spielsysteme eine Währung anlegen.')));
       }
     }

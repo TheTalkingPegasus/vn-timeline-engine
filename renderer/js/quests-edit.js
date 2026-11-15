@@ -206,8 +206,8 @@
           el('button', { class: 'btn tiny primary', onclick: () => S.notifyPreview([{ type: k }]) }, '▶ Vorschau')),
         N.off ? null : el('div', { class: 'col gap4' }, ...notifyFields(N, [
           el('div', { class: 'logic-row' }, el('span', { class: 'muted small' }, 'Text'), txt(N.text, (v) => { N.text = v; }, { flex: '1' }), el('span', { class: 'muted small' }, 'Überschrift'), txt(N.title, (v) => { N.title = v; }, { width: '150px' }, 'Standard')),
-          el('div', { class: 'logic-row' }, el('span', { class: 'muted small' }, 'Symbol'), VN.assetSelect('image', N.icon, (v) => VN.mutate(() => { N.icon = v; })),
-            el('span', { class: 'muted small' }, 'Sound'), sel(N.sound || '', auds(), (v) => { N.sound = v; }),
+          Q().iconFields(N),
+          el('div', { class: 'logic-row' }, el('span', { class: 'muted small' }, 'Sound'), sel(N.sound || '', auds(), (v) => { N.sound = v; }),
             el('span', { class: 'muted small' }, 'Jingle'), sel(N.jingle || '', auds(), (v) => { N.jingle = v; }),
             N.jingle ? sel(N.jingleMode || 'duck', [['duck', 'Musik leiser'], ['pause', 'Musik pausieren'], ['over', 'darüber spielen']], (v) => { N.jingleMode = v; }) : null,
             N.jingle ? num(N.jingleVol != null ? N.jingleVol : 90, (v) => { N.jingleVol = Math.max(0, Math.min(100, v)); }, '56px') : null)]))));
