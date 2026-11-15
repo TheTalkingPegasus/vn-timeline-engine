@@ -5776,7 +5776,15 @@ window.VN_I18N_JA = {
 "ohne Fläche": "塗りなし",
 "Größe und Farben zurücksetzen": "サイズと色をリセット",
 "Bilder erhalten": "入手した画像",
-"Freikaufen-Knopf": "解除ボタン"
+"Freikaufen-Knopf": "解除ボタン",
+"Emoji einfügen": "絵文字を挿入",
+"Emojis": "絵文字",
+"Pixelart": "ドット絵",
+"Eigene Bilder": "独自画像",
+"Normale Emojis": "通常の絵文字",
+"Bild-Emojis stehen als {emo=…} im Text und erscheinen im Spiel als kleines Bild in Zeilenhöhe.": "画像絵文字はテキスト内で {emo=…} と書かれ、ゲームでは行の高さの小さな画像として表示されます。",
+"Bild-Emojis im Text": "テキスト内の画像絵文字",
+"Höhe in der Zeile": "行内の高さ"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

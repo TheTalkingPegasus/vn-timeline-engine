@@ -1628,6 +1628,8 @@
       if (VN.stopPreview) VN.stopPreview();
       root = document.getElementById('player');
       root.innerHTML = '';
+      // Bild-Emojis im Text (0.9.42): Größe und Höhe aus den Nachrichten-Einstellungen
+      { const C = VN.project.chats || {}; root.style.setProperty('--emo-size', (Number(C.emoSize) || 1.35) + 'em'); root.style.setProperty('--emo-y', (C.emoY != null ? C.emoY : -0.3) + 'em'); }
       // 0.9.41: im Spiel nichts markieren oder herausziehen (Texte, Bilder) – nur Eingabefelder bleiben normal
       if (!root._noSel) {
         root._noSel = true;

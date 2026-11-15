@@ -2859,3 +2859,15 @@ body.vz-panning, body.vz-panning * { cursor: grabbing !important; }
 .gp-cap { font: 700 3.2cqh/1.2 var(--sys-tfont, system-ui); color: var(--sys-accent, #fff); text-align: center; }
 .gp-hint { font-size: 1.8cqh; opacity: .7; text-align: center; }
 @keyframes plGetPic { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
+
+/* Bild-Emojis im Text (0.9.42) */
+.t-emo { display: inline-block; width: var(--emo-size, 1.35em); height: var(--emo-size, 1.35em); vertical-align: var(--emo-y, -0.3em); margin: 0 0.04em; }
+.t-emo img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.t-emo.px img { image-rendering: pixelated; }
+.emo-pick { position: fixed; z-index: 9999; width: 360px; max-height: 380px; display: flex; flex-direction: column; background: var(--bg2); border: 1px solid var(--line2); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.5); padding: 8px; gap: 6px; }
+.emo-pick .seg { display: flex; gap: 4px; flex-wrap: wrap; }
+.emo-pick .emo-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; overflow: auto; }
+.emo-pick .emo-cell { aspect-ratio: 1; border: 0; border-radius: 6px; background: var(--bg3) center / 80% no-repeat; cursor: pointer; font-size: 22px; padding: 0; image-rendering: auto; }
+.emo-pick .emo-cell.px { image-rendering: pixelated; }
+.emo-pick .emo-cell:hover { background-color: var(--line2); transform: scale(1.08); }
+.btn.emo-btn { padding: 0 6px; font-size: 15px; }

@@ -5776,7 +5776,15 @@ window.VN_I18N_ES = {
 "ohne Fläche": "sin relleno",
 "Größe und Farben zurücksetzen": "Restablecer tamaño y colores",
 "Bilder erhalten": "Imágenes recibidas",
-"Freikaufen-Knopf": "Botón de desbloqueo"
+"Freikaufen-Knopf": "Botón de desbloqueo",
+"Emoji einfügen": "Insertar emoji",
+"Emojis": "Emojis",
+"Pixelart": "Pixel art",
+"Eigene Bilder": "Imágenes propias",
+"Normale Emojis": "Emojis normales",
+"Bild-Emojis stehen als {emo=…} im Text und erscheinen im Spiel als kleines Bild in Zeilenhöhe.": "Los emojis de imagen se escriben como {emo=…} en el texto y aparecen en el juego como una imagen pequeña a la altura de la línea.",
+"Bild-Emojis im Text": "Emojis de imagen en el texto",
+"Höhe in der Zeile": "Altura en la línea"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

@@ -683,6 +683,7 @@
     const frame = d.frame && VN.assetUrl(d.frame);
     const body = el('div', { class: desk ? 'dv-desk' + (frame ? ' has-frame' : '') : 'dv-phone' + (frame ? ' has-frame' : '') }, screen, frame ? el('img', { class: 'dv-frame', src: frame, alt: '' }) : null);
     root.appendChild(body);
+    { const C = P().chats || {}; root.style.setProperty('--emo-size', (Number(C.emoSize) || 1.35) + 'em'); root.style.setProperty('--emo-y', (C.emoY != null ? C.emoY : -0.3) + 'em'); }
     if (o.before && o.before.parentNode === host) host.insertBefore(root, o.before); else host.appendChild(root);
 
     // Uhr in der Statusleiste / Taskleiste
@@ -748,7 +749,7 @@
         if (busy) return;
         const reps = DV.replies(rs, cid, d);
         foot.hidden = !reps.length;
-        for (const r of reps) foot.appendChild(el('button', { class: 'dv-reply', onclick: (e) => { e.stopPropagation(); answer(r); } }, XF(tr(r.id + ':text', r.text || '…'))));
+        for (const r of reps) foot.appendChild(el('button', { class: 'dv-reply', onclick: (e) => { e.stopPropagation(); answer(r); } }, fmtText(el('span'), XF(tr(r.id + ':text', r.text || '…')))));
       };
       const answer = (r) => {
         if (typing) return;
@@ -991,7 +992,7 @@
           for (const cm of DV.postComments(s, rs)) card.appendChild(el('div', { class: 'dv-soc-cm' }, el('strong', null, name(DV.contact(cm.author)) + ' '), rich(XF(tr(cm.id, cm.text)))));
           if (S.rep[s.id]) { const r = (s.replies || []).find((x) => x.id === S.rep[s.id]); if (r) card.appendChild(el('div', { class: 'dv-soc-cm me' }, el('strong', null, tp('Du') + ' '), rich(XF(tr(r.id, r.text))))); }
           const reps = DV.postReplies(s, rs);
-          if (reps.length) card.appendChild(el('div', { class: 'dv-soc-reps' }, ...reps.map((r) => el('button', { class: 'dv-reply', onclick: (e) => { e.stopPropagation(); reply(s, r); } }, XF(tr(r.id, r.text))))));
+          if (reps.length) card.appendChild(el('div', { class: 'dv-soc-reps' }, ...reps.map((r) => el('button', { class: 'dv-reply', onclick: (e) => { e.stopPropagation(); reply(s, r); } }, fmtText(el('span'), XF(tr(r.id, r.text)))))));
           list.appendChild(card);
         }
       };

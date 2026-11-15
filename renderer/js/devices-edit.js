@@ -35,6 +35,66 @@
   const condBtn = (list, title, label) => el('button', { class: 'btn tiny' + (list.length ? ' primary' : ''), title: VN.t(title), onclick: () => modal(VN.t(title), (c) => c.appendChild(VN.condEditor(list, VN.t('Nur wenn')))) }, (label || '🔒') + (list.length ? ' ' + list.length : ''));
   const actBtn = (list, title) => el('button', { class: 'btn tiny' + (list.length ? ' primary' : ''), title: VN.t(title), onclick: () => modal(VN.t(title), (c) => c.appendChild(VN.actionEditor(list, VN.t('Dann ausführen')))) }, '⚡' + (list.length ? ' ' + list.length : ''));
 
+  // ---------- Emojis beim Schreiben (0.9.42): Bild-Emojis aus dem Starter-Pack, eigene Bilder oder normale Emojis ----------
+  const UNI = '😀 😃 😄 😁 😆 😅 😂 🤣 🙂 😉 😊 😇 🥰 😍 🤩 😘 😋 😛 😜 🤪 😎 🤓 🤔 🤨 😐 😑 😶 🙄 😏 😬 😌 😔 😪 😴 😷 🤒 🤢 🥵 🥶 😵 🤯 🥳 😕 😟 🙁 😮 😯 😲 😳 🥺 😢 😭 😱 😖 😣 😞 😓 😩 😫 😤 😡 😠 🤬 😈 👿 💀 💩 🤡 👻 👽 🤖 ❤️ 🧡 💛 💚 💙 💜 🖤 🤍 💔 💕 💖 ✨ ⭐ 🔥 💯 💤 💢 💬 👍 👎 👌 ✌️ 🤞 👏 🙏 💪 👋 🎉 🎁 🍀 🌙 ☀️ 🌈 ☕ 🍕 🍺 🎮 📱 💻 🔑 🗝 💰 ⚔️ 🛡️'.split(' ');
+  VN.emojiBtn = (input, commit) => el('button', { class: 'btn tiny emo-btn', title: VN.t('Emoji einfügen'), onclick: (ev) => { ev.preventDefault(); VN.emojiPick(ev.currentTarget, input, commit); } }, '😊');
+  VN.emojiPick = async (anchor, input, commit) => {
+    document.querySelectorAll('.emo-pick').forEach((x) => x.remove());
+    const pos = [input.selectionStart != null ? input.selectionStart : input.value.length, input.selectionEnd != null ? input.selectionEnd : input.value.length];
+    const p = VN.project;
+    p.emoMap = p.emoMap || {};
+    let pack = [];
+    try { if (window.Library && Library.api()) pack = (await Library.api().list()).filter((x) => x && x.builtin && /^emoji/.test(x.cat)); } catch (e) { pack = []; }
+    const insert = (tok) => {
+      const v = input.value, t = v.slice(0, pos[0]) + tok + v.slice(pos[1]);
+      input.value = t; pos[0] = pos[1] = pos[0] + tok.length;
+      VN.mutate(() => commit(t));
+      box.remove();
+    };
+    const usePack = async (x) => {
+      // erst ins Projekt holen (einmal pro Emoji), dann als {emo=…} einfügen
+      let id = p.emoMap[x.id];
+      if (!id || !VN.asset(id)) {
+        const res = await Library.api().import([x.id]);
+        const added = VN.registerAssets(res);
+        if (!added.length) return;
+        VN.mutate(() => { added[0].folder = 'Emojis' + (x.cat === 'emoji_pixel' ? '/Pixel' : ''); added[0].name = Library.loc(x.name, added[0].name); if (x.cat === 'emoji_pixel') added[0].pixel = true; p.emoMap[x.id] = added[0].id; });
+        id = added[0].id;
+      }
+      insert('{emo=' + id + '}');
+    };
+    const box = el('div', { class: 'emo-pick', onclick: (e) => e.stopPropagation() });
+    const grid = el('div', { class: 'emo-grid' });
+    const tabs = [['vec', 'Emojis'], ['px', 'Pixelart'], ['own', 'Eigene Bilder'], ['uni', 'Normale Emojis']].filter(([k]) => (k !== 'vec' && k !== 'px') || pack.length);
+    let tab = VN.ui.emoTab && tabs.some((t) => t[0] === VN.ui.emoTab) ? VN.ui.emoTab : tabs[0][0];
+    const seg = el('div', { class: 'seg' });
+    const draw = () => {
+      seg.innerHTML = ''; grid.innerHTML = '';
+      for (const [k, l] of tabs) seg.appendChild(el('button', { class: 'btn tiny' + (k === tab ? ' primary' : ''), onclick: () => { tab = VN.ui.emoTab = k; draw(); } }, VN.t(l)));
+      if (tab === 'uni') for (const u of UNI) grid.appendChild(el('button', { class: 'emo-cell', title: u, onclick: () => insert(u) }, u));
+      else if (tab === 'own') {
+        const imgs = VN.assetsOf('image');
+        if (!imgs.length) grid.appendChild(el('div', { class: 'muted small', style: { gridColumn: '1 / -1' } }, VN.t('Noch keine Bilder im Projekt.')));
+        for (const a of imgs) grid.appendChild(el('button', { class: 'emo-cell', title: a.name, style: { backgroundImage: `url("${VN.assetUrl(a.id)}")` }, onclick: () => insert('{emo=' + a.id + '}') }));
+      } else for (const x of pack.filter((y) => (tab === 'px') === (y.cat === 'emoji_pixel'))) grid.appendChild(el('button', { class: 'emo-cell' + (tab === 'px' ? ' px' : ''), title: Library.loc(x.name, ''), style: { backgroundImage: `url("${Library.api().url(x)}")` }, onclick: () => usePack(x) }));
+    };
+    draw();
+    box.append(seg, grid, el('div', { class: 'muted small' }, VN.t('Bild-Emojis stehen als {emo=…} im Text und erscheinen im Spiel als kleines Bild in Zeilenhöhe.')));
+    document.body.appendChild(box);
+    const r = anchor.getBoundingClientRect();
+    box.style.left = Math.max(8, Math.min(window.innerWidth - 370, r.right - 360)) + 'px';
+    box.style.top = (r.bottom + 390 > window.innerHeight ? Math.max(8, r.top - 386) : r.bottom + 4) + 'px';
+    const off = (e) => { if (!box.contains(e.target) && e.target !== anchor) { box.remove(); document.removeEventListener('mousedown', off, true); } };
+    setTimeout(() => document.addEventListener('mousedown', off, true), 0);
+  };
+  // Textfeld mit Emoji-Knopf daneben
+  const withEmo = (input, commit) => {
+    const box = el('span', { class: 'row gap4', style: { flex: input.style.flex || '1', minWidth: input.style.minWidth || '160px', alignItems: 'flex-start' } });
+    input.style.flex = '1'; input.style.minWidth = '0';
+    box.append(input, VN.emojiBtn(input, commit));
+    return box;
+  };
+
   // ---------- Freikaufen-Knopf gestalten (0.9.42): jedes Detail ----------
   const buyDesign = (e, curs) => modal(VN.t('Freikaufen-Knopf gestalten'), (card) => {
     const D = DV(), B = D.BUY;
@@ -241,6 +301,8 @@
     if (!DV().list().some((d) => d.apps.some((a) => a.type === 'messages'))) body.appendChild(el('div', { class: 'cond-warn' }, '⚠ ' + VN.t('Kein Gerät hat die App „Nachrichten“. Unter „Geräte“ hinzufügen.')));
     body.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, VN.t('Einstellungen')),
       el('div', { class: 'logic-row' }, chk(C.notify !== false, 'Meldung bei neuer Nachricht (Klick öffnet den Chat)', (v) => { C.notify = v; })),
+      row('Bild-Emojis im Text', el('span', { class: 'row gap4', style: { alignItems: 'center' } }, el('input', { type: 'range', min: 0.8, max: 3, step: 0.05, value: Number(C.emoSize) || 1.35, style: { width: '120px' }, onchange: (e) => VN.mutate(() => { C.emoSize = Number(e.target.value); }) }), el('span', { class: 'muted small' }, VN.t('Größe') + ' ' + (Number(C.emoSize) || 1.35).toFixed(2) + '×'),
+        el('input', { type: 'range', min: -0.6, max: 0.3, step: 0.02, value: C.emoY != null ? C.emoY : -0.3, style: { width: '90px' }, title: VN.t('Höhe in der Zeile'), onchange: (e) => VN.mutate(() => { C.emoY = Number(e.target.value); }) }), el('span', { class: 'muted small' }, VN.t('Höhe in der Zeile')))),
       row('Ton bei neuer Nachricht', sel(C.sound, [['', '— wie Beziehungs-Meldung —'], ...VN.assetsOf('audio').map((a) => [a.id, a.name])], (v) => { C.sound = v; })),
       el('div', { class: 'muted small' }, VN.t('Chat-Zeilen in der Timeline (Dialog „Als Handy-Nachricht zeigen“) landen ebenfalls im Verlauf, wenn der Sprecher ein Kontakt ist – und ältere Nachrichten erscheinen dort darüber.'))));
     // Kontakte
@@ -309,7 +371,7 @@
     t.msgs.forEach((m, i) => {
       card.appendChild(el('div', { class: 'logic-row dv-msgrow' + (m.from === 'me' ? ' me' : '') },
         el('button', { class: 'btn tiny', style: { width: '90px' }, title: VN.t('Wer schreibt? (umschalten)'), onclick: () => VN.mutate(() => { m.from = m.from === 'me' ? 'them' : 'me'; }) }, m.from === 'me' ? VN.t('Ich') : nm),
-        el('textarea', { rows: 1, onchange: (e) => VN.mutate(() => { m.text = e.target.value; }) }, m.text || ''),
+        withEmo(el('textarea', { rows: 1, onchange: (e) => VN.mutate(() => { m.text = e.target.value; }) }, m.text || ''), (v) => { m.text = v; }),
         sel(m.image, imgOpts('— Bild —'), (v) => { m.image = v; }, { width: '90px' }),
         condBtn(m.conds, 'Zeile nur, wenn … (z. B. Route)'),
         actBtn(m.actions || (m.actions = []), 'Beim Lesen dieser Nachricht ausführen (z. B. Ort freischalten)'),
@@ -325,7 +387,7 @@
     t.replies.forEach((r, i) => {
       card.appendChild(el('div', { class: 'logic-row' },
         el('span', null, '↩'),
-        txt(r.text, (v) => { r.text = v; }, 'Antwort-Text', { flex: '1', minWidth: '160px' }),
+        withEmo(txt(r.text, (v) => { r.text = v; }, 'Antwort-Text', { flex: '1', minWidth: '160px' }), (v) => { r.text = v; }),
         condBtn(r.conds, 'Antwort nur anbieten, wenn …'),
         actBtn(r.actions, 'Bei dieser Antwort ausführen'),
         el('span', { class: 'muted small' }, VN.t('danach')),
@@ -397,7 +459,7 @@
         el('button', { class: 'btn tiny', title: VN.t('Duplizieren'), onclick: () => VN.mutate(() => { const n = JSON.parse(JSON.stringify(s)); n.id = VN.uid('sp'); for (const c of n.comments) c.id = VN.uid('sc'); for (const r of n.replies) r.id = VN.uid('sr'); SO.posts.splice(i + 1, 0, n); }) }, '⧉'),
         el('button', { class: 'btn tiny danger', onclick: () => { if (confirm(VN.t('Beitrag löschen?'))) VN.mutate(() => { SO.posts.splice(i, 1); }); } }, '×')));
       card.appendChild(el('div', { class: 'logic-row' },
-        el('textarea', { rows: 2, class: 'dv-ta', style: { flex: '1', minWidth: '220px' }, placeholder: VN.t('Text des Beitrags'), onchange: (e) => VN.mutate(() => { s.text = e.target.value; }) }, s.text || ''),
+        withEmo(el('textarea', { rows: 2, class: 'dv-ta', style: { flex: '1', minWidth: '220px' }, placeholder: VN.t('Text des Beitrags'), onchange: (e) => VN.mutate(() => { s.text = e.target.value; }) }, s.text || ''), (v) => { s.text = v; }),
         thumb(s.image), sel(s.image, imgOpts('— Bild —'), (v) => { s.image = v; }, { width: '120px' })));
       card.appendChild(el('div', { class: 'logic-row' },
         el('span', { class: 'muted small' }, '♥'), num(s.likes || 0, (v) => { s.likes = Math.max(0, Math.round(v)); }),
@@ -606,7 +668,7 @@
       el('button', { class: 'btn tiny', title: VN.t('Nach hinten'), onclick: () => VN.mutate(() => { page.els.splice(idx, 1); page.els.unshift(e); }) }, '⬇'),
       el('button', { class: 'btn tiny', title: VN.t('Duplizieren'), onclick: () => VN.mutate(() => { const n = JSON.parse(JSON.stringify(e)); n.id = VN.uid('we'); n.y += 4; page.els.push(n); VN.ui.webEl = n.id; }) }, '⧉'),
       el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { page.els.splice(idx, 1); VN.ui.webEl = null; }) }, '×')));
-    if (e.kind === 'text' || e.kind === 'button') box.appendChild(el('textarea', { class: 'dv-ta', rows: 3, onchange: (ev) => VN.mutate(() => { e.text = ev.target.value; }) }, e.text || ''));
+    if (e.kind === 'text' || e.kind === 'button') box.appendChild(withEmo(el('textarea', { class: 'dv-ta', rows: 3, onchange: (ev) => VN.mutate(() => { e.text = ev.target.value; }) }, e.text || ''), (v) => { e.text = v; }));
     if (e.kind === 'image') box.appendChild(row('Bild', thumb(e.image), sel(e.image, imgOpts('— Bild wählen —'), (v) => { e.image = v; }, { width: '140px' })));
     if (e.kind !== 'image') box.appendChild(el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } },
       e.kind !== 'box' ? el('label', { class: 'check' }, col(e.color || '#1c1e24', (v) => { e.color = v; }), VN.t('Schrift')) : null,

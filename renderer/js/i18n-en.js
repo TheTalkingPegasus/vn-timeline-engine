@@ -5695,7 +5695,15 @@ window.VN_I18N_EN = {
 "ohne Fläche": "no fill",
 "Größe und Farben zurücksetzen": "Reset size and colors",
 "Bilder erhalten": "Pictures received",
-"Freikaufen-Knopf": "Unlock button"
+"Freikaufen-Knopf": "Unlock button",
+"Emoji einfügen": "Insert emoji",
+"Emojis": "Emojis",
+"Pixelart": "Pixel art",
+"Eigene Bilder": "Own images",
+"Normale Emojis": "Regular emojis",
+"Bild-Emojis stehen als {emo=…} im Text und erscheinen im Spiel als kleines Bild in Zeilenhöhe.": "Image emojis are written as {emo=…} in the text and appear in the game as a small picture at line height.",
+"Bild-Emojis im Text": "Image emojis in text",
+"Höhe in der Zeile": "Height in the line"
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",
