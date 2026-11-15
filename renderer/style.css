@@ -2879,3 +2879,11 @@ body.vz-panning, body.vz-panning * { cursor: grabbing !important; }
 .hub-layer.drop { border-top: 2px solid var(--accent, #e8a43a); }
 .hub-layer .hl-thumb { width: 26px; height: 26px; flex: none; border-radius: 4px; background: #0003 center / contain no-repeat; }
 .hub-layer .hl-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Anhänger: Bahn und Maske (0.9.43) */
+.sh-path { stroke: #ffd36a; stroke-width: 0.25%; stroke-dasharray: 1% 0.8%; fill: none; pointer-events: none; }
+.sh-to circle { fill: rgba(255, 211, 106, 0.25); stroke: #ffd36a; stroke-width: 0.3%; cursor: move; }
+.sh-to .x { stroke: #ffd36a; stroke-width: 0.3%; fill: none; pointer-events: none; }
+.sh-mask { fill: rgba(95, 141, 255, 0.22); stroke: #7fa7ff; stroke-width: 0.3%; cursor: move; }
+.sh-mask.draft { stroke-dasharray: 1% 0.6%; pointer-events: none; }
+.sh-mpt { fill: #fff; stroke: #5f8dff; stroke-width: 0.25%; cursor: pointer; }

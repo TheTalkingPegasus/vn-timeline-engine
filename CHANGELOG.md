@@ -2,6 +2,15 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.43 – Hang-ons with path, mask and squish (e.g. eating)
+- **Path:** a soft-physics hang-on moves from its pin to a target and back – endless or once per poke “bite” (action
+  “〰 Soft poke → Play path (bite)” or trigger track); duration, stay at target, offset, motion (smooth/push/even),
+  optionally swallow afterwards.
+- **Mask:** draw a shape on the figure (e.g. around the mouth) – whatever moves in disappears as if behind a wall.
+- **Squish like a soft balloon against a wall:** just before the edge the picture compresses (strength, zone) and gets a
+  bit wider (own slider); along the path or perpendicular to the mask edge.
+- **Poke on entering:** the chosen soft area (e.g. lips, cheeks) gives way at the moment of contact.
+
 ## 0.9.42 – Emojis, emoji picker, hub decoration and layers, everything designable
 - **33 emojis in the starter pack**, in two styles: glossy vector and pixel art (faces plus heart, broken heart, star,
   fire, sparkles, 100).
