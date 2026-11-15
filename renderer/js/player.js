@@ -945,6 +945,24 @@
     return hubs.find(uses) || prev || null;
   }
   // under: nur Hintergrund und Objekte zeichnen (Hub liegt hinter einem Hub-Dialog), keine Ereignisse
+  // Bild mit Weich-Physik/Gesicht im Hub: Rahmen in Bildgröße (wie „contain“), darin die Weich-Physik-Fläche
+  function hubSoftLook(url, assetId, rigCv) {
+    const img = el('img', { src: url, draggable: 'false' });
+    const inner = el('div', { class: 'char-inner pl-hsoft-in' }, img);
+    const wrap = el('div', { class: 'pl-hsoft' }, inner);
+    const fit = () => {
+      const W = wrap.clientWidth, H = wrap.clientHeight, a = img.naturalWidth / img.naturalHeight;
+      if (!W || !H || !a) return;
+      const w = Math.min(W, H * a), h = w / a;
+      inner.style.width = w + 'px'; inner.style.height = h + 'px';
+    };
+    img.addEventListener('load', fit);
+    new ResizeObserver(fit).observe(wrap);
+    // Bones: Canvas sitzt mit seinem Rand genau um das Bild (wie auf der Bühne), das Bild selbst nur für die Größe
+    if (rigCv) { img.style.visibility = 'hidden'; inner.appendChild(rigCv); } else Soft.attach(inner, assetId);
+    return wrap;
+  }
+
   function showHub(s, entering, returning, under) {
     run.hubShown = s.id;
     if (!under && run.scene === s.id) showFxExtra(hubFx(s));
@@ -979,8 +997,13 @@
       const inv = !!o.invisible;
       let look = inv ? el('span') : url ? el('img', { src: url, draggable: 'false', class: hovUrl ? 'base' : null }) : el('div', { class: 'ph' }, VN.tr(o.id + ':name', o.name || 'Objekt'));
       // Bild mit Bones (0.9.24): atmet, wackelt und spielt optional eine Idle-Animation
-      if (!inv && url && o.bones && window.Rig && Rig.has(o.asset)) {
-        try { const clip = { idleAnim: o.idleAnim || undefined, boneAmp: o.boneAmp != null ? o.boneAmp : 100 }, hold = {}; const cv = Rig.canvasFor(o.asset, clip, window.Anim ? { extraFn: Anim.extraFnFor(clip, hold) } : {}); cv.classList.add('pl-hcv'); if (hovUrl) cv.classList.add('base'); look = cv; } catch (er) { console.error('Hub-Objekt mit Bones', er); }
+      // 0.9.40: Figuren im Hub bewegen sich automatisch wie in Szenen (Bones, Weich-Physik, Gesicht), außer es ist abgeschaltet
+      const animOn = o.bones !== false;
+      if (!inv && url && animOn && !(window.Rig && Rig.has(o.asset)) && window.Soft && Soft.cfgAny(o.asset)) {
+        try { look = hubSoftLook(url, o.asset); if (hovUrl) look.classList.add('base'); } catch (er) { console.error('Hub-Objekt mit Weich-Physik', er); }
+      }
+      if (!inv && url && animOn && window.Rig && Rig.has(o.asset)) {
+        try { const clip = { idleAnim: o.idleAnim || undefined, boneAmp: o.boneAmp != null ? o.boneAmp : 100 }, hold = {}; const cv = Rig.canvasFor(o.asset, clip, window.Anim ? { extraFn: Anim.extraFnFor(clip, hold) } : {}); look = hubSoftLook(url, o.asset, cv); if (hovUrl) look.classList.add('base'); } catch (er) { console.error('Hub-Objekt mit Bones', er); }
       }
       if (!inv) VN.applyLook(look, o);
       const node = el('div', {
