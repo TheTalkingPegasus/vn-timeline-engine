@@ -1628,6 +1628,29 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Zeit durch Tun: Zeitpunkte sammeln, eigene Kosten, Aktion „um … Zeitpunkte“');
   } catch (e) { general.push('Zeit durch Tun: ' + e.message); }
 
+  // 38. Alternative Szene übernimmt den Hintergrund (0.9.40)
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [];
+      const p = VN.project, n0 = p.scenes.length;
+      const src = VN.newStoryScene('Quelle'); src.beats = 6;
+      src.tracks.bg = [{ id: 'cb1', start: 0, len: 2, asset: 'X1', trans: 'fade', dur: 1 }, { id: 'cb2', start: 2, len: 4, asset: 'X2', trans: 'fade', dur: 1, daytime: 'night' }];
+      const a = VN.createAltScene(src, 'Ja', 3);
+      const c = (a.tracks.bg || [])[0];
+      if (!c || c.asset !== 'X2' || c.daytime !== 'night') out.push('falscher Hintergrund');
+      if (c && (c.trans !== 'cut' || c.start !== 0 || c.id === 'cb2')) out.push('nicht nahtlos/neu');
+      const b = VN.createAltScene(src, 'Nein', 0);
+      if (((b.tracks.bg || [])[0] || {}).asset !== 'X1') out.push('Schritt 0');
+      const hub = VN.newHubScene('H'); hub.bg = p.assets.find((x) => x.kind === 'image').id;
+      const h = VN.createAltScene(hub, 'Tür');
+      if (((h.tracks.bg || [])[0] || {}).asset !== hub.bg) out.push('aus Hub');
+      p.scenes.splice(n0);
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Alternative Szene / Hintergrund: ' + r.join(', '));
+    else log('✓ Alternative Szene übernimmt den Hintergrund der Auswahl');
+  } catch (e) { general.push('Alternative Szene / Hintergrund: ' + e.message); }
+
   // 27. Kulissen-Raum (0.9.32): 3D-Flächen, Kamera, Licht durch Fenster mit Jalousie, Bühne und Spieler
   try {
     const r = JSON.parse(await js(`(async () => {

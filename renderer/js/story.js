@@ -735,7 +735,7 @@
         if (t.key === 'choice') {
           c.options.forEach((o) => items.push({
             label: 'Alternativer Pfad: neue Szene', hint: '„' + (o.text || 'Option') + '“',
-            action: () => VN.mutate(() => { const n = VN.createAltScene(s, o.text); o.target = n.id; })
+            action: () => VN.mutate(() => { const n = VN.createAltScene(s, o.text, c.start); o.target = n.id; })
           }));
           items.push('sep');
         }
