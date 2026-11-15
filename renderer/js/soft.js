@@ -101,7 +101,7 @@
         const s = sim.regs[r.id] || (sim.regs[r.id] = { x: 0, y: 0, vx: 0, vy: 0 });
         s.time = (s.time || 0) + dt;
         if (sim.gulpReq && P.idle === 'swallow') s.gulp = s.time;
-        for (const k of kick) { s.vx += k.x * (P.xs || 1); s.vy += k.y * (P.ys || 1); }
+        for (const k of kick) { if (k.only && k.only !== r.id) continue; s.vx += k.x * (P.xs || 1); s.vy += k.y * (P.ys || 1); }
         // angespanntes Zucken: kurze Stöße in zufälligen Abständen (stärker = häufiger und kräftiger)
         const tw = Math.max(0, Number(P.twitch) || 0);
         if (tw > 0) {
@@ -129,6 +129,8 @@
     poke(sim, dir, amount) {
       // Schlucken auslösen (0.9.38): läuft in Bereichen mit „Schlucken“ sofort einmal ab
       if (dir === 'gulp') { sim.gulpReq = (sim.gulpReq || 0) + 1; return; }
+      // Bahn der Anhänger einmal abspielen (0.9.43), z. B. „Bissen“
+      if (dir === 'bite') { sim.biteReq = (sim.biteReq || 0) + 1; return; }
       const a = (Number(amount) || 1) * 0.22;
       const d = dir === 'up' ? [0, -1] : dir === 'left' ? [-1, 0] : dir === 'right' ? [1, 0] : dir === 'random' ? [Math.random() * 2 - 1, Math.random() * 2 - 1] : [0, 1];
       sim.poke.push({ x: d[0] * a, y: d[1] * a });
@@ -430,9 +432,30 @@
       for (const a of hs) {
         const img = Soft.hangImg(a.asset);
         if (!img) continue;
-        const P1 = pinAt(a.pins[0][0], a.pins[0][1]);
+        let P1 = pinAt(a.pins[0][0], a.pins[0][1]);
         const P2 = a.pins[1] ? pinAt(a.pins[1][0], a.pins[1][1]) : null;
         const st = st0[a.id] || (st0[a.id] = { th: 0, om: 0, f: {} });
+        // Bahn (0.9.43): vom Pin zum Ziel und zurück – endlos oder einmal per Anstoß „Bissen“
+        let mv = null;
+        const M = !P2 && a.move && a.move.on !== false && a.move.to ? a.move : null;
+        if (M) {
+          const T = Math.max(0.2, Number(M.dur) || 1.6), hold = Math.max(0, Math.min(0.8, Number(M.hold) || 0));
+          let g = 0;
+          if ((M.mode || 'loop') === 'loop') { const ph = (((t + (Number(M.delay) || 0)) % T) + T) % T / T; g = ph < 0.5 ? ph * 2 : 2 - ph * 2; }
+          else {
+            if (sim.biteReq) st.mt0 = t;
+            if (st.mt0 != null) { const ph = (t - st.mt0) / T; if (ph >= 1) { st.mt0 = null; if (M.gulp) sim.gulpReq = (sim.gulpReq || 0) + 1; } else g = ph < 0.5 ? ph * 2 : 2 - ph * 2; }
+          }
+          g = Math.min(1, g * (1 + hold * 2));
+          const e = M.ease === 'linear' ? g : M.ease === 'push' ? 1 - Math.pow(1 - g, 3) : g * g * (3 - 2 * g);
+          const PT = pinAt(M.to[0], M.to[1]);
+          const dx = PT[0] - P1[0], dy = PT[1] - P1[1], L = Math.hypot(dx, dy) || 1;
+          const S0 = P1;
+          P1 = [P1[0] + dx * e, P1[1] + dy * e];
+          mv = { S: S0, d: [dx / L, dy / L], q: e };
+        }
+        // Maske: alles vom Anhänger, was hinein fährt, ist weg (Mund, Tasche, Wand …)
+        const mask = !P2 && Array.isArray(a.mask) && a.mask.length >= 3 ? a.mask.map((q) => pinAt(q[0], q[1])) : null;
         const dw = (Number(a.size) || 0.14) * iw, dh = dw * img.naturalHeight / img.naturalWidth;
         // Pendel: hängt am Pin, schwingt bei Bewegung der Figur und der Stelle darunter (z. B. wippende Brust)
         if (!P2 && a.swing !== false && dt > 0) {
@@ -496,9 +519,62 @@
         else if (a.fx === 'float') fy = Math.sin(t * Math.PI * 2 * 0.45 * sp + ph) * 0.012 * amp * ih;
         else if (a.fx === 'spin') fa = t * Math.PI * 2 * 0.3 * sp * (amp || 1);
         else if (a.fx === 'blink') alpha = 0.55 + 0.45 * Math.cos(t * Math.PI * 2 * 0.7 * sp + ph) * Math.min(1, amp);
-        ops.push({ a, img, P1, P2, th: st.th, fa, fsc, fx, fy, alpha, dw, dh, chain: bend > 0 && st.ch ? st.ch.a.slice() : null });
+        // Quetschen wie ein Schlauchballon an einer Wand: Eintrittskante der Maske auf der Bahn suchen
+        let sq = null;
+        if (mask && mv) {
+          const d = mv.d; let best = null;
+          for (let i = 0; i < mask.length; i++) {
+            const A = mask[i], B = mask[(i + 1) % mask.length];
+            const ex = B[0] - A[0], ey = B[1] - A[1], den = d[0] * ey - d[1] * ex;
+            if (Math.abs(den) < 1e-9) continue;
+            const wx = A[0] - mv.S[0], wy = A[1] - mv.S[1];
+            const tt = (wx * ey - wy * ex) / den, uu = (wx * d[1] - wy * d[0]) / den;
+            if (tt >= -dh && uu >= 0 && uu <= 1 && (best == null || tt < best)) { best = tt; const el = Math.hypot(ex, ey) || 1; let nx = ey / el, ny = -ex / el; if (nx * d[0] + ny * d[1] < 0) { nx = -nx; ny = -ny; } var wn = [nx, ny]; }
+          }
+          // gestaucht wird entlang der Bahn (Standard) oder senkrecht zur Kante der Maske
+          if (best != null) sq = { E: [mv.S[0] + d[0] * best, mv.S[1] + d[1] * best], d: a.squishDir === 'wall' && wn ? wn : d, amt: Math.max(0, Number(a.squish != null ? a.squish : 0.5)), len: Math.max(0.05, Number(a.squishLen) || 0.35), widen: Math.max(0, Number(a.widen != null ? a.widen : 0.25)) };
+        }
+        // Anstoß beim Eintreten: Lippen/Backen geben nach (nur der gewählte Bereich oder alle)
+        if (sq && dt > 0) {
+          const tip = (P1[0] - sq.E[0]) * sq.d[0] + (P1[1] - sq.E[1]) * sq.d[1] + Math.max(dw, dh) * 0.5;
+          const inside = tip > 0;
+          if (inside && !st.inM && Number(a.move.poke)) sim.poke.push({ x: sq.d[0] * Number(a.move.poke) * 0.22, y: sq.d[1] * Number(a.move.poke) * 0.22, only: a.move.pokeReg || null });
+          st.inM = inside;
+        }
+        ops.push({ a, img, P1, P2, th: st.th, fa, fsc, fx, fy, alpha, dw, dh, chain: bend > 0 && st.ch ? st.ch.a.slice() : null, mask, sq });
       }
+      sim.biteReq = 0;
       return ops;
+    },
+    // Gequetscht zeichnen (0.9.43): Gitter über das Bild, jeder Punkt erst normal platziert, dann nahe der Wand gestaucht
+    // (Material sammelt sich vor der Kante, wird dort etwas breiter) – was hinter der Kante liegt, schneidet die Maske weg
+    drawSquish(ctx, o) {
+      const a = o.a, A = a.anchor || [0.5, 0.06], nw = o.img.naturalWidth, nh = o.img.naturalHeight;
+      const ang = (Number(a.rot) || 0) * Math.PI / 180 + o.th + o.fa, cs = Math.cos(ang), sn = Math.sin(ang);
+      const sx = o.fsc * (a.flip ? -1 : 1), sy = o.fsc;
+      const place = (u, v) => { const x = (u - A[0]) * o.dw * sx, y = (v - A[1]) * o.dh * sy; return [o.P1[0] + o.fx + x * cs - y * sn, o.P1[1] + o.fy + x * sn + y * cs]; };
+      const S = o.sq, d = S.d, n = [-d[1], d[0]];
+      // Zone vor der Wand: dort staut sich das Bild (Dichte bis 1/(1−q)), läuft dann durch die Wand und wird abgeschnitten
+      const len = Math.max(o.dw, o.dh) * S.len, q = Math.min(0.92, S.amt);
+      const warp = (p) => {
+        const rx = p[0] - S.E[0], ry = p[1] - S.E[1];
+        const al = rx * d[0] + ry * d[1], cr = rx * n[0] + ry * n[1];
+        const u = (al + len) / len;
+        if (u <= 0 || q <= 0) return p;
+        let h, hp;
+        if (u <= 1) { h = u - q * u * u / 2; hp = 1 - q * u; }
+        else { h = 1 - q / 2 + (1 - q) * (u - 1); hp = 1 - q; }
+        const al2 = -len + len * h, cr2 = cr * (1 + S.widen * (1 - hp) / Math.max(0.05, q));
+        return [S.E[0] + d[0] * al2 + n[0] * cr2, S.E[1] + d[1] * al2 + n[1] * cr2];
+      };
+      const GX = 12, GY = 12, P = [];
+      for (let j = 0; j <= GY; j++) for (let i = 0; i <= GX; i++) P.push(warp(place(i / GX, j / GY)));
+      for (let j = 0; j < GY; j++) for (let i = 0; i < GX; i++) {
+        const i00 = j * (GX + 1) + i, i10 = i00 + 1, i01 = i00 + GX + 1, i11 = i01 + 1;
+        const s = (ii, jj) => [ii / GX * nw, jj / GY * nh];
+        tri(ctx, o.img, s(i, j), s(i + 1, j), s(i + 1, j + 1), P[i00], P[i10], P[i11]);
+        tri(ctx, o.img, s(i, j), s(i + 1, j + 1), s(i, j + 1), P[i00], P[i11], P[i01]);
+      }
     },
     // Längsachse eines Anhängers: vom Haltepunkt zur gegenüberliegenden Kante (oben gehalten → nach unten)
     hangAxis(a, dw, dh) {
@@ -536,6 +612,13 @@
         if (!!a.behind !== behind) continue;
         const nw = o.img.naturalWidth, nh = o.img.naturalHeight;
         ctx.save();
+        if (o.mask) {
+          // alles außerhalb der Maske bleibt sichtbar
+          ctx.beginPath(); ctx.rect(-1e5, -1e5, 2e5, 2e5);
+          o.mask.forEach((q, i) => (i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]))); ctx.closePath();
+          ctx.clip('evenodd');
+        }
+        if (o.sq && !o.P2 && !o.chain) { ctx.globalAlpha = Math.max(0, Math.min(1, o.alpha)); Soft.drawSquish(ctx, o); ctx.restore(); continue; }
         ctx.globalAlpha = Math.max(0, Math.min(1, o.alpha));
         if (o.P2) {
           // zwischen zwei Pins gespannt: Ankerpunkt 1 auf Pin 1, Ankerpunkt 2 auf Pin 2
@@ -816,9 +899,9 @@
     VN.registerAction('softPoke', {
       label: '〰 Weich-Physik anstoßen', make: () => ({ dir: 'down', amount: 1 }),
       apply: (a) => Soft.pokeAll(a.dir || 'down', a.amount != null ? a.amount : 1, a.asset || ''),
-      text: (a) => '〰 ' + VN.t('Weich anstoßen') + ' (' + VN.t({ down: 'nach unten', up: 'nach oben', left: 'nach links', right: 'nach rechts', random: 'zufällig', gulp: 'Schlucken' }[a.dir || 'down']) + ')',
+      text: (a) => '〰 ' + VN.t('Weich anstoßen') + ' (' + VN.t({ down: 'nach unten', up: 'nach oben', left: 'nach links', right: 'nach rechts', random: 'zufällig', gulp: 'Schlucken', bite: 'Bahn abspielen (Bissen)' }[a.dir || 'down']) + ')',
       row: (row, a, sel) => {
-        row.appendChild(sel(a.dir || 'down', [['down', 'nach unten'], ['up', 'nach oben'], ['left', 'nach links'], ['right', 'nach rechts'], ['random', 'zufällig'], ['gulp', 'Schlucken']], (v) => VN.mutate(() => { a.dir = v; })));
+        row.appendChild(sel(a.dir || 'down', [['down', 'nach unten'], ['up', 'nach oben'], ['left', 'nach links'], ['right', 'nach rechts'], ['random', 'zufällig'], ['gulp', 'Schlucken'], ['bite', 'Bahn abspielen (Bissen)']], (v) => VN.mutate(() => { a.dir = v; })));
         row.appendChild(el('input', { type: 'number', step: '0.1', min: '0', value: a.amount != null ? a.amount : 1, style: { width: '70px' }, title: VN.t('Stärke'), onchange: (e) => VN.mutate(() => { a.amount = Number(e.target.value) || 0; }) }));
         const s = VN.assetSelect('image', a.asset || '', (v) => VN.mutate(() => { a.asset = v; }));
         s.style.maxWidth = '160px'; s.title = VN.t('nur dieses Bild (leer = alle)');

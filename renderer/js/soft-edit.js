@@ -120,7 +120,7 @@ window.PenBar = {
       const pathOf = (pts, W, H, close) => pts.map((q, i) => (i ? 'L' : 'M') + (q[0] * W).toFixed(1) + ' ' + (q[1] * H).toFixed(1)).join(' ') + (close ? ' Z' : '');
       const stop = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
       // Zeichen-Werkzeuge zeichnen auch über bestehende Bereiche hinweg (Wählen nur mit „Auswählen“)
-      const drawing = () => (VN.ui.softTool || 'select') !== 'select' || !!VN.ui.softPinMode || !!VN.ui.hangPin;
+      const drawing = () => (VN.ui.softTool || 'select') !== 'select' || !!VN.ui.softPinMode || !!VN.ui.hangPin || !!VN.ui.hangMask;
       // Zeichenstift: Punkte in Arbeit (noch kein Bereich)
       let pen = [];
       SoftEd._pen = { finish: () => finishPen(), cancel: () => { pen = []; draw(); }, active: () => pen.length > 0 };
@@ -203,7 +203,7 @@ window.PenBar = {
             g.appendChild(mk('circle', { cx: q[0], cy: q[1], r: hs * 0.5, class: 'dot' }));
             if (sel) { const tx = mk('text', { x: q[0] + hs * 2.2, y: q[1] - hs * 1.4, class: 'sh-lbl', 'font-size': Math.round(H * 0.018) }); tx.textContent = (h.pins.length > 1 ? (i + 1) + ' · ' : '') + (h.name || ''); g.appendChild(tx); }
             g.addEventListener('mousedown', (ev) => {
-              if (VN.ui.hangPin) return;
+              if (VN.ui.hangPin || VN.ui.hangMask) return;
               stop(ev);
               if (VN.ui.softHang !== h.id) { VN.ui.softHang = h.id; VN.ui.softSel = null; VN.render(); return; }
               const o = h.pins.map((x) => x.slice()), [u0, v0] = toImg(ev);
@@ -213,6 +213,45 @@ window.PenBar = {
             });
             svg.appendChild(g);
           });
+        }
+        // Bahn und Maske des gewählten Anhängers (0.9.43)
+        const hsel = ((data && data.hangs) || []).find((x) => x.id === VN.ui.softHang);
+        if (hsel && Array.isArray(hsel.mask) && hsel.mask.length >= 3 && !VN.ui.hangMask) {
+          const mg = mk('path', { d: pathOf(hsel.mask, W, H, true), class: 'sh-mask' });
+          mg.addEventListener('mousedown', (ev) => {
+            if (drawing()) return; stop(ev);
+            const o = hsel.mask.map((q) => q.slice()), [u0, v0] = toImg(ev);
+            VN.drag(ev, (dx, dy, e2) => { const [u, v] = toImg(e2); hsel.mask = o.map((q) => [q[0] + u - u0, q[1] + v - v0]); draw(); }, (dx, dy, moved) => { if (!moved) return; const nv = hsel.mask.map((q) => [r4(q[0]), r4(q[1])]); hsel.mask = o; VN.mutate(() => { hsel.mask = nv; }); });
+          });
+          svg.appendChild(mg);
+          hsel.mask.forEach((q, i) => {
+            const c = mk('circle', { cx: q[0] * W, cy: q[1] * H, r: hs * 0.9, class: 'sh-mpt' });
+            c.addEventListener('mousedown', (ev) => {
+              if (drawing()) return; stop(ev);
+              const o = q.slice(), [u0, v0] = toImg(ev);
+              VN.drag(ev, (dx, dy, e2) => { const [u, v] = toImg(e2); hsel.mask[i] = [o[0] + u - u0, o[1] + v - v0]; draw(); }, (dx, dy, moved) => { if (!moved) return; const nv = hsel.mask.map((x) => [r4(x[0]), r4(x[1])]); hsel.mask[i] = o; VN.mutate(() => { hsel.mask = nv; }); });
+            });
+            c.addEventListener('contextmenu', (ev) => { stop(ev); if (hsel.mask.length > 3) VN.mutate(() => { hsel.mask.splice(i, 1); }); });
+            svg.appendChild(c);
+          });
+        }
+        if (VN.ui.hangMask && VN.ui.hangMask.pts.length) {
+          const mp = VN.ui.hangMask.pts;
+          svg.appendChild(mk('path', { d: pathOf(mp, W, H, mp.length >= 3), class: 'sh-mask draft' }));
+          mp.forEach((q) => svg.appendChild(mk('circle', { cx: q[0] * W, cy: q[1] * H, r: hs * 0.9, class: 'sh-mpt' })));
+        }
+        if (hsel && hsel.move && hsel.move.to && hsel.pins && hsel.pins[0]) {
+          const a0 = hsel.pins[0], b0 = hsel.move.to;
+          svg.appendChild(mk('line', { x1: a0[0] * W, y1: a0[1] * H, x2: b0[0] * W, y2: b0[1] * H, class: 'sh-path' }));
+          const g = mk('g', { class: 'sh-to' });
+          g.appendChild(mk('circle', { cx: b0[0] * W, cy: b0[1] * H, r: hs * 1.5 }));
+          g.appendChild(mk('path', { d: `M${b0[0] * W - hs} ${b0[1] * H} H${b0[0] * W + hs} M${b0[0] * W} ${b0[1] * H - hs} V${b0[1] * H + hs}`, class: 'x' }));
+          g.addEventListener('mousedown', (ev) => {
+            if (drawing()) return; stop(ev);
+            const o = b0.slice(), [u0, v0] = toImg(ev);
+            VN.drag(ev, (dx, dy, e2) => { const [u, v] = toImg(e2); hsel.move.to = [o[0] + u - u0, o[1] + v - v0]; draw(); }, (dx, dy, moved) => { if (!moved) return; const nv = [r4(hsel.move.to[0]), r4(hsel.move.to[1])]; hsel.move.to = o; VN.mutate(() => { hsel.move.to = nv; }); });
+          });
+          svg.appendChild(g);
         }
         // Zeichenstift in Arbeit
         if (pen.length) {
@@ -293,11 +332,19 @@ window.PenBar = {
       stage.addEventListener('mousedown', (e) => {
         if (e.button !== 0) return;
         e.preventDefault();
+        if (VN.ui.hangMask) {
+          // Maske zeichnen (0.9.43): Punkte setzen, „Fertig“ im Seitenfeld oder Doppelklick schließt
+          const hm = VN.ui.hangMask, [pu, pv] = toImg(e);
+          if (e.detail >= 2 && hm.pts.length >= 3) { SoftEd.finishMask(); return; }
+          hm.pts.push([r4(pu), r4(pv)]); draw();
+          return;
+        }
         if (VN.ui.hangPin) {
           const hp = VN.ui.hangPin, h = ((data && data.hangs) || []).find((x) => x.id === hp.id);
           const [pu, pv] = toImg(e);
           VN.ui.hangPin = null;
-          if (h) VN.mutate(() => { h.pins[hp.i] = [r4(pu), r4(pv)]; }); else VN.render();
+          if (h && hp.i === 'to') VN.mutate(() => { h.move = Object.assign({ on: true, mode: 'loop', dur: 1.6, hold: 0.15, ease: 'smooth', poke: 0.6 }, h.move || {}); h.move.to = [r4(pu), r4(pv)]; });
+          else if (h) VN.mutate(() => { h.pins[hp.i] = [r4(pu), r4(pv)]; }); else VN.render();
           return;
         }
         if (VN.ui.softPinMode) {
@@ -513,6 +560,7 @@ window.PenBar = {
         !two && h.swing !== false ? slider('weight', 'Trägheit', 0, 3, 0.05, 1) : null,
         !two && h.swing !== false ? slider('stiff', 'Steifheit', 0, 1, 0.01, 0.15) : null,
         !two && h.swing !== false ? slider('damp', 'Dämpfung', 0, 1, 0.01, 0.3) : null,
+        ...(two ? [] : SoftEd.moveFields(id, h, data, row, slider, pinBtn)),
         row('Effekt', fxSel),
         h.fx ? slider('fxAmp', 'Effekt: Stärke', 0, 3, 0.05, 1) : null,
         h.fx ? slider('fxSpeed', 'Effekt: Tempo', 0.1, 4, 0.05, 1) : null,
@@ -520,6 +568,59 @@ window.PenBar = {
           el('button', { class: 'btn tiny', onclick: () => { const c = JSON.parse(JSON.stringify(h)); c.id = VN.uid('hg'); c.pins = h.pins.map((q) => [r4(1 - q[0]), q[1]]); c.flip = !h.flip; c.name = (h.name || '') + ' ' + VN.t('(gespiegelt)'); VN.mutate(() => { hangs.push(c); }); VN.ui.softHang = c.id; } }, VN.t('Gespiegelt kopieren')),
           el('button', { class: 'btn tiny danger', onclick: () => VN.mutate(() => { hangs.splice(hangs.indexOf(h), 1); VN.ui.softHang = null; }) }, VN.t('Entfernen'))));
       return el('div', null, card, box);
+    },
+
+    // Maske fertig zeichnen
+    finishMask() {
+      const hm = VN.ui.hangMask; VN.ui.hangMask = null;
+      const d = Soft.data(VN.ui.softAsset), h = d && (d.hangs || []).find((x) => x.id === (hm && hm.id));
+      if (h && hm.pts.length >= 3) VN.mutate(() => { h.mask = hm.pts; }); else VN.render();
+    },
+    // Bahn, Maske und Quetschen eines Anhängers (0.9.43)
+    moveFields(id, h, data, row, slider, pinBtn) {
+      const M = h.move || {};
+      const mset = (k, v) => VN.mutate(() => { h.move = h.move || {}; h.move[k] = v; });
+      const msl = (k, label, min, max, step, def, fmt) => {
+        const val = M[k] != null ? M[k] : def;
+        const out = el('span', { class: 'muted small' }, fmt ? fmt(val) : String(val));
+        return el('label', { class: 'soft-sl' }, el('span', null, VN.t(label)),
+          el('input', { type: 'range', min, max, step, value: val, oninput: (e) => { out.textContent = fmt ? fmt(Number(e.target.value)) : e.target.value; }, onchange: (e) => mset(k, Number(e.target.value)) }), out);
+      };
+      const sel = (val, opts, commit) => { const s = el('select', { onchange: (e) => commit(e.target.value) }); for (const [v, l] of opts) { const o = el('option', { value: v }, VN.t(l)); if (v === val) o.selected = true; s.appendChild(o); } return s; };
+      const regs = ((data && data.regions) || []).map((r) => [r.id, r.name || VN.t((Soft.PRESETS[r.preset] || {}).label || 'Bereich')]);
+      const out = [el('div', { class: 'sec-title', style: { marginTop: '6px' } }, VN.t('Bahn (hin und zurück)'))];
+      out.push(el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } }, pinBtn('to', M.to ? 'Ziel neu setzen' : 'Ziel setzen'),
+        M.to ? el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: M.on !== false, onchange: (e) => mset('on', e.target.checked) }), VN.t('Bahn an')) : null,
+        M.to ? el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { delete h.move; }) }, VN.t('Bahn entfernen')) : null));
+      if (!M.to) { out.push(el('div', { class: 'muted small' }, VN.t('Der Anhänger fährt vom Pin zum Ziel und zurück – z. B. ein Keks zum Mund. Mit einer Maske verschwindet er dort, wo er hineinfährt.'))); return out; }
+      out.push(row('Ablauf', sel(M.mode || 'loop', [['loop', 'endlos hin und zurück'], ['trigger', 'einmal pro Anstoß „Bissen“']], (v) => mset('mode', v))));
+      if ((M.mode || 'loop') === 'trigger') out.push(el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } },
+        el('button', { class: 'btn tiny primary', onclick: () => Soft.pokeAll('bite', 1, id) }, '▶ ' + VN.t('Bissen testen')),
+        el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!M.gulp, onchange: (e) => mset('gulp', e.target.checked) }), VN.t('danach schlucken')),
+        el('span', { class: 'muted small' }, VN.t('Im Spiel: Aktion „〰 Weich anstoßen → Bahn abspielen (Bissen)“ oder Auslöser-Spur.'))));
+      out.push(msl('dur', 'Dauer hin + zurück', 0.2, 8, 0.05, 1.6, (v) => v.toFixed(2) + ' s'),
+        msl('hold', 'Am Ziel verweilen', 0, 0.8, 0.01, 0.15, (v) => Math.round(v * 100) + ' %'),
+        (M.mode || 'loop') === 'loop' ? msl('delay', 'Versatz', 0, 4, 0.05, 0, (v) => v.toFixed(2) + ' s') : null,
+        row('Bewegung', sel(M.ease || 'smooth', [['smooth', 'weich'], ['push', 'schieben (schnell rein, langsam am Ende)'], ['linear', 'gleichmäßig']], (v) => mset('ease', v))),
+        msl('poke', 'Anstoß beim Eintreten', 0, 3, 0.05, 0.6),
+        regs.length ? row('Anstoß für', sel(M.pokeReg || '', [['', 'alle Bereiche'], ...regs], (v) => mset('pokeReg', v))) : null);
+      out.push(el('div', { class: 'sec-title', style: { marginTop: '6px' } }, VN.t('Maske und Quetschen')));
+      const drawingMask = VN.ui.hangMask && VN.ui.hangMask.id === h.id;
+      out.push(el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } },
+        drawingMask ? el('button', { class: 'btn tiny primary', onclick: () => SoftEd.finishMask() }, '✓ ' + VN.t('Maske fertig') + ' (' + VN.ui.hangMask.pts.length + ')')
+          : el('button', { class: 'btn tiny' + (h.mask ? '' : ' primary'), onclick: () => { VN.ui.hangMask = { id: h.id, pts: [] }; VN.ui.hangPin = null; VN.render(); } }, '✏ ' + VN.t(h.mask ? 'Maske neu zeichnen' : 'Maske zeichnen')),
+        drawingMask ? el('button', { class: 'btn tiny', onclick: () => { VN.ui.hangMask = null; VN.render(); } }, VN.t('Abbrechen')) : null,
+        h.mask && !drawingMask ? el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { delete h.mask; }) }, VN.t('Maske löschen')) : null));
+      out.push(el('div', { class: 'muted small' }, VN.t(drawingMask ? 'Punkte ins Bild klicken (z. B. um die Mundöffnung). Doppelklick oder „Fertig“ schließt die Form.' : 'Was in die Maske hineinfährt, ist weg – wie hinter einer Wand. Punkte ziehen, Rechtsklick löscht einen Punkt, Fläche ziehen verschiebt alles.')));
+      if (h.mask) {
+        const ss = (k, label, min, max, step, def, fmt) => slider(k, label, min, max, step, def, fmt);
+        out.push(ss('squish', 'Quetschen', 0, 1, 0.01, 0.5, (v) => Math.round(v * 100) + ' %'),
+          ss('squishLen', 'Quetsch-Zone', 0.05, 1, 0.01, 0.35, (v) => Math.round(v * 100) + ' %'),
+          ss('widen', 'Breiter werden', 0, 1, 0.01, 0.25, (v) => Math.round(v * 100) + ' %'),
+          row('Stauchen entlang', (() => { const s2 = el('select', { onchange: (e) => VN.mutate(() => { h.squishDir = e.target.value; }) }); for (const [v, l] of [['path', 'der Bahn'], ['wall', 'senkrecht zur Maskenkante']]) { const o = el('option', { value: v }, VN.t(l)); if (v === (h.squishDir || 'path')) o.selected = true; s2.appendChild(o); } return s2; })()),
+          el('div', { class: 'muted small' }, VN.t('Wie ein weicher Ballon gegen eine Wand: kurz vor der Kante staucht sich das Bild zusammen und wird etwas breiter, dahinter verschwindet es.')));
+      }
+      return out;
     },
 
     inspector() {
