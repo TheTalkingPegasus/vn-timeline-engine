@@ -2926,3 +2926,7 @@ body.vz-panning, body.vz-panning * { cursor: grabbing !important; }
 .sw-look .dv-web-bm .dv-web-desc { color: var(--sw-desc); opacity: 1; }
 .sw-look .sw-logo { align-self: center; object-fit: contain; margin-bottom: 1cqh; }
 .sw-look .sw-name { align-self: center; font-size: calc(4.4cqh * var(--sw-size, 1)); font-weight: 800; color: var(--sw-title); margin-bottom: 1cqh; letter-spacing: -0.02em; }
+
+/* Verkaufen auf Websites (0.9.44) */
+.dv-web-el .dv-sale-price { display: inline-flex; align-items: center; margin-left: 0.4em; }
+.dv-web-el.sold.dim { opacity: 0.45; }

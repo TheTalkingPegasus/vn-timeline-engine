@@ -1740,6 +1740,29 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Social Media im Browser, Websuche (Profile, #Themen, Suchwörter, geheime Seiten)');
   } catch (e) { general.push('Social im Browser: ' + e.message); }
 
+  // 43. Verkaufen auf Websites (0.9.44)
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [], p = VN.project, DV = VN.Devices;
+      const hadCur = p.currencies.length; if (!hadCur) p.currencies.push({ id: 'cT', name: 'Gold', start: 0 });
+      const cur = p.currencies[0];
+      const rs = VN.newRunState(); rs.money[cur.id] = 5;
+      const e = { id: 'eS', kind: 'button', text: 'Kaufen', sale: { price: 4, cur: cur.id, actions: [] } };
+      VN.migrate(p); const bakWeb = JSON.stringify(p.web); const w = DV.newSite(); w.pages[0].els = [e]; p.web.sites.push(w);
+      if (!DV.saleOf(e)) out.push('saleOf');
+      if (!DV.sell(e, rs) || rs.money[cur.id] !== 1) out.push('Kauf');
+      if (!DV.saleBought(e, rs)) out.push('gekauft gemerkt');
+      if (DV.sell(e, rs)) out.push('ohne Geld gekauft');
+      if (!VN.checkConds([{ type: 'webBought', el: 'eS' }], rs)) out.push('Bedingung');
+      if (VN.checkConds([{ type: 'webBought', el: 'eS', not: true }], rs)) out.push('Bedingung nicht');
+      p.web = JSON.parse(bakWeb);
+      if (!hadCur) p.currencies.pop();
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Website-Verkauf: ' + r.join(', '));
+    else log('✓ Verkaufen auf Websites, Bedingung „Auf Website gekauft“');
+  } catch (e) { general.push('Website-Verkauf: ' + e.message); }
+
   // 27. Kulissen-Raum (0.9.32): 3D-Flächen, Kamera, Licht durch Fenster mit Jalousie, Bühne und Spieler
   try {
     const r = JSON.parse(await js(`(async () => {

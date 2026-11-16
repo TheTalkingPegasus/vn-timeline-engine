@@ -742,8 +742,39 @@
             el('input', { type: 'number', min: 0, step: 1, value: Number(e.blurPrice) || 0, style: { width: '72px' }, title: VN.t('0 = nicht freikaufbar'), onchange: (ev) => VN.mutate(() => { e.blurPrice = Math.max(0, Math.round(Number(ev.target.value) || 0)); if (!e.blurCur) e.blurCur = curs[0].id; }) }),
             curs.length > 1 ? sel(e.blurCur || curs[0].id, curs.map((c) => [c.id, c.name]), (v) => { e.blurCur = v; }, { width: '110px' }) : el('span', { class: 'muted small' }, curs[0].name))));
           box.appendChild(el('div', { class: 'muted small' }, Number(e.blurPrice) > 0 ? VN.t('Auf dem Bild erscheint ein Knopf „🔓 Freikaufen“. Ein Klick fragt nach, der zweite zahlt – danach bleibt das Bild scharf.') : VN.t('Preis eintragen, damit der Spieler das Bild selbst freikaufen kann.')));
-          if (Number(e.blurPrice) > 0) box.appendChild(el('div', { class: 'row gap4' }, el('button', { class: 'btn tiny primary', onclick: () => buyDesign(e, curs) }, '🎨 ' + VN.t('Knopf gestalten'))));
+          if (Number(e.blurPrice) > 0) box.appendChild(el('div', { class: 'row gap4', style: { flexWrap: 'wrap' } }, el('button', { class: 'btn tiny primary', onclick: () => buyDesign(e, curs) }, '🎨 ' + VN.t('Knopf gestalten')),
+            actBtn(e.buyActions || (e.buyActions = []), 'Nach dem Freikaufen ausführen (z. B. Szene starten, Gegenstand geben, Variable setzen)'),
+            el('span', { class: 'muted small' }, (e.buyActions || []).length ? VN.tf('{n} Aktionen', { n: e.buyActions.length }) : VN.t('Aktionen nach dem Kauf'))));
         } else box.appendChild(el('div', { class: 'muted small' }, VN.t('Zum Freikaufen gegen Geld zuerst unter Spielsysteme eine Währung anlegen.')));
+      }
+    }
+    // Verkaufen (0.9.44): Preis, nach dem Kauf Aktionen – z. B. Szene freischalten
+    if (e.kind === 'text' || e.kind === 'button' || (e.kind === 'image' && !(Number(e.blur) > 0 && Number(e.blurPrice) > 0))) {
+      const curs = VN.project.currencies || [];
+      const S = e.sale || {}, D = DV().SALE;
+      const on = Number(S.price) > 0;
+      const setS = (k, v) => { e.sale = e.sale || { actions: [] }; e.sale[k] = v; };
+      box.appendChild(el('div', { class: 'sec-title', style: { marginTop: '6px' } }, '🛒 ' + VN.t('Verkaufen')));
+      if (!curs.length) box.appendChild(el('div', { class: 'muted small' }, VN.t('Zum Verkaufen zuerst unter Spielsysteme eine Währung anlegen.')));
+      else {
+        box.appendChild(row('Preis', el('span', { class: 'row gap4' },
+          el('input', { type: 'number', min: 0, step: 1, value: Number(S.price) || 0, style: { width: '72px' }, title: VN.t('0 = nicht verkaufen'), onchange: (ev) => VN.mutate(() => { setS('price', Math.max(0, Math.round(Number(ev.target.value) || 0))); if (!e.sale.cur) e.sale.cur = curs[0].id; if (!e.sale.actions) e.sale.actions = []; }) }),
+          curs.length > 1 ? sel(S.cur || curs[0].id, curs.map((c) => [c.id, c.name]), (v) => setS('cur', v), { width: '110px' }) : el('span', { class: 'muted small' }, curs[0].name))));
+        if (!on) box.appendChild(el('div', { class: 'muted small' }, VN.t('Preis eintragen: Ein Klick kauft, danach laufen die Kauf-Aktionen – z. B. Szene starten, Gegenstand geben, Variable setzen. Mit der Bedingung „🛒 Auf Website gekauft“ schaltest du überall etwas frei.')));
+        else {
+          e.sale.actions = e.sale.actions || [];
+          box.appendChild(el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } }, actBtn(e.sale.actions, 'Nach dem Kauf ausführen (z. B. Szene starten, Gegenstand geben, Variable setzen)'),
+            el('span', { class: 'muted small' }, e.sale.actions.length ? VN.tf('{n} Aktionen', { n: e.sale.actions.length }) : VN.t('noch keine Aktion'))));
+          box.appendChild(el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } },
+            chk(S.once !== false, 'nur einmal kaufbar', (v) => setS('once', v)), chk(S.confirm !== false, 'erst nachfragen', (v) => setS('confirm', v)), chk(S.showPrice !== false, 'Preis anzeigen', (v) => setS('showPrice', v))));
+          box.appendChild(row('Nachfrage', txt(S.ask || '', (v) => setS('ask', v), VN.t(D.ask), { flex: '1' })));
+          box.appendChild(row('Zu wenig Geld', txt(S.poor || '', (v) => setS('poor', v), VN.t(D.poor), { flex: '1' })));
+          if (S.once !== false) {
+            box.appendChild(row('Nach dem Kauf', sel(S.soldMode || 'text', [['text', 'Text ersetzen'], ['dim', 'blass anzeigen'], ['hide', 'ausblenden']], (v) => setS('soldMode', v), { width: '150px' })));
+            if ((S.soldMode || 'text') === 'text') box.appendChild(row('Gekauft-Text', txt(S.sold || '', (v) => setS('sold', v), VN.t(D.sold), { flex: '1' })));
+          }
+          box.appendChild(el('div', { class: 'muted small' }, VN.t('Aussehen: wie dieses Element (Farben, Schrift, Rand …). Anderswo freischalten mit der Bedingung „🛒 Auf Website gekauft“.')));
+        }
       }
     }
     if (e.kind !== 'input' && e.kind !== 'box') {

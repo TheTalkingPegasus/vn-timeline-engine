@@ -150,6 +150,22 @@
   // Freikaufen (0.9.41): verschwommenes Bild gegen Geld scharf machen – bleibt danach für den Spielstand scharf
   DV.elBuyCur = (e) => { const L = VN.project.currencies || []; return Number(e.blurPrice) > 0 ? L.find((c) => c.id === e.blurCur) || L[0] || null : null; };
   DV._pvBought = {}; // nur Vorschau im Editor
+  // Verkaufen auf Websites (0.9.44): Text, Knopf oder Bild hat einen Preis; nach dem Kauf laufen Aktionen (Szene, Gegenstand, Variable …)
+  DV.SALE = { price: 0, cur: '', once: true, confirm: true, showPrice: true, ask: 'Wirklich kaufen?', poor: 'Nicht genug Geld.', sold: '✓ Gekauft', soldMode: 'text', actions: [] };
+  DV.saleOf = (e) => (e && e.sale && Number(e.sale.price) > 0 ? Object.assign({}, DV.SALE, e.sale) : null);
+  DV.saleCur = (S) => { const L = VN.project.currencies || []; return L.find((c) => c.id === S.cur) || L[0] || null; };
+  DV.saleBought = (e, rs) => !!(rs && rs.chat && (rs.chat.bought || {})[e.id]);
+  DV.sell = (e, rs) => {
+    const S = DV.saleOf(e), c = S && DV.saleCur(S), price = Math.round(Number(S && S.price) || 0);
+    if (!S || !c) return false;
+    if ((rs.money[c.id] || 0) < price) return false;
+    rs.money[c.id] -= price;
+    const st = DV.st(rs); (st.bought || (st.bought = {}))[e.id] = 1;
+    if (VN.did) VN.did(rs, 'spend', c.id);
+    return true;
+  };
+  // alle verkaufbaren Dinge (für die Bedingung „Auf Website gekauft“)
+  DV.saleItems = () => { const out = []; for (const w of DV.sites()) for (const g of w.pages || []) for (const e of g.els || []) if (DV.saleOf(e) || Number(e.blurPrice) > 0) out.push({ e, w, g, label: w.name + ': ' + (e.kind === 'image' ? '🖼 ' + ((VN.asset(e.image) || {}).name || VN.t('Bild')) : '„' + String(e.text || '').slice(0, 24) + '“') }); return out; };
   // Aussehen des Freikaufen-Knopfs (0.9.42) – jedes Detail einstellbar
   DV.BUY = { text: '🔓 Freikaufen', ask: 'Wirklich zahlen?', poor: 'Nicht genug Geld.', confirm: true, price: true, pos: 'center', size: 2.6, font: '', bold: true, italic: false, upper: false,
     color: '#ffffff', bg1: '#c38cff', bg2: '#5f8dff', angle: 135, askBg1: '#ffb35c', askBg2: '#ff6f61', poorGray: true, radius: 99, padX: 2.2, padY: 1, border: '', borderW: 0,
@@ -541,6 +557,16 @@
     text: (c) => '🔑 ' + VN.t('Passwort richtig') + ' (' + (c.el || '?') + ')',
     row: (row, c, sel) => row.appendChild(sel(c.el || '', [['', '— Eingabefeld —'], ...DV.sites().flatMap((w) => w.pages.flatMap((g) => g.els.filter((e) => e.kind === 'input' && e.mode === 'password').map((e) => [e.id, DV.addrOf(w, g) + ' · ' + (e.place || VN.t('Passwort'))])))], (v) => VN.mutate(() => { c.el = v; })))
   });
+  VN.registerCond('webBought', {
+    label: '🛒 Auf Website gekauft', on: () => DV.on() && DV.saleItems().length > 0, make: () => ({ el: (DV.saleItems()[0] || { e: {} }).e.id || '', not: false }),
+    check: (c, rs) => !!(rs.chat && (rs.chat.bought || {})[c.el]) !== !!c.not,
+    text: (c) => { const x = DV.saleItems().find((y) => y.e.id === c.el); return '🛒 ' + (x ? x.label : '?') + (c.not ? ' ' + VN.t('nicht gekauft') : ' ' + VN.t('gekauft')); },
+    problem: (c) => (DV.saleItems().some((y) => y.e.id === c.el) ? null : 'Kaufbares Element fehlt'),
+    row: (row, c, sel) => {
+      row.appendChild(sel(c.el || '', DV.saleItems().map((x) => [x.e.id, x.label]), (v) => VN.mutate(() => { c.el = v; })));
+      row.appendChild(sel(c.not ? 'not' : 'yes', [['yes', 'gekauft'], ['not', 'noch nicht gekauft']], (v) => VN.mutate(() => { c.not = v === 'not'; })));
+    }
+  });
   VN.registerCond('social', {
     label: '📸 Beitrag', on: DV.socialOn, make: () => ({ post: (DV.posts()[0] || {}).id || '', state: 'shown' }),
     check: (c, rs) => {
@@ -669,6 +695,7 @@
           if (e.place) out.push({ id: e.id + ':place', area: 'Websites', where, who: 'Platzhalter', text: e.place, set: (v) => { e.place = v; } });
           for (const x of e.results || []) if (x.label) out.push({ id: e.id + ':r:' + x.addr, area: 'Websites', where, who: 'Suchtreffer', text: x.label, set: (v) => { x.label = v; } });
           if (e.blurHint) out.push({ id: e.id + ':hint', area: 'Websites', where, who: 'Hinweis', text: e.blurHint, set: (v) => { e.blurHint = v; } });
+          if (e.sale) for (const k of ['ask', 'poor', 'sold']) if (e.sale[k]) out.push({ id: e.id + ':sale:' + k, area: 'Websites', where, who: VN.t('Kaufen') + ' · ' + k, text: e.sale[k], set: (v) => { e.sale[k] = v; } });
           if (Number(e.blurPrice) > 0 && e.buy) for (const [k, f, who] of [['buyText', 'text', 'Freikaufen-Knopf'], ['buyAsk', 'ask', 'Nachfrage'], ['buyPoor', 'poor', 'Zu wenig Geld']]) if (e.buy[f]) out.push({ id: e.id + ':' + k, area: 'Websites', where, who, text: e.buy[f], set: (v) => { e.buy[f] = v; } });
           if (e.fail) out.push({ id: e.id + ':fail', area: 'Websites', where, who: 'Fehlermeldung', text: e.fail, set: (v) => { e.fail = v; } });
         }
@@ -886,11 +913,32 @@
       };
       const runActs = (list, key) => { if (!o.preview && H.apply && (list || []).length) { const x = H.apply(list, key); if (x && x.close) { close(); return true; } } return false; };
       const usable = (w) => VN.checkConds(w.conds || [], rs);
-      const click = (e) => { if (runActs(e.actions, e.id)) return; if (e.link) go(e.link); else if ((e.actions || []).length) draw(); };
+      const click = (e) => {
+        // Verkaufen: erst zahlen, dann die Kauf-Aktionen, danach wie ein normaler Klick
+        const S = DV.saleOf(e);
+        if (S) {
+          const bought = o.preview ? !!DV._pvBought[e.id] : DV.saleBought(e, rs);
+          if (!(bought && S.once)) {
+            const c = DV.saleCur(S), price = Math.round(Number(S.price) || 0);
+            if (!c) return;
+            if ((rs.money[c.id] || 0) < price && !o.preview) { msg[e.id + ':sale'] = 'poor'; snd('click'); draw(); return; }
+            if (S.confirm && msg[e.id + ':sale'] !== 'ask') { msg[e.id + ':sale'] = 'ask'; snd('click'); draw(); return; }
+            msg[e.id + ':sale'] = '';
+            if (o.preview) DV._pvBought[e.id] = 1; else DV.sell(e, rs);
+            snd('item');
+            if (runActs(S.actions, e.id + ':sale')) return;
+            if (H.refresh) H.refresh();
+          } else if (!(e.actions || []).length && !e.link) return;
+        }
+        if (runActs(e.actions, e.id)) return;
+        if (e.link) go(e.link); else draw();
+      };
       const pageEl = (w, g, e) => {
         const H0 = Math.max(10, Number(g.height) || 140);
         const st = DV.elStyle(e, H0, rs);
-        const clickable = !!(e.link || (e.actions || []).length);
+        const SL = DV.saleOf(e), sold = SL && SL.once && (o.preview ? !!DV._pvBought[e.id] : DV.saleBought(e, rs));
+        if (sold && SL.soldMode === 'hide') return el('span');
+        const clickable = !!(e.link || (e.actions || []).length || (SL && !sold));
         if (e.kind === 'image') {
           const img = el('div', { class: 'dv-web-el img' + (clickable ? ' link' : ''), style: Object.assign(st, { backgroundImage: e.image && VN.assetUrl(e.image) ? `url("${VN.assetUrl(e.image)}")` : '' }), onclick: clickable ? (ev) => { ev.stopPropagation(); click(e); } : null });
           const cur = DV.elBuyCur(e);
@@ -912,7 +960,7 @@
               if (!ask && BL.confirm !== false) { msg._ask = e.id; snd('click'); draw(); return; }
               msg._ask = null;
               if (o.preview) { DV._pvBought[e.id] = 1; snd('item'); draw(); return; }
-              if (DV.buyEl(e, rs)) { snd('item'); if (H.refresh) H.refresh(); draw(); }
+              if (DV.buyEl(e, rs)) { snd('item'); if (runActs(e.buyActions, e.id + ':buy')) return; if (H.refresh) H.refresh(); draw(); }
             } }, el('span', null, ask ? BT('buyAsk', 'ask') : BT('buyText', 'text')), BL.price !== false ? (VN.moneyChip ? VN.moneyChip(cur, price) : String(price)) : null);
             hint.append(btn);
             if (msg[e.id + ':buy']) hint.append(el('div', { class: 'dv-web-buymsg', style: { color: BL.msgColor, fontFamily: (BL.font && window.Theme && Theme.fontCss(BL.font)) || '' } }, msg[e.id + ':buy']));
@@ -941,7 +989,17 @@
             el('div', { class: 'dv-web-in' }, inp, el('button', { disabled: !!done, onclick: (ev) => { ev.stopPropagation(); submit(); } }, done ? '✓' : '→')),
             msg[e.id] ? el('div', { class: 'dv-web-msg' }, msg[e.id]) : null);
         }
-        const node = el('div', { class: 'dv-web-el ' + (e.kind === 'button' ? 'btn' : 'text') + (clickable ? ' link' : ''), style: st, onclick: clickable ? (ev) => { ev.stopPropagation(); click(e); } : null });
+        const node = el('div', { class: 'dv-web-el ' + (e.kind === 'button' ? 'btn' : 'text') + (clickable ? ' link' : '') + (sold ? ' sold' + (SL.soldMode === 'dim' ? ' dim' : '') : ''), style: st, onclick: clickable ? (ev) => { ev.stopPropagation(); click(e); } : null });
+        if (SL) {
+          // Kauf-Zustand: Nachfrage, zu wenig Geld, gekauft – Texte frei wählbar
+          const ST = (k) => (e.sale[k] ? XF(tr(e.id + ':sale:' + k, e.sale[k])) : tp(DV.SALE[k]));
+          const m = msg[e.id + ':sale'];
+          const c = DV.saleCur(SL);
+          const txt = sold && SL.soldMode !== 'dim' ? ST('sold') : m === 'ask' ? ST('ask') : m === 'poor' ? ST('poor') : XF(tr(e.id, e.text || ''));
+          fmtText(node, txt);
+          if (!sold && SL.showPrice && c && m !== 'poor') node.appendChild(el('span', { class: 'dv-sale-price' }, ' ', VN.moneyChip ? VN.moneyChip(c, Math.round(Number(SL.price))) : String(SL.price)));
+          return node;
+        }
         fmtText(node, XF(tr(e.id, e.text || '')));
         return node;
       };
