@@ -2911,3 +2911,18 @@ body.vz-panning, body.vz-panning * { cursor: grabbing !important; }
 .tag-dots { display: inline-flex; gap: 2px; margin-left: 4px; }
 .tag-dots i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
 .list-item.tag-dim { opacity: 0.35; }
+
+/* Social Media im Browser, Websuche (0.9.44) */
+.dv-web-view > .dv-soc.in-web { height: 100%; min-height: 100%; }
+.dv-web-bm .dv-web-desc { display: block; font-style: normal; font-size: 0.85em; opacity: 0.7; margin-top: 2px; }
+
+/* Browser: Startseite/Suche gestaltbar (0.9.44) */
+.dv-web-home.sw-look { background: var(--sw-bg); min-height: 100%; font-family: var(--sw-font, inherit); font-size: calc(1em * var(--sw-size, 1)); }
+.sw-look .dv-web-h { color: var(--sw-head); font-size: calc(2.4cqh * var(--sw-size, 1)); }
+.sw-look .dv-web-bm { background: var(--sw-card); border-color: var(--sw-border); border-radius: var(--sw-radius); box-shadow: var(--sw-shadow); }
+.sw-look .dv-web-bm:hover { border-color: var(--sw-hover); }
+.sw-look .dv-web-bm strong { color: var(--sw-title); font-size: calc(1.9cqh * var(--sw-size, 1)); }
+.sw-look .dv-web-bm span { color: var(--sw-url); font-size: calc(1.5cqh * var(--sw-size, 1)); }
+.sw-look .dv-web-bm .dv-web-desc { color: var(--sw-desc); opacity: 1; }
+.sw-look .sw-logo { align-self: center; object-fit: contain; margin-bottom: 1cqh; }
+.sw-look .sw-name { align-self: center; font-size: calc(4.4cqh * var(--sw-size, 1)); font-weight: 800; color: var(--sw-title); margin-bottom: 1cqh; letter-spacing: -0.02em; }

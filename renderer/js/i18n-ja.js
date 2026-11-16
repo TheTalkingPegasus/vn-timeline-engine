@@ -5865,7 +5865,26 @@ window.VN_I18N_JA = {
 "+ neuer Tag (Enter)": "+ 新しいタグ（Enter）",
 "Tag in eine Szene ziehen = markieren. Sind mehrere Szenen markiert, bekommen alle den Tag.": "タグをシーンにドラッグして付けます。複数選択中なら全部に付きます。",
 "Klick: nur diesen Tag zeigen · Rechtsklick: entfernen": "クリック：このタグのみ表示・右クリック：外す",
-"Neuer Tag …": "新しいタグ …"
+"Neuer Tag …": "新しいタグ …",
+"Beiträge zum Thema": "このトピックの投稿",
+"Auch im Browser als Website (Websuche findet Profile und #Themen)": "ブラウザでもサイトとして表示（Web検索でプロフィールと#トピックが見つかる）",
+"Adresse": "アドレス",
+"als Lesezeichen": "ブックマークに",
+"Profile: www.{d}/@name · Themen: www.{d}/tag/thema – diese Adressen gehen auch als Link auf Websites, in Suchergebnissen und Nachrichten.": "プロフィール：www.{d}/@名前・トピック：www.{d}/tag/トピック – サイト・検索結果・メッセージのリンクにも使えます。",
+"Suchwörter (geheime Seite: nur bei genauem Treffer)": "検索語（秘密ページ：完全一致のみ）",
+"Suchwörter, mit Komma getrennt": "検索語（カンマ区切り）",
+"Kurzbeschreibung im Suchergebnis": "検索結果の短い説明",
+"Startseite und Websuche des Browsers": "ブラウザのスタートページとWeb検索",
+"Zuklappen": "閉じる",
+"Gestalten": "デザイン",
+"Gilt für die Lesezeichen-Startseite und für die Ergebnisse, wenn man in die Adresszeile ein Wort statt einer Adresse eintippt.": "ブックマークのスタートページと、アドレス欄にアドレスではなく単語を入れた時の結果に適用されます。",
+"Name der Suche": "検索サービス名",
+"z. B. Gugel": "例：Gugel",
+"Logo": "ロゴ",
+"Keine Treffer": "結果なし",
+"Ecken / Schatten": "角 / 影",
+"Websuche": "Web検索",
+"Name der Suche ": "検索サービス名"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

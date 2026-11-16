@@ -1714,6 +1714,32 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Story-Tags: vergeben, filtern (eines/alle), löschen');
   } catch (e) { general.push('Story-Tags: ' + e.message); }
 
+  // 42. Social Media im Browser und Websuche (0.9.44)
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [], p = VN.project, DV = VN.Devices;
+      const bak = JSON.stringify({ social: p.social, web: p.web, chats: p.chats });
+      VN.migrate(p);
+      const c = DV.newContact(); c.name = 'Wache Bernd'; p.chats.contacts.push(c);
+      const s = DV.newPost(c.id); s.text = 'Heute im #Gildenhaus'; s.conds = []; p.social.posts.push(s); p.social.name = 'Pixgram';
+      const w = DV.newSite(); w.name = 'Geheimbund'; w.domain = 'geheim.ra'; w.hidden = true; w.keywords = 'mondschein'; p.web.sites.push(w);
+      if (DV.socDomain() !== 'pixgram.com') out.push('Domain ' + DV.socDomain());
+      if (!DV.socAddr('www.pixgram.com/@wachebernd') || DV.socAddr('pixgram.com/@wachebernd').prof !== c.id) out.push('Profil-Adresse');
+      if ((DV.socAddr('pixgram.com/tag/gildenhaus') || {}).tag !== 'gildenhaus') out.push('Tag-Adresse');
+      const hits = (q) => DV.webSearch(q, null).map((x) => x.addr);
+      if (!hits('bernd').includes('pixgram.com/@wachebernd')) out.push('Suche Profil');
+      if (!hits('gildenhaus').some((a) => a.endsWith('/tag/gildenhaus'))) out.push('Suche Tag');
+      if (hits('geheim').includes('geheim.ra')) out.push('geheime Seite gefunden');
+      if (!hits('mondschein').includes('geheim.ra')) out.push('Suchwort');
+      p.social.web = false;
+      if (DV.socAddr('pixgram.com')) out.push('abschaltbar');
+      Object.assign(p, JSON.parse(bak));
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Social im Browser: ' + r.join(', '));
+    else log('✓ Social Media im Browser, Websuche (Profile, #Themen, Suchwörter, geheime Seiten)');
+  } catch (e) { general.push('Social im Browser: ' + e.message); }
+
   // 27. Kulissen-Raum (0.9.32): 3D-Flächen, Kamera, Licht durch Fenster mit Jalousie, Bühne und Spieler
   try {
     const r = JSON.parse(await js(`(async () => {

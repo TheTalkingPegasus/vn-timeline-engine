@@ -5865,7 +5865,26 @@ window.VN_I18N_ES = {
 "+ neuer Tag (Enter)": "+ nueva etiqueta (Enter)",
 "Tag in eine Szene ziehen = markieren. Sind mehrere Szenen markiert, bekommen alle den Tag.": "Arrastra una etiqueta a una escena para etiquetarla. Si hay varias seleccionadas, todas la reciben.",
 "Klick: nur diesen Tag zeigen · Rechtsklick: entfernen": "Clic: mostrar solo esta etiqueta · clic derecho: quitar",
-"Neuer Tag …": "Nueva etiqueta …"
+"Neuer Tag …": "Nueva etiqueta …",
+"Beiträge zum Thema": "Publicaciones sobre el tema",
+"Auch im Browser als Website (Websuche findet Profile und #Themen)": "También en el navegador como web (la búsqueda encuentra perfiles y #temas)",
+"Adresse": "Dirección",
+"als Lesezeichen": "como marcador",
+"Profile: www.{d}/@name · Themen: www.{d}/tag/thema – diese Adressen gehen auch als Link auf Websites, in Suchergebnissen und Nachrichten.": "Perfiles: www.{d}/@nombre · temas: www.{d}/tag/tema – estas direcciones también funcionan como enlaces en webs, resultados y mensajes.",
+"Suchwörter (geheime Seite: nur bei genauem Treffer)": "Palabras de búsqueda (página secreta: solo coincidencia exacta)",
+"Suchwörter, mit Komma getrennt": "Palabras de búsqueda, separadas por comas",
+"Kurzbeschreibung im Suchergebnis": "Descripción breve en resultados",
+"Startseite und Websuche des Browsers": "Página de inicio y búsqueda del navegador",
+"Zuklappen": "Contraer",
+"Gestalten": "Diseñar",
+"Gilt für die Lesezeichen-Startseite und für die Ergebnisse, wenn man in die Adresszeile ein Wort statt einer Adresse eintippt.": "Se aplica a la página de marcadores y a los resultados cuando se escribe una palabra en lugar de una dirección.",
+"Name der Suche": "Nombre del buscador",
+"z. B. Gugel": "p. ej. Gugel",
+"Logo": "Logo",
+"Keine Treffer": "Sin resultados",
+"Ecken / Schatten": "Esquinas / sombra",
+"Websuche": "Búsqueda web",
+"Name der Suche ": "Nombre del buscador"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

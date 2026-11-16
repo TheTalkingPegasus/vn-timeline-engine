@@ -5785,7 +5785,26 @@ window.VN_I18N_EN = {
 "+ neuer Tag (Enter)": "+ new tag (Enter)",
 "Tag in eine Szene ziehen = markieren. Sind mehrere Szenen markiert, bekommen alle den Tag.": "Drag a tag into a scene to tag it. If several scenes are selected, all of them get the tag.",
 "Klick: nur diesen Tag zeigen · Rechtsklick: entfernen": "Click: show only this tag · right-click: remove",
-"Neuer Tag …": "New tag …"
+"Neuer Tag …": "New tag …",
+"Beiträge zum Thema": "Posts on the topic",
+"Auch im Browser als Website (Websuche findet Profile und #Themen)": "Also in the browser as a website (web search finds profiles and #topics)",
+"Adresse": "Address",
+"als Lesezeichen": "as bookmark",
+"Profile: www.{d}/@name · Themen: www.{d}/tag/thema – diese Adressen gehen auch als Link auf Websites, in Suchergebnissen und Nachrichten.": "Profiles: www.{d}/@name · topics: www.{d}/tag/topic – these addresses also work as links on websites, in search results and messages.",
+"Suchwörter (geheime Seite: nur bei genauem Treffer)": "Search words (secret page: exact match only)",
+"Suchwörter, mit Komma getrennt": "Search words, comma separated",
+"Kurzbeschreibung im Suchergebnis": "Short description in search results",
+"Startseite und Websuche des Browsers": "Browser start page and web search",
+"Zuklappen": "Collapse",
+"Gestalten": "Design",
+"Gilt für die Lesezeichen-Startseite und für die Ergebnisse, wenn man in die Adresszeile ein Wort statt einer Adresse eintippt.": "Applies to the bookmark start page and to the results when a word instead of an address is typed into the address bar.",
+"Name der Suche": "Search name",
+"z. B. Gugel": "e.g. Gugel",
+"Logo": "Logo",
+"Keine Treffer": "No results",
+"Ecken / Schatten": "Corners / shadow",
+"Websuche": "Web search",
+"Name der Suche ": "Search name"
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",
