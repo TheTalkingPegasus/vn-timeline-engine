@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototyp 0.9.43
+VN Timeline Engine · Prototyp 0.9.44
 ====================================
 (English: see README.txt)
 
@@ -13,6 +13,19 @@ Ohne Installation (ZIP):
 3. Zum Kennenlernen "Tutorial starten" (7 Beispiel-Szenen mit Tour) oder "Lernen" wählen
    (11 Themen mit Aufgaben, die das Programm selbst abhakt). Beispielprojekte aus älteren
    Versionen lieber neu anlegen.
+
+NEU IN 0.9.44 · Story-Tags, Social Media im Browser, Verkaufen auf Websites, Kontakt-Reaktionen
+- Story-Tags im Pfade-Graph: eigenes verschiebbares 🏷-Fenster – Tag eintippen, in Szenen/Hubs ziehen (auch alle markierten auf
+  einmal), Klick hebt Szenen und Wege hervor (Rest abgedunkelt), mehrere Tags mit „eines davon“/„alle“, Hinzoomen, Farben,
+  umbenennen, löschen; Schilder an den Nodes, Punkte und Filter in der Szenenliste, Tag-Feld im Inspektor.
+- Social Media als Website: eigene Adresse (z. B. www.pixgram.com, /@name, /tag/thema), wahlweise als Lesezeichen. Websuche in
+  der Adresszeile findet Websites (Name, Adresse, Suchwörter, Kurzbeschreibung; geheime Seiten nur bei genauem Suchwort),
+  Profile und #Themen. Startseite und Ergebnisse voll gestaltbar.
+- Verkaufen auf Websites: Texte, Knöpfe und Bilder mit Preis; nach dem Kauf laufen Aktionen (Szene, Gegenstand, Variable …);
+  einmal/nachfragen/Preis zeigen, eigene Texte, gekauft-Zustand; neue Bedingung „🛒 Auf Website gekauft“. Auch nach dem
+  Freikaufen von Bildern können Aktionen laufen.
+- Weich-Physik reagiert auf Kontakt: Bereiche reagieren, wenn ein Anhänger in seine Maske fährt – Anstoß, Zurückziehen, Wölben
+  solange drin, Nachwackeln, Schlucken (alles einzeln schaltbar); andere Anhänger können bei Kontakt wippen.
 
 NEU IN 0.9.43 · Anhänger mit Bahn, Maske und Quetschen (z. B. Essen)
 - Bahn: ein Anhänger der Weich-Physik fährt vom Pin zum Ziel und zurück – endlos oder einmal pro Anstoß „Bissen“ (Aktion
