@@ -2887,3 +2887,27 @@ body.vz-panning, body.vz-panning * { cursor: grabbing !important; }
 .sh-mask { fill: rgba(95, 141, 255, 0.22); stroke: #7fa7ff; stroke-width: 0.3%; cursor: move; }
 .sh-mask.draft { stroke-dasharray: 1% 0.6%; pointer-events: none; }
 .sh-mpt { fill: #fff; stroke: #5f8dff; stroke-width: 0.25%; cursor: pointer; }
+
+/* Story-Tags (0.9.44) */
+.tag-win { position: absolute; z-index: 20; width: 230px; background: rgba(28, 29, 34, 0.96); border: 1px solid var(--line2); border-radius: 10px; box-shadow: 0 8px 26px rgba(0,0,0,.45); display: flex; flex-direction: column; gap: 6px; padding: 8px; }
+.tag-win.min { width: auto; }
+.tag-win .tw-head { display: flex; align-items: center; gap: 6px; cursor: move; user-select: none; }
+.tag-win .tw-list { display: flex; flex-direction: column; gap: 4px; max-height: 320px; overflow: auto; }
+.tw-tag { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border-radius: 7px; background: color-mix(in srgb, var(--tagc) 16%, transparent); border: 1px solid color-mix(in srgb, var(--tagc) 45%, transparent); cursor: grab; font-size: 12.5px; }
+.tw-tag:hover { background: color-mix(in srgb, var(--tagc) 26%, transparent); }
+.tw-tag.on { background: color-mix(in srgb, var(--tagc) 40%, transparent); border-color: var(--tagc); box-shadow: 0 0 10px color-mix(in srgb, var(--tagc) 55%, transparent); }
+.tw-tag .tw-col { width: 16px; height: 16px; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; flex: none; }
+.tw-tag .tw-col::-webkit-color-swatch-wrapper { padding: 0; } .tw-tag .tw-col::-webkit-color-swatch { border: 0; border-radius: 50%; }
+.tw-tag .tw-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tw-tag .tw-n { font-size: 11px; opacity: .7; }
+.tw-filter { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.tw-hint { font-size: 10.5px; }
+.g-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
+.g-tagpill { display: inline-flex; align-items: center; gap: 3px; font-size: 10.5px; line-height: 1; padding: 3px 6px; border-radius: 99px; background: color-mix(in srgb, var(--tagc) 28%, transparent); border: 1px solid var(--tagc); color: var(--text, #eee); cursor: pointer; }
+.g-tagpill .tp-x { border: 0; background: none; color: inherit; padding: 0 0 0 2px; cursor: pointer; font-size: 12px; }
+.g-node.tagged { box-shadow: 0 0 0 2px var(--tagc, #a66cf0), 0 0 22px color-mix(in srgb, var(--tagc, #a66cf0) 60%, transparent); }
+.g-node.tagdrop { box-shadow: 0 0 0 3px #fff, 0 0 18px rgba(255,255,255,.5); }
+.g-label.dimmed { opacity: 0.15; }
+.tag-dots { display: inline-flex; gap: 2px; margin-left: 4px; }
+.tag-dots i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+.list-item.tag-dim { opacity: 0.35; }

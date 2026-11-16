@@ -1692,6 +1692,28 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Hub: Ebenen verschieben, Deko ohne Hitbox');
   } catch (e) { general.push('Hub-Ebenen: ' + e.message); }
 
+  // 41. Story-Tags (0.9.44)
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [], p = VN.project, n0 = (p.storyTags || []).length;
+      const a = VN.newTag('A'), b = VN.newTag('B');
+      const s1 = p.scenes[0], s2 = p.scenes[1];
+      VN.addTag(s1, a.id); VN.addTag(s1, b.id); VN.addTag(s2, a.id); VN.addTag(s2, a.id);
+      if (VN.sceneTags(s2).length !== 1) out.push('doppelt');
+      VN.ui.tagSel = [a.id, b.id]; VN.ui.tagMode = 'any';
+      if (VN.tagFocus().size !== 2) out.push('eines davon');
+      VN.ui.tagMode = 'all';
+      if (VN.tagFocus().size !== 1 || !VN.tagFocus().has(s1.id)) out.push('alle');
+      VN.deleteTag(a.id);
+      if (VN.sceneTags(s1).length !== 1 || VN.sceneTags(s2).length) out.push('löschen');
+      VN.deleteTag(b.id); VN.ui.tagSel = []; VN.ui.tagMode = 'any';
+      if ((p.storyTags || []).length !== n0) out.push('Aufräumen');
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Story-Tags: ' + r.join(', '));
+    else log('✓ Story-Tags: vergeben, filtern (eines/alle), löschen');
+  } catch (e) { general.push('Story-Tags: ' + e.message); }
+
   // 27. Kulissen-Raum (0.9.32): 3D-Flächen, Kamera, Licht durch Fenster mit Jalousie, Bühne und Spieler
   try {
     const r = JSON.parse(await js(`(async () => {

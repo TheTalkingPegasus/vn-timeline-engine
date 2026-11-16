@@ -167,9 +167,15 @@
         },
           el('span', { class: 'dot', style: { background: s.type === 'hub' ? '#f0f0f3' : '#4fb3c8' } }),
           el('span', { class: 'name' }, s.name, m && m !== true ? el('span', { class: 'sc-hit' }, m) : null),
+          VN.tagDots(s),
           p.startScene === s.id ? el('span', { class: 'badge' }, 'START') : null,
           reach.has(s.id) ? null : el('span', { class: 'badge gray', title: 'Wird nirgends betreten (kein Weg führt hierher)' }, '!'));
+        { const tf = VN.tagFocus(); if (tf && !tf.has(s.id)) it.classList.add('tag-dim'); }
         it.addEventListener('dragstart', (e) => { e.dataTransfer.setData('vn/scene', s.id); e.dataTransfer.effectAllowed = 'move'; });
+        // Tag auf eine Szene in der Liste ziehen
+        it.addEventListener('dragover', (e) => { if ([...e.dataTransfer.types].includes('vn/tag')) { e.preventDefault(); it.classList.add('drop'); } });
+        it.addEventListener('dragleave', () => it.classList.remove('drop'));
+        it.addEventListener('drop', (e) => { const id = e.dataTransfer.getData('vn/tag'); it.classList.remove('drop'); if (!id) return; e.preventDefault(); e.stopPropagation(); VN.mutate(() => VN.addTag(s, id)); });
         it.addEventListener('contextmenu', (e) => {
           e.preventDefault();
           VN.menu(e.clientX, e.clientY, [

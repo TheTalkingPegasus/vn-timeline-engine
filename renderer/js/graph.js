@@ -26,6 +26,7 @@
         })(),
         el('button', { class: 'btn', onclick: () => Graph.addScene('story') }, '+ Story-Szene'),
         el('button', { class: 'btn', onclick: () => Graph.addScene('hub') }, '+ Hub-Szene'),
+        el('button', { class: 'btn' + (VN.ui.tagWinOff ? '' : ' primary'), title: VN.t('Fenster mit Story-Tags zeigen/verbergen'), onclick: () => { VN.ui.tagWinOff = !VN.ui.tagWinOff; VN.render(); } }, '🏷 ' + VN.t('Tags')),
         el('button', { class: 'btn', onclick: () => Graph.autoLayout() }, 'Automatisch anordnen'),
         el('button', { class: 'btn', onclick: () => { Graph._fitted = false; VN.render(); } }, 'Alles zeigen')));
 
@@ -53,9 +54,15 @@
       if (chf && chf !== '__none' && !VN.chapters().includes(chf)) VN.ui.graphChapter = '';
       const inFocus = (s) => (!chf || (chf === '__none' ? !s.chapter : s.chapter === chf)) && (!q || VN.sceneMatch(s, q));
       const focus = chf || q ? p.scenes.filter(inFocus) : null;
+      // Story-Tags (0.9.44): Szenen mit den gewählten Tags leuchten, der Rest wird abgedunkelt
+      const tf = Graph._tagFocus = VN.tagFocus();
       for (const s of p.scenes) {
         const n = Graph.nodeEl(s, reach, () => Graph.drawEdges(svg, labels));
         if (focus) n.classList.add(focus.includes(s) ? (q ? 'found' : 'inch') : 'dimmed');
+        if (tf) {
+          if (tf.has(s.id)) { n.classList.add('tagged'); const c = (VN.tag((VN.ui.tagSel || []).find((id) => VN.sceneTags(s).includes(id))) || {}).color; if (c) n.style.setProperty('--tagc', c); }
+          else n.classList.add('dimmed');
+        }
         nodeEls[s.id] = n;
         layer.appendChild(n);
       }
@@ -73,6 +80,7 @@
         VN.World && VN.World.on() ? el('div', null, el('span', { class: 'ln', style: { background: COLORS.event } }), 'Ereignis am Ort (gestrichelt grün: zurück)') : null,
         VN.Devices && VN.Devices.on() ? el('div', null, el('span', { class: 'ln', style: { background: COLORS.device } }), 'Sprung aus einem Gerät (PC, Handy)') : null,
         el('div', null, el('span', { class: 'ln', style: { background: 'transparent', border: '1px dashed #9a9ca8', height: '0' } }), 'Gestrichelt: nicht erreichbar')));
+      if (!VN.ui.tagWinOff) wrap.appendChild(Graph.tagWin());
       root.appendChild(wrap);
 
       // Mehrfachauswahl (0.9.19): Rahmen ziehen markiert Szenen, die man dann gemeinsam verschiebt
@@ -98,7 +106,7 @@
         window.addEventListener('keyup', (e) => { if (e.code === 'Space') { Graph._space = false; const w = document.querySelector('.graph-wrap'); if (w) w.classList.remove('pan-ready'); } });
       }
       wrap.addEventListener('mousedown', (e) => {
-        if (e.target.closest('.g-node') || e.target.closest('.g-label') || e.target.closest('.graph-legend')) return;
+        if (e.target.closest('.g-node') || e.target.closest('.g-label') || e.target.closest('.graph-legend') || e.target.closest('.tag-win')) return;
         // Ansicht verschieben: mittlere oder rechte Maustaste, oder Leertaste + Ziehen
         if (e.button === 1 || e.button === 2 || (e.button === 0 && Graph._space)) { e.preventDefault(); return pan(e); }
         if (e.button !== 0) return;
@@ -142,7 +150,7 @@
         applyView();
       }, { passive: false });
       wrap.addEventListener('contextmenu', (e) => {
-        if (e.target.closest('.g-node') || e.target.closest('.g-label')) return;
+        if (e.target.closest('.g-node') || e.target.closest('.g-label') || e.target.closest('.tag-win')) return;
         e.preventDefault();
         if (wrap._noMenu) { wrap._noMenu = false; return; }
         const r = wrap.getBoundingClientRect();
@@ -155,6 +163,75 @@
     },
 
     // Pfad-Prüfung: kaputte Bedingungen (Bezug gelöscht) – gelten im Spiel als nicht erfüllt
+    // ---------- Story-Tags: eigenes, verschiebbares Fenster (0.9.44) ----------
+    tagWin() {
+      const L = VN.tags();
+      const pos = VN.ui.tagWin || (VN.ui.tagWin = { x: null, y: 12 });
+      const sel = new Set((VN.ui.tagSel || []).filter((id) => VN.tag(id)));
+      const count = (id) => VN.project.scenes.filter((s) => VN.sceneTags(s).includes(id)).length;
+      const box = el('div', { class: 'tag-win' + (VN.ui.tagWinMin ? ' min' : ''), style: pos.x == null ? { right: '12px', top: pos.y + 'px' } : { left: pos.x + 'px', top: pos.y + 'px' } });
+      const head = el('div', { class: 'tw-head' }, el('strong', null, '🏷 ' + VN.t('Story-Tags')),
+        el('span', { class: 'muted small' }, L.length ? String(L.length) : ''),
+        el('div', { class: 'spacer' }),
+        el('button', { class: 'btn tiny', title: VN.t(VN.ui.tagWinMin ? 'Aufklappen' : 'Einklappen'), onclick: () => { VN.ui.tagWinMin = !VN.ui.tagWinMin; VN.render(); } }, VN.ui.tagWinMin ? '▾' : '▴'),
+        el('button', { class: 'btn tiny', title: VN.t('Schließen'), onclick: () => { VN.ui.tagWinOff = true; VN.render(); } }, '✕'));
+      // Fenster am Kopf verschieben
+      head.addEventListener('mousedown', (e) => {
+        if (e.target.closest('button')) return;
+        e.stopPropagation();
+        const wr = box.parentNode.getBoundingClientRect(), br = box.getBoundingClientRect();
+        const ox = br.left - wr.left, oy = br.top - wr.top;
+        VN.drag(e, (dx, dy) => { box.style.right = ''; box.style.left = Math.max(0, Math.min(wr.width - 80, ox + dx)) + 'px'; box.style.top = Math.max(0, Math.min(wr.height - 40, oy + dy)) + 'px'; },
+          () => { VN.ui.tagWin = { x: parseFloat(box.style.left) || 0, y: parseFloat(box.style.top) || 0 }; });
+      });
+      box.appendChild(head);
+      if (VN.ui.tagWinMin) return box;
+      const list = el('div', { class: 'tw-list' });
+      if (!L.length) list.appendChild(el('div', { class: 'muted small' }, VN.t('Noch keine Tags. Unten einen Namen eingeben, z. B. „Quest: Diebesgilde“.')));
+      for (const t of L) {
+        const n = count(t.id);
+        const chip = el('div', { class: 'tw-tag' + (sel.has(t.id) ? ' on' : ''), draggable: 'true', style: { '--tagc': t.color }, title: VN.t('In eine Szene ziehen = markieren · Klick = hervorheben (Umschalt: mehrere) · Rechtsklick: mehr') },
+          el('input', { type: 'color', class: 'tw-col', value: t.color, title: VN.t('Farbe'), onclick: (e) => e.stopPropagation(), onchange: (e) => VN.mutate(() => { t.color = e.target.value; }) }),
+          el('span', { class: 'tw-name' }, t.name),
+          el('span', { class: 'tw-n' }, String(n)));
+        chip.addEventListener('dragstart', (e) => { e.dataTransfer.setData('vn/tag', t.id); e.dataTransfer.effectAllowed = 'copy'; });
+        chip.addEventListener('mousedown', (e) => e.stopPropagation());
+        chip.addEventListener('click', (e) => {
+          const cur = new Set(sel);
+          if (e.shiftKey || e.ctrlKey || e.metaKey) { if (cur.has(t.id)) cur.delete(t.id); else cur.add(t.id); }
+          else if (cur.size === 1 && cur.has(t.id)) cur.clear(); else { cur.clear(); cur.add(t.id); }
+          VN.ui.tagSel = [...cur]; Graph._fitted = true; VN.render();
+        });
+        chip.addEventListener('dblclick', async (e) => { e.stopPropagation(); const nm = await VN.prompt(VN.t('Name des Tags'), t.name); if (nm) VN.mutate(() => { t.name = nm; }); });
+        chip.addEventListener('contextmenu', (e) => {
+          e.preventDefault(); e.stopPropagation();
+          const multi = [...(Graph._multi || [])].map((id) => VN.scene(id)).filter(Boolean);
+          VN.menu(e.clientX, e.clientY, [
+            { head: t.name },
+            { label: VN.t('Umbenennen …'), action: async () => { const nm = await VN.prompt(VN.t('Name des Tags'), t.name); if (nm) VN.mutate(() => { t.name = nm; }); } },
+            multi.length ? { label: VN.t('Allen markierten Szenen geben') + ' (' + multi.length + ')', action: () => VN.mutate(() => { for (const s of multi) VN.addTag(s, t.id); }) } : null,
+            multi.length ? { label: VN.t('Von markierten Szenen entfernen'), action: () => VN.mutate(() => { for (const s of multi) VN.removeTag(s, t.id); }) } : null,
+            n ? { label: VN.t('Diese Szenen markieren'), action: () => { VN.ui.graphMulti = VN.project.scenes.filter((s) => VN.sceneTags(s).includes(t.id)).map((s) => s.id); VN.render(); } } : null,
+            n ? { label: VN.t('Von allen Szenen entfernen'), action: () => VN.mutate(() => { for (const s of VN.project.scenes) VN.removeTag(s, t.id); }) } : null,
+            'sep',
+            { label: VN.t('Tag löschen'), danger: true, action: () => VN.mutate(() => VN.deleteTag(t.id)) }
+          ].filter(Boolean));
+        });
+        list.appendChild(chip);
+      }
+      box.appendChild(list);
+      if (sel.size) box.appendChild(el('div', { class: 'tw-filter' },
+        sel.size > 1 ? el('select', { onchange: (e) => { VN.ui.tagMode = e.target.value; VN.render(); } }, ...[['any', 'Szenen mit einem davon'], ['all', 'nur Szenen mit allen']].map(([v, l]) => { const o = el('option', { value: v }, VN.t(l)); if (v === (VN.ui.tagMode || 'any')) o.selected = true; return o; })) : null,
+        el('span', { class: 'muted small' }, (Graph._tagFocus ? Graph._tagFocus.size : 0) + ' ' + VN.t('Szenen')),
+        el('button', { class: 'btn tiny', onclick: () => { const ids = [...(Graph._tagFocus || [])]; const wrap = box.parentNode; if (ids.length && wrap) { Graph.fit(wrap, () => { const L2 = wrap.querySelector('.graph-layer'); L2.style.transform = `translate(${VN.ui.graphPan.x}px, ${VN.ui.graphPan.y}px) scale(${zoom})`; }, VN.project.scenes.filter((s) => ids.includes(s.id))); } } }, VN.t('Hinzoomen')),
+        el('button', { class: 'btn tiny', onclick: () => { VN.ui.tagSel = []; VN.render(); } }, VN.t('Filter aus'))));
+      const inp = el('input', { type: 'text', class: 'small-input', placeholder: VN.t('+ neuer Tag (Enter)') });
+      inp.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter' && inp.value.trim()) { const nm = inp.value.trim(); VN.mutate(() => { VN.newTag(nm); }); } });
+      inp.addEventListener('mousedown', (e) => e.stopPropagation());
+      box.append(inp, el('div', { class: 'muted small tw-hint' }, VN.t('Tag in eine Szene ziehen = markieren. Sind mehrere Szenen markiert, bekommen alle den Tag.')));
+      return box;
+    },
+
     issueChip() {
       const iss = VN.condIssues().concat(VN.World ? VN.World.issues() : []);
       Graph._iss = new Map();
@@ -211,6 +288,10 @@
         el('div', { class: 'nm' }, s.name, s.chapter ? el('span', { class: 'g-ch' }, '📁 ' + s.chapter) : null),
         el('div', { class: 'meta' }, meta),
         Graph._iss && Graph._iss.has(s.id) ? el('div', { class: 'g-issue', title: Graph._iss.get(s.id).map((i) => i.text).join('\n') }, '⚠ ' + Graph._iss.get(s.id).length + (Graph._iss.get(s.id).length > 1 ? ' Probleme' : ' Problem')) : null,
+        VN.sceneTags(s).length ? el('div', { class: 'g-tags' }, ...VN.sceneTags(s).map((id) => { const t = VN.tag(id); return el('span', { class: 'g-tagpill', style: { '--tagc': t.color }, title: VN.t('Klick: nur diesen Tag zeigen · Rechtsklick: entfernen'),
+          onmousedown: (e) => e.stopPropagation(),
+          onclick: (e) => { e.stopPropagation(); VN.ui.tagSel = [id]; VN.render(); },
+          oncontextmenu: (e) => { e.preventDefault(); e.stopPropagation(); VN.mutate(() => VN.removeTag(s, id)); } }, t.name); })) : null,
         Graph._rl && Graph._rl.has(s.id) ? el('div', { class: 'g-heart', title: 'Nur erreichbar mit genug Beziehung: ' + Graph._rl.get(s.id) }, '♥🔒 ' + Graph._rl.get(s.id)) : null);
 
       node.addEventListener('mousedown', (e) => {
@@ -243,6 +324,17 @@
         });
       });
       node.addEventListener('dblclick', () => App.openScene(s.id));
+      // Tag aus dem Tag-Fenster hineinziehen = markieren (bei Mehrfachauswahl: alle markierten Szenen)
+      node.addEventListener('dragover', (e) => { if ([...e.dataTransfer.types].includes('vn/tag')) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; node.classList.add('tagdrop'); } });
+      node.addEventListener('dragleave', () => node.classList.remove('tagdrop'));
+      node.addEventListener('drop', (e) => {
+        const id = e.dataTransfer.getData('vn/tag'); node.classList.remove('tagdrop');
+        if (!id || !VN.tag(id)) return;
+        e.preventDefault(); e.stopPropagation();
+        const multi = Graph._multi || new Set();
+        const group = multi.has(s.id) ? p.scenes.filter((x) => multi.has(x.id)) : [s];
+        VN.mutate(() => { for (const x of group) VN.addTag(x, id); });
+      });
       node.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -256,6 +348,7 @@
           { label: 'Neue Hub-Szene als Nachfolger', action: () => Graph.addSuccessor(s, 'hub') }
         ];
         if (!isStart) items.push({ label: 'Als Startszene festlegen', action: () => VN.mutate(() => { p.startScene = s.id; }) });
+        if (VN.tags().length) items.push('sep', { head: '🏷 ' + VN.t('Tags') }, ...VN.tags().map((t) => ({ label: (VN.sceneTags(s).includes(t.id) ? '☑ ' : '☐ ') + t.name, action: () => VN.mutate(() => { if (VN.sceneTags(s).includes(t.id)) VN.removeTag(s, t.id); else VN.addTag(s, t.id); }) })));
         items.push('sep', { label: 'Szene löschen', danger: true, action: () => VN.deleteScene(s.id) });
         VN.render();
         VN.menu(e.clientX, e.clientY, items);
@@ -314,10 +407,12 @@
           path.setAttribute('stroke-width', '2');
           path.setAttribute('marker-end', `url(#arr-${e.kind})`);
           if (e.kind === 'event' || e.kind === 'back') path.setAttribute('stroke-dasharray', '7 5');
+          const tf = Graph._tagFocus, inT = tf && tf.has(s.id) && tf.has(t.id);
+          if (tf) { if (inT) path.setAttribute('stroke-width', '3.5'); else path.setAttribute('opacity', '0.12'); }
           svg.appendChild(path);
           const lx = 0.125 * x1 + 0.375 * c1x + 0.375 * c2x + 0.125 * x2;
           const ly = 0.5 * y1 + 0.5 * y2 + (k - 1) * 22;
-          const lab = el('div', { class: 'g-label', style: { left: lx + 'px', top: ly + 'px', borderColor: COLORS[e.kind] }, title: e.label }, e.label);
+          const lab = el('div', { class: 'g-label' + (Graph._tagFocus && !inT ? ' dimmed' : ''), style: { left: lx + 'px', top: ly + 'px', borderColor: COLORS[e.kind] }, title: e.label }, e.label);
           lab.addEventListener('contextmenu', (ev) => {
             ev.preventDefault();
             ev.stopPropagation();

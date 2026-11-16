@@ -173,6 +173,30 @@
     for (const s of p.scenes) if (s.chapter === from) s.chapter = to;
   };
   // Trifft die Suche? true = Name, Text = Fundstelle im Dialog/Objekt, false = nein
+  // ---------- Story-Tags (0.9.44): Szenen/Hubs markieren, im Pfade-Graph filtern ----------
+  VN.TAG_COLORS = ['#a66cf0', '#5f8dff', '#3fb3c8', '#4fbf7a', '#e8c86a', '#f0913a', '#ef5b6b', '#e86ab8', '#9aa0aa'];
+  VN.tags = () => (VN.project.storyTags = VN.project.storyTags || []);
+  VN.tag = (id) => VN.tags().find((t) => t.id === id);
+  VN.newTag = (name) => {
+    const L = VN.tags();
+    const t = { id: VN.uid('tg'), name: name || VN.t('Neuer Tag'), color: VN.TAG_COLORS[L.length % VN.TAG_COLORS.length] };
+    L.push(t);
+    return t;
+  };
+  VN.sceneTags = (s) => (s.tags || []).filter((id) => VN.tag(id));
+  VN.addTag = (s, id) => { s.tags = s.tags || []; if (!s.tags.includes(id)) s.tags.push(id); };
+  VN.removeTag = (s, id) => { if (s.tags) { s.tags = s.tags.filter((x) => x !== id); if (!s.tags.length) delete s.tags; } };
+  VN.deleteTag = (id) => { VN.project.storyTags = VN.tags().filter((t) => t.id !== id); for (const s of VN.project.scenes) VN.removeTag(s, id); VN.ui.tagSel = (VN.ui.tagSel || []).filter((x) => x !== id); };
+  // aktiver Filter: null = keiner, sonst Menge der passenden Szenen-IDs
+  VN.tagFocus = () => {
+    const sel = (VN.ui.tagSel || []).filter((id) => VN.tag(id));
+    if (!sel.length) return null;
+    const all = VN.ui.tagMode === 'all';
+    return new Set(VN.project.scenes.filter((s) => { const T = VN.sceneTags(s); return all ? sel.every((id) => T.includes(id)) : sel.some((id) => T.includes(id)); }).map((s) => s.id));
+  };
+  // kleine Farbpunkte für Listen
+  VN.tagDots = (s) => { const T = VN.sceneTags(s); return T.length ? VN.el('span', { class: 'tag-dots', title: T.map((id) => VN.tag(id).name).join(', ') }, ...T.map((id) => VN.el('i', { style: { background: VN.tag(id).color } }))) : null; };
+
   VN.sceneMatch = (s, q) => {
     if (!q) return true;
     if ((s.name || '').toLowerCase().includes(q) || (s.chapter || '').toLowerCase().includes(q)) return true;
