@@ -478,6 +478,7 @@ window.PenBar = {
         poly ? el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: r.smooth !== false, onchange: (e) => VN.mutate(() => { r.smooth = e.target.checked; }) }), VN.t('Umriss rund (Kurven statt gerader Linien)')) : null,
         poly ? el('div', { class: 'muted small' }, VN.t('Punkte ziehen zum Anpassen · Doppelklick auf den Umriss fügt einen Punkt ein · Rechtsklick auf einen Punkt löscht ihn · Alt-Klick: Ecke ↔ rund')) : null,
         el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: !!P.layer, onchange: (e) => VN.mutate(() => { r.layer = e.target.checked; }) }), VN.t('Als eigene Ebene (darf über den Körper schwingen)')),
+        ...SoftEd.contactFields(r, Soft.data(id)),
         el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } },
           el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { const c = JSON.parse(JSON.stringify(r)); c.id = VN.uid('sr'); if (poly) c.pts = r.pts.map((q) => [r4(1 - q[0]), q[1]].concat(q.slice(2))).reverse(); else { c.cx = r4(1 - r.cx); c.rot = -(r.rot || 0); } if (r.pin) c.pin = [r4(1 - r.pin[0]), r.pin[1]]; c.name = (r.name || '') + ' ↔'; regs.push(c); VN.ui.softSel = c.id; }) }, VN.t('↔ Gespiegelt kopieren')),
           !poly ? el('button', { class: 'btn tiny', onclick: () => { const im = new Image(); im.src = VN.assetUrl(id); const go = () => VN.mutate(() => { r.pts = Soft.toPoly(r, im.naturalWidth && im.naturalHeight ? im.naturalWidth / im.naturalHeight : 1); r.shape = 'poly'; r.smooth = true; }); if (im.complete && im.naturalWidth) go(); else im.onload = go; } }, VN.t('✒ In freie Form umwandeln')) : null,
@@ -561,6 +562,7 @@ window.PenBar = {
         !two && h.swing !== false ? slider('stiff', 'Steifheit', 0, 1, 0.01, 0.15) : null,
         !two && h.swing !== false ? slider('damp', 'Dämpfung', 0, 1, 0.01, 0.3) : null,
         ...(two ? [] : SoftEd.moveFields(id, h, data, row, slider, pinBtn)),
+        two ? null : SoftEd.hangContactRow(h, data, slider, row),
         row('Effekt', fxSel),
         h.fx ? slider('fxAmp', 'Effekt: Stärke', 0, 3, 0.05, 1) : null,
         h.fx ? slider('fxSpeed', 'Effekt: Tempo', 0.1, 4, 0.05, 1) : null,
@@ -570,6 +572,44 @@ window.PenBar = {
       return el('div', null, card, box);
     },
 
+    // Reaktion eines Bereichs auf Kontakt mit einem Anhänger (0.9.44) – alles einzeln an/aus und regelbar
+    contactFields(r, data) {
+      const srcs = ((data && data.hangs) || []).filter((h) => h.move && h.move.to && Array.isArray(h.mask) && h.mask.length >= 3);
+      if (!srcs.length) return [];
+      const C = r.contact || {};
+      const on = !!r.contact && C.on !== false;
+      const set = (k, v) => VN.mutate(() => { r.contact = r.contact || { on: true }; r.contact[k] = v; });
+      const sl = (k, label, min, max, step, def, fmt) => {
+        const val = C[k] != null ? C[k] : def;
+        const out = el('span', { class: 'muted small' }, fmt ? fmt(val) : String(val));
+        return el('label', { class: 'soft-sl' }, el('span', null, VN.t(label)),
+          el('input', { type: 'range', min, max, step, value: val, oninput: (e) => { out.textContent = fmt ? fmt(Number(e.target.value)) : e.target.value; }, onchange: (e) => set(k, Number(e.target.value)) }), out);
+      };
+      const sel = (val, opts, commit) => { const s = el('select', { onchange: (e) => commit(e.target.value) }); for (const [v, l] of opts) { const o = el('option', { value: v }, VN.t(l)); if (v === val) o.selected = true; s.appendChild(o); } return s; };
+      const row = (label, ...kids) => el('div', { class: 'logic-row' }, el('span', { class: 'muted small', style: { width: '112px' } }, VN.t(label)), ...kids);
+      const out = [el('div', { class: 'sec-title', style: { marginTop: '6px' } }, VN.t('Bei Kontakt mit Anhänger')),
+        el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: on, onchange: (e) => VN.mutate(() => { r.contact = Object.assign({ push: 1 }, r.contact || {}, { on: e.target.checked }); }) }), VN.t('reagiert, wenn ein Anhänger in seine Maske fährt'))];
+      if (!on) return out;
+      out.push(row('Von', sel(C.from || '', [['', 'jedem Anhänger mit Maske'], ...srcs.map((h) => [h.id, h.name || '?'])], (v) => set('from', v))),
+        sl('push', 'Anstoß beim Eintreten', 0, 3, 0.05, 1),
+        sl('pull', 'Zurückziehen beim Austreten', 0, 3, 0.05, 0),
+        sl('bulge', 'Wölben, solange drin', 0, 2, 0.05, 0),
+        sl('speed', 'Wölben: Tempo', 1, 20, 0.5, 8),
+        sl('wobble', 'Nachwackeln', 0, 3, 0.05, 0),
+        sl('calm', 'Wackeln klingt ab', 0.5, 8, 0.1, 2.5),
+        row('Schlucken', sel(C.gulp === true ? 'out' : (C.gulp || ''), [['', 'nein'], ['in', 'beim Eintreten'], ['out', 'beim Austreten']], (v) => set('gulp', v))),
+        el('div', { class: 'muted small' }, VN.t('Jede Reaktion lässt sich einzeln abschalten (Regler auf 0). „Wölben“ bläht den Bereich auf, solange der Anhänger in der Maske ist – z. B. volle Backen.')));
+      return out;
+    },
+    hangContactRow(h, data, slider, row) {
+      const mover = h.move && h.move.to && Array.isArray(h.mask) && h.mask.length >= 3;
+      if (mover) return el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: h.contact !== false, onchange: (e) => VN.mutate(() => { h.contact = e.target.checked; }) }), VN.t('Kontakt melden (Bereiche und andere Anhänger können reagieren)'));
+      const srcs = ((data && data.hangs) || []).filter((x) => x !== h && x.move && x.move.to && Array.isArray(x.mask) && x.mask.length >= 3);
+      if (!srcs.length || h.swing === false) return null;
+      const s2 = el('select', { onchange: (e) => VN.mutate(() => { h.ctFrom = e.target.value; }) });
+      for (const [v, l] of [['', 'jedem Anhänger mit Maske'], ...srcs.map((x) => [x.id, x.name || '?'])]) { const o = el('option', { value: v }, VN.t(l)); if (v === (h.ctFrom || '')) o.selected = true; s2.appendChild(o); }
+      return el('div', null, el('div', { class: 'sec-title', style: { marginTop: '6px' } }, VN.t('Bei Kontakt')), slider('ctKick', 'Wippt bei Kontakt', 0, 3, 0.05, 0, (v) => (v ? v.toFixed(2) : VN.t('aus'))), Number(h.ctKick) ? row('Von', s2) : null);
+    },
     // Maske fertig zeichnen
     finishMask() {
       const hm = VN.ui.hangMask; VN.ui.hangMask = null;

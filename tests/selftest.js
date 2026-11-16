@@ -1692,6 +1692,77 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Hub: Ebenen verschieben, Deko ohne Hitbox');
   } catch (e) { general.push('Hub-Ebenen: ' + e.message); }
 
+  // 41. Story-Tags (0.9.44)
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [], p = VN.project, n0 = (p.storyTags || []).length;
+      const a = VN.newTag('A'), b = VN.newTag('B');
+      const s1 = p.scenes[0], s2 = p.scenes[1];
+      VN.addTag(s1, a.id); VN.addTag(s1, b.id); VN.addTag(s2, a.id); VN.addTag(s2, a.id);
+      if (VN.sceneTags(s2).length !== 1) out.push('doppelt');
+      VN.ui.tagSel = [a.id, b.id]; VN.ui.tagMode = 'any';
+      if (VN.tagFocus().size !== 2) out.push('eines davon');
+      VN.ui.tagMode = 'all';
+      if (VN.tagFocus().size !== 1 || !VN.tagFocus().has(s1.id)) out.push('alle');
+      VN.deleteTag(a.id);
+      if (VN.sceneTags(s1).length !== 1 || VN.sceneTags(s2).length) out.push('löschen');
+      VN.deleteTag(b.id); VN.ui.tagSel = []; VN.ui.tagMode = 'any';
+      if ((p.storyTags || []).length !== n0) out.push('Aufräumen');
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Story-Tags: ' + r.join(', '));
+    else log('✓ Story-Tags: vergeben, filtern (eines/alle), löschen');
+  } catch (e) { general.push('Story-Tags: ' + e.message); }
+
+  // 42. Social Media im Browser und Websuche (0.9.44)
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [], p = VN.project, DV = VN.Devices;
+      const bak = JSON.stringify({ social: p.social, web: p.web, chats: p.chats });
+      VN.migrate(p);
+      const c = DV.newContact(); c.name = 'Wache Bernd'; p.chats.contacts.push(c);
+      const s = DV.newPost(c.id); s.text = 'Heute im #Gildenhaus'; s.conds = []; p.social.posts.push(s); p.social.name = 'Pixgram';
+      const w = DV.newSite(); w.name = 'Geheimbund'; w.domain = 'geheim.ra'; w.hidden = true; w.keywords = 'mondschein'; p.web.sites.push(w);
+      if (DV.socDomain() !== 'pixgram.com') out.push('Domain ' + DV.socDomain());
+      if (!DV.socAddr('www.pixgram.com/@wachebernd') || DV.socAddr('pixgram.com/@wachebernd').prof !== c.id) out.push('Profil-Adresse');
+      if ((DV.socAddr('pixgram.com/tag/gildenhaus') || {}).tag !== 'gildenhaus') out.push('Tag-Adresse');
+      const hits = (q) => DV.webSearch(q, null).map((x) => x.addr);
+      if (!hits('bernd').includes('pixgram.com/@wachebernd')) out.push('Suche Profil');
+      if (!hits('gildenhaus').some((a) => a.endsWith('/tag/gildenhaus'))) out.push('Suche Tag');
+      if (hits('geheim').includes('geheim.ra')) out.push('geheime Seite gefunden');
+      if (!hits('mondschein').includes('geheim.ra')) out.push('Suchwort');
+      p.social.web = false;
+      if (DV.socAddr('pixgram.com')) out.push('abschaltbar');
+      Object.assign(p, JSON.parse(bak));
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Social im Browser: ' + r.join(', '));
+    else log('✓ Social Media im Browser, Websuche (Profile, #Themen, Suchwörter, geheime Seiten)');
+  } catch (e) { general.push('Social im Browser: ' + e.message); }
+
+  // 43. Verkaufen auf Websites (0.9.44)
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [], p = VN.project, DV = VN.Devices;
+      const hadCur = p.currencies.length; if (!hadCur) p.currencies.push({ id: 'cT', name: 'Gold', start: 0 });
+      const cur = p.currencies[0];
+      const rs = VN.newRunState(); rs.money[cur.id] = 5;
+      const e = { id: 'eS', kind: 'button', text: 'Kaufen', sale: { price: 4, cur: cur.id, actions: [] } };
+      VN.migrate(p); const bakWeb = JSON.stringify(p.web); const w = DV.newSite(); w.pages[0].els = [e]; p.web.sites.push(w);
+      if (!DV.saleOf(e)) out.push('saleOf');
+      if (!DV.sell(e, rs) || rs.money[cur.id] !== 1) out.push('Kauf');
+      if (!DV.saleBought(e, rs)) out.push('gekauft gemerkt');
+      if (DV.sell(e, rs)) out.push('ohne Geld gekauft');
+      if (!VN.checkConds([{ type: 'webBought', el: 'eS' }], rs)) out.push('Bedingung');
+      if (VN.checkConds([{ type: 'webBought', el: 'eS', not: true }], rs)) out.push('Bedingung nicht');
+      p.web = JSON.parse(bakWeb);
+      if (!hadCur) p.currencies.pop();
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Website-Verkauf: ' + r.join(', '));
+    else log('✓ Verkaufen auf Websites, Bedingung „Auf Website gekauft“');
+  } catch (e) { general.push('Website-Verkauf: ' + e.message); }
+
   // 27. Kulissen-Raum (0.9.32): 3D-Flächen, Kamera, Licht durch Fenster mit Jalousie, Bühne und Spieler
   try {
     const r = JSON.parse(await js(`(async () => {

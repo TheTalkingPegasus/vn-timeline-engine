@@ -150,6 +150,22 @@
   // Freikaufen (0.9.41): verschwommenes Bild gegen Geld scharf machen – bleibt danach für den Spielstand scharf
   DV.elBuyCur = (e) => { const L = VN.project.currencies || []; return Number(e.blurPrice) > 0 ? L.find((c) => c.id === e.blurCur) || L[0] || null : null; };
   DV._pvBought = {}; // nur Vorschau im Editor
+  // Verkaufen auf Websites (0.9.44): Text, Knopf oder Bild hat einen Preis; nach dem Kauf laufen Aktionen (Szene, Gegenstand, Variable …)
+  DV.SALE = { price: 0, cur: '', once: true, confirm: true, showPrice: true, ask: 'Wirklich kaufen?', poor: 'Nicht genug Geld.', sold: '✓ Gekauft', soldMode: 'text', actions: [] };
+  DV.saleOf = (e) => (e && e.sale && Number(e.sale.price) > 0 ? Object.assign({}, DV.SALE, e.sale) : null);
+  DV.saleCur = (S) => { const L = VN.project.currencies || []; return L.find((c) => c.id === S.cur) || L[0] || null; };
+  DV.saleBought = (e, rs) => !!(rs && rs.chat && (rs.chat.bought || {})[e.id]);
+  DV.sell = (e, rs) => {
+    const S = DV.saleOf(e), c = S && DV.saleCur(S), price = Math.round(Number(S && S.price) || 0);
+    if (!S || !c) return false;
+    if ((rs.money[c.id] || 0) < price) return false;
+    rs.money[c.id] -= price;
+    const st = DV.st(rs); (st.bought || (st.bought = {}))[e.id] = 1;
+    if (VN.did) VN.did(rs, 'spend', c.id);
+    return true;
+  };
+  // alle verkaufbaren Dinge (für die Bedingung „Auf Website gekauft“)
+  DV.saleItems = () => { const out = []; for (const w of DV.sites()) for (const g of w.pages || []) for (const e of g.els || []) if (DV.saleOf(e) || Number(e.blurPrice) > 0) out.push({ e, w, g, label: w.name + ': ' + (e.kind === 'image' ? '🖼 ' + ((VN.asset(e.image) || {}).name || VN.t('Bild')) : '„' + String(e.text || '').slice(0, 24) + '“') }); return out; };
   // Aussehen des Freikaufen-Knopfs (0.9.42) – jedes Detail einstellbar
   DV.BUY = { text: '🔓 Freikaufen', ask: 'Wirklich zahlen?', poor: 'Nicht genug Geld.', confirm: true, price: true, pos: 'center', size: 2.6, font: '', bold: true, italic: false, upper: false,
     color: '#ffffff', bg1: '#c38cff', bg2: '#5f8dff', angle: 135, askBg1: '#ffb35c', askBg2: '#ff6f61', poorGray: true, radius: 99, padX: 2.2, padY: 1, border: '', borderW: 0,
@@ -185,6 +201,52 @@
   DV.newSite = () => { const w = { id: VN.uid('ws'), name: VN.t('Neue Website'), domain: 'meine-seite.de', hidden: false, conds: [], pages: [DV.newPage('')] }; w.pages[0].els.push(DV.fixEl({ kind: 'text', x: 8, y: 8, w: 84, h: 12, text: VN.t('Willkommen!'), size: 7, bold: true }), DV.fixEl({ kind: 'text', x: 8, y: 24, w: 84, h: 20, text: VN.t('Hier steht der Text deiner Seite.'), size: 3.6 })); return w; };
   const normAddr = (a) => String(a || '').trim().toLowerCase().replace(/^[a-z]+:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '');
   DV.addrOf = (w, g) => normAddr(w.domain) + (g && g.path ? '/' + normAddr(g.path) : '');
+  // ---------- Social Media im Browser (0.9.44) ----------
+  const slug = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ß/g, 'ss').replace(/[^a-z0-9]+/g, '').slice(0, 40);
+  DV.socOnWeb = () => !!P().social && P().social.web !== false && DV.posts().length > 0;
+  DV.socDomain = () => normAddr(P().social && P().social.domain) || ((slug(DV.social().name || 'Pixgram') || 'pixgram') + '.com');
+  DV.socProfileAddr = (c) => DV.socDomain() + '/@' + slug(DV.cName(c));
+  // Adresse → { prof, tag } oder null
+  DV.socAddr = (addr) => {
+    if (!DV.socOnWeb()) return null;
+    const a = normAddr(addr), d = DV.socDomain();
+    if (a !== d && !a.startsWith(d + '/')) return null;
+    const path = a.slice(d.length + 1);
+    if (!path) return { prof: null, tag: null };
+    if (path.startsWith('@')) { const c = DV.contacts().find((x) => slug(DV.cName(x)) === path.slice(1)); return c ? { prof: c.id, tag: null } : null; }
+    if (path.startsWith('tag/')) return { prof: null, tag: path.slice(4) };
+    return null;
+  };
+  // Aussehen von Startseite und Suchergebnissen (0.9.44) – alles einstellbar
+  DV.SEARCH_LOOK = { name: '', logo: '', logoH: 6, bg: '#e9ebef', card: '#ffffff', border: '#d4d7de', hover: '#2f7de1', title: '#1a56b0', url: '#3a8a4a', desc: '#555b66', head: '#1d2129', font: '', size: 1, radius: 12, shadow: 0, home: 'Lesezeichen', results: 'Ergebnisse für', none: 'Keine Treffer.' };
+  DV.searchLook = () => Object.assign({}, DV.SEARCH_LOOK, (P().web && P().web.look) || {});
+  // Eingebaute Websuche der Adresszeile: Websites (Name, Adresse, Suchwörter) und das Social Media (Profile, #Themen)
+  DV.webSearch = (q, rs, XF) => {
+    XF = XF || ((x) => x);
+    const words = String(q || '').toLowerCase().split(/\s+/).filter((w) => w.length >= 2);
+    if (!words.length) return [];
+    const hit = (txt) => { const t = String(txt || '').toLowerCase(); return words.some((w) => t.includes(w)); };
+    const kw = (w) => String(w.keywords || '').toLowerCase().split(/[,;\n]+/).map((x) => x.trim()).filter(Boolean);
+    const out = [];
+    for (const w of DV.sites()) {
+      if (rs && !VN.checkConds(w.conds || [], rs)) continue;
+      const K = kw(w);
+      // geheime Seiten nur, wenn ein Suchwort genau passt
+      const ok = w.hidden ? K.some((k) => words.includes(k) || words.join(' ') === k) : (hit(w.name) || hit(w.domain) || K.some((k) => words.some((x) => k.includes(x))) || w.pages.some((g) => hit(g.title) || hit(g.path)));
+      if (ok) out.push({ addr: DV.addrOf(w, w.pages[0]), label: tr(w.id + ':name', w.name), desc: w.desc ? tr(w.id + ':desc', w.desc) : '' });
+    }
+    if (DV.socOnWeb()) {
+      const nm = tr('social:name', DV.social().name || 'Pixgram');
+      const feed = rs ? DV.feed(rs) : DV.posts();
+      if (hit(nm) || hit(DV.socDomain()) || hit('social') || hit('feed')) out.push({ addr: DV.socDomain(), label: nm, desc: tp('Social Media') });
+      const authors = [...new Set(feed.map((s) => s.author))].map((id) => DV.contact(id)).filter(Boolean);
+      for (const c of authors) if (hit(DV.cName(c))) out.push({ addr: DV.socProfileAddr(c), label: DV.cName(c) + ' · ' + nm, desc: tp('Profil') });
+      const tags = new Set();
+      for (const s of feed) for (const m of String(XF(tr(s.id, s.text || ''))).matchAll(/#([\p{L}\p{N}_]+)/gu)) tags.add(m[1].toLowerCase());
+      for (const t of tags) if (words.some((w) => t.includes(w.replace(/^#/, '')))) out.push({ addr: DV.socDomain() + '/tag/' + t, label: '#' + t + ' · ' + nm, desc: tp('Beiträge zum Thema') });
+    }
+    return out;
+  };
   // Adresse → { site, page } (Groß/klein, „www.“ und „https://“ egal)
   DV.findPage = (addr) => {
     const a = normAddr(addr);
@@ -495,6 +557,16 @@
     text: (c) => '🔑 ' + VN.t('Passwort richtig') + ' (' + (c.el || '?') + ')',
     row: (row, c, sel) => row.appendChild(sel(c.el || '', [['', '— Eingabefeld —'], ...DV.sites().flatMap((w) => w.pages.flatMap((g) => g.els.filter((e) => e.kind === 'input' && e.mode === 'password').map((e) => [e.id, DV.addrOf(w, g) + ' · ' + (e.place || VN.t('Passwort'))])))], (v) => VN.mutate(() => { c.el = v; })))
   });
+  VN.registerCond('webBought', {
+    label: '🛒 Auf Website gekauft', on: () => DV.on() && DV.saleItems().length > 0, make: () => ({ el: (DV.saleItems()[0] || { e: {} }).e.id || '', not: false }),
+    check: (c, rs) => !!(rs.chat && (rs.chat.bought || {})[c.el]) !== !!c.not,
+    text: (c) => { const x = DV.saleItems().find((y) => y.e.id === c.el); return '🛒 ' + (x ? x.label : '?') + (c.not ? ' ' + VN.t('nicht gekauft') : ' ' + VN.t('gekauft')); },
+    problem: (c) => (DV.saleItems().some((y) => y.e.id === c.el) ? null : 'Kaufbares Element fehlt'),
+    row: (row, c, sel) => {
+      row.appendChild(sel(c.el || '', DV.saleItems().map((x) => [x.e.id, x.label]), (v) => VN.mutate(() => { c.el = v; })));
+      row.appendChild(sel(c.not ? 'not' : 'yes', [['yes', 'gekauft'], ['not', 'noch nicht gekauft']], (v) => VN.mutate(() => { c.not = v === 'not'; })));
+    }
+  });
   VN.registerCond('social', {
     label: '📸 Beitrag', on: DV.socialOn, make: () => ({ post: (DV.posts()[0] || {}).id || '', state: 'shown' }),
     check: (c, rs) => {
@@ -612,8 +684,10 @@
       for (const cm of s.comments || []) if (cm.text) { const ca = DV.contact(cm.author); out.push({ id: cm.id, area: 'Social Media', where, who: 'Kommentar' + (ca ? ' · ' + ca.name : ''), text: cm.text, set: (v) => { cm.text = v; } }); }
       for (const r of s.replies || []) if (r.text) out.push({ id: r.id, area: 'Social Media', where, who: 'Antwort', text: r.text, set: (v) => { r.text = v; } });
     }
+    { const L = (P().web && P().web.look) || {}; for (const [k, who] of [['name', 'Name der Suche'], ['home', 'Überschrift Startseite'], ['results', 'Überschrift Ergebnisse'], ['none', 'Keine Treffer']]) if (L[k] && L[k] !== DV.SEARCH_LOOK[k]) out.push({ id: 'web:search:' + k, area: 'Websites', where: VN.t('Websuche'), who, text: L[k], set: (v) => { L[k] = v; } }); }
     for (const w of DV.sites()) {
       if (w.name) out.push({ id: w.id + ':name', area: 'Websites', where: w.domain || w.name, who: 'Name', text: w.name, set: (v) => { w.name = v; } });
+      if (w.desc) out.push({ id: w.id + ':desc', area: 'Websites', where: w.domain || w.name, who: 'Beschreibung', text: w.desc, set: (v) => { w.desc = v; } });
       for (const pg of w.pages || []) {
         const where = (w.domain || w.name || '') + '/' + (pg.path || '');
         for (const e of pg.els || []) {
@@ -621,6 +695,7 @@
           if (e.place) out.push({ id: e.id + ':place', area: 'Websites', where, who: 'Platzhalter', text: e.place, set: (v) => { e.place = v; } });
           for (const x of e.results || []) if (x.label) out.push({ id: e.id + ':r:' + x.addr, area: 'Websites', where, who: 'Suchtreffer', text: x.label, set: (v) => { x.label = v; } });
           if (e.blurHint) out.push({ id: e.id + ':hint', area: 'Websites', where, who: 'Hinweis', text: e.blurHint, set: (v) => { e.blurHint = v; } });
+          if (e.sale) for (const k of ['ask', 'poor', 'sold']) if (e.sale[k]) out.push({ id: e.id + ':sale:' + k, area: 'Websites', where, who: VN.t('Kaufen') + ' · ' + k, text: e.sale[k], set: (v) => { e.sale[k] = v; } });
           if (Number(e.blurPrice) > 0 && e.buy) for (const [k, f, who] of [['buyText', 'text', 'Freikaufen-Knopf'], ['buyAsk', 'ask', 'Nachfrage'], ['buyPoor', 'poor', 'Zu wenig Geld']]) if (e.buy[f]) out.push({ id: e.id + ':' + k, area: 'Websites', where, who, text: e.buy[f], set: (v) => { e.buy[f] = v; } });
           if (e.fail) out.push({ id: e.id + ':fail', area: 'Websites', where, who: 'Fehlermeldung', text: e.fail, set: (v) => { e.fail = v; } });
         }
@@ -827,14 +902,43 @@
         el('button', { class: 'dv-web-btn', onclick: (e) => { e.stopPropagation(); go(addr.value); } }, '→'));
       box.append(bar, view);
       const nav = (to) => { if (to !== cur) hist.push(cur); cur = to; results = null; msg = {}; snd('click'); draw(); view.scrollTop = 0; };
-      const go = (to) => { const t = String(to || '').trim(); nav(t ? (DV.findPage(t) ? normAddr(t) : '!' + t) : ''); };
+      const go = (to) => {
+        let t = String(to || '').trim();
+        if (t.startsWith(tp('Suche: '))) t = t.slice(tp('Suche: ').length);
+        if (!t) { nav(''); return; }
+        if (DV.findPage(t) || DV.socAddr(t)) { nav(normAddr(t)); return; }
+        // kein bekannter Ort: sieht es wie eine Adresse aus → 404, sonst suchen
+        if (/^\S+\.[a-z]{2,}(\/\S*)?$/i.test(t)) { nav('!' + t); return; }
+        nav('?' + t);
+      };
       const runActs = (list, key) => { if (!o.preview && H.apply && (list || []).length) { const x = H.apply(list, key); if (x && x.close) { close(); return true; } } return false; };
       const usable = (w) => VN.checkConds(w.conds || [], rs);
-      const click = (e) => { if (runActs(e.actions, e.id)) return; if (e.link) go(e.link); else if ((e.actions || []).length) draw(); };
+      const click = (e) => {
+        // Verkaufen: erst zahlen, dann die Kauf-Aktionen, danach wie ein normaler Klick
+        const S = DV.saleOf(e);
+        if (S) {
+          const bought = o.preview ? !!DV._pvBought[e.id] : DV.saleBought(e, rs);
+          if (!(bought && S.once)) {
+            const c = DV.saleCur(S), price = Math.round(Number(S.price) || 0);
+            if (!c) return;
+            if ((rs.money[c.id] || 0) < price && !o.preview) { msg[e.id + ':sale'] = 'poor'; snd('click'); draw(); return; }
+            if (S.confirm && msg[e.id + ':sale'] !== 'ask') { msg[e.id + ':sale'] = 'ask'; snd('click'); draw(); return; }
+            msg[e.id + ':sale'] = '';
+            if (o.preview) DV._pvBought[e.id] = 1; else DV.sell(e, rs);
+            snd('item');
+            if (runActs(S.actions, e.id + ':sale')) return;
+            if (H.refresh) H.refresh();
+          } else if (!(e.actions || []).length && !e.link) return;
+        }
+        if (runActs(e.actions, e.id)) return;
+        if (e.link) go(e.link); else draw();
+      };
       const pageEl = (w, g, e) => {
         const H0 = Math.max(10, Number(g.height) || 140);
         const st = DV.elStyle(e, H0, rs);
-        const clickable = !!(e.link || (e.actions || []).length);
+        const SL = DV.saleOf(e), sold = SL && SL.once && (o.preview ? !!DV._pvBought[e.id] : DV.saleBought(e, rs));
+        if (sold && SL.soldMode === 'hide') return el('span');
+        const clickable = !!(e.link || (e.actions || []).length || (SL && !sold));
         if (e.kind === 'image') {
           const img = el('div', { class: 'dv-web-el img' + (clickable ? ' link' : ''), style: Object.assign(st, { backgroundImage: e.image && VN.assetUrl(e.image) ? `url("${VN.assetUrl(e.image)}")` : '' }), onclick: clickable ? (ev) => { ev.stopPropagation(); click(e); } : null });
           const cur = DV.elBuyCur(e);
@@ -856,7 +960,7 @@
               if (!ask && BL.confirm !== false) { msg._ask = e.id; snd('click'); draw(); return; }
               msg._ask = null;
               if (o.preview) { DV._pvBought[e.id] = 1; snd('item'); draw(); return; }
-              if (DV.buyEl(e, rs)) { snd('item'); if (H.refresh) H.refresh(); draw(); }
+              if (DV.buyEl(e, rs)) { snd('item'); if (runActs(e.buyActions, e.id + ':buy')) return; if (H.refresh) H.refresh(); draw(); }
             } }, el('span', null, ask ? BT('buyAsk', 'ask') : BT('buyText', 'text')), BL.price !== false ? (VN.moneyChip ? VN.moneyChip(cur, price) : String(price)) : null);
             hint.append(btn);
             if (msg[e.id + ':buy']) hint.append(el('div', { class: 'dv-web-buymsg', style: { color: BL.msgColor, fontFamily: (BL.font && window.Theme && Theme.fontCss(BL.font)) || '' } }, msg[e.id + ':buy']));
@@ -885,7 +989,17 @@
             el('div', { class: 'dv-web-in' }, inp, el('button', { disabled: !!done, onclick: (ev) => { ev.stopPropagation(); submit(); } }, done ? '✓' : '→')),
             msg[e.id] ? el('div', { class: 'dv-web-msg' }, msg[e.id]) : null);
         }
-        const node = el('div', { class: 'dv-web-el ' + (e.kind === 'button' ? 'btn' : 'text') + (clickable ? ' link' : ''), style: st, onclick: clickable ? (ev) => { ev.stopPropagation(); click(e); } : null });
+        const node = el('div', { class: 'dv-web-el ' + (e.kind === 'button' ? 'btn' : 'text') + (clickable ? ' link' : '') + (sold ? ' sold' + (SL.soldMode === 'dim' ? ' dim' : '') : ''), style: st, onclick: clickable ? (ev) => { ev.stopPropagation(); click(e); } : null });
+        if (SL) {
+          // Kauf-Zustand: Nachfrage, zu wenig Geld, gekauft – Texte frei wählbar
+          const ST = (k) => (e.sale[k] ? XF(tr(e.id + ':sale:' + k, e.sale[k])) : tp(DV.SALE[k]));
+          const m = msg[e.id + ':sale'];
+          const c = DV.saleCur(SL);
+          const txt = sold && SL.soldMode !== 'dim' ? ST('sold') : m === 'ask' ? ST('ask') : m === 'poor' ? ST('poor') : XF(tr(e.id, e.text || ''));
+          fmtText(node, txt);
+          if (!sold && SL.showPrice && c && m !== 'poor') node.appendChild(el('span', { class: 'dv-sale-price' }, ' ', VN.moneyChip ? VN.moneyChip(c, Math.round(Number(SL.price))) : String(SL.price)));
+          return node;
+        }
         fmtText(node, XF(tr(e.id, e.text || '')));
         return node;
       };
@@ -893,16 +1007,40 @@
         view.innerHTML = '';
         addr.value = cur.startsWith('?') ? tp('Suche: ') + cur.slice(1) : cur.startsWith('!') ? cur.slice(1) : cur ? 'www.' + cur : '';
         addr.placeholder = tp('Adresse eingeben …');
+        const SLk = DV.searchLook();
+        const lookHome = (node) => {
+          const st = node.style, f = (x) => (window.Theme && Theme.fontCss ? Theme.fontCss(x) : x);
+          st.setProperty('--sw-bg', SLk.bg); st.setProperty('--sw-card', SLk.card); st.setProperty('--sw-border', SLk.border); st.setProperty('--sw-hover', SLk.hover);
+          st.setProperty('--sw-title', SLk.title); st.setProperty('--sw-url', SLk.url); st.setProperty('--sw-desc', SLk.desc); st.setProperty('--sw-head', SLk.head);
+          st.setProperty('--sw-size', String(Number(SLk.size) || 1)); st.setProperty('--sw-radius', (Number(SLk.radius) || 0) / 10 + 'cqh');
+          st.setProperty('--sw-shadow', Number(SLk.shadow) ? `0 ${Number(SLk.shadow) * 0.05}cqh ${Number(SLk.shadow) * 0.2}cqh rgba(0,0,0,.25)` : 'none');
+          if (SLk.font) st.setProperty('--sw-font', f(SLk.font));
+          node.classList.add('sw-look');
+          if (SLk.logo && VN.assetUrl(SLk.logo)) node.prepend(el('img', { class: 'sw-logo', src: VN.assetUrl(SLk.logo), style: { height: (Number(SLk.logoH) || 6) + 'cqh' } }));
+          else if (SLk.name) node.prepend(el('div', { class: 'sw-name' }, XF(tr('web:search:name', SLk.name))));
+          return node;
+        };
+        const LT = (k) => (DV.searchLook()[k] && DV.searchLook()[k] !== DV.SEARCH_LOOK[k] ? XF(tr('web:search:' + k, DV.searchLook()[k])) : tp(DV.SEARCH_LOOK[k]));
         if (!cur) {
           const list = DV.sites().filter((w) => !w.hidden && usable(w));
-          view.appendChild(el('div', { class: 'dv-web-home' }, el('div', { class: 'dv-web-h' }, tp('Lesezeichen')),
-            ...(list.length ? list.map((w) => el('button', { class: 'dv-web-bm', onclick: (e) => { e.stopPropagation(); go(DV.addrOf(w, w.pages[0])); } }, el('strong', null, tr(w.id + ':name', w.name)), el('span', null, 'www.' + normAddr(w.domain)))) : [el('div', { class: 'dv-empty' }, tp('Keine Lesezeichen.'))])));
+          if (DV.socOnWeb() && DV.social().bookmark !== false) list.push({ id: 'social', name: DV.social().name || 'Pixgram', domain: DV.socDomain(), pages: [{ path: '' }] });
+          view.appendChild(lookHome(el('div', { class: 'dv-web-home' }, el('div', { class: 'dv-web-h' }, LT('home')),
+            ...(list.length ? list.map((w) => el('button', { class: 'dv-web-bm', onclick: (e) => { e.stopPropagation(); go(DV.addrOf(w, w.pages[0])); } }, el('strong', null, tr(w.id + ':name', w.name)), el('span', null, 'www.' + normAddr(w.domain)))) : [el('div', { class: 'dv-empty' }, tp('Keine Lesezeichen.'))]))));
           return;
         }
         if (cur.startsWith('?')) {
-          const r = results || { q: cur.slice(1), list: [] };
-          view.appendChild(el('div', { class: 'dv-web-home' }, el('div', { class: 'dv-web-h' }, tp('Ergebnisse für') + ' „' + r.q + '“'),
-            ...(r.list.length ? r.list.map((x) => el('button', { class: 'dv-web-bm', onclick: (e) => { e.stopPropagation(); go(x.addr); } }, el('strong', null, XF(x.label || x.addr)), el('span', null, 'www.' + normAddr(x.addr)))) : [el('div', { class: 'dv-empty' }, tp('Keine Treffer.'))])));
+          const r = results || { q: cur.slice(1), list: DV.webSearch(cur.slice(1), o.preview ? null : rs, XF) };
+          view.appendChild(lookHome(el('div', { class: 'dv-web-home' }, el('div', { class: 'dv-web-h' }, LT('results') + ' „' + r.q + '“'),
+            ...(r.list.length ? r.list.map((x) => el('button', { class: 'dv-web-bm', onclick: (e) => { e.stopPropagation(); go(x.addr); } }, el('strong', null, XF(x.label || x.addr)), el('span', null, 'www.' + normAddr(x.addr)), x.desc ? el('em', { class: 'dv-web-desc' }, XF(x.desc)) : null)) : [el('div', { class: 'dv-empty' }, LT('none'))]))));
+          return;
+        }
+        // Social Media als Website (0.9.44): Feed, Profile (/@name) und Themen (/tag/…)
+        const so = cur.startsWith('!') ? null : DV.socAddr(cur);
+        if (so) {
+          W.visited[normAddr(cur)] = 1;
+          const sv = socialView({ type: 'social' }, () => { if (hist.length) { cur = hist.pop(); results = null; draw(); } else nav(''); }, so);
+          sv.classList.add('in-web');
+          view.appendChild(sv);
           return;
         }
         const f = cur.startsWith('!') ? null : DV.findPage(cur);
@@ -918,7 +1056,7 @@
     };
 
     // Social Media: Feed, Profile, Likes und Kommentare des Spielers
-    const socialView = (a, onBack) => {
+    const socialView = (a, onBack, start) => {
       const box = el('div', { class: 'dv-soc' });
       const SL = (DV.social().look) || DV.SOC_LOOK;
       if (SL.custom) {
@@ -933,7 +1071,7 @@
         if (SL.headImg && VN.assetUrl(SL.headImg)) st.setProperty('--soc-head-img', `url("${VN.assetUrl(SL.headImg)}")`);
       }
       const logo = () => (SL.custom && SL.logo && VN.assetUrl(SL.logo) ? el('img', { class: 'dv-soc-logoimg', src: VN.assetUrl(SL.logo), alt: tr('social:name', DV.social().name || 'Pixgram') }) : tr('social:name', DV.social().name || 'Pixgram'));
-      let prof = null, tag = null;
+      let prof = (start && start.prof) || null, tag = (start && start.tag) || null;
       const S = DV.sst(rs);
       // @Name → Profil, #Thema → Feed gefiltert (Namen mit Leerzeichen werden erkannt, längster Name zuerst)
       const rich = (text) => {

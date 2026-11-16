@@ -102,6 +102,32 @@
         s.time = (s.time || 0) + dt;
         if (sim.gulpReq && P.idle === 'swallow') s.gulp = s.time;
         for (const k of kick) { if (k.only && k.only !== r.id) continue; s.vx += k.x * (P.xs || 1); s.vy += k.y * (P.ys || 1); }
+        // Reaktion auf Kontakt mit einem Anhänger (0.9.44): anstoßen, wölben, wackeln, schlucken – je Bereich einstellbar
+        const RC = r.contact;
+        if (RC && RC.on !== false && sim.ctBy) {
+          const src = RC.from ? sim.ctBy[RC.from] : null;
+          const all = Object.keys(sim.ctBy).filter((k2) => k2 !== '_any').map((k2) => sim.ctBy[k2]);
+          const cIn = src ? !!src.in : all.some((c2) => c2.in);
+          const cDepth = src ? (src.depth || 0) : all.reduce((m, c2) => Math.max(m, c2.depth || 0), 0);
+          const ev = src || sim.ctBy._any || {};
+          const dd = ev.d || [0, 1];
+          if (ev.enterT != null && s.ctIn !== ev.enterT) {
+            s.ctIn = ev.enterT;
+            const pu = RC.push != null ? Number(RC.push) : 1;
+            if (pu) { s.vx += dd[0] * pu * 0.22 * (P.xs || 1); s.vy += dd[1] * pu * 0.22 * (P.ys || 1); }
+            if (Number(RC.wobble)) s.cw = 1;
+            if (RC.gulp === 'in') s.gulp = s.time;
+          }
+          if (ev.exitT != null && s.ctOut !== ev.exitT) {
+            s.ctOut = ev.exitT;
+            if (RC.gulp === 'out' || RC.gulp === true) s.gulp = s.time;
+            const pb = Number(RC.pull) || 0;
+            if (pb) { s.vx -= dd[0] * pb * 0.22 * (P.xs || 1); s.vy -= dd[1] * pb * 0.22 * (P.ys || 1); }
+          }
+          const tgt = cIn ? cDepth : 0;
+          s.cd = (s.cd || 0) + (tgt - (s.cd || 0)) * Math.min(1, dt * (Number(RC.speed) || 8));
+          s.cw = (s.cw || 0) * Math.exp(-dt * (Number(RC.calm) || 2.5));
+        }
         // angespanntes Zucken: kurze Stöße in zufälligen Abständen (stärker = häufiger und kräftiger)
         const tw = Math.max(0, Number(P.twitch) || 0);
         if (tw > 0) {
@@ -149,10 +175,10 @@
       else if (P.idle === 'wobble') { idleX = (Math.sin(t * sp * 2.3 + ph) * 0.6 + Math.sin(t * sp * 3.7 + ph * 2) * 0.4) * amp * 0.45; idleY = (Math.sin(t * sp * 2.9 + ph * 3) * 0.6 + Math.sin(t * sp * 4.3 + ph) * 0.4) * amp * 0.45; }
       // Schlucken: alle paar Sekunden (oder auf Anstoß) wandert eine Wölbung von oben nach unten
       let gulp = null;
-      if (P.idle === 'swallow') {
+      if (P.idle === 'swallow' || (s && s.gulp != null && s.time - s.gulp < GULP)) {
         let q = -1;
         if (s && s.gulp != null && s.time - s.gulp < GULP) q = (s.time - s.gulp) / GULP;
-        else if (Number(P.idleAmp) > 0) {
+        else if (P.idle === 'swallow' && Number(P.idleAmp) > 0) {
           const T = 5 / Math.max(0.1, Number(P.idleSpeed) || 1), k = Math.floor((t + ph) / T);
           const jit = (Math.sin(k * 12.9898 + ph * 4.1) * 43758.5453) % 1;
           const st0 = k * T + Math.abs(jit) * T * 0.5 - ph;
@@ -171,6 +197,12 @@
       let sw = (Number(P.pulse) || 0) ? Soft.heart(t + ph * 0.05, P.bpm) * Number(P.pulse) * 0.05 : 0;
       // Aufblähen (0.9.38): Bereich dauerhaft gewölbt, beim Wackeln atmet die Wölbung leicht mit
       const pf = Number(P.puff) || 0;
+      // Kontakt (0.9.44): Wölbung, solange der Anhänger drin ist, und kurzes Nachwackeln
+      const RC = r.contact;
+      if (RC && RC.on !== false && s) {
+        if (Number(RC.bulge) && s.cd) sw += s.cd * Number(RC.bulge) * 0.16;
+        if (Number(RC.wobble) && s.cw > 0.01) { const wa = s.cw * Number(RC.wobble) * 0.012; dx += (Math.sin(t * 23 + ph) * 0.6 + Math.sin(t * 37 + ph * 2) * 0.4) * wa; dy += (Math.sin(t * 29 + ph * 3) * 0.6 + Math.sin(t * 41 + ph) * 0.4) * wa; }
+      }
       if (pf) sw += pf * 0.22 * (1 + (P.idle === 'wobble' ? Math.sin(t * sp * 1.9 + ph) * 0.12 * (Number(P.idleAmp) || 0) : 0));
       return { dx: dx + idleX, dy: dy + idleY, sq, wave, t, sp, sw, gulp };
     },
@@ -474,6 +506,11 @@
           }
           st.th = Math.max(-1.45, Math.min(1.45, st.th));
         } else if (P2 || a.swing === false) { st.th = 0; st.om = 0; }
+        // Anhänger reagiert auf Kontakt eines anderen (Ohrring wippt beim Bissen) – 0.9.44
+        if (!P2 && a.swing !== false && Number(a.ctKick) && sim.ctBy) {
+          const src = sim.ctBy[a.ctFrom || '_any'];
+          if (src && src.enterT != null && st.ctSeen !== src.enterT) { st.ctSeen = src.enterT; const dd = src.d || [1, 0]; st.om += (dd[0] * 3 + dd[1] * 1.2) * Number(a.ctKick); }
+        }
         // Biegung (0.9.38): Kette aus Abschnitten, jeder folgt dem vorigen verzögert (Haarsträhne, Schweif)
         const bend = !P2 ? Math.max(0, Math.min(1, Number(a.bend) || 0)) : 0;
         if (bend > 0 && dt > 0) {
@@ -539,6 +576,18 @@
           const tip = (P1[0] - sq.E[0]) * sq.d[0] + (P1[1] - sq.E[1]) * sq.d[1] + Math.max(dw, dh) * 0.5;
           const inside = tip > 0;
           if (inside && !st.inM && Number(a.move.poke)) sim.poke.push({ x: sq.d[0] * Number(a.move.poke) * 0.22, y: sq.d[1] * Number(a.move.poke) * 0.22, only: a.move.pokeReg || null });
+          // Kontakt für Bereiche und andere Anhänger (0.9.44): wer reagieren soll, schaut hier nach
+          if (a.contact !== false) {
+            const by = sim.ctBy || (sim.ctBy = {});
+            const c = by[a.id] || (by[a.id] = {});
+            if (inside && !st.inM) c.enterT = t;
+            if (!inside && st.inM) c.exitT = t;
+            c.in = inside; c.depth = inside ? Math.min(1, tip / Math.max(1, Math.max(dw, dh))) : 0; c.d = sq.d.slice();
+            const any = by._any || (by._any = {});
+            if (c.enterT === t) any.enterT = t;
+            if (c.exitT === t) any.exitT = t;
+            any.d = c.d;
+          }
           st.inM = inside;
         }
         ops.push({ a, img, P1, P2, th: st.th, fa, fsc, fx, fy, alpha, dw, dh, chain: bend > 0 && st.ch ? st.ch.a.slice() : null, mask, sq });

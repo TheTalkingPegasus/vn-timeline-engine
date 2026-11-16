@@ -1,4 +1,4 @@
-VN Timeline Engine · Prototype 0.9.43
+VN Timeline Engine · Prototype 0.9.44
 ====================================
 (Deutsch: siehe LIES MICH.txt)
 
@@ -15,6 +15,8 @@ Without installing (ZIP):
    isn't signed: "More info" → "Run anyway".
 3. To get to know it, choose "Start tutorial" (7 example scenes with a tour) or "Learn"
    (11 topics with tasks the program checks off by itself).
+
+NEW IN 0.9.44 · Story tags (drag onto scenes, filter paths), social media in the in-game browser with web search, selling on websites with actions, soft-physics contact reactions
 
 NEW IN 0.9.43 · Soft-physics hang-ons with path, mask and balloon-like squish (e.g. eating), poke on contact
 

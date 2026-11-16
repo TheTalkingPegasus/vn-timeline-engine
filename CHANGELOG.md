@@ -2,6 +2,20 @@
 
 All notable changes. German details: `LIES MICH.txt`.
 
+## 0.9.44 – Story tags, social media in the browser, selling on websites, contact reactions
+- **Story tags in the Paths view:** own movable 🏷 window – type a tag, drag it onto scenes/hubs (all selected ones at once),
+  click to highlight its scenes and connecting paths (others dimmed), several tags with “any”/“all”, zoom to, colors,
+  rename, delete; tag pills on nodes, dots and filtering in the scene list, tag field in the inspector.
+- **Social media as a website:** the network has its own address (e.g. www.pixgram.com, /@name for profiles, /tag/topic);
+  optional bookmark. **Web search in the address bar:** typing words finds websites (name, address, new search words and
+  short description; secret pages only on an exact search word), profiles and #topics. Start page and results fully
+  designable (name/logo, headings, font, colors, corners, shadow).
+- **Selling on websites:** texts, buttons and images can have a price; after paying, actions run (start scene, give item,
+  set variable …); once/confirm/show price, own texts, sold state (text/faded/hidden); new condition “🛒 Bought on website”.
+  Unblurring purchases can run actions too.
+- **Soft physics reacts to contact:** areas react when a hang-on moves into its mask – push in, pull back, bulge while inside,
+  wobble afterwards, swallow (each on/off and adjustable, from any or one hang-on); other hang-ons can bounce on contact.
+
 ## 0.9.43 – Hang-ons with path, mask and squish (e.g. eating)
 - **Path:** a soft-physics hang-on moves from its pin to a target and back – endless or once per poke “bite” (action
   “〰 Soft poke → Play path (bite)” or trigger track); duration, stay at target, offset, motion (smooth/push/even),

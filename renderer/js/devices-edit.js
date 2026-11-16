@@ -414,7 +414,13 @@
       ...without.map((d) => el('button', { class: 'btn tiny', style: { marginLeft: '8px' }, onclick: () => VN.mutate(() => { d.apps.push(DV().fixApp({ id: VN.uid('app'), type: 'social' })); }) }, (d.kind === 'desktop' ? '💻 ' : '📱 ') + VN.tf('Zu „{n}“ hinzufügen', { n: d.name })))));
     body.appendChild(el('div', { class: 'opt-card' }, el('div', { class: 'sec-title' }, VN.t('Einstellungen')),
       row('Name der App im Spiel', txt(SO.name, (v) => { SO.name = v || 'Pixgram'; }, 'Pixgram', { width: '180px' })),
-      el('div', { class: 'logic-row' }, chk(SO.notify !== false, 'Meldung bei neuem Beitrag (Klick öffnet die App)', (v) => { SO.notify = v; }))));
+      el('div', { class: 'logic-row' }, chk(SO.notify !== false, 'Meldung bei neuem Beitrag (Klick öffnet die App)', (v) => { SO.notify = v; })),
+      // Im Browser (0.9.44): als Website erreichbar und per Websuche zu finden
+      el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } }, chk(SO.web !== false, 'Auch im Browser als Website (Websuche findet Profile und #Themen)', (v) => { SO.web = v; })),
+      SO.web !== false ? row('Adresse', el('span', { class: 'row gap4', style: { alignItems: 'center' } }, el('span', { class: 'muted small' }, 'www.'),
+        txt(SO.domain || '', (v) => { SO.domain = String(v || '').trim().toLowerCase().replace(/^[a-z]+:\/\//, '').replace(/^www\./, '').replace(/\/+$/, ''); }, DV().socDomain(), { width: '170px' }),
+        chk(SO.bookmark !== false, 'als Lesezeichen', (v) => { SO.bookmark = v; }))) : null,
+      SO.web !== false ? el('div', { class: 'muted small' }, VN.tf('Profile: www.{d}/@name · Themen: www.{d}/tag/thema – diese Adressen gehen auch als Link auf Websites, in Suchergebnissen und Nachrichten.', { d: DV().socDomain() })) : null));
     // Aussehen der Seite
     const SL = SO.look;
     const fontOpts = (none) => (window.Theme ? Theme.fontOptions(none) : [['', none]]);
@@ -511,6 +517,28 @@
     const without = devs.filter((d) => !d.apps.some((a) => a.type === 'web'));
     if (WB.sites.length && without.length) body.appendChild(el('div', { class: devs.length === without.length ? 'cond-warn' : 'hint-box' }, (devs.length === without.length ? '⚠ ' + VN.t('Noch kein Gerät hat die App „Browser“.') : VN.t('App „Browser“ auch auf:')),
       ...without.map((d) => el('button', { class: 'btn tiny', style: { marginLeft: '8px' }, onclick: () => VN.mutate(() => { d.apps.push(DV().fixApp({ id: VN.uid('app'), type: 'web' })); }) }, (d.kind === 'desktop' ? '💻 ' : '📱 ') + VN.tf('Zu „{n}“ hinzufügen', { n: d.name })))));
+    // Startseite und Suchergebnisse des Browsers gestalten (0.9.44)
+    {
+      const L = WB.look = WB.look || {}, B = DV().SEARCH_LOOK, V = Object.assign({}, B, L);
+      const open = !!VN.ui.webLookOpen;
+      const card = el('div', { class: 'opt-card' }, el('div', { class: 'row gap8' }, el('div', { class: 'sec-title', style: { flex: '1' } }, '🔎 ' + VN.t('Startseite und Websuche des Browsers')),
+        el('button', { class: 'btn tiny', onclick: () => { VN.ui.webLookOpen = !open; VN.render(); } }, open ? VN.t('Zuklappen') : '🎨 ' + VN.t('Gestalten'))));
+      if (open) {
+        const C = (k, label) => el('label', { class: 'check' }, col(V[k], (v) => { L[k] = v; }), VN.t(label));
+        const N = (k, min, max, step) => el('input', { type: 'range', min, max, step, value: V[k], style: { width: '110px' }, onchange: (e) => VN.mutate(() => { L[k] = Number(e.target.value); }) });
+        const T = (k, ph) => txt(L[k] || '', (v) => { if (v) L[k] = v; else delete L[k]; }, VN.t(ph || B[k]), { flex: '1', minWidth: '140px' });
+        card.append(
+          el('div', { class: 'muted small' }, VN.t('Gilt für die Lesezeichen-Startseite und für die Ergebnisse, wenn man in die Adresszeile ein Wort statt einer Adresse eintippt.')),
+          row('Name der Suche', T('name', 'z. B. Gugel')), row('Logo', VN.assetSelect('image', V.logo, (v) => VN.mutate(() => { if (v) L.logo = v; else delete L.logo; })), V.logo ? N('logoH', 2, 20, 0.5) : null),
+          row('Überschriften', T('home'), T('results')), row('Keine Treffer', T('none')),
+          row('Schrift', sel(V.font || '', window.Theme ? Theme.fontOptions('— Standard —') : [['', '—']], (v) => { L.font = v; }, { width: '170px' }), el('span', { class: 'muted small' }, VN.t('Größe')), N('size', 0.6, 1.8, 0.05)),
+          row('Farben', C('bg', 'Hintergrund'), C('head', 'Überschrift'), C('card', 'Karte'), C('border', 'Rand')),
+          row('', C('title', 'Titel'), C('url', 'Adresse'), C('desc', 'Beschreibung'), C('hover', 'Maus darüber')),
+          row('Ecken / Schatten', N('radius', 0, 40, 1), N('shadow', 0, 20, 1)),
+          el('div', { class: 'row gap8' }, el('button', { class: 'btn tiny', onclick: () => VN.mutate(() => { WB.look = {}; }) }, '↺ ' + VN.t('Standard'))));
+      }
+      body.appendChild(card);
+    }
     // Websites
     const site = WB.sites.find((w) => w.id === VN.ui.webSite) || WB.sites[0];
     body.appendChild(el('div', { class: 'row gap8', style: { flexWrap: 'wrap', margin: '6px 0 10px' } }, el('strong', null, VN.t('Websites')),
@@ -524,7 +552,11 @@
         el('span', { title: VN.t('Erscheint nicht bei den Lesezeichen – man kommt nur über die Adresse, einen Link oder eine Suche hin.') }, chk(site.hidden, 'geheim (nur über Adresse)', (v) => { site.hidden = v; })),
         condBtn(site.conds, 'Website nur erreichbar, wenn …', '🔒 ' + VN.t('Nur wenn')),
         el('div', { class: 'spacer' }),
-        el('button', { class: 'btn tiny danger', onclick: () => { if (confirm(VN.tf('Website „{n}“ löschen?', { n: site.name }))) VN.mutate(() => { WB.sites = WB.sites.filter((x) => x !== site); }); } }, '×'))));
+        el('button', { class: 'btn tiny danger', onclick: () => { if (confirm(VN.tf('Website „{n}“ löschen?', { n: site.name }))) VN.mutate(() => { WB.sites = WB.sites.filter((x) => x !== site); }); } }, '×')),
+      // Websuche (0.9.44): wer in die Adresszeile etwas eintippt, findet die Seite über Name, Adresse oder diese Wörter
+      el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } },
+        txt(site.keywords || '', (v) => { site.keywords = v; }, site.hidden ? VN.t('Suchwörter (geheime Seite: nur bei genauem Treffer)') : VN.t('Suchwörter, mit Komma getrennt'), { flex: '1', minWidth: '200px' }),
+        txt(site.desc || '', (v) => { site.desc = v; }, VN.t('Kurzbeschreibung im Suchergebnis'), { flex: '1', minWidth: '200px' }))));
     // Seiten
     const page = site.pages.find((g) => g.id === VN.ui.webPage) || site.pages[0];
     body.appendChild(el('div', { class: 'row gap8', style: { flexWrap: 'wrap', margin: '4px 0 8px' } }, el('span', { class: 'muted small' }, VN.t('Seiten')),
@@ -710,8 +742,39 @@
             el('input', { type: 'number', min: 0, step: 1, value: Number(e.blurPrice) || 0, style: { width: '72px' }, title: VN.t('0 = nicht freikaufbar'), onchange: (ev) => VN.mutate(() => { e.blurPrice = Math.max(0, Math.round(Number(ev.target.value) || 0)); if (!e.blurCur) e.blurCur = curs[0].id; }) }),
             curs.length > 1 ? sel(e.blurCur || curs[0].id, curs.map((c) => [c.id, c.name]), (v) => { e.blurCur = v; }, { width: '110px' }) : el('span', { class: 'muted small' }, curs[0].name))));
           box.appendChild(el('div', { class: 'muted small' }, Number(e.blurPrice) > 0 ? VN.t('Auf dem Bild erscheint ein Knopf „🔓 Freikaufen“. Ein Klick fragt nach, der zweite zahlt – danach bleibt das Bild scharf.') : VN.t('Preis eintragen, damit der Spieler das Bild selbst freikaufen kann.')));
-          if (Number(e.blurPrice) > 0) box.appendChild(el('div', { class: 'row gap4' }, el('button', { class: 'btn tiny primary', onclick: () => buyDesign(e, curs) }, '🎨 ' + VN.t('Knopf gestalten'))));
+          if (Number(e.blurPrice) > 0) box.appendChild(el('div', { class: 'row gap4', style: { flexWrap: 'wrap' } }, el('button', { class: 'btn tiny primary', onclick: () => buyDesign(e, curs) }, '🎨 ' + VN.t('Knopf gestalten')),
+            actBtn(e.buyActions || (e.buyActions = []), 'Nach dem Freikaufen ausführen (z. B. Szene starten, Gegenstand geben, Variable setzen)'),
+            el('span', { class: 'muted small' }, (e.buyActions || []).length ? VN.tf('{n} Aktionen', { n: e.buyActions.length }) : VN.t('Aktionen nach dem Kauf'))));
         } else box.appendChild(el('div', { class: 'muted small' }, VN.t('Zum Freikaufen gegen Geld zuerst unter Spielsysteme eine Währung anlegen.')));
+      }
+    }
+    // Verkaufen (0.9.44): Preis, nach dem Kauf Aktionen – z. B. Szene freischalten
+    if (e.kind === 'text' || e.kind === 'button' || (e.kind === 'image' && !(Number(e.blur) > 0 && Number(e.blurPrice) > 0))) {
+      const curs = VN.project.currencies || [];
+      const S = e.sale || {}, D = DV().SALE;
+      const on = Number(S.price) > 0;
+      const setS = (k, v) => { e.sale = e.sale || { actions: [] }; e.sale[k] = v; };
+      box.appendChild(el('div', { class: 'sec-title', style: { marginTop: '6px' } }, '🛒 ' + VN.t('Verkaufen')));
+      if (!curs.length) box.appendChild(el('div', { class: 'muted small' }, VN.t('Zum Verkaufen zuerst unter Spielsysteme eine Währung anlegen.')));
+      else {
+        box.appendChild(row('Preis', el('span', { class: 'row gap4' },
+          el('input', { type: 'number', min: 0, step: 1, value: Number(S.price) || 0, style: { width: '72px' }, title: VN.t('0 = nicht verkaufen'), onchange: (ev) => VN.mutate(() => { setS('price', Math.max(0, Math.round(Number(ev.target.value) || 0))); if (!e.sale.cur) e.sale.cur = curs[0].id; if (!e.sale.actions) e.sale.actions = []; }) }),
+          curs.length > 1 ? sel(S.cur || curs[0].id, curs.map((c) => [c.id, c.name]), (v) => setS('cur', v), { width: '110px' }) : el('span', { class: 'muted small' }, curs[0].name))));
+        if (!on) box.appendChild(el('div', { class: 'muted small' }, VN.t('Preis eintragen: Ein Klick kauft, danach laufen die Kauf-Aktionen – z. B. Szene starten, Gegenstand geben, Variable setzen. Mit der Bedingung „🛒 Auf Website gekauft“ schaltest du überall etwas frei.')));
+        else {
+          e.sale.actions = e.sale.actions || [];
+          box.appendChild(el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } }, actBtn(e.sale.actions, 'Nach dem Kauf ausführen (z. B. Szene starten, Gegenstand geben, Variable setzen)'),
+            el('span', { class: 'muted small' }, e.sale.actions.length ? VN.tf('{n} Aktionen', { n: e.sale.actions.length }) : VN.t('noch keine Aktion'))));
+          box.appendChild(el('div', { class: 'logic-row', style: { flexWrap: 'wrap' } },
+            chk(S.once !== false, 'nur einmal kaufbar', (v) => setS('once', v)), chk(S.confirm !== false, 'erst nachfragen', (v) => setS('confirm', v)), chk(S.showPrice !== false, 'Preis anzeigen', (v) => setS('showPrice', v))));
+          box.appendChild(row('Nachfrage', txt(S.ask || '', (v) => setS('ask', v), VN.t(D.ask), { flex: '1' })));
+          box.appendChild(row('Zu wenig Geld', txt(S.poor || '', (v) => setS('poor', v), VN.t(D.poor), { flex: '1' })));
+          if (S.once !== false) {
+            box.appendChild(row('Nach dem Kauf', sel(S.soldMode || 'text', [['text', 'Text ersetzen'], ['dim', 'blass anzeigen'], ['hide', 'ausblenden']], (v) => setS('soldMode', v), { width: '150px' })));
+            if ((S.soldMode || 'text') === 'text') box.appendChild(row('Gekauft-Text', txt(S.sold || '', (v) => setS('sold', v), VN.t(D.sold), { flex: '1' })));
+          }
+          box.appendChild(el('div', { class: 'muted small' }, VN.t('Aussehen: wie dieses Element (Farben, Schrift, Rand …). Anderswo freischalten mit der Bedingung „🛒 Auf Website gekauft“.')));
+        }
       }
     }
     if (e.kind !== 'input' && e.kind !== 'box') {

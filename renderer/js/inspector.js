@@ -219,6 +219,7 @@
       return el('div', { class: 'insp' },
         el('div', null, el('h3', null, 'Story-Szene'), el('div', { class: 'insp-title' }, s.name)),
         field('Name', text(s.name, set(s, 'name'))),
+        Inspector.tagField(s),
         field('Länge in Schritten (Klicks)', num(s.beats, (v) => VN.mutate(() => { s.beats = Math.max(1, Math.round(v)); }), { min: 1, max: 999 })),
         s.overHub || s.next === '@return' ? check('Über dem Hub abspielen (Hub bleibt im Hintergrund sichtbar)', s.overHub, set(s, 'overHub')) : null,
         field('Danach weiter zu', VN.sceneSelect(s.next, set(s, 'next'), { exclude: s.id, world: true, emptyLabel: VN.World && VN.World.on() ? '— Ende (oder zurück zum Ort nach Ereignis) —' : '— Ende des Spiels —' })),
@@ -392,6 +393,7 @@
     hub(s) {
       return el('div', { class: 'insp' },
         el('div', null, el('h3', null, 'Hub-Szene'), el('div', { class: 'insp-title' }, s.name)),
+        Inspector.tagField(s),
         field('Name', text(s.name, set(s, 'name'))),
         window.KulEd ? KulEd.bgField(s.bgLook || (s.bgLook = {}), true) : null,
         s.bgLook && s.bgLook.kulisse ? null : assetField('Hintergrund', 'image', s.bg, set(s, 'bg')),
@@ -639,6 +641,15 @@
           el('button', { class: 'btn danger', onclick: () => VN.mutate(() => { s.objects = s.objects.filter((x) => x !== o); VN.ui.sel = null; }) }, 'Löschen')));
     },
 
+    // Story-Tags einer Szene (0.9.44)
+    tagField(s) {
+      const T = VN.sceneTags(s);
+      const add = el('select', { class: 'small-input', onchange: (e) => { const v = e.target.value; if (v === '__new') { VN.prompt(VN.t('Name des Tags'), '').then((nm) => { if (nm) VN.mutate(() => { const t = VN.newTag(nm); VN.addTag(s, t.id); }); else VN.render(); }); return; } if (v) VN.mutate(() => VN.addTag(s, v)); } },
+        el('option', { value: '' }, '+ ' + VN.t('Tag')), ...VN.tags().filter((t) => !T.includes(t.id)).map((t) => el('option', { value: t.id }, t.name)), el('option', { value: '__new' }, VN.t('Neuer Tag …')));
+      return field('Story-Tags', el('div', { class: 'row gap4', style: { flexWrap: 'wrap' } },
+        ...T.map((id) => { const t = VN.tag(id); return el('span', { class: 'g-tagpill', style: { '--tagc': t.color } }, t.name, el('button', { class: 'tp-x', title: VN.t('Entfernen'), onclick: () => VN.mutate(() => VN.removeTag(s, id)) }, '×')); }),
+        add));
+    },
     // Ebenen im Hub (0.9.42): Reihenfolge aller Objekte, oben = ganz vorne. Ziehen oder ↑↓
     hubLayers(s, o, idx) {
       const mv = (from, to) => VN.mutate(() => { const [x] = s.objects.splice(from, 1); s.objects.splice(Math.max(0, Math.min(s.objects.length, to)), 0, x); });
