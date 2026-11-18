@@ -432,6 +432,37 @@
 
   // Nur Arten anbieten, deren System eingeschaltet ist (vorhandene bleiben sichtbar)
   Life.condTypes = () => { const p = VN.project; const out = []; if (p.time && p.time.enabled) out.push(['time', 'Zeit / Kalender']); if (Life.extraCondTypes) out.push(...Life.extraCondTypes()); return out; };
+  // Im Laden gekauft (0.9.45): bleibt gemerkt, auch wenn der Gegenstand längst verbraucht oder verkauft ist
+  const shopEntries = () => {
+    const p = VN.project, out = [];
+    for (const sh of p.shops || []) for (const e of sh.items || []) { const it = p.items.find((x) => x.id === e.item); if (it) out.push({ shop: sh, it, key: sh.id + '|' + it.id, label: sh.name + ': ' + it.name }); }
+    return out;
+  };
+  VN.registerCond('shopBought', {
+    label: '🛍 Im Laden gekauft',
+    on: () => !!(VN.project.economy && VN.project.economy.enabled) && shopEntries().length > 0,
+    make: () => ({ key: (shopEntries()[0] || {}).key || '', not: false }),
+    check: (c, rs) => {
+      const [sid, iid] = String(c.key || '').split('|');
+      const S = rs.shop || {};
+      const got = sid === '*' ? Object.values(S).some((x) => (x || {})[iid] > 0) : ((S[sid] || {})[iid] > 0);
+      return !!got !== !!c.not;
+    },
+    text: (c) => {
+      const [sid, iid] = String(c.key || '').split('|');
+      const it = (VN.project.items || []).find((x) => x.id === iid);
+      const sh = (VN.project.shops || []).find((x) => x.id === sid);
+      return '🛍 ' + (sid === '*' ? VN.t('irgendwo') : (sh ? sh.name : '?')) + ': ' + (it ? it.name : '?') + ' ' + VN.t(c.not ? 'nicht gekauft' : 'gekauft');
+    },
+    problem: (c) => { const [sid, iid] = String(c.key || '').split('|'); if (sid === '*') return (VN.project.items || []).some((x) => x.id === iid) ? null : 'Gegenstand fehlt'; return shopEntries().some((x) => x.key === c.key) ? null : 'Gegenstand im Laden fehlt'; },
+    row: (row, c, sel) => {
+      const E = shopEntries();
+      const any = [...new Map(E.map((x) => [x.it.id, x])).values()].map((x) => ['*|' + x.it.id, VN.t('irgendwo') + ': ' + x.it.name]);
+      row.appendChild(sel(c.key || '', [...E.map((x) => [x.key, x.label]), ...any], (v) => VN.mutate(() => { c.key = v; })));
+      row.appendChild(sel(c.not ? 'not' : 'yes', [['yes', 'gekauft'], ['not', 'noch nicht gekauft']], (v) => VN.mutate(() => { c.not = v === 'not'; })));
+    }
+  });
+
   Life.actionTypes = () => { const p = VN.project; const out = []; if (p.time && p.time.enabled) out.push(['time', 'Zeit vergehen lassen']); if (p.economy && p.economy.enabled) out.push(['shop', 'Laden öffnen']); if (Life.extraActionTypes) out.push(...Life.extraActionTypes()); return out; };
 
   // logic.js um neue Bedingungen/Aktionen erweitern

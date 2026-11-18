@@ -95,6 +95,14 @@
     return box;
   };
 
+  // Name, unter dem ein kaufbares Element in Bedingungen und Listen auftaucht (0.9.45)
+  const buyNameRow = (e) => {
+    const auto = e.kind === 'image' ? ((VN.asset(e.image) || {}).name || VN.t('Bild')) : String(e.text || '').slice(0, 24);
+    return el('div', null,
+      row('Name für Bedingungen', txt(e.buyName || '', (v) => { if (v) e.buyName = v; else delete e.buyName; }, auto || VN.t('z. B. Dietrich-Set'), { flex: '1', minWidth: '160px' })),
+      el('div', { class: 'muted small' }, VN.t('Unter diesem Namen steht das Ding in der Bedingung „🛒 Auf Website gekauft“ – praktisch, wenn mehrere Bilder oder Knöpfe ähnlich heißen.')));
+  };
+
   // ---------- Freikaufen-Knopf gestalten (0.9.42): jedes Detail ----------
   const buyDesign = (e, curs) => modal(VN.t('Freikaufen-Knopf gestalten'), (card) => {
     const D = DV(), B = D.BUY;
@@ -745,6 +753,7 @@
           if (Number(e.blurPrice) > 0) box.appendChild(el('div', { class: 'row gap4', style: { flexWrap: 'wrap' } }, el('button', { class: 'btn tiny primary', onclick: () => buyDesign(e, curs) }, '🎨 ' + VN.t('Knopf gestalten')),
             actBtn(e.buyActions || (e.buyActions = []), 'Nach dem Freikaufen ausführen (z. B. Szene starten, Gegenstand geben, Variable setzen)'),
             el('span', { class: 'muted small' }, (e.buyActions || []).length ? VN.tf('{n} Aktionen', { n: e.buyActions.length }) : VN.t('Aktionen nach dem Kauf'))));
+          if (Number(e.blurPrice) > 0) box.appendChild(buyNameRow(e));
         } else box.appendChild(el('div', { class: 'muted small' }, VN.t('Zum Freikaufen gegen Geld zuerst unter Spielsysteme eine Währung anlegen.')));
       }
     }
@@ -773,6 +782,7 @@
             box.appendChild(row('Nach dem Kauf', sel(S.soldMode || 'text', [['text', 'Text ersetzen'], ['dim', 'blass anzeigen'], ['hide', 'ausblenden']], (v) => setS('soldMode', v), { width: '150px' })));
             if ((S.soldMode || 'text') === 'text') box.appendChild(row('Gekauft-Text', txt(S.sold || '', (v) => setS('sold', v), VN.t(D.sold), { flex: '1' })));
           }
+          box.appendChild(buyNameRow(e));
           box.appendChild(el('div', { class: 'muted small' }, VN.t('Aussehen: wie dieses Element (Farben, Schrift, Rand …). Anderswo freischalten mit der Bedingung „🛒 Auf Website gekauft“.')));
         }
       }

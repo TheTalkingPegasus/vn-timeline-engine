@@ -1763,6 +1763,36 @@ module.exports = async function selftest({ win, app, approve, exportWebTo, Brows
     else log('✓ Verkaufen auf Websites, Bedingung „Auf Website gekauft“');
   } catch (e) { general.push('Website-Verkauf: ' + e.message); }
 
+  // 44. Gekauftes als Bedingung: Website-Name und Laden (0.9.45)
+  try {
+    const r = JSON.parse(await js(`(() => {
+      const out = [], p = VN.project, DV = VN.Devices;
+      VN.migrate(p);
+      const bakWeb = JSON.stringify(p.web), bakShop = JSON.stringify(p.shops), bakEco = JSON.stringify(p.economy);
+      // Website: eigener Name taucht in der Auswahl auf
+      const e = { id: 'eN', kind: 'image', image: '', blur: 8, blurPrice: 2, buyName: 'Geheimfoto' };
+      const w = DV.newSite(); w.name = 'Markt'; w.pages[0].els = [e]; p.web.sites.push(w);
+      const found = DV.saleItems().find((x) => x.e.id === 'eN');
+      if (!found || found.label.indexOf('Geheimfoto') < 0) out.push('Name in der Liste');
+      // Laden: Kauf bleibt gemerkt, auch ohne den Gegenstand im Rucksack
+      p.economy = { enabled: true };
+      const it = p.items[0];
+      p.shops = [{ id: 'shT', name: 'Basar', currency: (p.currencies[0] || {}).id, items: [{ item: it.id, price: 1, stock: -1 }] }];
+      const rs = VN.newRunState();
+      const C = { type: 'shopBought', key: 'shT|' + it.id };
+      if (VN.checkConds([C], rs)) out.push('vorher schon gekauft');
+      rs.shop = { shT: {} }; rs.shop.shT[it.id] = 1;
+      if (!VN.checkConds([C], rs)) out.push('nach dem Kauf');
+      if (VN.checkConds([{ type: 'shopBought', key: 'shT|' + it.id, not: true }], rs)) out.push('nicht-gekauft');
+      if (!VN.checkConds([{ type: 'shopBought', key: '*|' + it.id }], rs)) out.push('irgendwo');
+      if (VN.condProblem(C)) out.push('Problem: ' + VN.condProblem(C));
+      p.web = JSON.parse(bakWeb); p.shops = JSON.parse(bakShop); p.economy = JSON.parse(bakEco);
+      return JSON.stringify(out);
+    })()`));
+    if (r.length) general.push('Gekauft als Bedingung: ' + r.join(', '));
+    else log('✓ Gekauftes als Bedingung: eigener Name (Website) und Läden');
+  } catch (e) { general.push('Gekauft als Bedingung: ' + e.message); }
+
   // 27. Kulissen-Raum (0.9.32): 3D-Flächen, Kamera, Licht durch Fenster mit Jalousie, Bühne und Spieler
   try {
     const r = JSON.parse(await js(`(async () => {

@@ -5905,7 +5905,13 @@ window.VN_I18N_JA = {
 "Text ersetzen": "テキストを置き換え",
 "blass anzeigen": "薄く表示",
 "Gekauft-Text": "購入済みテキスト",
-"Aussehen: wie dieses Element (Farben, Schrift, Rand …). Anderswo freischalten mit der Bedingung „🛒 Auf Website gekauft“.": "見た目はこの要素と同じ（色・フォント・枠…）。他の場所では条件「🛒 サイトで購入済み」で解放。"
+"Aussehen: wie dieses Element (Farben, Schrift, Rand …). Anderswo freischalten mit der Bedingung „🛒 Auf Website gekauft“.": "見た目はこの要素と同じ（色・フォント・枠…）。他の場所では条件「🛒 サイトで購入済み」で解放。",
+"Name für Bedingungen": "条件用の名前",
+"z. B. Dietrich-Set": "例：ピッキングセット",
+"Unter diesem Namen steht das Ding in der Bedingung „🛒 Auf Website gekauft“ – praktisch, wenn mehrere Bilder oder Knöpfe ähnlich heißen.": "この名前で条件「🛒 サイトで購入済み」に表示されます。似た名前の画像やボタンが複数ある時に便利です。",
+"🛍 Im Laden gekauft": "🛍 店で購入済み",
+"irgendwo": "どこでも",
+"Gegenstand im Laden fehlt": "店の商品がありません"
 };
 window.VN_I18N_JA_CONTENT = {
 "01 Bild und Figur": "01 画像とキャラクター",

@@ -5905,7 +5905,13 @@ window.VN_I18N_ES = {
 "Text ersetzen": "reemplazar texto",
 "blass anzeigen": "mostrar atenuado",
 "Gekauft-Text": "Texto comprado",
-"Aussehen: wie dieses Element (Farben, Schrift, Rand …). Anderswo freischalten mit der Bedingung „🛒 Auf Website gekauft“.": "Aspecto: como este elemento (colores, fuente, borde …). Desbloquea en otro sitio con la condición «🛒 Comprado en web»."
+"Aussehen: wie dieses Element (Farben, Schrift, Rand …). Anderswo freischalten mit der Bedingung „🛒 Auf Website gekauft“.": "Aspecto: como este elemento (colores, fuente, borde …). Desbloquea en otro sitio con la condición «🛒 Comprado en web».",
+"Name für Bedingungen": "Nombre para condiciones",
+"z. B. Dietrich-Set": "p. ej. juego de ganzúas",
+"Unter diesem Namen steht das Ding in der Bedingung „🛒 Auf Website gekauft“ – praktisch, wenn mehrere Bilder oder Knöpfe ähnlich heißen.": "Con este nombre aparece en la condición «🛒 Comprado en web» – útil si varias imágenes o botones se llaman igual.",
+"🛍 Im Laden gekauft": "🛍 Comprado en la tienda",
+"irgendwo": "en cualquier sitio",
+"Gegenstand im Laden fehlt": "Falta el objeto de la tienda"
 };
 window.VN_I18N_ES_CONTENT = {
 "01 Bild und Figur": "01 Imagen y personaje",

@@ -5825,7 +5825,13 @@ window.VN_I18N_EN = {
 "Text ersetzen": "replace text",
 "blass anzeigen": "show faded",
 "Gekauft-Text": "Bought text",
-"Aussehen: wie dieses Element (Farben, Schrift, Rand …). Anderswo freischalten mit der Bedingung „🛒 Auf Website gekauft“.": "Look: like this element (colors, font, border …). Unlock elsewhere with the condition “🛒 Bought on website”."
+"Aussehen: wie dieses Element (Farben, Schrift, Rand …). Anderswo freischalten mit der Bedingung „🛒 Auf Website gekauft“.": "Look: like this element (colors, font, border …). Unlock elsewhere with the condition “🛒 Bought on website”.",
+"Name für Bedingungen": "Name for conditions",
+"z. B. Dietrich-Set": "e.g. lockpick set",
+"Unter diesem Namen steht das Ding in der Bedingung „🛒 Auf Website gekauft“ – praktisch, wenn mehrere Bilder oder Knöpfe ähnlich heißen.": "Under this name the thing appears in the condition “🛒 Bought on website” – handy when several images or buttons are named alike.",
+"🛍 Im Laden gekauft": "🛍 Bought in a shop",
+"irgendwo": "anywhere",
+"Gegenstand im Laden fehlt": "Shop item missing"
 };
 window.VN_I18N_EN_FRAG = [
 "// Eigenes Plugin für die VN Timeline Engine\n// Anleitung: siehe PLUGINS.md in diesem Ordner\nVNPlugin.register({\n  id: '__ID__',\n  name: 'Mein Plugin',\n  version: '1.0',\n  description: 'Beschreibe hier kurz, was dein Plugin macht.',\n  actions: {\n    hallo: {\n      label: 'Hallo sagen',\n      params: [\n        { key: 'text', label: 'Text', type: 'text', default: 'Hallo aus dem Plugin!' },\n        { key: 'gold', label: 'Gold geben', type: 'number', default: 5 }\n      ],\n      // Läuft, wenn die Aktion im Spiel ausgelöst wird. Ein Promise lässt das Spiel warten.\n      run(params, ctx) {\n        ctx.money.add('Gold', Number(params.gold) || 0);\n        return ctx.message(params.text);\n      }\n    }\n  },\n  hooks: {\n    onSceneEnter(scene, ctx) { /* z. B. Statistik zählen */ }\n  }\n});",

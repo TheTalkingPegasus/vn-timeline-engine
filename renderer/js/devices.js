@@ -165,7 +165,15 @@
     return true;
   };
   // alle verkaufbaren Dinge (für die Bedingung „Auf Website gekauft“)
-  DV.saleItems = () => { const out = []; for (const w of DV.sites()) for (const g of w.pages || []) for (const e of g.els || []) if (DV.saleOf(e) || Number(e.blurPrice) > 0) out.push({ e, w, g, label: w.name + ': ' + (e.kind === 'image' ? '🖼 ' + ((VN.asset(e.image) || {}).name || VN.t('Bild')) : '„' + String(e.text || '').slice(0, 24) + '“') }); return out; };
+  DV.saleItems = () => {
+    const out = [];
+    for (const w of DV.sites()) for (const g of w.pages || []) for (const e of g.els || []) if (DV.saleOf(e) || Number(e.blurPrice) > 0) {
+      // Name für Bedingungen (0.9.45): eigener Name, sonst Bildname bzw. Text des Knopfes
+      const auto = e.kind === 'image' ? '🖼 ' + ((VN.asset(e.image) || {}).name || VN.t('Bild')) : '„' + String(e.text || '').slice(0, 24) + '“';
+      out.push({ e, w, g, name: e.buyName || '', label: w.name + ': ' + (e.buyName || auto) });
+    }
+    return out;
+  };
   // Aussehen des Freikaufen-Knopfs (0.9.42) – jedes Detail einstellbar
   DV.BUY = { text: '🔓 Freikaufen', ask: 'Wirklich zahlen?', poor: 'Nicht genug Geld.', confirm: true, price: true, pos: 'center', size: 2.6, font: '', bold: true, italic: false, upper: false,
     color: '#ffffff', bg1: '#c38cff', bg2: '#5f8dff', angle: 135, askBg1: '#ffb35c', askBg2: '#ff6f61', poorGray: true, radius: 99, padX: 2.2, padY: 1, border: '', borderW: 0,
